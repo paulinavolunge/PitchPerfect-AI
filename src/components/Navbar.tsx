@@ -20,6 +20,9 @@ const Navbar = () => {
           <Link to="/practice" className="text-brand-dark hover:text-brand-green transition-colors">
             Practice
           </Link>
+          <Link to="/roleplay" className="text-brand-dark hover:text-brand-green transition-colors">
+            Roleplay
+          </Link>
           <Link to="/tips" className="text-brand-dark hover:text-brand-green transition-colors">
             AI Tips
           </Link>
