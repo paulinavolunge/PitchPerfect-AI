@@ -53,20 +53,27 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Improve smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-green text-white font-medium rounded-full px-8 py-3 hover:opacity-90 transition-opacity;
+    @apply bg-brand-green text-white font-medium rounded-full px-8 py-3 hover:opacity-90 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0;
   }
   
   .btn-secondary {
-    @apply bg-secondary text-brand-dark font-medium rounded-full px-8 py-3 hover:bg-brand-blue/50 transition-colors;
+    @apply bg-secondary text-brand-dark font-medium rounded-full px-8 py-3 hover:bg-brand-blue/50 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0;
   }
 
   .card-hover {
-    @apply transition-all hover:shadow-lg hover:-translate-y-1;
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
 
   .speech-bubble {
@@ -82,4 +89,44 @@
     border-style: solid;
     border-color: white transparent;
   }
+  
+  /* New design components */
+  .notion-card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all duration-300 hover:shadow-md hover:border-gray-200;
+  }
+  
+  .glass-card {
+    @apply backdrop-blur-md bg-white/80 border border-white/20 shadow-sm rounded-xl;
+  }
+  
+  .nav-link {
+    @apply relative text-brand-dark/80 hover:text-brand-green transition-colors duration-300 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-brand-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
+  }
+  
+  .section-title {
+    @apply text-3xl font-bold mb-4 text-brand-dark;
+  }
+  
+  .section-description {
+    @apply text-lg text-brand-dark/70 max-w-2xl mx-auto;
+  }
+}
+
+/* Animation utilities */
+.animate-fade {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
