@@ -1,6 +1,4 @@
-
 import React from 'react';
-import Logo from './Logo';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
@@ -9,7 +7,6 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-1">
-            <Logo className="text-white" />
             <p className="mt-4 text-gray-300">
               Elevate your sales game with AI-powered pitch practice and personalized feedback.
             </p>
