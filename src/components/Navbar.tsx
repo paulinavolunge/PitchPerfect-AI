@@ -1,17 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Logo from './Logo';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/hooks/use-theme';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,13 +29,13 @@ const Navbar = () => {
 
   return (
     <nav className={cn(
-      "fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b transition-all duration-300",
+      "fixed top-0 left-0 right-0 bg-white/80 dark:bg-black/80 backdrop-blur-md z-50 border-b transition-all duration-300",
       isScrolled ? "py-3" : "py-4 md:py-6"
     )}>
       <div className="container mx-auto px-6 flex justify-between items-center">
         <Logo 
           size={isScrolled ? "md" : "lg"} 
-          className="mr-8 md:mr-12 flex-shrink-0" // Added more margin on desktop
+          className="mr-8 md:mr-12 flex-shrink-0"
         />
         
         {!isMobile ? (
@@ -57,6 +58,14 @@ const Navbar = () => {
             <Link to="/subscription" className={`nav-link ${isActive('/subscription') ? 'text-brand-green font-medium' : ''}`}>
               Pricing
             </Link>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={toggleTheme}
+              className="ml-2"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </Button>
           </div>
         ) : (
           <Button 
@@ -73,7 +82,7 @@ const Navbar = () => {
       </div>
       
       {isMobile && isMenuOpen && (
-        <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b shadow-lg animate-slide-in">
+        <div className="md:hidden absolute top-16 left-0 right-0 bg-white dark:bg-black/90 border-b shadow-lg animate-slide-in">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
             <Link 
               to="/" 
@@ -117,6 +126,16 @@ const Navbar = () => {
             >
               Pricing
             </Link>
+            <div className="flex items-center justify-between mt-2 pt-2 border-t">
+              <span className="text-sm">Theme</span>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              </Button>
+            </div>
             <Button className="btn-primary w-full mt-2" onClick={() => setIsMenuOpen(false)}>
               Get Started
             </Button>

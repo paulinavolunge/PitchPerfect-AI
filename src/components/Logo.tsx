@@ -22,7 +22,7 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
 
   return (
     <div className={cn(
-      "flex items-center gap-4 font-semibold",
+      "flex items-center gap-4 font-semibold dark:text-white",
       textSizeClasses[size],
       className
     )}>
@@ -35,7 +35,7 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
         )} 
       />
       <span className="font-bold whitespace-nowrap">
-        Pitch<span className="text-brand-blue">Perfect</span> AI
+        Pitch<span className="text-brand-blue dark:text-brand-green">Perfect</span> AI
       </span>
     </div>
   );
