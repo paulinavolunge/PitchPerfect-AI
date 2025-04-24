@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
@@ -7,6 +6,7 @@ import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
 import { Volume2, Volume1, VolumeX } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import ScriptUpload from '@/components/roleplay/ScriptUpload';
 
 const RolePlay = () => {
   const [isScenarioSelected, setIsScenarioSelected] = useState(false);
@@ -23,6 +23,7 @@ const RolePlay = () => {
   const [voiceMode, setVoiceMode] = useState<'voice' | 'text' | 'hybrid'>('hybrid');
   const [voiceStyle, setVoiceStyle] = useState<'friendly' | 'assertive' | 'skeptical' | 'rushed'>('friendly');
   const [volume, setVolume] = useState(70);
+  const [userScript, setUserScript] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleScenarioSelect = (selectedScenario: typeof scenario) => {
@@ -52,6 +53,14 @@ const RolePlay = () => {
     });
   };
 
+  const handleScriptSubmit = (script: string) => {
+    setUserScript(script);
+    toast({
+      title: "Script Ready",
+      description: "Your sales script has been saved. Let's practice!",
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -59,7 +68,13 @@ const RolePlay = () => {
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
           {!isScenarioSelected ? (
-            <ScenarioSelector onSelectScenario={handleScenarioSelect} />
+            <div className="space-y-8">
+              <ScenarioSelector onSelectScenario={handleScenarioSelect} />
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-xl font-semibold mb-4 text-brand-dark">Upload Your Script</h2>
+                <ScriptUpload onScriptSubmit={handleScriptSubmit} />
+              </div>
+            </div>
           ) : (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -163,6 +178,13 @@ const RolePlay = () => {
                   volume={volume}
                 />
               </div>
+              {userScript && (
+                <div className="mt-4 p-4 bg-brand-blue/10 rounded-lg">
+                  <p className="text-sm text-brand-dark/70">
+                    Practicing with your uploaded script. The AI will respond based on your script content.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

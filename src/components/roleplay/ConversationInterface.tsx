@@ -14,6 +14,7 @@ interface ConversationInterfaceProps {
   };
   voiceStyle: 'friendly' | 'assertive' | 'skeptical' | 'rushed';
   volume: number;
+  userScript?: string | null;
 }
 
 interface Message {
@@ -27,7 +28,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   mode,
   scenario,
   voiceStyle,
-  volume
+  volume,
+  userScript
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -140,6 +142,19 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     const lowerInput = userInput.toLowerCase();
     const persona = getAIPersona();
     
+    if (userScript) {
+      const scriptLines = userScript.split('\n').map(line => line.toLowerCase());
+      const relevantLine = scriptLines.find(line => 
+        line.includes(lowerInput.substring(0, 10))
+      );
+
+      if (relevantLine) {
+        return `${persona}: I see you're following your script. Let me challenge that point: ${
+          generateObjection(relevantLine)
+        }`;
+      }
+    }
+
     if (lowerInput.includes('price') || lowerInput.includes('cost') || lowerInput.includes('expensive')) {
       if (scenario.objection === 'Price') {
         return `${persona}: I understand your concern about the price. Our solution costs more because we deliver 30% more value through our advanced features. Many customers find they recoup the investment within 6 months through increased efficiency. Would you like me to show you how the ROI calculation works for businesses like yours?`;
@@ -169,6 +184,18 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     ];
     
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  };
+
+  const generateObjection = (scriptLine: string): string => {
+    const objections = [
+      "That sounds good in theory, but how does it work in practice?",
+      "I've heard similar promises before. What makes your solution different?",
+      "That's interesting, but I'm not sure it addresses our specific needs.",
+      "Can you provide some concrete examples of how this has worked for others?",
+      "I understand what you're saying, but the timing isn't right for us."
+    ];
+    
+    return objections[Math.floor(Math.random() * objections.length)];
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
