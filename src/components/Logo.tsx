@@ -17,7 +17,7 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
   return (
     <div className={cn("flex items-center gap-3 font-semibold", textSizeClasses[size], className)}>
       <img 
-        src="/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png" 
+        src="/lovable-uploads/1167785f-2451-4e85-a1ae-a2bf86c90a95.png" 
         alt="PitchPerfect AI Logo" 
         className={cn(
           "object-contain bg-transparent", 
