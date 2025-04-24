@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Logo from './Logo';
@@ -35,7 +36,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6 flex justify-between items-center">
         <Logo 
           size={isScrolled ? "md" : "lg"} 
-          className="mr-8 md:mr-12 flex-shrink-0"
+          className="flex-grow-0 flex-shrink-0" 
         />
         
         {!isMobile ? (
@@ -68,14 +69,16 @@ const Navbar = () => {
             </Button>
           </div>
         ) : (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden flex-shrink-0"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </Button>
+          </div>
         )}
         
         <Button className="btn-primary hidden md:flex animate-fade-in">Get Started</Button>
@@ -147,3 +150,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
