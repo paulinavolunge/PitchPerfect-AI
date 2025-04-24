@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
@@ -17,7 +16,7 @@ const CTASection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to perfect your <span className="text-brand-green">sales pitch</span>?
+              Ready to perfect your <span className="text-brand-blue">sales pitch</span>?
             </h2>
             <p className="text-xl text-white/80 mb-8">
               Join thousands of sales professionals who are closing more deals with PitchPerfect AI.
@@ -41,7 +40,7 @@ const CTASection = () => {
           </div>
           
           <div className="bg-brand-dark/50 rounded-2xl p-8 border border-white/10 backdrop-blur-sm">
-            <h3 className="text-2xl font-medium mb-2 text-brand-green">Try PitchPerfect AI Today</h3>
+            <h3 className="text-2xl font-medium mb-2 text-brand-blue">Try PitchPerfect AI Today</h3>
             <p className="text-white/80 mb-6">
               Start your 14-day free trial. No credit card required.
             </p>
