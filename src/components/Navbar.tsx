@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Logo from './Logo';
@@ -33,10 +32,10 @@ const Navbar = () => {
       "fixed top-0 left-0 right-0 bg-white/80 dark:bg-black/80 backdrop-blur-md z-50 border-b transition-all duration-300",
       isScrolled ? "py-3" : "py-4 md:py-6"
     )}>
-      <div className="container mx-auto px-6 flex justify-between items-center">
+      <div className="container mx-auto px-6 flex justify-between items-center h-16">
         <Logo 
           size={isScrolled ? "md" : "lg"} 
-          className="flex-grow-0 flex-shrink-0" 
+          className="flex-grow-0 flex-shrink-0 self-center" 
         />
         
         {!isMobile ? (
@@ -69,7 +68,7 @@ const Navbar = () => {
             </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-center">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -150,4 +149,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
