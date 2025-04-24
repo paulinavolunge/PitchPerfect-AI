@@ -20,7 +20,7 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
         src="/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png" 
         alt="PitchPerfect AI Logo" 
         className={cn(
-          "object-contain", 
+          "object-contain bg-transparent", 
           size === 'sm' ? 'w-8 h-8' : 
           size === 'md' ? 'w-10 h-10' : 
           'w-12 h-12'
@@ -32,4 +32,3 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
 };
 
 export default Logo;
-
