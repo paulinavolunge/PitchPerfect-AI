@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Mic, MicOff, Send, Waveform } from 'lucide-react';
+import { Mic, MicOff, Send, AudioWaveform } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ConversationInterfaceProps {
@@ -37,11 +36,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Mock scenario introduction based on selected options
   useEffect(() => {
     const scenarioIntro = getScenarioIntro();
     
-    // Add AI welcome message with slight delay to simulate loading
     setTimeout(() => {
       setMessages([
         {
@@ -52,7 +49,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         }
       ]);
       
-      // Simulate AI speaking
       if (mode !== 'text') {
         setIsAISpeaking(true);
         setTimeout(() => setIsAISpeaking(false), 5000);
@@ -60,7 +56,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     }, 800);
   }, [scenario]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -74,7 +69,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       return `${getAIPersona()}: Hello! I'm ready to roleplay your custom scenario about ${scenario.custom}. How can I help you today?`;
     }
     
-    // Generate appropriate intro based on scenario
     const intros = {
       SaaS: "Hi there! I'm considering a new software solution for my team. I've heard about your product, but I'm not convinced it's worth the investment.",
       Retail: "Hello, I'm browsing today and noticed your product. I'm interested but have a few concerns before making a purchase.",
@@ -93,9 +87,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       Need: "though I'm not convinced we need this solution"
     };
     
-    // @ts-ignore - Industry is guaranteed to be one of the keys
     let intro = intros[scenario.industry] || intros.SaaS;
-    // @ts-ignore - Objection is guaranteed to be one of the keys
     intro += ` I'm interested to learn more, ${objectionHints[scenario.objection]}.`;
     
     return `${getAIPersona()}: ${intro}`;
@@ -124,7 +116,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setMessages(prev => [...prev, newMessage]);
     setInputText('');
     
-    // Simulate AI thinking and responding
     setTimeout(() => {
       const aiResponse = generateAIResponse(inputText);
       const aiMessage: Message = {
@@ -136,24 +127,19 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       setMessages(prev => [...prev, aiMessage]);
       
-      // Simulate AI speaking if not in text-only mode
       if (mode !== 'text') {
         setIsAISpeaking(true);
-        // Calculate approximate speech duration based on word count (rough estimate)
         const wordCount = aiResponse.split(' ').length;
-        const speechDuration = Math.min(Math.max(wordCount * 300, 1500), 8000); // between 1.5 and 8 seconds
-        
+        const speechDuration = Math.min(Math.max(wordCount * 300, 1500), 8000);
         setTimeout(() => setIsAISpeaking(false), speechDuration);
       }
     }, 1200);
   };
 
-  // Mock AI response generation based on user input and scenario
   const generateAIResponse = (userInput: string): string => {
     const lowerInput = userInput.toLowerCase();
     const persona = getAIPersona();
     
-    // Very simple response logic based on keywords and objection type
     if (lowerInput.includes('price') || lowerInput.includes('cost') || lowerInput.includes('expensive')) {
       if (scenario.objection === 'Price') {
         return `${persona}: I understand your concern about the price. Our solution costs more because we deliver 30% more value through our advanced features. Many customers find they recoup the investment within 6 months through increased efficiency. Would you like me to show you how the ROI calculation works for businesses like yours?`;
@@ -175,7 +161,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       return `${persona}: Timing is definitely important. When would you anticipate being ready to move forward? We could use that timeframe to prepare a smooth implementation plan.`;
     }
     
-    // Default responses when no specific keywords match
     const defaultResponses = [
       `${persona}: That's an interesting perspective. Can you tell me more about how you're handling this challenge currently?`,
       `${persona}: I see where you're coming from. Many of our customers had similar concerns before they discovered how our solution addresses that exact issue.`,
@@ -194,7 +179,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const toggleListening = () => {
-    // In a real implementation, this would connect to the Web Speech API
     if (isListening) {
       setIsListening(false);
       toast({
@@ -208,7 +192,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         description: "Speak now. Your voice will be processed into text.",
       });
       
-      // Simulate speech recognition after a delay
       setTimeout(() => {
         const mockRecognizedText = "I understand your concerns about pricing, but I believe our solution offers exceptional value compared to alternatives.";
         setInputText(mockRecognizedText);
@@ -237,7 +220,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 {message.sender === 'ai' && isAISpeaking && message.id === messages[messages.length - 1].id && (
                   <span className="ml-2 inline-flex items-center">
-                    <Waveform size={14} className="animate-pulse text-brand-green mr-1" />
+                    <AudioWaveform size={14} className="animate-pulse text-brand-green mr-1" />
                     Speaking...
                   </span>
                 )}
