@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Logo from './Logo';
@@ -33,7 +34,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6 flex justify-between items-center">
         <Logo 
           size={isScrolled ? "md" : "lg"} 
-          className="mr-8 flex-shrink-0"
+          className="mr-8 md:mr-12 flex-shrink-0" // Added more margin on desktop
         />
         
         {!isMobile ? (
