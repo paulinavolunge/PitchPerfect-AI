@@ -26,6 +26,9 @@ const Navbar = () => {
           <Link to="/tips" className="text-brand-dark hover:text-brand-green transition-colors">
             AI Tips
           </Link>
+          <Link to="/subscription" className="text-brand-dark hover:text-brand-green transition-colors">
+            Pricing
+          </Link>
         </div>
         
         <Button className="btn-primary">Get Started</Button>

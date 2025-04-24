@@ -25,11 +25,18 @@ const Index = () => {
                 Practice your pitch in real-time with our advanced AI roleplay system. 
                 Choose between voice or text interaction and get instant feedback.
               </p>
-              <Link to="/roleplay">
-                <Button className="btn-primary flex items-center gap-2">
-                  Try Roleplay Now <ArrowRight size={18} />
-                </Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/roleplay">
+                  <Button className="btn-primary flex items-center gap-2">
+                    Try Roleplay Now <ArrowRight size={18} />
+                  </Button>
+                </Link>
+                <Link to="/subscription">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    Go Premium 
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
