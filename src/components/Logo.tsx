@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
@@ -15,18 +14,19 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
     lg: 'text-2xl'
   };
 
-  const iconSizeMap = {
-    sm: 16,
-    md: 20,
-    lg: 24
-  };
-
   return (
-    <div className={cn("flex items-center gap-2 font-semibold", textSizeClasses[size], className)}>
-      <div className="bg-brand-green text-white p-1 rounded-md">
-        <Mic size={iconSizeMap[size]} strokeWidth={2.5} />
-      </div>
-      <span>Pitch<span className="text-brand-green">Perfect</span> AI</span>
+    <div className={cn("flex items-center gap-3 font-semibold", textSizeClasses[size], className)}>
+      <img 
+        src="/lovable-uploads/255b0025-56b1-4a4a-b966-bb658c0c5a51.png" 
+        alt="PitchPerfect AI Logo" 
+        className={cn(
+          "object-contain", 
+          size === 'sm' ? 'w-8 h-8' : 
+          size === 'md' ? 'w-10 h-10' : 
+          'w-12 h-12'
+        )} 
+      />
+      <span>Pitch<span className="text-brand-blue">Perfect</span> AI</span>
     </div>
   );
 };
