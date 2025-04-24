@@ -28,10 +28,13 @@ const Navbar = () => {
   return (
     <nav className={cn(
       "fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b transition-all duration-300",
-      isScrolled ? "py-3" : "py-4"
+      isScrolled ? "py-3" : "py-4 md:py-6"
     )}>
       <div className="container mx-auto px-6 flex justify-between items-center">
-        <Logo size={isScrolled ? "md" : "lg"} className="mr-8" />
+        <Logo 
+          size={isScrolled ? "md" : "lg"} 
+          className="mr-8 flex-shrink-0"
+        />
         
         {!isMobile ? (
           <div className="hidden md:flex items-center gap-8 animate-fade-in">

@@ -10,14 +10,14 @@ interface LogoProps {
 const Logo = ({ size = 'md', className }: LogoProps) => {
   const textSizeClasses = {
     sm: 'text-xl',
-    md: 'text-2xl',
-    lg: 'text-3xl'
+    md: 'text-2xl md:text-3xl', // Increased text size on medium and larger screens
+    lg: 'text-3xl md:text-4xl'  // Even larger text for lg size
   };
 
   const imageSizeClasses = {
     sm: 'w-10 h-10',
-    md: 'w-14 h-14 lg:w-16 lg:h-16',
-    lg: 'w-16 h-16 lg:w-20 lg:h-20'
+    md: 'w-14 h-14 md:w-20 md:h-20', // Significantly larger on desktop
+    lg: 'w-16 h-16 md:w-24 md:h-24'  // Even larger option for lg size
   };
 
   return (
