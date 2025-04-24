@@ -65,8 +65,7 @@ export default {
                     border: 'hsl(var(--sidebar-border))',
                     ring: 'hsl(var(--sidebar-ring))'
                 },
-                // Brand colors
-                "brand-blue": "#D3E4FD",
+                "brand-blue": "#2563EB",
                 "brand-dark": "#403E43",
                 "brand-green": "#0EA5E9",
             },
