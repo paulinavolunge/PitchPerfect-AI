@@ -4,6 +4,7 @@ import Logo from './Logo';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,10 +28,10 @@ const Navbar = () => {
   return (
     <nav className={cn(
       "fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b transition-all duration-300",
-      isScrolled ? "py-2" : "py-3"
+      isScrolled ? "py-3" : "py-4"
     )}>
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <Logo size={isScrolled ? "md" : "lg"} />
+      <div className="container mx-auto px-6 flex justify-between items-center">
+        <Logo size={isScrolled ? "md" : "lg"} className="mr-8" />
         
         {!isMobile ? (
           <div className="hidden md:flex items-center gap-8 animate-fade-in">
