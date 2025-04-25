@@ -10,6 +10,7 @@ import Practice from "./pages/Practice";
 import Tips from "./pages/Tips";
 import RolePlay from "./pages/RolePlay";
 import Subscription from "./pages/Subscription";
+import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/tips" element={<Tips />} />
           <Route path="/roleplay" element={<RolePlay />} />
           <Route path="/subscription" element={<Subscription />} />
+          <Route path="/progress" element={<Progress />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

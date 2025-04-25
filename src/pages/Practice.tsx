@@ -26,11 +26,14 @@ const Practice = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow pt-24 pb-12">
+      <main className="flex-grow pt-20 pb-12"> {/* Adjusted top padding */}
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-brand-dark">Practice Your Pitch</h1>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-brand-dark mb-2">Practice Your Pitch</h1>
+                <p className="text-brand-dark/70 mb-4">Choose a scenario or upload your script to start practicing and get instant AI feedback.</p>
+              </div>
               <Button variant="outline" onClick={resetPractice} className="flex items-center gap-2">
                 <RefreshCcw size={16} />
                 New Session

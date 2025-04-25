@@ -30,9 +30,9 @@ const Navbar = () => {
   return (
     <nav className={cn(
       "fixed top-0 left-0 right-0 bg-white/80 dark:bg-black/80 backdrop-blur-md z-50 border-b transition-all duration-300",
-      isScrolled ? "py-2" : "py-3"
+      isScrolled ? "py-1" : "py-2"
     )}>
-      <div className="container mx-auto px-6 flex justify-between items-center h-12">
+      <div className="container mx-auto px-4 flex justify-between items-center h-10">
         <Logo 
           size={isScrolled ? "sm" : "md"} 
           className="flex-grow-0 flex-shrink-0 self-center" 
