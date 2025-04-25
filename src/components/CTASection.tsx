@@ -33,10 +33,7 @@ const CTASection = () => {
             
             <div className="flex flex-wrap gap-4">
               <Button className="btn-primary">Start Free Trial</Button>
-              <Button 
-                variant="outline" 
-                className="text-white border-brand-blue hover:bg-brand-blue/20 hover:text-white transition-colors duration-300 px-8 py-3 rounded-full"
-              >
+              <Button className="btn-primary">
                 Book a Demo
               </Button>
             </div>
