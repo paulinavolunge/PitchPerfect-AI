@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
-    <section className="pt-32 pb-20 bg-gradient-to-b from-brand-blue/30 to-white overflow-hidden">
+    <section className="pt-24 pb-20 bg-gradient-to-b from-brand-blue/30 to-white overflow-hidden">
       <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center">
         <div className="lg:w-1/2 space-y-6 mb-10 lg:mb-0 animate-fade-in">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-brand-dark leading-tight">
