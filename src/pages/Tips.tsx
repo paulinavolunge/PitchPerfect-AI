@@ -1,45 +1,131 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Search } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
+import { useToast } from '@/components/ui/use-toast';
 
 const Tips = () => {
-  const salesTips = [
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('All Tips');
+  const [displayedTips, setDisplayedTips] = useState(6);
+
+  const allSalesTips = [
     {
       title: "Build rapport before pitching",
       description: "Find common ground or references before diving into your product pitch. People buy from those they like and trust.",
-      type: "tip"
+      type: "tip",
+      category: "Opening Lines"
     },
     {
       title: "Problem-Solution Framework",
       description: "We noticed [problem] is causing [negative impact]. Our [product] addresses this by [key benefit], resulting in [positive outcome].",
-      type: "script"
+      type: "script",
+      category: "Value Proposition"
     },
     {
       title: "Use the 'Feel, Felt, Found' technique",
       description: "When handling objections: 'I understand how you feel. Others have felt the same way. What they found was...'",
-      type: "tip"
+      type: "tip",
+      category: "Objection Handling"
     },
     {
       title: "The 60-Second Value Proposition",
       description: "For [target customer] who [statement of need or opportunity], our [product/service] is a [category] that [statement of key benefit]. Unlike [competing alternative], we [statement of primary differentiation].",
-      type: "script"
+      type: "script",
+      category: "Value Proposition"
     },
     {
       title: "Pause strategically after key points",
       description: "Strategic silence gives prospects time to process important information and signals confidence in your message.",
-      type: "tip"
+      type: "tip",
+      category: "Closing Techniques"
     },
     {
       title: "Use client-specific language",
       description: "Research your prospect's industry terminology before meetings and mirror their vocabulary during your pitch.",
-      type: "tip"
+      type: "tip",
+      category: "Opening Lines"
+    },
+    {
+      title: "Ask open-ended questions",
+      description: "Use questions that require more than a yes/no answer to better understand customer needs and challenges.",
+      type: "tip",
+      category: "Opening Lines"
+    },
+    {
+      title: "The SPIN selling technique",
+      description: "Situation → Problem → Implication → Need-payoff. Guide prospects through these four steps to uncover real needs.",
+      type: "script",
+      category: "Closing Techniques"
+    },
+    {
+      title: "Use social proof effectively",
+      description: "Reference similar customers who've achieved success with your product: 'Companies like yours have seen a 30% increase in...'",
+      type: "tip",
+      category: "Objection Handling"
+    },
+    {
+      title: "The contrast principle",
+      description: "Show the gap between where they are and where they could be with your solution to create urgency.",
+      type: "tip",
+      category: "Closing Techniques"
     }
   ];
+
+  const filterCategories = ["All Tips", "Objection Handling", "Opening Lines", "Value Proposition", "Closing Techniques"];
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleFilterClick = (filter: string) => {
+    setActiveFilter(filter);
+    toast({
+      title: "Filter Applied",
+      description: `Showing ${filter} sales tips`,
+    });
+  };
+
+  const handleLoadMore = () => {
+    setDisplayedTips(prev => Math.min(prev + 3, allSalesTips.length));
+    
+    if (displayedTips + 3 >= allSalesTips.length) {
+      toast({
+        title: "No More Tips Available",
+        description: "You've reached the end of our tips collection",
+      });
+    } else {
+      toast({
+        title: "Loading More Tips",
+        description: "Loading additional sales tips",
+      });
+    }
+  };
+
+  const handleGeneratePersonalizedTips = () => {
+    toast({
+      title: "Generating Personalized Tips",
+      description: "AI is analyzing your profile to create custom recommendations",
+    });
+  };
+
+  // Filter tips based on search query and active filter
+  const filteredTips = allSalesTips.filter(tip => {
+    const matchesSearch = tip.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         tip.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesFilter = activeFilter === "All Tips" || tip.category === activeFilter;
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  // Get the tips to display (limited by displayedTips)
+  const salesTips = filteredTips.slice(0, displayedTips);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -57,7 +143,12 @@ const Tips = () => {
                   <p className="text-brand-dark/70 mb-4">
                     Get custom-tailored sales tips and script suggestions based on your industry, target audience, and improvement areas.
                   </p>
-                  <Button className="btn-primary">Generate Personalized Tips</Button>
+                  <Button 
+                    className="btn-primary"
+                    onClick={handleGeneratePersonalizedTips}
+                  >
+                    Generate Personalized Tips
+                  </Button>
                 </div>
                 <div className="md:w-1/3 flex justify-center">
                   <div className="bg-brand-green/20 rounded-full p-6 w-24 h-24 flex items-center justify-center">
@@ -77,32 +168,54 @@ const Tips = () => {
                 type="text"
                 placeholder="Search for tips or scripts..."
                 className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-green"
+                value={searchQuery}
+                onChange={handleSearch}
               />
             </div>
             
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="rounded-full text-sm" size="sm">All Tips</Button>
-              <Button variant="outline" className="rounded-full text-sm" size="sm">Objection Handling</Button>
-              <Button variant="outline" className="rounded-full text-sm" size="sm">Opening Lines</Button>
-              <Button variant="outline" className="rounded-full text-sm" size="sm">Value Proposition</Button>
-              <Button variant="outline" className="rounded-full text-sm" size="sm">Closing Techniques</Button>
+              {filterCategories.map((filter) => (
+                <Button 
+                  key={filter}
+                  variant={activeFilter === filter ? "default" : "outline"} 
+                  className={`rounded-full text-sm ${activeFilter === filter ? 'bg-brand-green hover:bg-brand-green/90' : ''}`}
+                  size="sm"
+                  onClick={() => handleFilterClick(filter)}
+                >
+                  {filter}
+                </Button>
+              ))}
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {salesTips.map((tip, index) => (
-              <AISuggestionCard
-                key={index}
-                title={tip.title}
-                description={tip.description}
-                type={tip.type as 'tip' | 'script'}
-              />
-            ))}
-          </div>
+          {salesTips.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {salesTips.map((tip, index) => (
+                <AISuggestionCard
+                  key={index}
+                  title={tip.title}
+                  description={tip.description}
+                  type={tip.type as 'tip' | 'script'}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium text-gray-700">No matching tips found</h3>
+              <p className="text-gray-500 mt-2">Try adjusting your search or filter</p>
+            </div>
+          )}
           
-          <div className="mt-8 text-center">
-            <Button variant="outline">Load More Tips</Button>
-          </div>
+          {filteredTips.length > displayedTips && (
+            <div className="mt-8 text-center">
+              <Button 
+                variant="outline"
+                onClick={handleLoadMore}
+              >
+                Load More Tips
+              </Button>
+            </div>
+          )}
         </div>
       </main>
       
