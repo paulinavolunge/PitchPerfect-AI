@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
@@ -36,7 +35,7 @@ const CTASection = () => {
               <Button className="btn-primary">Start Free Trial</Button>
               <Button 
                 variant="outline" 
-                className="text-white border-brand-blue hover:bg-brand-blue/20 hover:text-white transition-colors duration-300"
+                className="text-white border-brand-blue hover:bg-brand-blue/20 hover:text-white transition-colors duration-300 px-8 py-3 rounded-full"
               >
                 Book a Demo
               </Button>
@@ -84,4 +83,3 @@ const CTASection = () => {
 };
 
 export default CTASection;
-
