@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 
 const features = [
   "Real-time voice analysis",
-  "Personalized improvement tips",
+  "Personalized improvement tips", 
   "Progress tracking dashboard",
   "AI-powered feedback"
 ];
@@ -33,7 +34,10 @@ const CTASection = () => {
             
             <div className="flex flex-wrap gap-4">
               <Button className="btn-primary">Start Free Trial</Button>
-              <Button variant="outline" className="text-white border-white hover:bg-white/10">
+              <Button 
+                variant="outline" 
+                className="text-white border-brand-blue hover:bg-brand-blue/20 hover:text-white transition-colors duration-300"
+              >
                 Book a Demo
               </Button>
             </div>
@@ -80,3 +84,4 @@ const CTASection = () => {
 };
 
 export default CTASection;
+
