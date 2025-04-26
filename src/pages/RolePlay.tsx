@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
@@ -55,6 +56,16 @@ const RolePlay = () => {
 
   const handleScriptSubmit = (script: string) => {
     setUserScript(script);
+    // If user uploaded a script directly, also transition to practice mode
+    if (!isScenarioSelected) {
+      setIsScenarioSelected(true);
+      setScenario({
+        difficulty: 'Custom',
+        objection: 'Custom',
+        industry: 'Custom',
+        custom: 'Custom Script'
+      });
+    }
     toast({
       title: "Script Ready",
       description: "Your sales script has been saved. Let's practice!",
@@ -176,6 +187,7 @@ const RolePlay = () => {
                   scenario={scenario} 
                   voiceStyle={voiceStyle}
                   volume={volume}
+                  userScript={userScript}
                 />
               </div>
               {userScript && (

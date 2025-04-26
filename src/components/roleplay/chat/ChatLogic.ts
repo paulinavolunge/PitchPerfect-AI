@@ -1,3 +1,4 @@
+
 interface Scenario {
   difficulty: string;
   objection: string;
@@ -38,16 +39,28 @@ export const generateAIResponse = (userInput: string, scenario: Scenario, userSc
   const lowerInput = userInput.toLowerCase();
   const persona = getAIPersona();
   
+  // If we have a user script, check it for relevant content
   if (userScript) {
-    const scriptLines = userScript.split('\n').map(line => line.toLowerCase());
-    const relevantLine = scriptLines.find(line => 
-      line.includes(lowerInput.substring(0, 10))
-    );
+    try {
+      const scriptLines = userScript.split('\n').filter(line => line.trim().length > 0);
+      
+      // Look for any script lines that might be related to the user's input
+      const relevantLines = scriptLines.filter(line => {
+        const lowerLine = line.toLowerCase();
+        // Check if any significant words from user input are in this line
+        const words = lowerInput.split(' ').filter(word => word.length > 4);
+        return words.some(word => lowerLine.includes(word));
+      });
 
-    if (relevantLine) {
-      return `${persona}: I see you're following your script. Let me challenge that point: ${
-        generateObjection(relevantLine)
-      }`;
+      if (relevantLines.length > 0) {
+        // Pick a random relevant line to respond to
+        const randomLine = relevantLines[Math.floor(Math.random() * relevantLines.length)];
+        return `${persona}: I see you're following your script. Let me challenge that point: ${
+          generateObjection(randomLine)
+        }`;
+      }
+    } catch (error) {
+      console.error("Error processing script:", error);
     }
   }
 

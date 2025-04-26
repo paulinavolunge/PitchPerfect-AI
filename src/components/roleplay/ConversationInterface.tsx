@@ -1,8 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
+import { useToast } from "@/hooks/use-toast";
 import { getScenarioIntro, generateAIResponse } from './chat/ChatLogic';
+
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+}
 
 interface ConversationInterfaceProps {
   mode: 'voice' | 'text' | 'hybrid';
@@ -17,13 +25,6 @@ interface ConversationInterfaceProps {
   userScript?: string | null;
 }
 
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
-
 const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   mode,
   scenario,
@@ -32,72 +33,73 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   userScript
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const scenarioIntro = getScenarioIntro(scenario, getAIPersona);
-    
-    setTimeout(() => {
-      setMessages([
-        {
-          id: '1',
-          text: scenarioIntro,
-          sender: 'ai',
-          timestamp: new Date()
-        }
-      ]);
-      
-      if (mode !== 'text') {
-        setIsAISpeaking(true);
-        setTimeout(() => setIsAISpeaking(false), 5000);
-      }
-    }, 800);
-  }, [scenario, mode]);
+    // Initialize with AI greeting
+    const greeting = getScenarioIntro(scenario, getAIPersona);
+    setMessages([
+      {
+        id: `ai-${Date.now()}`,
+        text: greeting,
+        sender: 'ai',
+        timestamp: new Date(),
+      },
+    ]);
+  }, [scenario]);
 
   const getAIPersona = () => {
-    const personas = {
-      friendly: "Alex",
-      assertive: "Jordan",
-      skeptical: "Casey",
-      rushed: "Morgan"
+    const styles = {
+      friendly: 'Alex',
+      assertive: 'Jordan',
+      skeptical: 'Morgan',
+      rushed: 'Taylor',
     };
-    return personas[voiceStyle];
+    return styles[voiceStyle] || 'Customer';
   };
 
-  const handleSendMessage = (inputText: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText,
+  const handleSendMessage = (text: string) => {
+    // Add user message
+    const userMessage = {
+      id: `user-${Date.now()}`,
+      text: text,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
     
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     
+    // Simulate thinking delay
     setTimeout(() => {
-      const aiResponse = generateAIResponse(inputText, scenario, userScript, getAIPersona);
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+      // Generate AI response
+      const aiResponse = generateAIResponse(text, scenario, userScript || null, getAIPersona);
+      
+      const aiMessage = {
+        id: `ai-${Date.now()}`,
         text: aiResponse,
         sender: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
       
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
       
-      if (mode !== 'text') {
-        setIsAISpeaking(true);
-        const wordCount = aiResponse.split(' ').length;
-        const speechDuration = Math.min(Math.max(wordCount * 300, 1500), 8000);
-        setTimeout(() => setIsAISpeaking(false), speechDuration);
+      if (volume > 0 && mode !== 'text') {
+        // Mock AI speaking for now
+        toast({
+          title: "Voice feedback",
+          description: "AI is responding with voice...",
+          duration: 3000,
+        });
       }
-    }, 1200);
+    }, 1000);
   };
 
   return (
-    <div className="flex flex-col h-[600px]">
-      <MessageList messages={messages} isAISpeaking={isAISpeaking} />
+    <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden">
+      <MessageList messages={messages} />
       <ChatInput mode={mode} onSendMessage={handleSendMessage} />
+      <div ref={messagesEndRef} />
     </div>
   );
 };
