@@ -8,7 +8,7 @@ interface Scenario {
 
 export const getScenarioIntro = (scenario: Scenario, getAIPersona: () => string): string => {
   if (scenario.custom) {
-    return `${getAIPersona()}: Hello! I'm ready to roleplay your custom scenario about ${scenario.custom}. How can I help you today?`;
+    return `${getAIPersona()}: Hello! I'm ready to roleplay your custom scenario. I'll respond to your script points as a potential client. Let's begin!`;
   }
   
   const intros = {
@@ -41,6 +41,8 @@ export const generateAIResponse = (userInput: string, scenario: Scenario, userSc
   
   // If we have a user script, check it for relevant content
   if (userScript) {
+    console.log("Using user script for response generation:", userScript.substring(0, 100) + "...");
+    
     try {
       const scriptLines = userScript.split('\n').filter(line => line.trim().length > 0);
       
@@ -58,12 +60,19 @@ export const generateAIResponse = (userInput: string, scenario: Scenario, userSc
         return `${persona}: I see you're following your script. Let me challenge that point: ${
           generateObjection(randomLine)
         }`;
+      } else {
+        // If no direct match, respond to general script content
+        const randomScriptLine = scriptLines[Math.floor(Math.random() * scriptLines.length)];
+        return `${persona}: Regarding your sales approach, I have some thoughts: ${
+          generateObjection(randomScriptLine || "your sales pitch")
+        }`;
       }
     } catch (error) {
       console.error("Error processing script:", error);
     }
   }
 
+  // Standard responses if no script or error processing script
   if (lowerInput.includes('price') || lowerInput.includes('cost') || lowerInput.includes('expensive')) {
     if (scenario.objection === 'Price') {
       return `${persona}: I understand your concern about the price. Our solution costs more because we deliver 30% more value through our advanced features. Many customers find they recoup the investment within 6 months through increased efficiency. Would you like me to show you how the ROI calculation works for businesses like yours?`;
@@ -97,11 +106,11 @@ export const generateAIResponse = (userInput: string, scenario: Scenario, userSc
 
 const generateObjection = (scriptLine: string): string => {
   const objections = [
-    "That sounds good in theory, but how does it work in practice?",
-    "I've heard similar promises before. What makes your solution different?",
-    "That's interesting, but I'm not sure it addresses our specific needs.",
-    "Can you provide some concrete examples of how this has worked for others?",
-    "I understand what you're saying, but the timing isn't right for us."
+    "That sounds good in theory, but how does it work in practice? Can you give me a specific example?",
+    "I've heard similar promises before from your competitors. What makes your solution different?",
+    "That's interesting, but I'm not sure it addresses our specific needs. Our situation is unique because...",
+    "Can you provide some concrete examples of how this has worked for others in my industry?",
+    "I understand what you're saying, but the timing isn't right for us. We're in the middle of another project."
   ];
   
   return objections[Math.floor(Math.random() * objections.length)];

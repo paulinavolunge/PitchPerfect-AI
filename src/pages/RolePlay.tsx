@@ -80,7 +80,12 @@ const RolePlay = () => {
         <div className="container mx-auto px-4">
           {!isScenarioSelected ? (
             <div className="space-y-8">
+              <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 className="text-xl font-semibold mb-4 text-center text-brand-dark">Choose a scenario or upload your script to start practicing</h2>
+              </div>
+              
               <ScenarioSelector onSelectScenario={handleScenarioSelect} />
+              
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-xl font-semibold mb-4 text-brand-dark">Upload Your Script</h2>
                 <ScriptUpload onScriptSubmit={handleScriptSubmit} />

@@ -48,7 +48,19 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         timestamp: new Date(),
       },
     ]);
+    
+    // Scroll to bottom when messages change
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [scenario]);
+
+  useEffect(() => {
+    // Scroll to bottom when messages change
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const getAIPersona = () => {
     const styles = {

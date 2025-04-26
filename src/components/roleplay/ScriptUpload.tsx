@@ -18,11 +18,27 @@ const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptSubmit }) => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const text = e.target?.result as string;
-        setScript(text);
+        try {
+          const text = e.target?.result as string;
+          setScript(text);
+          toast({
+            title: "Script Uploaded",
+            description: "Your sales script has been loaded successfully.",
+          });
+        } catch (error) {
+          console.error("Error reading file:", error);
+          toast({
+            title: "Error",
+            description: "Failed to read the uploaded script.",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.onerror = () => {
         toast({
-          title: "Script Uploaded",
-          description: "Your sales script has been loaded successfully.",
+          title: "Error",
+          description: "Failed to read the uploaded script.",
+          variant: "destructive",
         });
       };
       reader.readAsText(file);
@@ -36,6 +52,12 @@ const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptSubmit }) => {
       toast({
         title: "Script Saved",
         description: "Your script is ready for practice.",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Please enter or upload a script first.",
+        variant: "destructive",
       });
     }
   };
