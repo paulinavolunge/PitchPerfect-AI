@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload } from 'lucide-react';
+import { Upload, CheckCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ScriptUploadProps {
@@ -11,6 +11,7 @@ interface ScriptUploadProps {
 
 const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptSubmit }) => {
   const [script, setScript] = useState('');
+  const [isScriptUploaded, setIsScriptUploaded] = useState(false);
   const { toast } = useToast();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,6 +22,7 @@ const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptSubmit }) => {
         try {
           const text = e.target?.result as string;
           setScript(text);
+          setIsScriptUploaded(true);
           toast({
             title: "Script Uploaded",
             description: "Your sales script has been loaded successfully.",
@@ -53,6 +55,7 @@ const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptSubmit }) => {
         title: "Script Saved",
         description: "Your script is ready for practice.",
       });
+      setIsScriptUploaded(false);
     } else {
       toast({
         title: "Error",
@@ -81,6 +84,12 @@ const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptSubmit }) => {
             Upload Script
           </Button>
         </label>
+        {isScriptUploaded && (
+          <div className="flex items-center text-green-600 font-medium">
+            <CheckCircle size={20} className="mr-2" />
+            Script uploaded successfully!
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
