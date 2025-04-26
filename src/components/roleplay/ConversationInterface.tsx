@@ -33,6 +33,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   userScript
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +62,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   const handleSendMessage = (text: string) => {
     // Add user message
-    const userMessage = {
+    const userMessage: Message = {
       id: `user-${Date.now()}`,
       text: text,
       sender: 'user',
@@ -75,7 +76,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       // Generate AI response
       const aiResponse = generateAIResponse(text, scenario, userScript || null, getAIPersona);
       
-      const aiMessage = {
+      setIsAISpeaking(true);
+      
+      const aiMessage: Message = {
         id: `ai-${Date.now()}`,
         text: aiResponse,
         sender: 'ai',
@@ -91,13 +94,20 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           description: "AI is responding with voice...",
           duration: 3000,
         });
+        
+        // Simulate AI finishing speaking after 3 seconds
+        setTimeout(() => {
+          setIsAISpeaking(false);
+        }, 3000);
+      } else {
+        setIsAISpeaking(false);
       }
     }, 1000);
   };
 
   return (
     <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden">
-      <MessageList messages={messages} />
+      <MessageList messages={messages} isAISpeaking={isAISpeaking} />
       <ChatInput mode={mode} onSendMessage={handleSendMessage} />
       <div ref={messagesEndRef} />
     </div>
