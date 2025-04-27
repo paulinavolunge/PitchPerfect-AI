@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,9 @@ import RolePlay from "./pages/RolePlay";
 import Subscription from "./pages/Subscription";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
+import About from "./pages/About";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,9 @@ const App = () => (
           <Route path="/roleplay" element={<RolePlay />} />
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/progress" element={<Progress />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
