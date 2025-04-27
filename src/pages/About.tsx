@@ -12,20 +12,23 @@ const About = () => {
         
         <div className="prose prose-lg max-w-4xl">
           <p className="text-lg mb-6">
-            PitchPerfect AI is revolutionizing the way sales professionals practice and perfect their pitches. 
-            Our AI-powered platform provides real-time feedback, personalized coaching, and interactive roleplay 
-            scenarios to help you develop and refine your sales skills.
+            PitchPerfect AI was created to empower sales professionals to practice and perfect 
+            their pitch delivery and objection handling in a real-world simulation — anytime, 
+            anywhere.
           </p>
           
           <p className="text-lg mb-6">
-            Founded by a team of sales veterans and AI specialists, we understand the challenges of mastering 
-            sales presentations. That's why we've created a platform that combines cutting-edge artificial 
-            intelligence with proven sales methodologies to help you close more deals with confidence.
+            Our platform offers lifelike AI roleplays through both voice and text, helping users 
+            build confidence, improve skills, and close more deals faster.
           </p>
           
-          <p className="text-lg">
-            Whether you're new to sales or a seasoned professional, PitchPerfect AI provides the tools and 
-            feedback you need to take your pitching skills to the next level.
+          <p className="text-lg mb-6">
+            Whether you're just starting out or sharpening your edge, PitchPerfect AI gives you 
+            a private space to learn, grow, and succeed.
+          </p>
+          
+          <p className="text-lg font-medium">
+            Practice smarter. Sell better. Become PitchPerfect.
           </p>
         </div>
       </main>
