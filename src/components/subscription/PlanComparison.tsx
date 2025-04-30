@@ -2,13 +2,19 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckIcon, XIcon } from 'lucide-react';
+import { CheckIcon, XIcon, Loader2 } from 'lucide-react';
 
 type PlanFeature = {
   name: string;
   freeIncluded: boolean;
   premiumIncluded: boolean;
   description?: string;
+};
+
+type PlanComparisonProps = {
+  isPremium: boolean;
+  onUpgradeClick: () => void;
+  isLoading: boolean;
 };
 
 const features: PlanFeature[] = [
@@ -62,11 +68,16 @@ const features: PlanFeature[] = [
   },
 ];
 
-const PlanComparison: React.FC = () => {
+const PlanComparison: React.FC<PlanComparisonProps> = ({ isPremium, onUpgradeClick, isLoading }) => {
   return (
     <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
       {/* Free Plan */}
-      <Card className="border border-gray-200 rounded-xl p-6 bg-white shadow-md">
+      <Card className={`border ${isPremium ? 'border-gray-200' : 'border-brand-green'} rounded-xl p-6 bg-white shadow-md relative`}>
+        {!isPremium && (
+          <div className="absolute -top-3 right-4 bg-brand-green text-white text-xs font-bold py-1 px-3 rounded-full">
+            CURRENT PLAN
+          </div>
+        )}
         <div className="text-center pb-6 border-b">
           <h2 className="text-xl font-bold text-brand-dark">Free Plan</h2>
           <div className="mt-4 text-3xl font-bold">$0</div>
@@ -76,7 +87,7 @@ const PlanComparison: React.FC = () => {
             className="mt-6 w-full"
             disabled
           >
-            Current Plan
+            {isPremium ? 'Available Features' : 'Current Plan'}
           </Button>
         </div>
         <ul className="mt-6 space-y-4">
@@ -102,18 +113,39 @@ const PlanComparison: React.FC = () => {
       </Card>
       
       {/* Premium Plan */}
-      <Card className="border-2 border-brand-green rounded-xl p-6 bg-white shadow-lg relative">
-        <div className="absolute -top-3 right-4 bg-brand-green text-white text-xs font-bold py-1 px-3 rounded-full">
-          RECOMMENDED
-        </div>
+      <Card className={`${isPremium ? 'border-2 border-brand-green' : 'border'} rounded-xl p-6 bg-white shadow-lg relative`}>
+        {isPremium && (
+          <div className="absolute -top-3 right-4 bg-brand-green text-white text-xs font-bold py-1 px-3 rounded-full">
+            CURRENT PLAN
+          </div>
+        )}
+        {!isPremium && (
+          <div className="absolute -top-3 right-4 bg-brand-green text-white text-xs font-bold py-1 px-3 rounded-full">
+            RECOMMENDED
+          </div>
+        )}
         <div className="text-center pb-6 border-b">
           <h2 className="text-xl font-bold text-brand-dark">Premium Plan</h2>
-          <div className="mt-4 text-3xl font-bold">$29<span className="text-lg text-muted-foreground">/month</span></div>
-          <p className="text-sm text-muted-foreground mt-2">Cancel anytime</p>
+          <div className="mt-4">
+            <span className="text-3xl font-bold">$9.99</span>
+            <span className="text-lg text-muted-foreground">/month</span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">Or $99/year (save 17%)</p>
           <Button 
             className="mt-6 w-full bg-brand-green hover:bg-brand-green/90"
+            onClick={onUpgradeClick}
+            disabled={isPremium || isLoading}
           >
-            Upgrade to Premium
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : isPremium ? (
+              'Current Plan'
+            ) : (
+              'Upgrade to Premium'
+            )}
           </Button>
         </div>
         <ul className="mt-6 space-y-4">

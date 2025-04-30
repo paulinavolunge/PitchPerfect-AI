@@ -1,18 +1,29 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Logo from './Logo';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Sun, Moon, LogIn, LogOut, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/context/AuthContext';
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator 
+} from '@/components/ui/dropdown-menu';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut, isPremium } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +36,15 @@ const Navbar = () => {
 
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleAuthAction = () => {
+    if (user) {
+      // User is logged in, show dropdown
+    } else {
+      // User is not logged in, redirect to login
+      navigate('/login');
+    }
   };
 
   return (
@@ -50,7 +70,7 @@ const Navbar = () => {
               Practice
             </Link>
             <Link to="/roleplay" className={`nav-link ${isActive('/roleplay') ? 'text-brand-green font-medium' : ''}`}>
-              Roleplay
+              {isPremium ? 'Roleplay' : <span className="flex items-center">Roleplay <span className="ml-1 text-xs bg-brand-green/20 text-brand-green px-1 rounded">PRO</span></span>}
             </Link>
             <Link to="/tips" className={`nav-link ${isActive('/tips') ? 'text-brand-green font-medium' : ''}`}>
               AI Tips
@@ -58,6 +78,11 @@ const Navbar = () => {
             <Link to="/subscription" className={`nav-link ${isActive('/subscription') ? 'text-brand-green font-medium' : ''}`}>
               Pricing
             </Link>
+            {!isPremium && user && (
+              <Link to="/subscription" className="nav-link text-brand-green font-medium">
+                Upgrade
+              </Link>
+            )}
             <Button 
               variant="ghost" 
               size="icon"
@@ -80,7 +105,40 @@ const Navbar = () => {
           </div>
         )}
         
-        <Button className="btn-primary hidden md:flex animate-fade-in">Get Started</Button>
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2">
+                <User size={20} />
+                <span className="hidden sm:inline">{user.email?.split('@')[0]}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                Dashboard
+              </DropdownMenuItem>
+              {isPremium && (
+                <DropdownMenuItem className="flex items-center">
+                  <span className="mr-2">Premium</span>
+                  <span className="ml-auto text-xs bg-brand-green/20 text-brand-green px-1 rounded">PRO</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => navigate('/subscription')}>
+                {isPremium ? 'Manage Subscription' : 'Upgrade to Premium'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut} className="text-red-500">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button className="btn-primary animate-fade-in" onClick={() => navigate('/login')}>
+            <LogIn className="mr-2 h-4 w-4" />
+            Sign In
+          </Button>
+        )}
       </div>
       
       {isMobile && isMenuOpen && (
@@ -112,7 +170,7 @@ const Navbar = () => {
               className={`p-2 rounded-lg ${isActive('/roleplay') ? 'bg-brand-blue/20 text-brand-green' : ''}`}
               onClick={() => setIsMenuOpen(false)}
             >
-              Roleplay
+              {isPremium ? 'Roleplay' : <span className="flex items-center justify-between">Roleplay <span className="ml-1 text-xs bg-brand-green/20 text-brand-green px-1 rounded">PRO</span></span>}
             </Link>
             <Link 
               to="/tips" 
@@ -128,6 +186,15 @@ const Navbar = () => {
             >
               Pricing
             </Link>
+            {!isPremium && user && (
+              <Link 
+                to="/subscription" 
+                className="p-2 rounded-lg bg-brand-green/10 text-brand-green font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Upgrade to Premium
+              </Link>
+            )}
             <div className="flex items-center justify-between mt-2 pt-2 border-t">
               <span className="text-sm">Theme</span>
               <Button 
@@ -138,9 +205,17 @@ const Navbar = () => {
                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </Button>
             </div>
-            <Button className="btn-primary w-full mt-2" onClick={() => setIsMenuOpen(false)}>
-              Get Started
-            </Button>
+            {user ? (
+              <Button variant="outline" className="w-full mt-2" onClick={() => { signOut(); setIsMenuOpen(false); }}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            ) : (
+              <Button className="btn-primary w-full mt-2" onClick={() => { navigate('/login'); setIsMenuOpen(false); }}>
+                <LogIn className="mr-2 h-4 w-4" />
+                Sign In
+              </Button>
+            )}
           </div>
         </div>
       )}

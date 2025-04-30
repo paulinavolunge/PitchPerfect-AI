@@ -8,10 +8,14 @@ import Testimonials from '@/components/Testimonials';
 import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, LogIn } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
+  const { user, isPremium } = useAuth();
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -20,22 +24,37 @@ const Index = () => {
         <section className="py-12 bg-gradient-to-b from-white to-brand-blue/10">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto">
-              <h2 className="text-3xl font-bold mb-6 text-brand-dark">New! AI Roleplay Practice</h2>
+              <h2 className="text-3xl font-bold mb-6 text-brand-dark">AI Roleplay Practice</h2>
               <p className="text-lg mb-8 text-brand-dark/70">
                 Practice your pitch in real-time with our advanced AI roleplay system. 
                 Choose between voice or text interaction and get instant feedback.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/roleplay">
-                  <Button className="btn-primary flex items-center gap-2">
-                    Try Roleplay Now <ArrowRight size={18} />
-                  </Button>
-                </Link>
-                <Link to="/subscription">
-                  <Button variant="outline" className="flex items-center gap-2">
-                    Go Premium 
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    {isPremium ? (
+                      <Button className="btn-primary flex items-center gap-2" onClick={() => navigate('/roleplay')}>
+                        Try Roleplay Now <ArrowRight size={18} />
+                      </Button>
+                    ) : (
+                      <Button className="btn-primary flex items-center gap-2" onClick={() => navigate('/subscription')}>
+                        Upgrade to Access <ArrowRight size={18} />
+                      </Button>
+                    )}
+                    <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate('/practice')}>
+                      Basic Practice
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button className="btn-primary flex items-center gap-2" onClick={() => navigate('/signup')}>
+                      Sign Up Free <ArrowRight size={18} />
+                    </Button>
+                    <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate('/login')}>
+                      <LogIn size={18} /> Sign In
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
