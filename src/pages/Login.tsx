@@ -31,6 +31,22 @@ const Login = () => {
     }
   }, [user, navigate, location]);
 
+  useEffect(() => {
+    // Listen for auth errors
+    const handleAuthChange = async (event: string) => {
+      if (event === 'SIGNED_IN') {
+        // Clear any errors on successful sign in
+        setLoginError(null);
+      }
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
   const authAppearance = {
     theme: ThemeSupa,
     style: {
@@ -43,15 +59,6 @@ const Login = () => {
         color: 'rgb(22 163 74)',
       },
     },
-  };
-
-  // Handle login errors
-  const handleAuthError = (error: any) => {
-    setLoginError(error.message);
-    // Check if the error is about unverified email
-    if (error.message.includes('Email not confirmed')) {
-      setLoginError('Please verify your email address before logging in.');
-    }
   };
 
   return (
@@ -91,9 +98,12 @@ const Login = () => {
                 view="sign_in"
                 showLinks={true}
                 redirectTo={`${window.location.origin}/dashboard`}
-                onSubmit={(event) => {
-                  // Clear any previous errors when user attempts to login again
-                  setLoginError(null);
+                onError={(error) => {
+                  setLoginError(error.message);
+                  // Check if the error is about unverified email
+                  if (error.message.includes('Email not confirmed')) {
+                    setLoginError('Please verify your email address before logging in.');
+                  }
                 }}
               />
               

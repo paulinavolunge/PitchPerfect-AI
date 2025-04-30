@@ -38,6 +38,22 @@ const Signup = () => {
     }
   }, [user, navigate]);
 
+  // Set up listener for auth state changes
+  useEffect(() => {
+    const handleAuthChange = (event: string) => {
+      if (event === 'USER_CREATED') {
+        setVerificationSent(true);
+        setSignupError(null);
+      }
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
   const authAppearance = {
     theme: ThemeSupa,
     style: {
@@ -50,21 +66,6 @@ const Signup = () => {
         color: 'rgb(22 163 74)',
       },
     },
-  };
-
-  // Handle form submission
-  const handleFormSubmit = (formData: any) => {
-    // Will be called when the form is submitted
-    if (formData.email) {
-      setVerificationSent(true);
-      setSignupError(null);
-    }
-  };
-
-  // Handle signup errors
-  const handleAuthError = (error: any) => {
-    setSignupError(error.message);
-    setVerificationSent(false);
   };
 
   return (
@@ -109,7 +110,10 @@ const Signup = () => {
                 queryParams={{
                   emailRedirectTo: `${window.location.origin}/dashboard`,
                 }}
-                onSubmit={handleFormSubmit}
+                onError={(error) => {
+                  setSignupError(error.message);
+                  setVerificationSent(false);
+                }}
               />
             </CardContent>
           </Card>
