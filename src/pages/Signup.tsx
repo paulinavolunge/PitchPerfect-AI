@@ -8,6 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -51,6 +53,13 @@ const Signup = () => {
               </Link>
             </p>
           </div>
+          
+          <Alert className="mt-6 bg-blue-50 border-blue-100">
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              To use this app, you need to provide your Supabase URL and anonymous key as environment variables.
+            </AlertDescription>
+          </Alert>
         </div>
       </main>
       <Footer />
