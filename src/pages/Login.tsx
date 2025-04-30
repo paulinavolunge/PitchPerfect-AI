@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/lib/supabase';
@@ -9,16 +9,27 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2, Mail } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+    
+    // Check for verification message in URL params
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('verified') === 'true') {
+      setVerificationMessage("Email verified successfully! You can now log in.");
+    }
+  }, [user, navigate, location]);
 
   const authAppearance = {
     theme: ThemeSupa,
@@ -44,6 +55,24 @@ const Login = () => {
             <p className="text-brand-dark/70 mt-2">Sign in to access your account</p>
           </div>
 
+          {verificationMessage && (
+            <Alert className="mb-6 bg-green-50 border-green-200">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <AlertDescription className="text-green-700">
+                {verificationMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {loginError && (
+            <Alert className="mb-6 bg-red-50 border-red-200">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              <AlertDescription className="text-red-700">
+                {loginError}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Card>
             <CardContent className="pt-6">
               <Auth
@@ -53,6 +82,13 @@ const Login = () => {
                 view="sign_in"
                 showLinks={true}
                 redirectTo={`${window.location.origin}/dashboard`}
+                onError={(error) => {
+                  setLoginError(error.message);
+                  // Check if the error is about unverified email
+                  if (error.message.includes('Email not confirmed')) {
+                    setLoginError('Please verify your email address before logging in.');
+                  }
+                }}
               />
               
               <div className="text-center mt-4">

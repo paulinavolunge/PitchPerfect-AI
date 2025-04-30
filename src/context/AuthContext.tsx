@@ -12,6 +12,7 @@ type AuthContextType = {
   isPremium: boolean;
   subscriptionTier: string | null;
   subscriptionEnd: string | null;
+  emailVerified: boolean;
   signOut: () => Promise<void>;
   refreshSubscription: () => Promise<void>;
 };
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPremium, setIsPremium] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [emailVerified, setEmailVerified] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -41,7 +43,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setSession(data.session);
           setUser(data.session?.user ?? null);
           
+          // Check if email is verified
           if (data.session?.user) {
+            setEmailVerified(data.session.user.email_confirmed_at !== null);
             refreshSubscription();
           }
         }
@@ -57,17 +61,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         
+        // Check if email is verified
         if (session?.user) {
+          setEmailVerified(session.user.email_confirmed_at !== null);
+          
+          // Show success toast when email is confirmed
+          if (event === 'SIGNED_IN' && session.user.email_confirmed_at) {
+            toast({
+              title: "Email verified",
+              description: "Your email has been successfully verified.",
+              variant: "success",
+            });
+          }
+          
           refreshSubscription();
         } else {
+          setEmailVerified(false);
           setIsPremium(false);
           setSubscriptionTier(null);
           setSubscriptionEnd(null);
         }
+        
+        setLoading(false);
       }
     );
 
@@ -121,6 +140,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isPremium,
       subscriptionTier,
       subscriptionEnd,
+      emailVerified,
       signOut,
       refreshSubscription,
     }}>
