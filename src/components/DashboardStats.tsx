@@ -95,17 +95,20 @@ const DashboardStats = () => {
         </CardHeader>
         <CardContent className="px-2">
           <ChartContainer className="aspect-[4/3]" config={chartConfig}>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={mockData.recentPitches}>
-                <XAxis dataKey="name" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" name="Pitches" fill="var(--color-pitch)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-            <ChartLegend>
-              <ChartLegendContent />
-            </ChartLegend>
+            {/* Fix: Wrap the ResponsiveContainer in a React.Fragment to make it a single React element */}
+            <React.Fragment>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={mockData.recentPitches}>
+                  <XAxis dataKey="name" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" name="Pitches" fill="var(--color-pitch)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              <ChartLegend>
+                <ChartLegendContent />
+              </ChartLegend>
+            </React.Fragment>
           </ChartContainer>
         </CardContent>
       </Card>

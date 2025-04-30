@@ -7,6 +7,7 @@ import HowItWorks from '@/components/HowItWorks';
 import Testimonials from '@/components/Testimonials';
 import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
+import NewsletterSignup from '@/components/NewsletterSignup';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, LogIn } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -71,6 +72,7 @@ const Index = () => {
         </section>
         <Features />
         <HowItWorks />
+        <NewsletterSignup />
         <Testimonials />
         <div id="cta-section">
           <CTASection activeSection={activeSection} />
