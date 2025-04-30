@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
@@ -15,6 +15,16 @@ import { useAuth } from '@/context/AuthContext';
 const Index = () => {
   const { user, isPremium } = useAuth();
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  
+  // Scroll to CTA section when Book Demo is clicked
+  const scrollToCTA = (section: string) => {
+    setActiveSection(section);
+    const ctaSection = document.getElementById('cta-section');
+    if (ctaSection) {
+      ctaSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -47,11 +57,11 @@ const Index = () => {
                   </>
                 ) : (
                   <>
-                    <Button className="btn-primary flex items-center gap-2" onClick={() => navigate('/signup')}>
-                      Sign Up Free <ArrowRight size={18} />
+                    <Button className="btn-primary flex items-center gap-2" onClick={() => scrollToCTA('trial')}>
+                      Start Free Trial <ArrowRight size={18} />
                     </Button>
-                    <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate('/login')}>
-                      <LogIn size={18} /> Sign In
+                    <Button variant="outline" className="flex items-center gap-2" onClick={() => scrollToCTA('demo')}>
+                      Book a Demo
                     </Button>
                   </>
                 )}
@@ -62,7 +72,9 @@ const Index = () => {
         <Features />
         <HowItWorks />
         <Testimonials />
-        <CTASection />
+        <div id="cta-section">
+          <CTASection activeSection={activeSection} />
+        </div>
       </main>
       <Footer />
     </div>
