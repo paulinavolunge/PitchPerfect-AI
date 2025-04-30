@@ -10,12 +10,12 @@ import { useAuth } from '@/context/AuthContext';
 
 const SuccessPage = () => {
   const navigate = useNavigate();
-  const { refreshSession } = useAuth();
+  const { refreshSubscription } = useAuth();
 
   useEffect(() => {
     // Refresh the session to update premium status
-    refreshSession();
-  }, [refreshSession]);
+    refreshSubscription();
+  }, [refreshSubscription]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
