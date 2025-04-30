@@ -40,10 +40,13 @@ const Signup = () => {
 
   // Set up listener for auth state changes
   useEffect(() => {
-    const handleAuthChange = (event: string) => {
+    const handleAuthChange = (event: string, session: any) => {
       if (event === 'USER_CREATED') {
         setVerificationSent(true);
         setSignupError(null);
+      } else if (event === 'SIGNUP' && session?.error) {
+        setSignupError(session.error.message);
+        setVerificationSent(false);
       }
     };
 
@@ -109,10 +112,6 @@ const Signup = () => {
                 magicLink={false}
                 queryParams={{
                   emailRedirectTo: `${window.location.origin}/dashboard`,
-                }}
-                onError={(error) => {
-                  setSignupError(error.message);
-                  setVerificationSent(false);
                 }}
               />
             </CardContent>

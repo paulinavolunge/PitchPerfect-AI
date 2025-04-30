@@ -33,10 +33,18 @@ const Login = () => {
 
   useEffect(() => {
     // Listen for auth errors
-    const handleAuthChange = async (event: string) => {
+    const handleAuthChange = async (event: string, session: any) => {
       if (event === 'SIGNED_IN') {
         // Clear any errors on successful sign in
         setLoginError(null);
+      } else if (event === 'USER_UPDATE' && session?.error) {
+        // Handle errors during login
+        setLoginError(session.error.message);
+        
+        // Check if the error is about unverified email
+        if (session.error.message.includes('Email not confirmed')) {
+          setLoginError('Please verify your email address before logging in.');
+        }
       }
     };
 
@@ -98,13 +106,6 @@ const Login = () => {
                 view="sign_in"
                 showLinks={true}
                 redirectTo={`${window.location.origin}/dashboard`}
-                onError={(error) => {
-                  setLoginError(error.message);
-                  // Check if the error is about unverified email
-                  if (error.message.includes('Email not confirmed')) {
-                    setLoginError('Please verify your email address before logging in.');
-                  }
-                }}
               />
               
               <div className="text-center mt-4">
