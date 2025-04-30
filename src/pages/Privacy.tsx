@@ -69,7 +69,7 @@ const Privacy = () => {
           <h2 className="text-2xl font-semibold mt-8 mb-4">Contact Us</h2>
           <p className="text-lg">
             If you have questions about our privacy practices or would like to exercise your rights,
-            please contact us at <a href="mailto:privacy@pitchperfect-ai.com" className="text-brand-green hover:underline">privacy@pitchperfect-ai.com</a>.
+            please contact us at <a href="mailto:info@pitchperfectai.ai" className="text-brand-green hover:underline">info@pitchperfectai.ai</a>.
           </p>
         </div>
       </main>
