@@ -76,7 +76,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   useEffect(() => {
     // Initialize with AI greeting
     const greeting = getScenarioIntro(scenario, getAIPersona);
-    const initialMessage = {
+    const initialMessage: Message = {
       id: `ai-${Date.now()}`,
       text: greeting,
       sender: 'ai',

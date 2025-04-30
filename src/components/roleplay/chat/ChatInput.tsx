@@ -12,6 +12,38 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Add SpeechRecognition type definitions
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+  error: any;
+}
+
+interface SpeechRecognitionError extends Event {
+  error: string;
+  message: string;
+}
+
+// Speech Recognition types
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionError) => void) | null;
+  onend: (() => void) | null;
+}
+
+// Declare global interfaces
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognition;
+    webkitSpeechRecognition?: new () => SpeechRecognition;
+  }
+}
+
 interface ChatInputProps {
   mode: 'voice' | 'text' | 'hybrid';
   onSendMessage: (text: string) => void;
@@ -27,30 +59,35 @@ const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
 
   useEffect(() => {
     // Initialize speech recognition
-    if (typeof window !== 'undefined' && 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
+    if (typeof window !== 'undefined' && 
+        ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      const SpeechRecognitionConstructor = window.SpeechRecognition || 
+                                          window.webkitSpeechRecognition;
+                                          
+      if (SpeechRecognitionConstructor) {
+        recognitionRef.current = new SpeechRecognitionConstructor();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
 
-      recognitionRef.current.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('');
-          
-        setInputText(transcript);
-      };
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          const transcript = Array.from(event.results)
+            .map(result => result[0])
+            .map(result => result.transcript)
+            .join('');
+            
+          setInputText(transcript);
+        };
 
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        setIsListening(false);
-        toast({
-          title: "Voice recognition error",
-          description: `Error: ${event.error}. Please try again or use text input.`,
-          variant: "destructive",
-        });
-      };
+        recognitionRef.current.onerror = (event: SpeechRecognitionError) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+          toast({
+            title: "Voice recognition error",
+            description: `Error: ${event.error}. Please try again or use text input.`,
+            variant: "destructive",
+          });
+        };
+      }
     }
 
     // Cleanup
