@@ -5,12 +5,21 @@ import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Mic, MicOff, Pause, Play, RefreshCcw } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import PremiumModal from '@/components/PremiumModal';
 
 const Practice = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const { isPremium } = useAuth();
   
   const toggleRecording = () => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+    
     if (isRecording) {
       setShowFeedback(true);
     }
@@ -175,6 +184,13 @@ const Practice = () => {
       </main>
       
       <Footer />
+
+      {/* Premium Modal */}
+      <PremiumModal 
+        open={showPremiumModal} 
+        onOpenChange={setShowPremiumModal} 
+        featureName="voice practice"
+      />
     </div>
   );
 };

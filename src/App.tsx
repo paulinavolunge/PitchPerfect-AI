@@ -20,6 +20,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import PasswordReset from "./pages/PasswordReset";
 import UpdatePassword from "./pages/UpdatePassword";
+import PremiumModal from "./components/PremiumModal";
+import { useState } from "react";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Premium route component
 const PremiumRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isPremium, loading } = useAuth();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -51,7 +54,16 @@ const PremiumRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!isPremium) {
-    return <Navigate to="/subscription" replace />;
+    return (
+      <>
+        <Navigate to="/subscription" replace />
+        <PremiumModal
+          open={true}
+          onOpenChange={() => {}}
+          featureName="premium features"
+        />
+      </>
+    );
   }
   
   return <>{children}</>;

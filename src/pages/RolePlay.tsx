@@ -8,6 +8,7 @@ import ConversationInterface from '@/components/roleplay/ConversationInterface';
 import { Volume2, Volume1, VolumeX } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
+import { useAuth } from "@/context/AuthContext";
 
 const RolePlay = () => {
   const [isScenarioSelected, setIsScenarioSelected] = useState(false);
@@ -26,6 +27,7 @@ const RolePlay = () => {
   const [volume, setVolume] = useState(70);
   const [userScript, setUserScript] = useState<string | null>(null);
   const { toast } = useToast();
+  const { isPremium } = useAuth();
 
   const handleScenarioSelect = (selectedScenario: typeof scenario) => {
     setScenario(selectedScenario);
@@ -72,6 +74,9 @@ const RolePlay = () => {
     });
   };
 
+  // This component is already wrapped with PremiumRoute in App.tsx
+  // so we assume the user is premium if they can access this page
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

@@ -4,6 +4,8 @@ import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
 import { useToast } from "@/hooks/use-toast";
 import { getScenarioIntro, generateAIResponse } from './chat/ChatLogic';
+import { useAuth } from '@/context/AuthContext';
+import PremiumModal from '@/components/PremiumModal';
 
 interface Message {
   id: string;
@@ -34,8 +36,23 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { isPremium } = useAuth();
+  const [actualMode, setActualMode] = useState<'voice' | 'text' | 'hybrid'>('text');
+
+  useEffect(() => {
+    // Check if trying to use voice features without premium
+    if (mode !== 'text' && !isPremium) {
+      setActualMode('text');
+      if (mode === 'voice' || mode === 'hybrid') {
+        setShowPremiumModal(true);
+      }
+    } else {
+      setActualMode(mode);
+    }
+  }, [mode, isPremium]);
 
   useEffect(() => {
     // Initialize with AI greeting
@@ -99,7 +116,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       setMessages((prev) => [...prev, aiMessage]);
       
-      if (volume > 0 && mode !== 'text') {
+      if (volume > 0 && actualMode !== 'text' && isPremium) {
         // Mock AI speaking for now
         toast({
           title: "Voice feedback",
@@ -118,11 +135,20 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden">
-      <MessageList messages={messages} isAISpeaking={isAISpeaking} />
-      <ChatInput mode={mode} onSendMessage={handleSendMessage} />
-      <div ref={messagesEndRef} />
-    </div>
+    <>
+      <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden">
+        <MessageList messages={messages} isAISpeaking={isAISpeaking} />
+        <ChatInput mode={actualMode} onSendMessage={handleSendMessage} />
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Premium Modal */}
+      <PremiumModal 
+        open={showPremiumModal} 
+        onOpenChange={setShowPremiumModal}
+        featureName="voice roleplay"
+      />
+    </>
   );
 };
 
