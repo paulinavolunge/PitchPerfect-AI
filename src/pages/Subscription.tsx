@@ -11,12 +11,13 @@ import { supabase } from '@/lib/supabase';
 import { Navigate } from 'react-router-dom';
 import { CheckIcon, XIcon } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Subscription = () => {
   const { toast } = useToast();
   const { user, isPremium, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [customerPortalUrl, setCustomerPortalUrl] = useState<string | null>(null);
+  const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
 
   useEffect(() => {
     if (user) {
@@ -37,7 +38,7 @@ const Subscription = () => {
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
-          price: 'monthly', // or 'yearly'
+          price: planType, // "monthly" or "yearly"
           successUrl: `${window.location.origin}/subscription?success=true`,
           cancelUrl: `${window.location.origin}/subscription?canceled=true`,
         }
@@ -133,12 +134,24 @@ const Subscription = () => {
                 You're on the {subscriptionTier} plan
               </div>
             )}
+
+            {!isPremium && (
+              <div className="mt-8 max-w-xs mx-auto">
+                <Tabs value={planType} onValueChange={(v) => setPlanType(v as "monthly" | "yearly")}>
+                  <TabsList className="grid grid-cols-2">
+                    <TabsTrigger value="monthly" className="text-sm">Monthly ($9.99/mo)</TabsTrigger>
+                    <TabsTrigger value="yearly" className="text-sm">Yearly ($99/yr)</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            )}
           </div>
           
           <PlanComparison 
             isPremium={isPremium} 
             onUpgradeClick={handleUpgradeClick} 
-            isLoading={isLoading} 
+            isLoading={isLoading}
+            planType={planType}
           />
           
           {isPremium && subscriptionEnd && (

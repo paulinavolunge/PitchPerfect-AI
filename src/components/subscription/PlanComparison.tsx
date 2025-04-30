@@ -15,6 +15,7 @@ type PlanComparisonProps = {
   isPremium: boolean;
   onUpgradeClick: () => void;
   isLoading: boolean;
+  planType: "monthly" | "yearly";
 };
 
 const features: PlanFeature[] = [
@@ -46,7 +47,7 @@ const features: PlanFeature[] = [
     name: 'Advanced AI Feedback', 
     freeIncluded: false, 
     premiumIncluded: true,
-    description: 'Get detailed feedback on your performance' 
+    description: 'Detailed feedback on your performance' 
   },
   { 
     name: 'Script Analytics', 
@@ -68,7 +69,7 @@ const features: PlanFeature[] = [
   },
 ];
 
-const PlanComparison: React.FC<PlanComparisonProps> = ({ isPremium, onUpgradeClick, isLoading }) => {
+const PlanComparison: React.FC<PlanComparisonProps> = ({ isPremium, onUpgradeClick, isLoading, planType }) => {
   return (
     <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
       {/* Free Plan */}
@@ -127,10 +128,19 @@ const PlanComparison: React.FC<PlanComparisonProps> = ({ isPremium, onUpgradeCli
         <div className="text-center pb-6 border-b">
           <h2 className="text-xl font-bold text-brand-dark">Premium Plan</h2>
           <div className="mt-4">
-            <span className="text-3xl font-bold">$9.99</span>
-            <span className="text-lg text-muted-foreground">/month</span>
+            {planType === "monthly" ? (
+              <>
+                <span className="text-3xl font-bold">$9.99</span>
+                <span className="text-lg text-muted-foreground">/month</span>
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-bold">$99</span>
+                <span className="text-lg text-muted-foreground">/year</span>
+                <p className="text-sm text-green-600 mt-1">Save 17% compared to monthly</p>
+              </>
+            )}
           </div>
-          <p className="text-sm text-muted-foreground mt-1">Or $99/year (save 17%)</p>
           <Button 
             className="mt-6 w-full bg-brand-green hover:bg-brand-green/90"
             onClick={onUpgradeClick}

@@ -50,29 +50,28 @@ serve(async (req) => {
       customerId = newCustomer.id;
     }
 
-    // Set price based on subscription type
-    const priceId = priceType === "yearly" ? "price_yearly" : "price_monthly";
+    // Define price IDs for monthly and yearly plans
+    // In production, these would come from environment variables
+    const MONTHLY_PRICE_ID = Deno.env.get("STRIPE_MONTHLY_PRICE_ID") || "price_monthly";
+    const YEARLY_PRICE_ID = Deno.env.get("STRIPE_YEARLY_PRICE_ID") || "price_yearly";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            product_data: { 
-              name: priceType === "yearly" ? "PitchPerfect AI Premium (Annual)" : "PitchPerfect AI Premium (Monthly)"
-            },
-            unit_amount: priceType === "yearly" ? 9900 : 999,
-            recurring: { 
-              interval: priceType === "yearly" ? "year" : "month"
-            },
-          },
+          price: priceType === "yearly" ? YEARLY_PRICE_ID : MONTHLY_PRICE_ID,
           quantity: 1,
         },
       ],
       mode: "subscription",
       success_url: successUrl,
       cancel_url: cancelUrl,
+      // Add metadata to track the subscription
+      metadata: {
+        user_id: user.id,
+        email: user.email,
+        plan: priceType
+      }
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
