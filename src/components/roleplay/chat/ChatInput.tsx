@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Mic, MicOff, Send } from 'lucide-react';
@@ -23,6 +23,47 @@ const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { toast } = useToast();
   const { isPremium } = useAuth();
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    // Initialize speech recognition
+    if (typeof window !== 'undefined' && 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+          
+        setInputText(transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+        toast({
+          title: "Voice recognition error",
+          description: `Error: ${event.error}. Please try again or use text input.`,
+          variant: "destructive",
+        });
+      };
+    }
+
+    // Cleanup
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        if (isListening) {
+          recognitionRef.current.stop();
+        }
+      }
+    };
+  }, [toast]);
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
@@ -44,26 +85,40 @@ const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
     }
     
     if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       setIsListening(false);
       toast({
         title: "Voice recording stopped",
-        description: "Please speak clearly when recording.",
+        description: "Your voice has been processed into text.",
         variant: "default",
       });
     } else {
-      setIsListening(true);
-      toast({
-        title: "Listening...",
-        description: "Speak now. Your voice will be processed into text.",
-        variant: "default",
-      });
-      
-      // Mock voice recognition for now
-      setTimeout(() => {
-        const mockRecognizedText = "I understand your concerns about pricing, but I believe our solution offers exceptional value compared to alternatives.";
-        setInputText(mockRecognizedText);
-        setIsListening(false);
-      }, 4000);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+          setIsListening(true);
+          toast({
+            title: "Listening...",
+            description: "Speak now. Your voice will be processed into text.",
+            variant: "default",
+          });
+        } catch (error) {
+          console.error('Speech recognition error:', error);
+          toast({
+            title: "Voice recognition error",
+            description: "Could not start voice recognition. Please try again.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Voice recognition not supported",
+          description: "Your browser does not support voice recognition. Please use text input.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

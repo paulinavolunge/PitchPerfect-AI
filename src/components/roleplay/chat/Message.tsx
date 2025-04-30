@@ -19,7 +19,8 @@ const Message: React.FC<MessageProps> = ({ text, sender, timestamp, isLatestAIMe
           "max-w-[80%] rounded-lg p-3 shadow-sm transition-all",
           sender === 'user'
             ? 'bg-brand-blue text-white'
-            : 'bg-white text-brand-dark border border-gray-100'
+            : 'bg-white text-brand-dark border border-gray-100',
+          isAISpeaking && isLatestAIMessage && sender === 'ai' && 'border-brand-blue'
         )}
       >
         <p className="text-sm md:text-base">{text}</p>

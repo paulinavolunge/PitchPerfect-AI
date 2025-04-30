@@ -5,10 +5,12 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
-import { Volume2, Volume1, VolumeX } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Mic, MessageSquare, Airplay } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
 import { useAuth } from "@/context/AuthContext";
+import { Toggle } from "@/components/ui/toggle";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const RolePlay = () => {
   const [isScenarioSelected, setIsScenarioSelected] = useState(false);
@@ -74,6 +76,23 @@ const RolePlay = () => {
     });
   };
 
+  const handleModeChange = (newMode: 'voice' | 'text' | 'hybrid') => {
+    if (!isPremium && (newMode === 'voice' || newMode === 'hybrid')) {
+      toast({
+        title: "Premium Feature",
+        description: "Voice features require a premium account. Please upgrade to access.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setVoiceMode(newMode);
+    toast({
+      title: "Mode Changed",
+      description: `Interaction mode set to ${newMode}.`,
+    });
+  };
+  
   // This component is already wrapped with PremiumRoute in App.tsx
   // so we assume the user is premium if they can access this page
   
@@ -164,31 +183,48 @@ const RolePlay = () => {
                     </span>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setVoiceMode('voice')}
-                      className={voiceMode === 'voice' ? "bg-brand-blue/20 text-brand-dark" : ""}
-                    >
-                      Voice
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setVoiceMode('text')}
-                      className={voiceMode === 'text' ? "bg-brand-blue/20 text-brand-dark" : ""}
-                    >
-                      Text
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setVoiceMode('hybrid')}
-                      className={voiceMode === 'hybrid' ? "bg-brand-blue/20 text-brand-dark" : ""}
-                    >
-                      Hybrid
-                    </Button>
+                  <div className="flex items-center space-x-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Toggle 
+                          pressed={voiceMode === 'voice'} 
+                          onClick={() => handleModeChange('voice')}
+                          aria-label="Voice mode"
+                          className="data-[state=on]:bg-brand-blue data-[state=on]:text-white"
+                        >
+                          <Mic size={18} />
+                        </Toggle>
+                      </TooltipTrigger>
+                      <TooltipContent>Voice only</TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Toggle 
+                          pressed={voiceMode === 'text'} 
+                          onClick={() => handleModeChange('text')}
+                          aria-label="Text mode"
+                          className="data-[state=on]:bg-brand-blue data-[state=on]:text-white"
+                        >
+                          <MessageSquare size={18} />
+                        </Toggle>
+                      </TooltipTrigger>
+                      <TooltipContent>Text only</TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Toggle 
+                          pressed={voiceMode === 'hybrid'} 
+                          onClick={() => handleModeChange('hybrid')}
+                          aria-label="Hybrid mode"
+                          className="data-[state=on]:bg-brand-blue data-[state=on]:text-white"
+                        >
+                          <Airplay size={18} />
+                        </Toggle>
+                      </TooltipTrigger>
+                      <TooltipContent>Voice and text</TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
                 

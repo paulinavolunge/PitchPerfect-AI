@@ -6,6 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { getScenarioIntro, generateAIResponse } from './chat/ChatLogic';
 import { useAuth } from '@/context/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
+import VoiceSynthesis from '@/utils/VoiceSynthesis';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface Message {
   id: string;
@@ -37,10 +40,26 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [actualMode, setActualMode] = useState<'voice' | 'text' | 'hybrid'>('text');
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isPremium } = useAuth();
-  const [actualMode, setActualMode] = useState<'voice' | 'text' | 'hybrid'>('text');
+  const voiceSynthRef = useRef<VoiceSynthesis | null>(null);
+
+  useEffect(() => {
+    // Initialize voice synthesis
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      voiceSynthRef.current = VoiceSynthesis.getInstance();
+    }
+    
+    return () => {
+      // Stop speaking when component unmounts
+      if (voiceSynthRef.current) {
+        voiceSynthRef.current.stop();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Check if trying to use voice features without premium
@@ -57,14 +76,19 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   useEffect(() => {
     // Initialize with AI greeting
     const greeting = getScenarioIntro(scenario, getAIPersona);
-    setMessages([
-      {
-        id: `ai-${Date.now()}`,
-        text: greeting,
-        sender: 'ai',
-        timestamp: new Date(),
-      },
-    ]);
+    const initialMessage = {
+      id: `ai-${Date.now()}`,
+      text: greeting,
+      sender: 'ai',
+      timestamp: new Date(),
+    };
+    
+    setMessages([initialMessage]);
+    
+    // Speak the initial greeting if voice is enabled
+    if (voiceEnabled && isPremium && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
+      speakMessage(initialMessage.text);
+    }
     
     // Scroll to bottom when messages change
     if (messagesEndRef.current) {
@@ -89,6 +113,29 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     return styles[voiceStyle] || 'Customer';
   };
 
+  const speakMessage = async (text: string) => {
+    if (!voiceSynthRef.current) return;
+    
+    setIsAISpeaking(true);
+    
+    try {
+      const voiceVolume = volume / 100;
+      const persona = voiceStyle || 'friendly';
+      
+      await voiceSynthRef.current.speak({
+        text: text,
+        volume: voiceVolume,
+        rate: persona === 'rushed' ? 1.2 : 1,
+        pitch: persona === 'skeptical' ? 0.9 : persona === 'friendly' ? 1.1 : 1,
+        voice: persona
+      });
+    } catch (error) {
+      console.error('Error speaking:', error);
+    } finally {
+      setIsAISpeaking(false);
+    }
+  };
+
   const handleSendMessage = (text: string) => {
     // Add user message
     const userMessage: Message = {
@@ -100,12 +147,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     
     setMessages((prev) => [...prev, userMessage]);
     
+    // Stop any ongoing AI speech when user speaks
+    if (voiceSynthRef.current && isAISpeaking) {
+      voiceSynthRef.current.stop();
+      setIsAISpeaking(false);
+    }
+    
     // Simulate thinking delay
     setTimeout(() => {
       // Generate AI response
       const aiResponse = generateAIResponse(text, scenario, userScript || null, getAIPersona);
-      
-      setIsAISpeaking(true);
       
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
@@ -116,27 +167,49 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       setMessages((prev) => [...prev, aiMessage]);
       
-      if (volume > 0 && actualMode !== 'text' && isPremium) {
-        // Mock AI speaking for now
-        toast({
-          title: "Voice feedback",
-          description: "AI is responding with voice...",
-          duration: 3000,
-        });
-        
-        // Simulate AI finishing speaking after 3 seconds
-        setTimeout(() => {
-          setIsAISpeaking(false);
-        }, 3000);
-      } else {
-        setIsAISpeaking(false);
+      // Speak the AI response if voice is enabled
+      if (voiceEnabled && isPremium && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
+        speakMessage(aiResponse);
       }
     }, 1000);
+  };
+
+  const toggleVoice = () => {
+    if (!isPremium && !voiceEnabled) {
+      setShowPremiumModal(true);
+      return;
+    }
+    
+    setVoiceEnabled(!voiceEnabled);
+    
+    // Stop speaking if turning off
+    if (voiceEnabled && voiceSynthRef.current && isAISpeaking) {
+      voiceSynthRef.current.stop();
+      setIsAISpeaking(false);
+    }
+    
+    toast({
+      title: voiceEnabled ? "Voice responses disabled" : "Voice responses enabled",
+      description: voiceEnabled ? "AI will respond with text only." : "AI will respond with voice and text.",
+      duration: 3000,
+    });
   };
 
   return (
     <>
       <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden">
+        <div className="bg-white p-2 flex justify-end items-center border-b">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="voice-mode" className="text-sm">AI Voice</Label>
+            <Switch
+              id="voice-mode"
+              checked={voiceEnabled}
+              onCheckedChange={toggleVoice}
+              aria-label="Toggle voice responses"
+            />
+          </div>
+        </div>
+        
         <MessageList messages={messages} isAISpeaking={isAISpeaking} />
         <ChatInput mode={actualMode} onSendMessage={handleSendMessage} />
         <div ref={messagesEndRef} />
