@@ -8,8 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,6 +19,20 @@ const Login = () => {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  const authAppearance = {
+    theme: ThemeSupa,
+    style: {
+      button: {
+        borderRadius: '0.375rem',
+        backgroundColor: 'rgb(22 163 74)',
+        color: 'white',
+      },
+      anchor: {
+        color: 'rgb(22 163 74)',
+      },
+    },
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -35,13 +48,22 @@ const Login = () => {
             <CardContent className="pt-6">
               <Auth
                 supabaseClient={supabase}
-                appearance={{ theme: ThemeSupa }}
+                appearance={authAppearance}
                 providers={[]}
                 view="sign_in"
-                theme="light"
                 showLinks={true}
                 redirectTo={`${window.location.origin}/dashboard`}
               />
+              
+              <div className="text-center mt-4">
+                <Button 
+                  variant="link" 
+                  className="text-sm"
+                  onClick={() => navigate('/password-reset')}
+                >
+                  Forgot your password?
+                </Button>
+              </div>
             </CardContent>
           </Card>
           
@@ -53,13 +75,6 @@ const Login = () => {
               </Link>
             </p>
           </div>
-          
-          <Alert className="mt-6 bg-blue-50 border-blue-100">
-            <Info className="h-4 w-4" />
-            <AlertDescription className="text-sm">
-              To use this app, you need to provide your Supabase URL and anonymous key as environment variables.
-            </AlertDescription>
-          </Alert>
         </div>
       </main>
       <Footer />

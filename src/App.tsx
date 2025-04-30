@@ -18,6 +18,8 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import PasswordReset from "./pages/PasswordReset";
+import UpdatePassword from "./pages/UpdatePassword";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +68,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/password-reset" element={<PasswordReset />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
             <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
