@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             toast({
               title: "Email verified",
               description: "Your email has been successfully verified.",
-              variant: "success",
+              variant: "default", // Changed from "success" to "default"
             });
           }
           

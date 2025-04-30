@@ -14,6 +14,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+// Listen for auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event);
+  
+  // Handle authentication events
+  if (event === 'SIGNED_IN') {
+    console.log('User signed in');
+  } else if (event === 'SIGNED_OUT') {
+    console.log('User signed out');
+  } else if (event === 'USER_UPDATED') {
+    console.log('User updated');
+  } else if (event === 'PASSWORD_RECOVERY') {
+    console.log('Password recovery requested');
+  }
+});
+
 // Helper function to handle function invocation errors
 export const invokeSafeFunction = async (functionName: string, options?: any) => {
   try {

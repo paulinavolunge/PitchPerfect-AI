@@ -45,6 +45,15 @@ const Login = () => {
     },
   };
 
+  // Handle login errors
+  const handleAuthError = (error: any) => {
+    setLoginError(error.message);
+    // Check if the error is about unverified email
+    if (error.message.includes('Email not confirmed')) {
+      setLoginError('Please verify your email address before logging in.');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -82,12 +91,9 @@ const Login = () => {
                 view="sign_in"
                 showLinks={true}
                 redirectTo={`${window.location.origin}/dashboard`}
-                onError={(error) => {
-                  setLoginError(error.message);
-                  // Check if the error is about unverified email
-                  if (error.message.includes('Email not confirmed')) {
-                    setLoginError('Please verify your email address before logging in.');
-                  }
+                onSubmit={(event) => {
+                  // Clear any previous errors when user attempts to login again
+                  setLoginError(null);
                 }}
               />
               

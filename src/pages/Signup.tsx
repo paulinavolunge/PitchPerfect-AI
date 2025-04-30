@@ -52,6 +52,21 @@ const Signup = () => {
     },
   };
 
+  // Handle form submission
+  const handleFormSubmit = (formData: any) => {
+    // Will be called when the form is submitted
+    if (formData.email) {
+      setVerificationSent(true);
+      setSignupError(null);
+    }
+  };
+
+  // Handle signup errors
+  const handleAuthError = (error: any) => {
+    setSignupError(error.message);
+    setVerificationSent(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -94,17 +109,7 @@ const Signup = () => {
                 queryParams={{
                   emailRedirectTo: `${window.location.origin}/dashboard`,
                 }}
-                onError={(error) => {
-                  setSignupError(error.message);
-                  setVerificationSent(false);
-                }}
-                onSubmit={(formData) => {
-                  // Will be called when the form is submitted
-                  if (formData.email) {
-                    setVerificationSent(true);
-                    setSignupError(null);
-                  }
-                }}
+                onSubmit={handleFormSubmit}
               />
             </CardContent>
           </Card>
