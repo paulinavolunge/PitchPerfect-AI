@@ -8,7 +8,7 @@ import SubscriptionManagement from '@/components/subscription/SubscriptionManage
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { CheckIcon, XIcon } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,7 @@ const Subscription = () => {
   const { user, isPremium, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     if (user) {
@@ -93,24 +94,25 @@ const Subscription = () => {
 
   // Handle URL query parameters for success/cancel
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    if (query.get('success')) {
+    if (searchParams.get('success')) {
       toast({
         title: "Subscription successful!",
         description: "Thank you for subscribing to PitchPerfect AI Premium.",
       });
       refreshSubscription();
       // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (query.get('canceled')) {
+      searchParams.delete('success');
+      setSearchParams(searchParams);
+    } else if (searchParams.get('canceled')) {
       toast({
         title: "Subscription canceled",
         description: "Your subscription process was canceled.",
       });
       // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      searchParams.delete('canceled');
+      setSearchParams(searchParams);
     }
-  }, [toast, refreshSubscription]);
+  }, [toast, refreshSubscription, searchParams, setSearchParams]);
 
   if (!user) {
     return <Navigate to="/login" state={{ from: '/subscription' }} />;
@@ -164,6 +166,7 @@ const Subscription = () => {
                 onClick={handleManageSubscription} 
                 className="mt-2"
                 disabled={isLoading}
+                aria-label="Manage subscription"
               >
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Manage Subscription

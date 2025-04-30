@@ -64,6 +64,7 @@ const Practice = () => {
                         <Button
                           className={`rounded-full h-20 w-20 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-brand-green hover:bg-brand-green/90'}`}
                           onClick={toggleRecording}
+                          aria-label={isRecording ? "Stop recording" : "Start recording"}
                         >
                           {isRecording ? (
                             <MicOff size={32} />
@@ -80,11 +81,11 @@ const Practice = () => {
                       )}
                       
                       <div className="flex justify-center gap-4">
-                        <Button variant="outline" className="flex items-center gap-2">
+                        <Button variant="outline" className="flex items-center gap-2" aria-label="Play example">
                           <Play size={16} />
                           Example
                         </Button>
-                        <Button variant="outline" className="flex items-center gap-2">
+                        <Button variant="outline" className="flex items-center gap-2" aria-label="Pause recording">
                           <Pause size={16} />
                           Pause
                         </Button>

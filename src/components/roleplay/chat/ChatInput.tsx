@@ -73,6 +73,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
                   : 'bg-brand-green hover:bg-brand-green/90 text-white'
               }`}
               size="icon"
+              aria-label={isListening ? "Stop recording" : "Start recording"}
             >
               {isListening ? <MicOff size={18} /> : <Mic size={18} />}
             </Button>
@@ -95,6 +96,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
               disabled={!inputText.trim()}
               className="bg-brand-green hover:bg-brand-green/90 text-white rounded-full p-2"
               size="icon"
+              aria-label="Send message"
             >
               <Send size={18} />
             </Button>

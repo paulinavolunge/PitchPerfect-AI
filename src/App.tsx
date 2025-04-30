@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -44,6 +44,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const PremiumRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isPremium, loading } = useAuth();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const navigate = useNavigate();
   
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -59,7 +60,10 @@ const PremiumRoute = ({ children }: { children: React.ReactNode }) => {
         <Navigate to="/subscription" replace />
         <PremiumModal
           open={true}
-          onOpenChange={() => {}}
+          onOpenChange={() => {
+            setShowPremiumModal(false);
+            navigate("/subscription");
+          }}
           featureName="premium features"
         />
       </>
