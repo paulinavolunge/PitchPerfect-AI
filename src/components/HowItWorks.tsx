@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 
 const steps = [
   {
@@ -36,23 +36,23 @@ const HowItWorks = () => {
           </p>
         </div>
         
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center max-w-md mx-auto">
           {steps.map((step, index) => (
-            <div key={index} className="relative">
-              <div className="flex flex-col md:flex-row items-center gap-6 mb-12">
+            <div key={index} className="relative w-full">
+              <div className="flex flex-row items-center gap-6 mb-8">
                 <div className="bg-white rounded-full h-16 w-16 flex items-center justify-center shadow-md border border-gray-100">
                   <span className="text-xl font-bold text-brand-green">{step.number}</span>
                 </div>
                 
-                <div className="md:w-96 text-center md:text-left">
+                <div className="flex-1">
                   <h3 className="text-xl font-medium mb-2 text-brand-dark">{step.title}</h3>
                   <p className="text-brand-dark/70">{step.description}</p>
                 </div>
               </div>
               
               {index < steps.length - 1 && (
-                <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-6 text-brand-green">
-                  <ArrowRight className="rotate-90" size={24} />
+                <div className="flex justify-center w-full my-2">
+                  <ArrowDown className="text-brand-green" size={24} />
                 </div>
               )}
             </div>
