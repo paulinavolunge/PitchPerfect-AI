@@ -21,16 +21,32 @@ import Signup from "./pages/Signup";
 import PasswordReset from "./pages/PasswordReset";
 import UpdatePassword from "./pages/UpdatePassword";
 import PremiumModal from "./components/PremiumModal";
+import SuccessPage from "./pages/Success";
+import CancelPage from "./pages/Cancel";
 import { useState } from "react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      retry: 1,
+    },
+  },
+});
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-brand-blue">
+          <div className="h-8 w-8 rounded-full border-4 border-current border-r-transparent animate-spin"></div>
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    );
   }
   
   if (!user) {
@@ -47,7 +63,14 @@ const PremiumRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-brand-blue">
+          <div className="h-8 w-8 rounded-full border-4 border-current border-r-transparent animate-spin"></div>
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    );
   }
   
   if (!user) {
@@ -79,7 +102,7 @@ const App = () => (
       <TooltipProvider>
         <BrowserRouter>
           <Toaster />
-          <SonnerToaster />
+          <SonnerToaster position="top-right" />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -92,6 +115,8 @@ const App = () => (
             <Route path="/roleplay" element={<PremiumRoute><RolePlay /></PremiumRoute>} />
             <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+            <Route path="/success" element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
+            <Route path="/cancel" element={<ProtectedRoute><CancelPage /></ProtectedRoute>} />
             <Route path="/about" element={<About />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />

@@ -6,6 +6,11 @@ import { Mic, MicOff, Send } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ChatInputProps {
   mode: 'voice' | 'text' | 'hybrid';
@@ -43,12 +48,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
       toast({
         title: "Voice recording stopped",
         description: "Please speak clearly when recording.",
+        variant: "default",
       });
     } else {
       setIsListening(true);
       toast({
         title: "Listening...",
         description: "Speak now. Your voice will be processed into text.",
+        variant: "default",
       });
       
       // Mock voice recognition for now
@@ -62,21 +69,28 @@ const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
 
   return (
     <>
-      <div className="border-t p-4 bg-white">
+      <div className="border-t p-4 bg-white shadow-sm transition-all animate-fade-in">
         <div className="flex items-end gap-2">
           {(mode === 'voice' || mode === 'hybrid') && (
-            <Button
-              onClick={toggleListening}
-              className={`rounded-full p-2 ${
-                isListening
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-brand-green hover:bg-brand-green/90 text-white'
-              }`}
-              size="icon"
-              aria-label={isListening ? "Stop recording" : "Start recording"}
-            >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={toggleListening}
+                  className={`rounded-full p-2 transition-all ${
+                    isListening
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-brand-blue hover:bg-brand-blue/90 text-white'
+                  }`}
+                  size="icon"
+                  aria-label={isListening ? "Stop recording" : "Start recording"}
+                >
+                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isListening ? "Stop recording" : "Start voice input"}</p>
+              </TooltipContent>
+            </Tooltip>
           )}
           
           {(mode === 'text' || mode === 'hybrid') && (
@@ -85,32 +99,38 @@ const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-grow resize-none"
+              className="flex-grow resize-none border-brand-blue/20 focus:border-brand-blue/50 transition-all"
               rows={2}
             />
           )}
           
           {(mode === 'text' || mode === 'hybrid') && (
-            <Button
-              onClick={handleSendMessage}
-              disabled={!inputText.trim()}
-              className="bg-brand-green hover:bg-brand-green/90 text-white rounded-full p-2"
-              size="icon"
-              aria-label="Send message"
-            >
-              <Send size={18} />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!inputText.trim()}
+                  className="bg-brand-blue hover:bg-brand-blue/90 text-white rounded-full p-2 transition-all"
+                  size="icon"
+                  aria-label="Send message"
+                >
+                  <Send size={18} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Send message</p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
         
         {isListening && (
-          <div className="mt-2 text-center text-sm text-brand-green animate-pulse">
+          <div className="mt-2 text-center text-sm text-brand-blue animate-pulse">
             Listening... Speak clearly
           </div>
         )}
       </div>
 
-      {/* Premium Modal */}
       <PremiumModal 
         open={showPremiumModal} 
         onOpenChange={setShowPremiumModal}
