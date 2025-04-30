@@ -11,6 +11,8 @@ import ScriptUpload from '@/components/roleplay/ScriptUpload';
 import { useAuth } from "@/context/AuthContext";
 import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNavigate } from 'react-router-dom';
+import PremiumModal from "@/components/PremiumModal";
 
 const RolePlay = () => {
   const [isScenarioSelected, setIsScenarioSelected] = useState(false);
@@ -24,12 +26,21 @@ const RolePlay = () => {
     objection: '',
     industry: ''
   });
-  const [voiceMode, setVoiceMode] = useState<'voice' | 'text' | 'hybrid'>('hybrid');
+  const [voiceMode, setVoiceMode] = useState<'voice' | 'text' | 'hybrid'>('text');
   const [voiceStyle, setVoiceStyle] = useState<'friendly' | 'assertive' | 'skeptical' | 'rushed'>('friendly');
   const [volume, setVolume] = useState(70);
   const [userScript, setUserScript] = useState<string | null>(null);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { toast } = useToast();
   const { isPremium } = useAuth();
+  const navigate = useNavigate();
+
+  // Check if user is premium, if not show premium modal
+  useEffect(() => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
+    }
+  }, [isPremium]);
 
   const handleScenarioSelect = (selectedScenario: typeof scenario) => {
     setScenario(selectedScenario);
@@ -78,11 +89,7 @@ const RolePlay = () => {
 
   const handleModeChange = (newMode: 'voice' | 'text' | 'hybrid') => {
     if (!isPremium && (newMode === 'voice' || newMode === 'hybrid')) {
-      toast({
-        title: "Premium Feature",
-        description: "Voice features require a premium account. Please upgrade to access.",
-        variant: "destructive",
-      });
+      setShowPremiumModal(true);
       return;
     }
     
@@ -92,9 +99,6 @@ const RolePlay = () => {
       description: `Interaction mode set to ${newMode}.`,
     });
   };
-  
-  // This component is already wrapped with PremiumRoute in App.tsx
-  // so we assume the user is premium if they can access this page
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -191,6 +195,7 @@ const RolePlay = () => {
                           onClick={() => handleModeChange('voice')}
                           aria-label="Voice mode"
                           className="data-[state=on]:bg-brand-blue data-[state=on]:text-white"
+                          disabled={!isPremium}
                         >
                           <Mic size={18} />
                         </Toggle>
@@ -219,6 +224,7 @@ const RolePlay = () => {
                           onClick={() => handleModeChange('hybrid')}
                           aria-label="Hybrid mode"
                           className="data-[state=on]:bg-brand-blue data-[state=on]:text-white"
+                          disabled={!isPremium}
                         >
                           <Airplay size={18} />
                         </Toggle>
@@ -249,6 +255,19 @@ const RolePlay = () => {
       </main>
       
       <Footer />
+      
+      {/* Premium Modal */}
+      <PremiumModal 
+        open={showPremiumModal} 
+        onOpenChange={(isOpen) => {
+          setShowPremiumModal(isOpen);
+          if (!isOpen && !isPremium) {
+            // Redirect to subscription page if they close the modal but aren't premium
+            navigate("/subscription");
+          }
+        }}
+        featureName="AI roleplay practice"
+      />
     </div>
   );
 };

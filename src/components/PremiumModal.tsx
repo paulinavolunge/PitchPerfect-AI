@@ -1,85 +1,72 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Lock } from 'lucide-react';
+import { LockKeyhole } from 'lucide-react';
 
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  featureName?: string;
+  featureName: string;
 }
 
-const PremiumModal: React.FC<PremiumModalProps> = ({
-  open,
-  onOpenChange,
-  featureName = 'this feature',
-}) => {
+const PremiumModal = ({ open, onOpenChange, featureName }: PremiumModalProps) => {
   const navigate = useNavigate();
-  
+
   const handleUpgradeClick = () => {
     onOpenChange(false);
     navigate('/subscription');
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Lock size={20} className="text-amber-500" /> 
-            Premium Feature
-          </DialogTitle>
+          <div className="mx-auto bg-brand-green/10 p-3 rounded-full">
+            <LockKeyhole className="h-6 w-6 text-brand-green" />
+          </div>
+          <DialogTitle className="text-center pt-4">Premium Feature</DialogTitle>
+          <DialogDescription className="text-center">
+            {featureName.charAt(0).toUpperCase() + featureName.slice(1)} is a premium feature. Upgrade to access this and all other premium features.
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4 space-y-4">
-          <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-            <p className="text-center font-medium text-amber-800">
-              Unlock {featureName} with Premium
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <p className="text-center">
-              Get Real-Time Feedback + Voice Roleplay Practice
-            </p>
-            <ul className="space-y-2 mt-4">
-              <li className="flex items-start gap-2">
-                <div className="text-brand-green font-bold mt-0.5">•</div>
-                <p className="text-sm text-brand-dark/80">Unlimited voice roleplays with AI sales prospects</p>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="text-brand-green font-bold mt-0.5">•</div>
-                <p className="text-sm text-brand-dark/80">Deep-dive objection handling practice</p>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="text-brand-green font-bold mt-0.5">•</div>
-                <p className="text-sm text-brand-dark/80">Detailed performance analytics</p>
-              </li>
-            </ul>
-          </div>
+        <div className="py-4">
+          <h3 className="font-medium text-center mb-4">Premium Benefits</h3>
+          <ul className="space-y-2">
+            <li className="flex items-start">
+              <CheckIcon className="h-5 w-5 text-brand-green mr-2 flex-shrink-0 mt-0.5" />
+              <span>Voice interaction with AI roleplays</span>
+            </li>
+            <li className="flex items-start">
+              <CheckIcon className="h-5 w-5 text-brand-green mr-2 flex-shrink-0 mt-0.5" />
+              <span>Advanced objection tracking and analytics</span>
+            </li>
+            <li className="flex items-start">
+              <CheckIcon className="h-5 w-5 text-brand-green mr-2 flex-shrink-0 mt-0.5" />
+              <span>Access to all industry scenarios</span>
+            </li>
+            <li className="flex items-start">
+              <CheckIcon className="h-5 w-5 text-brand-green mr-2 flex-shrink-0 mt-0.5" />
+              <span>Unlimited practice sessions</span>
+            </li>
+          </ul>
         </div>
         
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+        <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="sm:mt-0 w-full sm:w-auto"
+            className="w-full sm:w-auto"
           >
             Maybe Later
           </Button>
           <Button 
             onClick={handleUpgradeClick}
-            className="bg-brand-green hover:bg-brand-green/90 text-white w-full sm:w-auto"
+            className="w-full sm:w-auto bg-brand-green hover:bg-brand-green/90"
           >
-            Upgrade to Premium
+            Upgrade Now
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -88,3 +75,22 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
 };
 
 export default PremiumModal;
+
+function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}

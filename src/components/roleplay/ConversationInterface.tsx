@@ -41,7 +41,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [actualMode, setActualMode] = useState<'voice' | 'text' | 'hybrid'>('text');
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isPremium } = useAuth();
@@ -70,6 +70,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       }
     } else {
       setActualMode(mode);
+      // Default voice to enabled when premium user selects voice/hybrid mode
+      if (isPremium && (mode === 'voice' || mode === 'hybrid')) {
+        setVoiceEnabled(true);
+      }
     }
   }, [mode, isPremium]);
 
@@ -206,6 +210,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
               checked={voiceEnabled}
               onCheckedChange={toggleVoice}
               aria-label="Toggle voice responses"
+              disabled={!isPremium}
             />
           </div>
         </div>

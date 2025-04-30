@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
@@ -7,8 +7,20 @@ import Footer from '@/components/Footer';
 import { ArrowRight } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
+import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
+import { useAuth } from '@/context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
+  const { user, refreshSubscription } = useAuth();
+  
+  useEffect(() => {
+    // Refresh subscription status when dashboard loads
+    if (user) {
+      refreshSubscription();
+    }
+  }, [user, refreshSubscription]);
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -16,6 +28,10 @@ const Dashboard = () => {
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-8 text-brand-dark">Your Dashboard</h1>
+          
+          <div className="mb-8">
+            <UserSubscriptionStatus />
+          </div>
           
           <DashboardStats />
           
@@ -59,8 +75,16 @@ const Dashboard = () => {
                   <p className="text-brand-dark/70 mb-6">
                     Ready to improve your pitch skills? Start a new practice session now.
                   </p>
-                  <Button className="btn-primary w-full mb-4">Start New Practice</Button>
-                  <Button variant="outline" className="w-full">Browse Scenarios</Button>
+                  <Link to="/practice">
+                    <Button className="w-full mb-4 bg-brand-green hover:bg-brand-green/90">
+                      Start New Practice
+                    </Button>
+                  </Link>
+                  <Link to="/roleplay">
+                    <Button variant="outline" className="w-full">
+                      Try Roleplay Scenarios
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
               
@@ -78,10 +102,12 @@ const Dashboard = () => {
                   type="script"
                 />
                 
-                <Button variant="outline" className="w-full flex items-center justify-center gap-2">
-                  View All Tips
-                  <ArrowRight size={16} />
-                </Button>
+                <Link to="/tips">
+                  <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+                    View All Tips
+                    <ArrowRight size={16} />
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
