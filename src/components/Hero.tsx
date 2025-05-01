@@ -45,9 +45,10 @@ const Hero = () => {
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
               </Button>
             </a>
-            <Link to="/subscription">
-              <Button variant="outline" className="btn-secondary">
-                Learn More
+            <Link to="/demo">
+              <Button variant="outline" className="btn-secondary flex items-center gap-2 group">
+                Play Demo
+                <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
               </Button>
             </Link>
           </motion.div>

@@ -23,6 +23,7 @@ import UpdatePassword from "./pages/UpdatePassword";
 import PremiumModal from "./components/PremiumModal";
 import SuccessPage from "./pages/Success";
 import CancelPage from "./pages/Cancel";
+import Demo from "./pages/Demo"; // Import the new Demo page
 import { useState } from "react";
 
 const queryClient = new QueryClient({
@@ -121,6 +122,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/demo" element={<Demo />} /> {/* Add the Demo route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
