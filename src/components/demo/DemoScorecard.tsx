@@ -1,6 +1,6 @@
-
 import React from 'react';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 
 interface ScoreData {
   overallScore: number;
@@ -14,6 +14,8 @@ interface ScoreData {
   feedback: string;
   strengths: string[];
   improvements: string[];
+  percentile?: number | null; // Make percentile optional
+  sessionCount?: number; // Add session count field
 }
 
 interface DemoScorecardProps {
@@ -26,7 +28,9 @@ const DemoScorecard: React.FC<DemoScorecardProps> = ({ scoreData }) => {
     categories,
     feedback,
     strengths,
-    improvements
+    improvements,
+    percentile,
+    sessionCount = 0 // Default to 0 if not provided
   } = scoreData;
   
   const getScoreColor = (score: number) => {
@@ -35,11 +39,33 @@ const DemoScorecard: React.FC<DemoScorecardProps> = ({ scoreData }) => {
     return 'text-red-500';
   };
   
+  // Render the percentile badge based on the session count
+  const renderPercentileBadge = () => {
+    // If there are fewer than 20 sessions or percentile is null/undefined, show "Great start!"
+    if (sessionCount < 20 || percentile === null || percentile === undefined) {
+      return (
+        <Badge variant="secondary" className="ml-2 bg-brand-blue/20 text-brand-blue">
+          <TrendingUp className="h-3 w-3 mr-1" /> Great start!
+        </Badge>
+      );
+    }
+    
+    // Otherwise show the actual percentile
+    return (
+      <Badge variant="secondary" className="ml-2 bg-brand-blue/20 text-brand-blue">
+        <TrendingUp className="h-3 w-3 mr-1" /> Top {percentile}%
+      </Badge>
+    );
+  };
+  
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-lg shadow-sm">
         <div className="text-center sm:text-left mb-4 sm:mb-0">
-          <h3 className="text-sm font-medium text-brand-dark/60">OVERALL SCORE</h3>
+          <div className="flex items-center">
+            <h3 className="text-sm font-medium text-brand-dark/60">OVERALL SCORE</h3>
+            {renderPercentileBadge()}
+          </div>
           <div className={`text-4xl font-bold ${getScoreColor(overallScore)}`}>
             {overallScore}/10
           </div>
