@@ -73,6 +73,10 @@ const Index = () => {
           </div>
         </section>
         
+        <section id="demo-sandbox">
+          {/* Placeholder for demo sandbox content */}
+        </section>
+        
         <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
           <Features />
         </Suspense>

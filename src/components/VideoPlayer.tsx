@@ -31,7 +31,7 @@ const VideoPlayer = ({ posterSrc, videoSrc, fallbackSrc, className = '' }: Video
           muted
           loop
           playsInline
-          loading="eager"
+          preload="none"
           poster={posterSrc}
         >
           <source src={videoSrc} type="video/mp4" />
