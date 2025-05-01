@@ -13,6 +13,8 @@ const Tips = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All Tips');
   const [displayedTips, setDisplayedTips] = useState(6);
+  const [appliedTips, setAppliedTips] = useState<string[]>([]);
+  const [activeScripts, setActiveScripts] = useState<{title: string, description: string}[]>([]);
 
   const allSalesTips = [
     {
@@ -114,6 +116,51 @@ const Tips = () => {
     });
   };
 
+  const handleApplyTipOrScript = (title: string, description: string, type: 'tip' | 'script') => {
+    if (type === 'tip') {
+      // Handle tip application
+      if (!appliedTips.includes(title)) {
+        setAppliedTips(prev => [...prev, title]);
+      }
+      toast({
+        title: "Tip Applied",
+        description: "This tip will be included in your next practice session",
+      });
+      
+      // Save to localStorage for persistence across sessions
+      const savedTips = JSON.parse(localStorage.getItem('appliedSalesTips') || '[]');
+      if (!savedTips.includes(title)) {
+        localStorage.setItem('appliedSalesTips', JSON.stringify([...savedTips, title]));
+      }
+    } else {
+      // Handle script application
+      const newScript = { title, description };
+      setActiveScripts(prev => {
+        // Don't add duplicates
+        if (prev.some(script => script.title === title)) {
+          return prev;
+        }
+        return [...prev, newScript];
+      });
+      
+      // Save to localStorage
+      const savedScripts = JSON.parse(localStorage.getItem('activeSalesScripts') || '[]');
+      if (!savedScripts.some((script: any) => script.title === title)) {
+        localStorage.setItem('activeSalesScripts', JSON.stringify([...savedScripts, newScript]));
+      }
+      
+      // Copy script to clipboard for immediate use
+      navigator.clipboard.writeText(description).catch(err => 
+        console.error("Failed to copy script to clipboard:", err)
+      );
+      
+      toast({
+        title: "Script Ready to Use",
+        description: "Script has been copied to clipboard and saved to your library",
+      });
+    }
+  };
+
   // Filter tips based on search query and active filter - modified to be case insensitive
   const filteredTips = allSalesTips.filter(tip => {
     const matchesSearch = searchQuery === '' || 
@@ -135,6 +182,22 @@ const Tips = () => {
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6 text-brand-dark">AI Sales Tips & Scripts</h1>
+          
+          {activeScripts.length > 0 && (
+            <Card className="mb-8 border-brand-green">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-medium mb-4 text-brand-dark">Your Active Scripts</h2>
+                <div className="space-y-4">
+                  {activeScripts.map((script, index) => (
+                    <div key={index} className="p-3 bg-brand-green/5 border border-brand-green/20 rounded-lg">
+                      <h3 className="font-medium text-brand-dark">{script.title}</h3>
+                      <p className="text-sm text-brand-dark/70 mt-1">{script.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           <Card className="mb-8 border-brand-green/30">
             <CardContent className="p-6">
@@ -197,6 +260,7 @@ const Tips = () => {
                   title={tip.title}
                   description={tip.description}
                   type={tip.type as 'tip' | 'script'}
+                  onApply={handleApplyTipOrScript}
                 />
               ))}
             </div>

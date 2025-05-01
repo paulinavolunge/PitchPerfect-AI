@@ -2,15 +2,49 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 
 interface AISuggestionCardProps {
   title: string;
   description: string;
   type: 'tip' | 'script';
+  onApply?: (title: string, description: string, type: 'tip' | 'script') => void;
 }
 
-const AISuggestionCard = ({ title, description, type }: AISuggestionCardProps) => {
+const AISuggestionCard = ({ title, description, type, onApply }: AISuggestionCardProps) => {
+  const { toast } = useToast();
   const isScript = type === 'script';
+  
+  const handleApply = () => {
+    if (onApply) {
+      onApply(title, description, type);
+    } else {
+      // Fallback toast notification if no handler provided
+      toast({
+        title: isScript ? "Script Applied" : "Tip Applied",
+        description: isScript 
+          ? "Script has been copied to your clipboard" 
+          : "This tip has been noted for your practice sessions",
+      });
+
+      // Copy to clipboard as fallback behavior
+      navigator.clipboard.writeText(description)
+        .then(() => {
+          toast({
+            title: "Copied to clipboard",
+            description: `${isScript ? "Script" : "Tip"} has been copied to your clipboard`,
+          });
+        })
+        .catch(err => {
+          console.error("Failed to copy text: ", err);
+          toast({
+            title: "Copy failed",
+            description: "Please try selecting and copying the text manually",
+            variant: "destructive",
+          });
+        });
+    }
+  };
   
   return (
     <Card className={`overflow-hidden ${isScript ? 'border-brand-green/30' : 'border-brand-blue'}`}>
@@ -28,9 +62,14 @@ const AISuggestionCard = ({ title, description, type }: AISuggestionCardProps) =
           {description}
         </p>
         <div className="flex justify-end">
-          <Button variant="ghost" size="sm" className={`text-xs ${
-            isScript ? 'text-brand-green hover:bg-brand-green/10' : 'text-blue-700 hover:bg-brand-blue/20'
-          }`}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-xs ${
+              isScript ? 'text-brand-green hover:bg-brand-green/10' : 'text-blue-700 hover:bg-brand-blue/20'
+            }`}
+            onClick={handleApply}
+          >
             {isScript ? 'Use Script' : 'Apply Tip'}
           </Button>
         </div>
