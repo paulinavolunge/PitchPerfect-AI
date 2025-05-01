@@ -58,7 +58,7 @@ const Index = () => {
                   </>
                 ) : (
                   <>
-                    <Button className="btn-primary flex items-center gap-2" onClick={() => scrollToCTA('trial')}>
+                    <Button className="btn-primary flex items-center gap-2" onClick={() => navigate('/signup')}>
                       Start Free Trial <ArrowRight size={18} />
                     </Button>
                     <Button variant="outline" className="flex items-center gap-2" onClick={() => scrollToCTA('demo')}>
