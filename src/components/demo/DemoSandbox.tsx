@@ -7,6 +7,36 @@ import DemoScorecard from './DemoScorecard';
 import { useToast } from '@/hooks/use-toast';
 import { getSampleScenario } from '@/utils/demoUtils';
 
+// Import the speech recognition types from the global window augmentations
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognition;
+    webkitSpeechRecognition?: new () => SpeechRecognition;
+  }
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+  error: any;
+}
+
+interface SpeechRecognitionError extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionError) => void) | null;
+  onend: (() => void) | null;
+}
+
 interface DemoSandboxProps {
   onComplete: () => void;
 }
