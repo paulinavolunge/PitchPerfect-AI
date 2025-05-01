@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/context/AuthContext";
 
 import Index from './pages/Index';
@@ -26,6 +26,8 @@ import Cancel from './pages/Cancel';
 import NotFound from './pages/NotFound';
 import GuidedTour from './components/GuidedTour';
 import CallRecordings from './pages/CallRecordings';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 
 const queryClient = new QueryClient();
 
@@ -77,6 +79,8 @@ const App: React.FC = () => {
             <Route path="/success" element={<Success />} />
             <Route path="/cancel" element={<Cancel />} />
             <Route path="/call-recordings" element={<CallRecordings />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           {showTour && 
