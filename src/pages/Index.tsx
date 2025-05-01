@@ -1,17 +1,19 @@
 
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
-import Features from '@/components/Features';
-import HowItWorks from '@/components/HowItWorks';
-import Testimonials from '@/components/Testimonials';
-import CTASection from '@/components/CTASection';
-import Footer from '@/components/Footer';
-import NewsletterSignup from '@/components/NewsletterSignup';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+
+// Lazy load below-the-fold components for better performance
+const Features = lazy(() => import('@/components/Features'));
+const HowItWorks = lazy(() => import('@/components/HowItWorks'));
+const Testimonials = lazy(() => import('@/components/Testimonials'));
+const CTASection = lazy(() => import('@/components/CTASection'));
+const Footer = lazy(() => import('@/components/Footer'));
+const NewsletterSignup = lazy(() => import('@/components/NewsletterSignup'));
 
 const Index = () => {
   const { user, isPremium } = useAuth();
@@ -70,15 +72,33 @@ const Index = () => {
             </div>
           </div>
         </section>
-        <Features />
-        <HowItWorks />
-        <NewsletterSignup />
-        <Testimonials />
+        
+        <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
+          <Features />
+        </Suspense>
+        
+        <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
+          <HowItWorks />
+        </Suspense>
+        
+        <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
+          <NewsletterSignup />
+        </Suspense>
+        
+        <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
+          <Testimonials />
+        </Suspense>
+        
         <div id="cta-section">
-          <CTASection activeSection={activeSection} />
+          <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
+            <CTASection activeSection={activeSection} />
+          </Suspense>
         </div>
       </main>
-      <Footer />
+      
+      <Suspense fallback={<div className="py-6 text-center">Loading footer...</div>}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
