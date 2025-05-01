@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Clock } from 'lucide-react';
+import { Play, Clock, RefreshCw } from 'lucide-react';
 import DemoTranscript from './DemoTranscript';
 import DemoScorecard from './DemoScorecard';
 import { useToast } from '@/hooks/use-toast';
 import { getSampleScenario } from '@/utils/demoUtils';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 // Import the speech recognition types from the global window augmentations
 declare global {
@@ -55,6 +56,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const [scenario, setScenario] = useState<any>(null);
   const [isListening, setIsListening] = useState(false);
   const [scoreData, setScoreData] = useState<any>(null);
+  const [permissionDenied, setPermissionDenied] = useState(false);
   const { toast } = useToast();
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -85,6 +87,9 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         recognitionRef.current.onerror = (event: SpeechRecognitionError) => {
           console.error('Speech recognition error', event.error);
           setIsListening(false);
+          if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+            setPermissionDenied(true);
+          }
           toast({
             title: "Voice recognition error",
             description: `Error: ${event.error}. Please try again.`,
@@ -197,6 +202,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     }
     
     try {
+      setPermissionDenied(false);
       recognitionRef.current.start();
       setIsListening(true);
       setDemoState(DemoState.RECORDING);
@@ -233,6 +239,11 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       title: "Demo complete",
       description: "Your pitch has been scored. See your results below.",
     });
+  };
+
+  const retryMicrophoneAccess = () => {
+    setPermissionDenied(false);
+    startDemo();
   };
 
   const generateScore = (transcript: string) => {
@@ -272,7 +283,10 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const handleViewScore = () => {
     setDemoState(DemoState.COMPLETE);
     setTimeout(() => {
-      onComplete?.();
+      onComplete?.({
+        ...scoreData,
+        timestamp: new Date().toISOString()
+      });
     }, 3000);
   };
 
@@ -284,6 +298,23 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
   return (
     <div className="space-y-6" ref={sandboxRef}>
+      {permissionDenied && demoState === DemoState.RECORDING && (
+        <Alert variant="destructive" className="mb-4 border-red-500 bg-red-50">
+          <AlertTitle>Microphone access denied</AlertTitle>
+          <AlertDescription className="flex justify-between items-center">
+            <span>We can't hear you. Please allow microphone access.</span>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={retryMicrophoneAccess}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" /> Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {demoState === DemoState.INTRO && (
         <div className="text-center space-y-6">
           <h2 className="text-xl font-semibold text-brand-dark">Demo Scenario: Handling Pricing Objections</h2>

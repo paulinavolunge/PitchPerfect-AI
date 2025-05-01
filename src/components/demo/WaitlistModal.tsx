@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { addToWaitlist } from '@/utils/demoUtils';
-import { sendSessionToCRM, CRMProvider, getWebhookUrl } from '@/utils/webhookUtils';
+import { sendSessionToCRM, sendImmediateConfirmation, CRMProvider, getWebhookUrl } from '@/utils/webhookUtils';
 
 interface WaitlistModalProps {
   open: boolean;
@@ -53,7 +53,10 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
         description: "Check your inbox for your pitch recap (first a quick confirmation, then the full PDF).",
       });
       
-      // Send data to waitlist and CRM
+      // Send immediate confirmation email
+      await sendImmediateConfirmation(email);
+      
+      // Send data to waitlist
       await addToWaitlist(email);
       
       // Send session data to CRM immediately with the email

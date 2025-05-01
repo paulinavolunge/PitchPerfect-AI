@@ -127,9 +127,50 @@ export const sendSessionToCRM = async (
  * @param email - The user's email address
  * @returns Promise resolving to the webhook response
  */
-export const sendImmediateConfirmation = async (email: string): Promise<{ success: boolean }> => {
-  // This would be implemented with a separate webhook or email service
-  // For now we're just logging it
-  console.log("Would send immediate confirmation to:", email);
-  return { success: true };
+export const sendImmediateConfirmation = async (email: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    // Get whatever webhook URL is configured for notifications
+    const webhookUrl = getWebhookUrl("zapier") || getWebhookUrl("custom");
+    
+    if (!webhookUrl) {
+      console.warn("No webhook URL configured for immediate notifications");
+      return { 
+        success: false, 
+        message: "No webhook URL configured for immediate notifications" 
+      };
+    }
+    
+    // Create a transactional email payload
+    const payload = {
+      email,
+      subject: "Your PitchPerfect AI Recap is Being Generated",
+      messageType: "immediate_confirmation",
+      timestamp: new Date().toISOString(),
+      message: "Thank you for using PitchPerfect AI! Your pitch recap PDF is being generated and will be sent to you shortly.",
+      priority: "high"
+    };
+    
+    console.log("Sending immediate confirmation via webhook:", payload);
+    
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      mode: "no-cors" // Add this to handle CORS
+    });
+    
+    // Since we're using no-cors, we won't get a proper response status
+    return { 
+      success: true, 
+      message: "Confirmation email request sent" 
+    };
+  } catch (error) {
+    console.error("Error sending immediate confirmation:", error);
+    return { 
+      success: false, 
+      message: `Error: ${error instanceof Error ? error.message : String(error)}` 
+    };
+  }
 };
