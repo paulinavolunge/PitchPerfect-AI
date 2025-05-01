@@ -114,10 +114,11 @@ const Tips = () => {
     });
   };
 
-  // Filter tips based on search query and active filter
+  // Filter tips based on search query and active filter - modified to be case insensitive
   const filteredTips = allSalesTips.filter(tip => {
-    const matchesSearch = tip.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         tip.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = searchQuery === '' || 
+                          tip.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          tip.description.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesFilter = activeFilter === "All Tips" || tip.category === activeFilter;
     
