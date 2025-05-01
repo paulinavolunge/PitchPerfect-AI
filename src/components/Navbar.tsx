@@ -63,6 +63,9 @@ const Navbar = () => {
             <Link to="/" className={`nav-link ${isActive('/') ? 'text-brand-green font-medium' : ''}`}>
               Home
             </Link>
+            <Link to="/compare" className={`nav-link ${isActive('/compare') ? 'text-brand-green font-medium' : ''}`}>
+              Why Us
+            </Link>
             <Link to="/dashboard" className={`nav-link ${isActive('/dashboard') ? 'text-brand-green font-medium' : ''}`}>
               Dashboard
             </Link>
@@ -150,6 +153,13 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Home
+            </Link>
+            <Link 
+              to="/compare" 
+              className={`p-2 rounded-lg ${isActive('/compare') ? 'bg-brand-blue/20 text-brand-green' : ''}`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Why Us
             </Link>
             <Link 
               to="/dashboard" 
