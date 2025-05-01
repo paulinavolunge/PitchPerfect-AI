@@ -38,7 +38,7 @@ interface SpeechRecognition extends EventTarget {
 }
 
 interface DemoSandboxProps {
-  onComplete: () => void;
+  onComplete: (sessionData: any) => void;
 }
 
 enum DemoState {
