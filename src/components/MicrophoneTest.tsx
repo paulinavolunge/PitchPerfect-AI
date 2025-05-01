@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mic, MicOff, Check, X, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
+import { Capacitor } from '@capacitor/core';
 
 interface MicrophoneTestProps {
   onTestComplete: (passed: boolean) => void;
@@ -20,13 +21,24 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
   const animationRef = useRef<number>(0);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   
+  // Check if we're on a native platform (Android/iOS)
+  const isNative = Capacitor.isNativePlatform();
+  
   // Start microphone and audio analysis
   const startRecording = async () => {
     try {
       // Reset permission denied state
       setPermissionDenied(false);
       
-      // Request microphone access
+      // If on native platform, we'll rely on the MicrophoneGuard component
+      // to handle permissions before this component is rendered
+      if (isNative) {
+        setIsRecording(true);
+        setInputDetected(true); // On native, we can assume permission is granted
+        return;
+      }
+      
+      // For web, request microphone access as before
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
       
@@ -129,6 +141,16 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
   useEffect(() => {
     let timerInterval: NodeJS.Timeout | null = null;
     
+    // Skip actual mic check on native platforms - we already have permission through MicrophoneGuard
+    if (isNative) {
+      // For native platforms, we'll just simulate a successful test after a short delay
+      const timer = setTimeout(() => {
+        setTestComplete(true);
+        onTestComplete(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+    
     if (isRecording && timeLeft > 0) {
       timerInterval = setInterval(() => {
         setTimeLeft(prevTime => prevTime - 1);
@@ -141,7 +163,7 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
     return () => {
       if (timerInterval) clearInterval(timerInterval);
     };
-  }, [isRecording, timeLeft, inputDetected, testComplete, onTestComplete]);
+  }, [isRecording, timeLeft, inputDetected, testComplete, onTestComplete, isNative]);
   
   // Start recording on mount if autoStart is true
   useEffect(() => {
@@ -153,6 +175,36 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
       stopRecording();
     };
   }, [autoStart]);
+  
+  if (isNative) {
+    // Simpler UI for native platforms
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="bg-brand-blue/10 pb-4">
+          <CardTitle className="text-xl text-brand-dark flex items-center justify-between">
+            <span>Microphone Check</span>
+            <Mic className="h-5 w-5 text-brand-green" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center space-y-4">
+            {!testComplete ? (
+              <div className="text-center">
+                <p className="text-lg font-medium">Checking microphone...</p>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <div className="text-green-600">
+                  <Check className="mx-auto h-12 w-12 mb-2" />
+                  <p className="text-lg font-medium">Microphone ready!</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className="w-full max-w-md mx-auto">

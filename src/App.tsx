@@ -28,6 +28,7 @@ import GuidedTour from './components/GuidedTour';
 import CallRecordings from './pages/CallRecordings';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import AccountDelete from './pages/AccountDelete';
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App: React.FC = () => {
             <Route path="/call-recordings" element={<CallRecordings />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/account-delete" element={<AccountDelete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           {showTour && 
