@@ -61,7 +61,7 @@ const Hero = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
-          className="lg:w-1/2 relative"
+          className="lg:w-1/2 relative sm:pt-0 pt-14"
         >
           <VideoPlayer 
             posterSrc="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
