@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,7 @@ import Practice from "./pages/Practice";
 import Tips from "./pages/Tips";
 import RolePlay from "./pages/RolePlay";
 import Subscription from "./pages/Subscription";
+import Pricing from "./pages/Pricing";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
@@ -114,6 +114,7 @@ const App = () => (
             <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
             <Route path="/roleplay" element={<PremiumRoute><RolePlay /></PremiumRoute>} />
             <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
             <Route path="/success" element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
             <Route path="/cancel" element={<ProtectedRoute><CancelPage /></ProtectedRoute>} />

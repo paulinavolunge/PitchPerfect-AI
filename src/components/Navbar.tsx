@@ -75,7 +75,7 @@ const Navbar = () => {
             <Link to="/tips" className={`nav-link ${isActive('/tips') ? 'text-brand-green font-medium' : ''}`}>
               AI Tips
             </Link>
-            <Link to="/subscription" className={`nav-link ${isActive('/subscription') ? 'text-brand-green font-medium' : ''}`}>
+            <Link to="/pricing" className={`nav-link ${isActive('/pricing') ? 'text-brand-green font-medium' : ''}`}>
               Pricing
             </Link>
             {!isPremium && user && (
@@ -180,8 +180,8 @@ const Navbar = () => {
               AI Tips
             </Link>
             <Link 
-              to="/subscription" 
-              className={`p-2 rounded-lg ${isActive('/subscription') ? 'bg-brand-blue/20 text-brand-green' : ''}`}
+              to="/pricing" 
+              className={`p-2 rounded-lg ${isActive('/pricing') ? 'bg-brand-blue/20 text-brand-green' : ''}`}
               onClick={() => setIsMenuOpen(false)}
             >
               Pricing

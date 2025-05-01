@@ -9,8 +9,8 @@ import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, LogIn } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
@@ -48,7 +48,7 @@ const Index = () => {
                         Try Roleplay Now <ArrowRight size={18} />
                       </Button>
                     ) : (
-                      <Button className="btn-primary flex items-center gap-2" onClick={() => navigate('/subscription')}>
+                      <Button className="btn-primary flex items-center gap-2" onClick={() => navigate('/pricing')}>
                         Upgrade to Access <ArrowRight size={18} />
                       </Button>
                     )}
