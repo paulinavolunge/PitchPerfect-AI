@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
-interface AndroidPermissions {
-  requestPermissions: () => Promise<{ results: Record<string, { state: string }> }>;
-  checkPermissions: () => Promise<{ microphone: { state: string } }>;
-}
+// Import the Plugins directly
+import { Permissions } from '@capacitor/core';
 
 interface MicrophoneGuardProps {
   children: React.ReactNode;
@@ -29,9 +27,7 @@ const MicrophoneGuard: React.FC<MicrophoneGuardProps> = ({ children }) => {
       }
       
       try {
-        // Dynamically import plugins to avoid issues on web
-        const { Permissions } = await import('@capacitor/core');
-        const result = await Permissions.checkPermission({ name: 'microphone' });
+        const result = await Permissions.query({ name: 'microphone' });
         
         switch (result.state) {
           case 'granted':
@@ -60,8 +56,7 @@ const MicrophoneGuard: React.FC<MicrophoneGuardProps> = ({ children }) => {
     }
     
     try {
-      const { Permissions } = await import('@capacitor/core');
-      const result = await Permissions.requestPermission({ name: 'microphone' });
+      const result = await Permissions.request({ name: 'microphone' });
       
       if (result.state === 'granted') {
         setPermissionState('granted');

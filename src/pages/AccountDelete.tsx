@@ -33,8 +33,16 @@ const AccountDelete: React.FC = () => {
       
       // Call the API endpoint to delete the account
       // In a real implementation, this would be a call to your backend
-      // For now, we'll simulate the API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('/api/account', { 
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
       
       // Clear local storage
       localStorage.clear();
