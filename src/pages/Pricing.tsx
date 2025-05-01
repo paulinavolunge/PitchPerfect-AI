@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,16 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ROICalculator from '@/components/ROICalculator';
+import GuidedTour from '@/components/GuidedTour';
+import { Step } from 'react-joyride';
 
 const Pricing = () => {
   const { user, isPremium } = useAuth();
   const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
   const navigate = useNavigate();
+  const demoRef = useRef<HTMLDivElement>(null);
+  const [runTour, setRunTour] = useState(false);
   
   const handleUpgradeClick = () => {
     if (!user) {
@@ -22,8 +27,40 @@ const Pricing = () => {
     navigate('/subscription');
   };
 
+  const scrollToDemo = () => {
+    if (demoRef.current) {
+      demoRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/demo');
+    }
+  };
+
+  // Tour steps
+  const steps: Step[] = [
+    {
+      target: '.pricing-cards',
+      content: 'Choose the plan that best fits your needs. Compare features and pricing.',
+      disableBeacon: true,
+    },
+    {
+      target: '.roi-calculator',
+      content: 'Calculate your potential return on investment with our ROI calculator.',
+      disableBeacon: true,
+    },
+    {
+      target: '.sticky-cta',
+      content: 'Try our demo without signing up!',
+      disableBeacon: true,
+    }
+  ];
+
+  // Handle tour completion
+  const handleTourComplete = () => {
+    localStorage.setItem('pricing_tour_completed', 'true');
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
@@ -44,12 +81,12 @@ const Pricing = () => {
             </div>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Free Plan */}
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto pricing-cards">
+            {/* Solo Plan */}
             <Card className="border-2 shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-2xl">Free Plan</CardTitle>
-                <CardDescription>Get started with basic features</CardDescription>
+                <CardTitle className="text-2xl">Solo</CardTitle>
+                <CardDescription>Perfect for individuals</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold">$0</span>
                   <span className="text-gray-500 ml-2">forever</span>
@@ -88,24 +125,24 @@ const Pricing = () => {
               </CardFooter>
             </Card>
             
-            {/* Premium Plan */}
+            {/* Team Plan */}
             <Card className="border-2 border-brand-green shadow-lg">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-2xl">Premium</CardTitle>
-                  <span className="bg-brand-green/20 text-brand-green text-xs font-medium px-2 py-1 rounded">RECOMMENDED</span>
+                  <CardTitle className="text-2xl">Team</CardTitle>
+                  <span className="bg-brand-green/20 text-brand-green text-xs font-medium px-2 py-1 rounded">POPULAR</span>
                 </div>
-                <CardDescription>All features unlocked</CardDescription>
+                <CardDescription>For growing teams</CardDescription>
                 <div className="mt-4">
                   {planType === "monthly" ? (
                     <>
-                      <span className="text-4xl font-bold">$9.99</span>
-                      <span className="text-gray-500 ml-2">/ month</span>
+                      <span className="text-4xl font-bold">$29</span>
+                      <span className="text-gray-500 ml-2">/ user / month</span>
                     </>
                   ) : (
                     <>
-                      <span className="text-4xl font-bold">$99</span>
-                      <span className="text-gray-500 ml-2">/ year</span>
+                      <span className="text-4xl font-bold">$290</span>
+                      <span className="text-gray-500 ml-2">/ user / year</span>
                     </>
                   )}
                 </div>
@@ -114,7 +151,7 @@ const Pricing = () => {
                 <ul className="space-y-3">
                   <li className="flex items-start">
                     <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>All free plan features</span>
+                    <span>All Solo plan features</span>
                   </li>
                   <li className="flex items-start">
                     <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
@@ -122,7 +159,7 @@ const Pricing = () => {
                   </li>
                   <li className="flex items-start">
                     <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Detailed performance analytics</span>
+                    <span>Team analytics dashboard</span>
                   </li>
                   <li className="flex items-start">
                     <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
@@ -141,11 +178,55 @@ const Pricing = () => {
                   </Button>
                 ) : (
                   <Button onClick={handleUpgradeClick} className="w-full bg-brand-green hover:bg-brand-green/90">
-                    {isPremium ? "Manage Subscription" : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Premium`}
+                    {isPremium ? "Manage Subscription" : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`}
                   </Button>
                 )}
               </CardFooter>
             </Card>
+            
+            {/* Enterprise Plan */}
+            <Card className="border-2 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl">Enterprise</CardTitle>
+                <CardDescription>For larger organizations</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">Custom</span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                    <span>All Team features</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                    <span>Custom AI training and scenarios</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                    <span>Advanced analytics and reporting</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                    <span>SSO and advanced security</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                    <span>Dedicated account manager</span>
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" variant="outline">
+                  Contact Sales
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+          
+          <div className="max-w-3xl mx-auto mt-20 roi-calculator">
+            <ROICalculator />
           </div>
           
           <div className="text-center mt-12">
@@ -153,10 +234,32 @@ const Pricing = () => {
               All plans include a 14-day free trial. No credit card required until trial ends.
             </p>
           </div>
+          
+          <div ref={demoRef} id="demo-section" className="mt-20">
+            {/* Demo content would go here if needed */}
+          </div>
         </div>
       </main>
       
+      {/* Sticky CTA Button */}
+      <div className="sticky-cta fixed bottom-6 left-0 right-0 flex justify-center z-40">
+        <Button 
+          onClick={scrollToDemo} 
+          className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-6 rounded-full shadow-lg animate-bounce-subtle"
+          size="lg"
+        >
+          Try It Free
+        </Button>
+      </div>
+      
       <Footer />
+      
+      {/* Guided Tour */}
+      <GuidedTour
+        steps={steps}
+        run={runTour}
+        onComplete={handleTourComplete}
+      />
     </div>
   );
 };
