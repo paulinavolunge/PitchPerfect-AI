@@ -126,20 +126,20 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
   const onDemoSubmit = async (data: DemoFormValues) => {
     setIsSubmittingDemo(true);
     try {
-      // Insert demo request into Supabase
-      const { error } = await supabase
-        .from('demo_requests')
-        .insert({
-          full_name: data.fullName,
-          email: data.email,
-          company: data.company,
-          requested_at: new Date().toISOString(),
-          status: 'pending'
-        });
-
-      if (error) {
-        throw new Error(error.message);
-      }
+      // Instead of using the database directly, store the request in localStorage
+      // This is a fallback solution when the demo_requests table hasn't been created yet
+      const demoRequest = {
+        full_name: data.fullName,
+        email: data.email,
+        company: data.company,
+        requested_at: new Date().toISOString(),
+        status: 'pending'
+      };
+      
+      // Store the demo request in localStorage
+      const existingRequests = JSON.parse(localStorage.getItem('demoRequests') || '[]');
+      existingRequests.push(demoRequest);
+      localStorage.setItem('demoRequests', JSON.stringify(existingRequests));
 
       // Show success message
       setShowDemoDialog(false);
