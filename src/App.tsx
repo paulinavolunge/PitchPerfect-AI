@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider"
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/context/AuthContext";
 
@@ -35,6 +36,23 @@ const App: React.FC = () => {
   // Only show the tour on the dashboard and only if the user is logged in
   const showTour = location.pathname === '/dashboard' && !!user;
   
+  // Define tour steps for GuidedTour
+  const tourSteps = [
+    {
+      target: '.dashboard-overview',
+      content: 'Welcome to your dashboard! Here you can see your overall performance.',
+      disableBeacon: true,
+    },
+    {
+      target: '.practice-section',
+      content: 'Start practicing your sales pitches here.',
+    },
+    {
+      target: '.progress-section',
+      content: 'Track your improvement over time.',
+    },
+  ];
+  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -61,7 +79,13 @@ const App: React.FC = () => {
             <Route path="/call-recordings" element={<CallRecordings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          {showTour && <GuidedTour />}
+          {showTour && 
+            <GuidedTour 
+              steps={tourSteps} 
+              run={showTour} 
+              onComplete={() => console.log('Tour completed')}
+            />
+          }
         </main>
       </ThemeProvider>
     </QueryClientProvider>
