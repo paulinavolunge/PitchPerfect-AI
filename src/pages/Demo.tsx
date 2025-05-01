@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import DemoSandbox from '@/components/demo/DemoSandbox';
 import WaitlistModal from '@/components/demo/WaitlistModal';
 import { sendSessionToCRM } from '@/utils/webhookUtils';
-import { toast } from '@/components/ui/toast';
+import { toast } from '@/hooks/use-toast';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
