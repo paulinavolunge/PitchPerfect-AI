@@ -5,9 +5,31 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import DemoSandbox from '@/components/demo/DemoSandbox';
 import WaitlistModal from '@/components/demo/WaitlistModal';
+import { sendSessionToCRM } from '@/utils/webhookUtils';
+import { toast } from '@/components/ui/toast';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  
+  const handleDemoComplete = async (sessionData: any) => {
+    // First show the waitlist modal
+    setShowWaitlistModal(true);
+    
+    // Then send the data to CRM via Zapier webhook
+    const webhookResult = await sendSessionToCRM(sessionData);
+    
+    // Show appropriate toast
+    if (webhookResult.success) {
+      toast({
+        title: "CRM Updated",
+        description: "Your session data was pushed to CRM",
+        variant: "default",
+      });
+    } else {
+      console.warn("CRM push failed:", webhookResult.message);
+      // No toast for failure in production to avoid confusing users
+    }
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -22,7 +44,7 @@ const Demo = () => {
                 Talk about overcoming pricing objections for 60 seconds, and get instant feedback.
               </p>
               
-              <DemoSandbox onComplete={() => setShowWaitlistModal(true)} />
+              <DemoSandbox onComplete={handleDemoComplete} />
             </div>
           </div>
         </div>
