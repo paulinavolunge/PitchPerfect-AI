@@ -1,7 +1,6 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mic, MicOff, Check, X } from 'lucide-react';
+import { Mic, MicOff, Check, X, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface MicrophoneTestProps {
@@ -14,6 +13,7 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
   const [inputDetected, setInputDetected] = useState(false);
   const [timeLeft, setTimeLeft] = useState(5);
   const [testComplete, setTestComplete] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -23,6 +23,9 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
   // Start microphone and audio analysis
   const startRecording = async () => {
     try {
+      // Reset permission denied state
+      setPermissionDenied(false);
+      
       // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
@@ -43,8 +46,14 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
     } catch (error) {
       console.error('Error accessing microphone:', error);
       setInputDetected(false);
-      onTestComplete(false);
-      setTestComplete(true);
+      setPermissionDenied(true);
+      
+      // We'll only complete the test if it was explicitly denied,
+      // otherwise we'll allow the user to retry
+      if (error instanceof DOMException && error.name === 'NotAllowedError') {
+        setTestComplete(true);
+        onTestComplete(false);
+      }
     }
   };
   
@@ -107,6 +116,13 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
     };
     
     draw();
+  };
+  
+  // Handle retry microphone access
+  const handleRetryMicAccess = () => {
+    setTestComplete(false);
+    setTimeLeft(5);
+    startRecording();
   };
   
   // Countdown timer effect
@@ -190,18 +206,28 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
                 </div>
               )}
               
-              {!inputDetected && (
+              {(!inputDetected || permissionDenied) && (
                 <Button 
-                  onClick={() => {
-                    setTestComplete(false);
-                    setTimeLeft(5);
-                    startRecording();
-                  }}
-                  className="mt-4"
+                  onClick={handleRetryMicAccess}
+                  className="mt-4 flex items-center gap-2"
                 >
-                  Test Again
+                  <RefreshCw className="h-4 w-4" /> Retry Microphone Access
                 </Button>
               )}
+            </div>
+          )}
+          
+          {/* Added a prominent retry button for permission denied cases */}
+          {permissionDenied && !testComplete && (
+            <div className="mt-2 text-center">
+              <p className="text-red-500 mb-2">Microphone access denied or unavailable</p>
+              <Button 
+                onClick={handleRetryMicAccess}
+                className="flex items-center gap-2"
+                variant="destructive"
+              >
+                <RefreshCw className="h-4 w-4" /> Request Microphone Permission
+              </Button>
             </div>
           )}
         </div>
