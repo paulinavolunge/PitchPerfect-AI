@@ -5,6 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
+// Detect if Permissions plugin is available
+const hasPermissionsPlugin = Capacitor.isPluginAvailable("Permissions");
+const Permissions = hasPermissionsPlugin
+  ? (Capacitor.Plugins as any).Permissions
+  : null;
+
 interface MicrophoneGuardProps {
   children: React.ReactNode;
 }
@@ -23,10 +29,14 @@ const MicrophoneGuard: React.FC<MicrophoneGuardProps> = ({ children }) => {
         return;
       }
       
+      // If Permissions plugin is not available, assume granted
+      if (!Permissions) {
+        setPermissionState('granted');
+        return;
+      }
+      
       try {
-        // Use the Capacitor object to access plugins dynamically
-        const { Permissions } = Capacitor;
-        const result = await Permissions?.query({ name: 'microphone' });
+        const result = await Permissions.query({ name: 'microphone' });
         
         switch (result?.state) {
           case 'granted':
@@ -54,9 +64,14 @@ const MicrophoneGuard: React.FC<MicrophoneGuardProps> = ({ children }) => {
       return;
     }
     
+    // If Permissions plugin is not available, assume granted
+    if (!Permissions) {
+      setPermissionState('granted');
+      return;
+    }
+    
     try {
-      const { Permissions } = Capacitor;
-      const result = await Permissions?.request({ name: 'microphone' });
+      const result = await Permissions.request({ name: 'microphone' });
       
       if (result?.state === 'granted') {
         setPermissionState('granted');
