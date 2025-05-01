@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { addToWaitlist } from '@/utils/demoUtils';
-import { sendSessionToCRM } from '@/utils/webhookUtils';
+import { sendSessionToCRM, CRMProvider, getWebhookUrl } from '@/utils/webhookUtils';
 
 interface WaitlistModalProps {
   open: boolean;
@@ -26,6 +26,19 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Default to "zapier" but check other providers if zapier is not configured
+  const determineCRMProvider = (): CRMProvider => {
+    const providers: CRMProvider[] = ["zapier", "hubspot", "salesforce", "freshsales", "custom"];
+    
+    for (const provider of providers) {
+      if (getWebhookUrl(provider)) {
+        return provider;
+      }
+    }
+    
+    return "zapier"; // Default if none configured
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,13 +64,16 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
           requestType: "pdf_recap"
         };
         
+        // Determine which CRM provider to use
+        const provider = determineCRMProvider();
+        
         // Fire webhook without waiting
-        sendSessionToCRM(enrichedData)
+        sendSessionToCRM(enrichedData, provider)
           .then(webhookResult => {
-            console.log("CRM webhook result:", webhookResult);
+            console.log(`CRM ${provider} webhook result:`, webhookResult);
           })
           .catch(error => {
-            console.error("CRM webhook error:", error);
+            console.error(`CRM ${provider} webhook error:`, error);
           });
       }
       

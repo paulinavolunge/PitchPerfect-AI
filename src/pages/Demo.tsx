@@ -4,12 +4,17 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DemoSandbox from '@/components/demo/DemoSandbox';
 import WaitlistModal from '@/components/demo/WaitlistModal';
-import { sendSessionToCRM } from '@/utils/webhookUtils';
+import WebhookSettings from '@/components/WebhookSettings';
+import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [showWebhookSettings, setShowWebhookSettings] = useState(false);
   const [sessionData, setSessionData] = useState<any>(null);
+  const [crmProvider, setCrmProvider] = useState<CRMProvider>("zapier");
   
   const handleDemoComplete = (data?: any) => {
     // Save session data
@@ -20,15 +25,15 @@ const Demo = () => {
     // Show the waitlist modal
     setShowWaitlistModal(true);
     
-    // Then send the data to CRM via Zapier webhook
+    // Then send the data to CRM via webhook
     if (data) {
-      sendSessionToCRM(data)
+      sendSessionToCRM(data, crmProvider)
         .then(webhookResult => {
           // Show appropriate toast
           if (webhookResult.success) {
             toast({
               title: "Session Recorded",
-              description: "Your session data was saved",
+              description: webhookResult.message,
               variant: "default",
             });
           } else {
@@ -46,7 +51,18 @@ const Demo = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-              <h1 className="text-2xl font-bold text-brand-dark mb-4">Try PitchPerfect AI</h1>
+              <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold text-brand-dark">Try PitchPerfect AI</h1>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowWebhookSettings(true)}
+                  className="flex items-center gap-1"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>CRM Settings</span>
+                </Button>
+              </div>
               <p className="text-brand-dark/80 mb-6">
                 Experience how PitchPerfect AI helps you improve your sales pitch. 
                 Talk about overcoming pricing objections for 60 seconds, and get instant feedback.
@@ -63,6 +79,11 @@ const Demo = () => {
         open={showWaitlistModal} 
         onOpenChange={setShowWaitlistModal}
         sessionData={sessionData}
+      />
+      
+      <WebhookSettings
+        open={showWebhookSettings}
+        onOpenChange={setShowWebhookSettings}
       />
     </div>
   );
