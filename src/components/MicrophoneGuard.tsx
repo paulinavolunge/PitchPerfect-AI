@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
-// Import the Plugins directly
-import { Permissions } from '@capacitor/core';
+// Import the correct Permissions API
+import { Permissions as CapacitorPermissions } from '@capacitor/core/dist/esm/core-plugin-definitions';
 
 interface MicrophoneGuardProps {
   children: React.ReactNode;
@@ -27,7 +27,7 @@ const MicrophoneGuard: React.FC<MicrophoneGuardProps> = ({ children }) => {
       }
       
       try {
-        const result = await Permissions.query({ name: 'microphone' });
+        const result = await CapacitorPermissions.query({ name: 'microphone' });
         
         switch (result.state) {
           case 'granted':
@@ -56,7 +56,7 @@ const MicrophoneGuard: React.FC<MicrophoneGuardProps> = ({ children }) => {
     }
     
     try {
-      const result = await Permissions.request({ name: 'microphone' });
+      const result = await CapacitorPermissions.request({ name: 'microphone' });
       
       if (result.state === 'granted') {
         setPermissionState('granted');
