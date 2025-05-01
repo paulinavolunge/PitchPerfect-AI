@@ -8,7 +8,7 @@ import { AlertTriangle } from 'lucide-react';
 // Detect if Permissions plugin is available
 const hasPermissionsPlugin = Capacitor.isPluginAvailable("Permissions");
 const Permissions = hasPermissionsPlugin
-  ? (Capacitor.Plugins as any).Permissions
+  ? ((Capacitor as any).Plugins.Permissions)
   : null;
 
 interface MicrophoneGuardProps {

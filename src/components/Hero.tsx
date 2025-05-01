@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -8,6 +8,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 
 const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [sessionStarted, setSessionStarted] = useState(false);
 
   useEffect(() => {
     // Ensure the video plays automatically when loaded
@@ -16,6 +17,17 @@ const Hero = () => {
         console.log('Auto-play was prevented:', error);
       });
     }
+
+    // Listen for the custom event that signals a demo has started
+    const handleDemoStart = () => {
+      setSessionStarted(true);
+    };
+
+    window.addEventListener('start-demo-auto', handleDemoStart);
+    
+    return () => {
+      window.removeEventListener('start-demo-auto', handleDemoStart);
+    };
   }, []);
 
   const handleScrollToDemo = (e: React.MouseEvent) => {
@@ -28,8 +40,15 @@ const Hero = () => {
       setTimeout(() => {
         const startDemoEvent = new CustomEvent('start-demo-auto');
         window.dispatchEvent(startDemoEvent);
+        setSessionStarted(true);
       }, 800); // Small delay to ensure the section is in view
     }
+  };
+
+  const handleStartDemo = () => {
+    const startDemoEvent = new CustomEvent('start-demo-auto');
+    window.dispatchEvent(startDemoEvent);
+    setSessionStarted(true);
   };
 
   return (
@@ -83,6 +102,8 @@ const Hero = () => {
             videoSrc="/demo-video.mp4"
             fallbackSrc="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
             className="max-w-lg mx-auto shadow-lg"
+            onStartClick={handleStartDemo}
+            showStartButton={!sessionStarted}
           />
           
           <div className="absolute inset-0 bg-brand-blue opacity-10 rounded-lg -z-10 transform translate-x-4 translate-y-4"></div>
