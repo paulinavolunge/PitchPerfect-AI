@@ -3,12 +3,16 @@
  * Utility functions for webhook integrations
  */
 
+interface SessionData {
+  [key: string]: any;
+}
+
 /**
  * Sends session data to a Zapier webhook for CRM integration
  * @param sessionData - The completed session data
  * @returns Promise resolving to the webhook response
  */
-export const sendSessionToCRM = async (sessionData: any): Promise<{ success: boolean; message: string }> => {
+export const sendSessionToCRM = async (sessionData: SessionData): Promise<{ success: boolean; message: string }> => {
   try {
     // In a production environment, this would be retrieved from environment variables
     // For now, we're checking if it exists in window.ENV (which would be injected at build time)
@@ -27,6 +31,7 @@ export const sendSessionToCRM = async (sessionData: any): Promise<{ success: boo
       ...sessionData,
       timestamp: new Date().toISOString(),
       source: "PitchPerfect AI",
+      isPriority: sessionData.requestType === "pdf_recap" // Mark PDF recaps as priority
     };
     
     console.log("Sending session to CRM via Zapier webhook:", payload);
@@ -59,4 +64,16 @@ export const sendSessionToCRM = async (sessionData: any): Promise<{ success: boo
       message: `Error: ${error instanceof Error ? error.message : String(error)}` 
     };
   }
+};
+
+/**
+ * Send immediate email confirmation before the full PDF is ready
+ * @param email - The user's email address
+ * @returns Promise resolving to the webhook response
+ */
+export const sendImmediateConfirmation = async (email: string): Promise<{ success: boolean }> => {
+  // This would be implemented with a separate webhook or email service
+  // For now we're just logging it
+  console.log("Would send immediate confirmation to:", email);
+  return { success: true };
 };

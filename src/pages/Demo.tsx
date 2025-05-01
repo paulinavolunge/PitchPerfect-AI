@@ -9,20 +9,26 @@ import { toast } from '@/hooks/use-toast';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [sessionData, setSessionData] = useState<any>(null);
   
-  const handleDemoComplete = (sessionData?: any) => {
-    // First show the waitlist modal
+  const handleDemoComplete = (data?: any) => {
+    // Save session data
+    if (data) {
+      setSessionData(data);
+    }
+    
+    // Show the waitlist modal
     setShowWaitlistModal(true);
     
     // Then send the data to CRM via Zapier webhook
-    if (sessionData) {
-      sendSessionToCRM(sessionData)
+    if (data) {
+      sendSessionToCRM(data)
         .then(webhookResult => {
           // Show appropriate toast
           if (webhookResult.success) {
             toast({
-              title: "CRM Updated",
-              description: "Your session data was pushed to CRM",
+              title: "Session Recorded",
+              description: "Your session data was saved",
               variant: "default",
             });
           } else {
@@ -55,7 +61,8 @@ const Demo = () => {
 
       <WaitlistModal 
         open={showWaitlistModal} 
-        onOpenChange={setShowWaitlistModal} 
+        onOpenChange={setShowWaitlistModal}
+        sessionData={sessionData}
       />
     </div>
   );

@@ -13,13 +13,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { addToWaitlist } from '@/utils/demoUtils';
+import { sendSessionToCRM } from '@/utils/webhookUtils';
 
 interface WaitlistModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  sessionData?: any;
 }
 
-const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange }) => {
+const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessionData }) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -32,20 +34,41 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange }) => 
     setIsSubmitting(true);
     
     try {
-      await addToWaitlist(email);
-      
+      // First show immediate confirmation
       toast({
-        title: "Success!",
-        description: "Thank you for joining our waitlist!",
+        title: "PDF on its way!",
+        description: "Check your inbox for your pitch recap (first a quick confirmation, then the full PDF).",
       });
       
+      // Send data to waitlist and CRM
+      await addToWaitlist(email);
+      
+      // Send session data to CRM immediately with the email
+      if (sessionData) {
+        const enrichedData = {
+          ...sessionData,
+          email,
+          requestType: "pdf_recap"
+        };
+        
+        // Fire webhook without waiting
+        sendSessionToCRM(enrichedData)
+          .then(webhookResult => {
+            console.log("CRM webhook result:", webhookResult);
+          })
+          .catch(error => {
+            console.error("CRM webhook error:", error);
+          });
+      }
+      
+      // Close modal and navigate
       onOpenChange(false);
       navigate('/signup');
     } catch (error) {
-      console.error('Error adding to waitlist:', error);
+      console.error('Error processing request:', error);
       toast({
         title: "Error",
-        description: "There was a problem adding you to the waitlist. Please try again.",
+        description: "There was a problem sending your recap. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -57,9 +80,9 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange }) => 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl">Ready for more practice?</DialogTitle>
+          <DialogTitle className="text-xl">Want a PDF recap of your pitch?</DialogTitle>
           <DialogDescription>
-            Join our waitlist to get early access to PitchPerfect AI and improve your sales pitches with real-time AI feedback.
+            Drop your email below and we'll send you a detailed analysis of your pitch performance.
           </DialogDescription>
         </DialogHeader>
         
@@ -85,7 +108,7 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange }) => 
               className="bg-brand-blue hover:bg-brand-blue/90 text-white w-full"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Join Waitlist"}
+              {isSubmitting ? "Sending..." : "Send Me the Recap"}
             </Button>
           </DialogFooter>
           
