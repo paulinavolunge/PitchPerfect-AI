@@ -1,137 +1,71 @@
+import React from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { ThemeProvider } from "@/components/theme-provider"
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from "@/components/ui/toaster"
+import { useAuth } from "@/context/AuthContext";
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Practice from "./pages/Practice";
-import Tips from "./pages/Tips";
-import RolePlay from "./pages/RolePlay";
-import Subscription from "./pages/Subscription";
-import Pricing from "./pages/Pricing";
-import Progress from "./pages/Progress";
-import NotFound from "./pages/NotFound";
-import About from "./pages/About";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import PasswordReset from "./pages/PasswordReset";
-import UpdatePassword from "./pages/UpdatePassword";
-import PremiumModal from "./components/PremiumModal";
-import SuccessPage from "./pages/Success";
-import CancelPage from "./pages/Cancel";
-import Demo from "./pages/Demo";
-import Compare from "./pages/Compare"; // Import the new Compare page
-import { useState } from "react";
+import Index from './pages/Index';
+import About from './pages/About';
+import Compare from './pages/Compare';
+import Pricing from './pages/Pricing';
+import Demo from './pages/Demo';
+import Signup from './pages/Signup';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Progress from './pages/Progress';
+import Practice from './pages/Practice';
+import RolePlay from './pages/RolePlay';
+import Subscription from './pages/Subscription';
+import PasswordReset from './pages/PasswordReset';
+import UpdatePassword from './pages/UpdatePassword';
+import Tips from './pages/Tips';
+import Success from './pages/Success';
+import Cancel from './pages/Cancel';
+import NotFound from './pages/NotFound';
+import GuidedTour from './components/GuidedTour';
+import CallRecordings from './pages/CallRecordings';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000,
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-brand-blue">
-          <div className="h-8 w-8 rounded-full border-4 border-current border-r-transparent animate-spin"></div>
-          <span className="sr-only">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
+const App: React.FC = () => {
+  const location = useLocation();
+  const { user } = useAuth();
 
-// Premium route component
-const PremiumRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isPremium, loading } = useAuth();
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const navigate = useNavigate();
+  // Only show the tour on the dashboard and only if the user is logged in
+  const showTour = location.pathname === '/dashboard' && !!user;
   
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-brand-blue">
-          <div className="h-8 w-8 rounded-full border-4 border-current border-r-transparent animate-spin"></div>
-          <span className="sr-only">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  if (!isPremium) {
-    return (
-      <>
-        <Navigate to="/subscription" replace />
-        <PremiumModal
-          open={true}
-          onOpenChange={() => {
-            setShowPremiumModal(false);
-            navigate("/subscription");
-          }}
-          featureName="premium features"
-        />
-      </>
-    );
-  }
-  
-  return <>{children}</>;
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <BrowserRouter>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <main className="min-h-screen bg-background">
           <Toaster />
-          <SonnerToaster position="top-right" />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/compare" element={<Compare />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/demo" element={<Demo />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/progress" element={<Progress />} />
+            <Route path="/practice" element={<Practice />} />
+            <Route path="/roleplay" element={<RolePlay />} />
+            <Route path="/subscription" element={<Subscription />} />
             <Route path="/password-reset" element={<PasswordReset />} />
             <Route path="/update-password" element={<UpdatePassword />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
-            <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
-            <Route path="/roleplay" element={<PremiumRoute><RolePlay /></PremiumRoute>} />
-            <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
-            <Route path="/success" element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
-            <Route path="/cancel" element={<ProtectedRoute><CancelPage /></ProtectedRoute>} />
-            <Route path="/about" element={<About />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/demo" element={<Demo />} />
-            <Route path="/compare" element={<Compare />} /> {/* Add the Compare route */}
+            <Route path="/tips" element={<Tips />} />
+            <Route path="/success" element={<Success />} />
+            <Route path="/cancel" element={<Cancel />} />
+            <Route path="/call-recordings" element={<CallRecordings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+          {showTour && <GuidedTour />}
+        </main>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

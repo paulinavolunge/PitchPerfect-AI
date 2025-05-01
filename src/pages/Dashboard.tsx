@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +10,13 @@ import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatu
 import StreakBadge from '@/components/dashboard/StreakBadge';
 import LeaderboardTable from '@/components/dashboard/LeaderboardTable';
 import { useAuth } from '@/context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
 import MicrophoneTest from '@/components/MicrophoneTest';
 import { VoiceSynthesis } from '@/utils/VoiceSynthesis';
 import { supabase } from '@/lib/supabase';
+import { FileAudio, Mic, Users } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, refreshSubscription } = useAuth();
@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [micTestPassed, setMicTestPassed] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
+  const navigate = useNavigate();
   
   // Define tour steps
   const tourSteps: Step[] = [
@@ -103,9 +104,39 @@ const Dashboard = () => {
       
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-brand-dark">Your Dashboard</h1>
-            {streakCount > 0 && <StreakBadge streakCount={streakCount} />}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-brand-dark mb-1">Dashboard</h1>
+              <p className="text-brand-dark/70">Welcome back, {user?.user_metadata?.first_name || 'there'}!</p>
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => navigate('/call-recordings')}
+              >
+                <FileAudio size={16} />
+                Call Recordings
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => navigate('/practice')}
+              >
+                <Mic size={16} />
+                Practice Session
+              </Button>
+              
+              <Button 
+                className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue/90"
+                onClick={() => navigate('/roleplay')}
+              >
+                <Users size={16} />
+                Role Play
+              </Button>
+            </div>
           </div>
           
           <div className="mb-8">
