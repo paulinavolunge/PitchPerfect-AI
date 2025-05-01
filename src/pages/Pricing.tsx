@@ -172,15 +172,17 @@ const Pricing = () => {
                 </ul>
               </CardContent>
               <CardFooter>
-                {!user ? (
-                  <Button onClick={() => navigate('/signup')} className="w-full bg-brand-green hover:bg-brand-green/90">
-                    {planType === "monthly" ? "Start Monthly Plan" : "Start Yearly Plan"} 
-                  </Button>
-                ) : (
-                  <Button onClick={handleUpgradeClick} className="w-full bg-brand-green hover:bg-brand-green/90">
-                    {isPremium ? "Manage Subscription" : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`}
-                  </Button>
-                )}
+                <Button 
+                  onClick={!user ? () => navigate('/signup') : handleUpgradeClick} 
+                  className="w-full bg-brand-green hover:bg-brand-green/90"
+                >
+                  {!user 
+                    ? (planType === "monthly" ? "Start Monthly Plan" : "Start Yearly Plan")
+                    : (isPremium 
+                        ? "Manage Subscription" 
+                        : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`)
+                  }
+                </Button>
               </CardFooter>
             </Card>
             
