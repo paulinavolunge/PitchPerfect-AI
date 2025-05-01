@@ -9,6 +9,7 @@ import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
 import StreakBadge from '@/components/dashboard/StreakBadge';
+import LeaderboardTable from '@/components/dashboard/LeaderboardTable';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
 import { Step } from 'react-joyride';
@@ -121,6 +122,11 @@ const Dashboard = () => {
               />
             </div>
           )}
+          
+          {/* Team Leaderboard Section */}
+          <div className="mt-8 mb-8">
+            <LeaderboardTable />
+          </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             <div className="lg:col-span-2 space-y-8">
