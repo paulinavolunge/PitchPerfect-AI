@@ -49,6 +49,15 @@ const GuidedTour = ({ steps, run, onComplete }: GuidedTourProps) => {
           backgroundColor: '#ffffff',
           textColor: '#334155', // brand-dark
         },
+        buttonSkip: {
+          color: '#334155',
+          fontSize: '14px',
+          borderRadius: '4px',
+          border: '1px solid #e2e8f0',
+          padding: '8px 16px',
+          backgroundColor: 'transparent',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        },
         spotlight: {
           backgroundColor: 'transparent',
         },
