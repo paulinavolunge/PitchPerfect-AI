@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
@@ -7,12 +7,46 @@ import Footer from '@/components/Footer';
 import { Mic, MicOff, Pause, Play, RefreshCcw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import StreakBadge from '@/components/dashboard/StreakBadge';
 
 const Practice = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const { isPremium } = useAuth();
+  const [streakCount, setStreakCount] = useState(0);
+  const { user, isPremium } = useAuth();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    if (user) {
+      fetchUserStreak();
+    }
+  }, [user]);
+  
+  const fetchUserStreak = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_streaks')
+        .select('streak_count')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // Not PGRST116 = not found
+        console.error('Error fetching streak:', error);
+        return;
+      }
+      
+      if (data) {
+        setStreakCount(data.streak_count);
+      }
+    } catch (err) {
+      console.error('Failed to fetch streak:', err);
+    }
+  };
   
   const toggleRecording = () => {
     if (!isPremium) {
@@ -22,8 +56,85 @@ const Practice = () => {
     
     if (isRecording) {
       setShowFeedback(true);
+      updatePracticeStreak();
     }
     setIsRecording(!isRecording);
+  };
+  
+  const updatePracticeStreak = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: existingStreak, error: fetchError } = await supabase
+        .from('user_streaks')
+        .select('streak_count, last_activity')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (fetchError && fetchError.code !== 'PGRST116') { // Not found error
+        console.error('Error fetching streak for update:', fetchError);
+        return;
+      }
+      
+      if (!existingStreak) {
+        // Create new streak record
+        const { error: insertError } = await supabase
+          .from('user_streaks')
+          .insert({
+            user_id: user.id,
+            streak_count: 1,
+            last_activity: today
+          });
+          
+        if (insertError) {
+          console.error('Error creating streak:', insertError);
+        } else {
+          setStreakCount(1);
+          toast({
+            title: "Streak started!",
+            description: "You've started your practice streak. Practice tomorrow to keep it going!",
+          });
+        }
+      } else {
+        // Check if streak should increment
+        const lastActivityDate = new Date(existingStreak.last_activity);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const isYesterday = lastActivityDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
+        const isToday = lastActivityDate.toISOString().split('T')[0] === today;
+        
+        // Only update if last activity was yesterday (continue streak) or not today (don't duplicate)
+        if (!isToday) {
+          const newStreakCount = isYesterday ? existingStreak.streak_count + 1 : 1;
+          
+          const { error: updateError } = await supabase
+            .from('user_streaks')
+            .update({
+              streak_count: newStreakCount,
+              last_activity: today
+            })
+            .eq('user_id', user.id);
+            
+          if (updateError) {
+            console.error('Error updating streak:', updateError);
+          } else {
+            setStreakCount(newStreakCount);
+            
+            if (newStreakCount > 1) {
+              toast({
+                title: `${newStreakCount}-day streak!`,
+                description: "You're building great practice habits. Keep it up!",
+              });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update streak:', err);
+    }
   };
   
   const resetPractice = () => {
@@ -40,7 +151,10 @@ const Practice = () => {
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-brand-dark mb-2">Practice Your Pitch</h1>
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-brand-dark">Practice Your Pitch</h1>
+                  {streakCount > 0 && <StreakBadge streakCount={streakCount} />}
+                </div>
                 <p className="text-brand-dark/70 mb-4">Choose a scenario or upload your script to start practicing and get instant AI feedback.</p>
               </div>
               <Button variant="outline" onClick={resetPractice} className="flex items-center gap-2">

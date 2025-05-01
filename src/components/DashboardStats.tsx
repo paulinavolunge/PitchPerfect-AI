@@ -8,7 +8,7 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { Activity, TrendingUp, Users } from 'lucide-react';
+import { Activity, TrendingUp, Users, Flame } from 'lucide-react';
 
 // Mock data for the stats
 const mockData = {
@@ -43,7 +43,11 @@ const chartConfig = {
   }
 };
 
-const DashboardStats = () => {
+interface DashboardStatsProps {
+  streakCount?: number;
+}
+
+const DashboardStats = ({ streakCount = 0 }: DashboardStatsProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Key Metrics */}
@@ -76,13 +80,15 @@ const DashboardStats = () => {
         
         <Card className="col-span-3 sm:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Objection Mastery</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Streak</CardTitle>
+            <Flame className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockData.objectionMastery}%</div>
+            <div className="text-2xl font-bold">{streakCount} day{streakCount !== 1 ? 's' : ''}</div>
             <div className="mt-2">
-              <Progress value={mockData.objectionMastery} className="h-2" />
+              <Progress value={Math.min(streakCount * 10, 100)} className="h-2 bg-gray-200">
+                <div className="h-full bg-orange-500 rounded-full" style={{ width: `${Math.min(streakCount * 10, 100)}%` }} />
+              </Progress>
             </div>
           </CardContent>
         </Card>

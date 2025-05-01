@@ -8,12 +8,14 @@ import { ArrowRight } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
+import StreakBadge from '@/components/dashboard/StreakBadge';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
 import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
 import MicrophoneTest from '@/components/MicrophoneTest';
 import { VoiceSynthesis } from '@/utils/VoiceSynthesis';
+import { supabase } from '@/lib/supabase';
 
 const Dashboard = () => {
   const { user, refreshSubscription } = useAuth();
@@ -21,6 +23,7 @@ const Dashboard = () => {
   const [showMicTest, setShowMicTest] = useState(false);
   const [micTestPassed, setMicTestPassed] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
+  const [streakCount, setStreakCount] = useState(0);
   
   // Define tour steps
   const tourSteps: Step[] = [
@@ -99,13 +102,16 @@ const Dashboard = () => {
       
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-8 text-brand-dark">Your Dashboard</h1>
+          <div className="flex flex-wrap items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-brand-dark">Your Dashboard</h1>
+            {streakCount > 0 && <StreakBadge streakCount={streakCount} />}
+          </div>
           
           <div className="mb-8">
             <UserSubscriptionStatus />
           </div>
           
-          <DashboardStats />
+          <DashboardStats streakCount={streakCount} />
           
           {showMicTest && (
             <div className="mb-8">
