@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { InfoIcon } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const ROICalculator = () => {
   const [monthlyQuota, setMonthlyQuota] = useState<string>('10000');
@@ -12,6 +13,7 @@ const ROICalculator = () => {
   const [asp, setAsp] = useState<string>('5000');
   const [roi, setRoi] = useState<number>(0);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
+  const [quotaType, setQuotaType] = useState<"monthly" | "quarterly">("monthly");
 
   // Format currency for display
   const formatCurrency = (value: number): string => {
@@ -35,13 +37,15 @@ const ROICalculator = () => {
     // Delay calculation a bit for animation effect
     const timer = setTimeout(() => {
       // Calculate ROI: Monthly quota * win rate increase (%) * average selling price
-      const calculatedRoi = quotaValue * (winRateValue / 100) * aspValue;
+      // If quarterly, divide by 3 to get monthly equivalent
+      const adjustedQuota = quotaType === "quarterly" ? quotaValue / 3 : quotaValue;
+      const calculatedRoi = adjustedQuota * (winRateValue / 100) * aspValue;
       setRoi(calculatedRoi);
       setIsCalculating(false);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [monthlyQuota, winRateLift, asp]);
+  }, [monthlyQuota, winRateLift, asp, quotaType]);
 
   // Handle input validation to only allow numbers
   const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>) => {
@@ -63,17 +67,44 @@ const ROICalculator = () => {
 
       <div className="grid md:grid-cols-3 gap-6">
         <div>
+          <div className="flex items-center justify-between mb-2">
+            <Label htmlFor="quota-type" className="flex items-center gap-2">
+              Quota Type
+              <Dialog>
+                <DialogTrigger>
+                  <InfoIcon className="h-4 w-4 text-gray-400 cursor-help" />
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Quota Type</DialogTitle>
+                    <DialogDescription>
+                      Select whether your quota is monthly or quarterly. Quarterly amounts will be automatically divided by 3 to calculate the monthly impact.
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+            </Label>
+            <ToggleGroup 
+              type="single" 
+              value={quotaType} 
+              onValueChange={(value) => value && setQuotaType(value as "monthly" | "quarterly")}
+              className="border rounded-md"
+            >
+              <ToggleGroupItem value="monthly" className="text-xs px-3">Monthly</ToggleGroupItem>
+              <ToggleGroupItem value="quarterly" className="text-xs px-3">Quarterly</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
           <Label htmlFor="monthly-quota" className="flex items-center gap-2">
-            Monthly Quota
+            {quotaType === "monthly" ? "Monthly Quota" : "Quarterly Quota"}
             <Dialog>
               <DialogTrigger>
                 <InfoIcon className="h-4 w-4 text-gray-400 cursor-help" />
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Monthly Quota</DialogTitle>
+                  <DialogTitle>{quotaType === "monthly" ? "Monthly Quota" : "Quarterly Quota"}</DialogTitle>
                   <DialogDescription>
-                    Your sales team's total monthly revenue target. This is the amount your team aims to sell each month.
+                    Your sales team's total {quotaType === "monthly" ? "monthly" : "quarterly"} revenue target. This is the amount your team aims to sell each {quotaType === "monthly" ? "month" : "quarter"}.
                   </DialogDescription>
                 </DialogHeader>
               </DialogContent>
