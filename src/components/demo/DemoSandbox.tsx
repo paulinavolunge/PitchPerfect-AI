@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Clock } from 'lucide-react';
@@ -38,7 +37,7 @@ interface SpeechRecognition extends EventTarget {
 }
 
 interface DemoSandboxProps {
-  onComplete: (sessionData: any) => void;
+  onComplete?: (sessionData?: any) => void;
 }
 
 enum DemoState {
@@ -227,7 +226,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const handleViewScore = () => {
     setDemoState(DemoState.COMPLETE);
     setTimeout(() => {
-      onComplete();
+      onComplete?.();
     }, 3000);
   };
 

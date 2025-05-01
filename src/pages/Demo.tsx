@@ -10,25 +10,27 @@ import { toast } from '@/hooks/use-toast';
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   
-  const handleDemoComplete = (sessionData: any) => {
+  const handleDemoComplete = (sessionData?: any) => {
     // First show the waitlist modal
     setShowWaitlistModal(true);
     
     // Then send the data to CRM via Zapier webhook
-    sendSessionToCRM(sessionData)
-      .then(webhookResult => {
-        // Show appropriate toast
-        if (webhookResult.success) {
-          toast({
-            title: "CRM Updated",
-            description: "Your session data was pushed to CRM",
-            variant: "default",
-          });
-        } else {
-          console.warn("CRM push failed:", webhookResult.message);
-          // No toast for failure in production to avoid confusing users
-        }
-      });
+    if (sessionData) {
+      sendSessionToCRM(sessionData)
+        .then(webhookResult => {
+          // Show appropriate toast
+          if (webhookResult.success) {
+            toast({
+              title: "CRM Updated",
+              description: "Your session data was pushed to CRM",
+              variant: "default",
+            });
+          } else {
+            console.warn("CRM push failed:", webhookResult.message);
+            // No toast for failure in production to avoid confusing users
+          }
+        });
+    }
   };
   
   return (
