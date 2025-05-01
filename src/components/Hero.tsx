@@ -18,6 +18,20 @@ const Hero = () => {
     }
   }, []);
 
+  const handleScrollToDemo = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const demoSection = document.getElementById('demo-sandbox');
+    if (demoSection) {
+      demoSection.scrollIntoView({ behavior: 'smooth' });
+      
+      // Trigger the start demo function if it exists in the global scope
+      setTimeout(() => {
+        const startDemoEvent = new CustomEvent('start-demo-auto');
+        window.dispatchEvent(startDemoEvent);
+      }, 800); // Small delay to ensure the section is in view
+    }
+  };
+
   return (
     <section className="pt-24 pb-20 bg-gradient-to-b from-brand-blue/10 to-white overflow-hidden">
       <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center">
@@ -39,12 +53,13 @@ const Hero = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="flex flex-wrap gap-4"
           >
-            <a href="#demo-sandbox">
-              <Button className="btn-primary flex items-center gap-2 group">
-                Try free 
-                <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
-              </Button>
-            </a>
+            <Button 
+              className="btn-primary flex items-center gap-2 group"
+              onClick={handleScrollToDemo}
+            >
+              Try free 
+              <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
+            </Button>
             <Link to="/demo">
               <Button variant="outline" className="btn-secondary flex items-center gap-2 group">
                 Play Demo

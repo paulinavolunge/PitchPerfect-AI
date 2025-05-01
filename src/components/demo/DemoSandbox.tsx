@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Clock } from 'lucide-react';
@@ -58,6 +59,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const sandboxRef = useRef<HTMLDivElement>(null);
   
   // Initialize speech recognition
   useEffect(() => {
@@ -92,8 +94,18 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       }
     }
 
+    // Set up event listener for auto-starting the demo
+    const handleAutoDemoStart = () => {
+      if (demoState === DemoState.INTRO) {
+        startDemo();
+      }
+    };
+
+    window.addEventListener('start-demo-auto', handleAutoDemoStart);
+
     // Cleanup
     return () => {
+      window.removeEventListener('start-demo-auto', handleAutoDemoStart);
       if (recognitionRef.current) {
         recognitionRef.current.onresult = null;
         recognitionRef.current.onerror = null;
@@ -105,7 +117,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, [toast]);
+  }, [toast, demoState]);
 
   // Load a sample scenario
   useEffect(() => {
@@ -136,6 +148,40 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+    };
+  }, [demoState]);
+
+  // Setup Intersection Observer for auto-starting the demo when scrolled into view
+  useEffect(() => {
+    // Only setup the observer if we're in the INTRO state
+    if (demoState !== DemoState.INTRO || !sandboxRef.current) return;
+
+    const options = {
+      root: null, // use viewport as root
+      rootMargin: '0px',
+      threshold: 0.7, // 70% of the element needs to be visible
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        // If the sandbox is visible and we haven't started the demo yet
+        if (entry.isIntersecting && demoState === DemoState.INTRO) {
+          // Small delay to ensure user has time to register what they're seeing
+          setTimeout(() => {
+            if (demoState === DemoState.INTRO) {
+              startDemo();
+            }
+          }, 1500);
+        }
+      });
+    }, options);
+
+    observer.observe(sandboxRef.current);
+
+    return () => {
+      if (sandboxRef.current) {
+        observer.unobserve(sandboxRef.current);
       }
     };
   }, [demoState]);
@@ -237,7 +283,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={sandboxRef}>
       {demoState === DemoState.INTRO && (
         <div className="text-center space-y-6">
           <h2 className="text-xl font-semibold text-brand-dark">Demo Scenario: Handling Pricing Objections</h2>

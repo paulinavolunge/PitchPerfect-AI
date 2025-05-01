@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import DemoSandbox from '@/components/demo/DemoSandbox';
 
 // Lazy load below-the-fold components for better performance
 const Features = lazy(() => import('@/components/Features'));
@@ -73,8 +74,13 @@ const Index = () => {
           </div>
         </section>
         
-        <section id="demo-sandbox">
-          {/* Placeholder for demo sandbox content */}
+        <section id="demo-sandbox" className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold text-brand-dark text-center mb-8">Try PitchPerfect AI</h2>
+            <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6">
+              <DemoSandbox />
+            </div>
+          </div>
         </section>
         
         <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
