@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -11,6 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    // Only include the Lovable tagger in development mode, not in production builds
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -19,4 +21,8 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Set the VITE_LOVABLE environment variable to false for production builds
+  define: {
+    'process.env.VITE_LOVABLE': mode === 'production' ? 'false' : 'true',
+  }
 }));

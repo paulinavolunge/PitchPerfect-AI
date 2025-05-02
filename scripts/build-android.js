@@ -10,6 +10,9 @@ if (!fs.existsSync(playDir)) {
   fs.mkdirSync(playDir, { recursive: true });
 }
 
+// Set environment variable for production build
+process.env.VITE_LOVABLE = 'false';
+
 // Run the build commands
 console.log('Building Vite app...');
 execSync('npm run build', { stdio: 'inherit' });
