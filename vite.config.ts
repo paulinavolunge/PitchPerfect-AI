@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Set the VITE_LOVABLE environment variable to false for production builds
+  // Set the VITE_LOVABLE environment variable based on mode
   define: {
     'import.meta.env.VITE_LOVABLE': mode === 'production' ? '"false"' : '"true"',
   }
