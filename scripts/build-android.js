@@ -95,6 +95,11 @@ try {
   if (fs.existsSync(aabSourcePath)) {
     fs.copyFileSync(aabSourcePath, outputPath);
     console.log(`✅ Build successful! App Bundle saved to: ${outputPath}`);
+    
+    console.log('\n📱 Testing the app bundle:');
+    console.log('To test the bundle with bundletool, run:');
+    console.log('node scripts/test-android-bundle.js');
+    console.log('\nThis will help you verify the bundle works correctly before uploading to Google Play.');
   } else {
     console.error('❌ Could not find the AAB file. Build may have failed.');
   }

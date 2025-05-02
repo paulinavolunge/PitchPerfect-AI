@@ -18,12 +18,55 @@ This command:
 
 The AAB file will be saved to `dist/play/PitchPerfect-{timestamp}.aab`
 
-## Validating the App Bundle
+## Testing the App Bundle with bundletool
 
-Validate your AAB using the bundletool:
+We've created a helper script to test your AAB before uploading to Google Play:
 
 ```bash
-java -jar bundletool.jar validate --bundle=/path/to/PitchPerfect.aab
+node scripts/test-android-bundle.js
+```
+
+This script will:
+1. Check for bundletool installation
+2. Prompt for keystore information
+3. Build device-specific APKs from your AAB
+4. Offer to install them on a connected device
+
+### Manual bundletool commands
+
+If you prefer to use bundletool directly:
+
+```bash
+# Generate APKs from the AAB
+bundletool build-apks \
+  --bundle=android/app/build/outputs/bundle/release/app-release.aab \
+  --output=/tmp/PitchPerfect.apks \
+  --ks=/path/to/keystore.jks \
+  --ks-pass=pass:your-keystore-password \
+  --ks-key-alias=your-key-alias \
+  --key-pass=pass:your-key-password
+
+# Install APKs on a connected device
+bundletool install-apks --apks=/tmp/PitchPerfect.apks
+```
+
+### Installing bundletool
+
+If you don't have bundletool:
+
+1. Download the latest JAR from [GitHub](https://github.com/google/bundletool/releases)
+2. Create an alias for easy access:
+   ```bash
+   alias bundletool='java -jar /path/to/bundletool.jar'
+   ```
+3. Or place it in your PATH
+
+## Validating the App Bundle
+
+Validate your AAB using bundletool:
+
+```bash
+bundletool validate --bundle=/path/to/PitchPerfect.aab
 ```
 
 ## Keystores and Signing
