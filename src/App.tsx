@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -32,38 +32,53 @@ import AccountDelete from './pages/AccountDelete';
 
 const queryClient = new QueryClient();
 
-// Determine if we're in development mode
-const isDevelopment = import.meta.env.DEV === true;
-
 const App: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const [showDashboardTour, setShowDashboardTour] = useState(false);
 
-  // Only show the tour on the dashboard, only if the user is logged in, and only in development mode
-  const showTour = location.pathname === '/dashboard' && !!user && isDevelopment;
+  // Check if we should show dashboard tour
+  useEffect(() => {
+    if (user && location.pathname === '/dashboard') {
+      const hasSeenDashboardTour = localStorage.getItem('hasSeenDashboardTour');
+      if (!hasSeenDashboardTour) {
+        setShowDashboardTour(true);
+      }
+    }
+  }, [user, location.pathname]);
   
-  // Define tour steps for GuidedTour
-  const tourSteps = [
+  // Define tour steps for Dashboard
+  const dashboardTourSteps = [
     {
       target: '.dashboard-overview',
-      content: 'Welcome to your dashboard! Here you can see your overall performance.',
+      content: 'Welcome to your dashboard! Here you can see your overall performance and track your progress.',
       disableBeacon: true,
     },
     {
       target: '.practice-section',
       content: 'Start practicing your sales pitches here.',
+      placement: 'bottom',
     },
     {
       target: '.progress-section',
-      content: 'Track your improvement over time.',
+      content: 'Track your improvement over time with detailed analytics.',
+      placement: 'bottom',
     },
+    {
+      target: '.ai-suggestions',
+      content: 'Get personalized tips and suggestions to improve your sales skills.',
+      placement: 'left',
+    }
   ];
+  
+  const handleDashboardTourComplete = () => {
+    localStorage.setItem('hasSeenDashboardTour', 'true');
+  };
   
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <main className="min-h-screen bg-background">
-          {/* Only include toaster in the DOM if needed */}
           <Toaster />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -89,12 +104,13 @@ const App: React.FC = () => {
             <Route path="/account-delete" element={<AccountDelete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          {/* Only render the tour in development mode */}
-          {showTour && 
+          
+          {/* Dashboard Tour */}
+          {showDashboardTour && 
             <GuidedTour 
-              steps={tourSteps} 
-              run={showTour} 
-              onComplete={() => console.log('Tour completed')}
+              steps={dashboardTourSteps} 
+              run={showDashboardTour} 
+              onComplete={handleDashboardTourComplete}
             />
           }
         </main>

@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
-import { Volume2, Volume1, VolumeX, Mic, MessageSquare, Airplay } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Mic, MessageSquare, Airplay, BookOpen, HelpCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +13,9 @@ import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from 'react-router-dom';
 import PremiumModal from "@/components/PremiumModal";
+import GuidedTour from "@/components/GuidedTour";
+import GettingStartedModal from "@/components/onboarding/GettingStartedModal";
+import { Step } from 'react-joyride';
 
 const RolePlay = () => {
   const [isScenarioSelected, setIsScenarioSelected] = useState(false);
@@ -31,16 +34,59 @@ const RolePlay = () => {
   const [volume, setVolume] = useState(70);
   const [userScript, setUserScript] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showGettingStartedModal, setShowGettingStartedModal] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const { toast } = useToast();
-  const { isPremium } = useAuth();
+  const { isPremium, user } = useAuth();
   const navigate = useNavigate();
 
-  // Check if user is premium, if not show premium modal
+  // Define tour steps
+  const tourSteps: Step[] = [
+    {
+      target: '.scenario-selection',
+      content: 'Start by selecting a scenario that matches your needs. Choose difficulty level, objection type, and industry.',
+      disableBeacon: true,
+      placement: 'bottom',
+    },
+    {
+      target: '.script-upload',
+      content: 'Or upload your own sales script to practice with.',
+      placement: 'top',
+    },
+    {
+      target: '.voice-style-controls',
+      content: 'Customize the AI response style to simulate different types of customers.',
+      placement: 'bottom',
+    },
+    {
+      target: '.interaction-mode-controls',
+      content: 'Choose how you want to interact with the AI: text, voice, or both (premium features).',
+      placement: 'left',
+    },
+    {
+      target: '.conversation-interface',
+      content: 'This is where your roleplay happens. Practice handling objections and get real-time responses from the AI.',
+      placement: 'top',
+    },
+    {
+      target: '.help-button',
+      content: 'Need help? You can always access the getting started guide from here.',
+      placement: 'left',
+    }
+  ];
+
+  // Check if first time user
   useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenRoleplayOnboarding');
+    if (user && !hasSeenOnboarding) {
+      setShowGettingStartedModal(true);
+    }
+    
+    // Check if premium, if not show premium modal
     if (!isPremium) {
       setShowPremiumModal(true);
     }
-  }, [isPremium]);
+  }, [isPremium, user]);
 
   const handleScenarioSelect = (selectedScenario: typeof scenario) => {
     setScenario(selectedScenario);
@@ -100,9 +146,40 @@ const RolePlay = () => {
     });
   };
   
+  const handleTourComplete = () => {
+    localStorage.setItem('hasSeenRoleplayOnboarding', 'true');
+    toast({
+      title: "Tour Completed",
+      description: "You're all set! Start practicing your sales skills now.",
+    });
+  };
+
+  const handleStartTour = () => {
+    setShowGettingStartedModal(false);
+    setShowTour(true);
+  };
+
+  const showGettingStartedGuide = () => {
+    setShowGettingStartedModal(true);
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      
+      {/* Guided Tour */}
+      <GuidedTour
+        steps={tourSteps}
+        run={showTour}
+        onComplete={handleTourComplete}
+      />
+      
+      {/* Getting Started Modal */}
+      <GettingStartedModal
+        open={showGettingStartedModal}
+        onOpenChange={setShowGettingStartedModal}
+        onStartTour={handleStartTour}
+      />
       
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
@@ -110,11 +187,23 @@ const RolePlay = () => {
             <div className="space-y-8">
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
                 <h2 className="text-xl font-semibold mb-4 text-center text-brand-dark">Choose a scenario or upload your script to start practicing</h2>
+                <div className="flex justify-center">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2"
+                    onClick={showGettingStartedGuide}
+                  >
+                    <BookOpen size={16} />
+                    Getting Started Guide
+                  </Button>
+                </div>
               </div>
               
-              <ScenarioSelector onSelectScenario={handleScenarioSelect} />
+              <div className="scenario-selection">
+                <ScenarioSelector onSelectScenario={handleScenarioSelect} />
+              </div>
               
-              <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="bg-white rounded-lg shadow-lg p-6 script-upload">
                 <h2 className="text-xl font-semibold mb-4 text-brand-dark">Upload Your Script</h2>
                 <ScriptUpload onScriptSubmit={handleScriptSubmit} />
               </div>
@@ -125,7 +214,7 @@ const RolePlay = () => {
                 <h1 className="text-2xl font-bold text-brand-dark">Role Play Practice</h1>
                 
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 voice-style-controls">
                     <Button
                       variant="ghost" 
                       size="sm"
@@ -187,7 +276,7 @@ const RolePlay = () => {
                     </span>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 interaction-mode-controls">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Toggle 
@@ -231,16 +320,34 @@ const RolePlay = () => {
                       </TooltipTrigger>
                       <TooltipContent>Voice and text</TooltipContent>
                     </Tooltip>
+                    
+                    <div className="ml-2 help-button">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={showGettingStartedGuide}
+                            className="h-8 w-8"
+                          >
+                            <HelpCircle size={18} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Getting Started Guide</TooltipContent>
+                      </Tooltip>
+                    </div>
                   </div>
                 </div>
                 
-                <ConversationInterface 
-                  mode={voiceMode} 
-                  scenario={scenario} 
-                  voiceStyle={voiceStyle}
-                  volume={volume}
-                  userScript={userScript}
-                />
+                <div className="conversation-interface">
+                  <ConversationInterface 
+                    mode={voiceMode} 
+                    scenario={scenario} 
+                    voiceStyle={voiceStyle}
+                    volume={volume}
+                    userScript={userScript}
+                  />
+                </div>
               </div>
               {userScript && (
                 <div className="mt-4 p-4 bg-brand-blue/10 rounded-lg">

@@ -6,9 +6,17 @@ interface GuidedTourProps {
   steps: Step[];
   run: boolean;
   onComplete: () => void;
+  showSkipButton?: boolean;
+  continuous?: boolean;
 }
 
-const GuidedTour = ({ steps, run, onComplete }: GuidedTourProps) => {
+const GuidedTour = ({ 
+  steps, 
+  run, 
+  onComplete, 
+  showSkipButton = true,
+  continuous = true 
+}: GuidedTourProps) => {
   const [tourState, setTourState] = useState({
     run,
     steps,
@@ -23,7 +31,7 @@ const GuidedTour = ({ steps, run, onComplete }: GuidedTourProps) => {
   }, [run]);
 
   const handleJoyrideCallback = (data: any) => {
-    const { status } = data;
+    const { status, type } = data;
     
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
       // Tour is complete
@@ -35,12 +43,12 @@ const GuidedTour = ({ steps, run, onComplete }: GuidedTourProps) => {
   return (
     <Joyride
       callback={handleJoyrideCallback}
-      continuous
+      continuous={continuous}
       hideCloseButton
       run={tourState.run}
       scrollToFirstStep
       showProgress
-      showSkipButton
+      showSkipButton={showSkipButton}
       steps={steps}
       styles={{
         options: {
