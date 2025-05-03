@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     // Only include the Lovable tagger in development mode, not in production builds
-    mode === 'development' &&
+    (mode === 'development' || mode === 'lovable') &&
     componentTagger(),
   ].filter(Boolean),
   resolve: {
