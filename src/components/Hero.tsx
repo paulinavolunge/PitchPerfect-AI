@@ -73,13 +73,13 @@ const Hero = () => {
             className="flex flex-wrap gap-4"
           >
             <Button 
-              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white flex items-center gap-2 group"
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group"
               onClick={handleScrollToDemo}
             >
               Start Free Trial <Rocket className="group-hover:translate-x-1 transition-transform" size={18} />
             </Button>
             <Link to="/demo">
-              <Button variant="outline" className="btn-secondary flex items-center gap-2 group">
+              <Button variant="outline" className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 flex items-center gap-2 group">
                 Play Demo
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
               </Button>
