@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
@@ -31,6 +30,7 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import AccountDelete from './pages/AccountDelete';
 import OnboardingWizard from './components/onboarding/OnboardingWizard';
+import TeamDashboard from './pages/TeamDashboard';
 
 const queryClient = new QueryClient();
 
@@ -134,6 +134,7 @@ const App: React.FC = () => {
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/account-delete" element={<AccountDelete />} />
+            <Route path="/team" element={<TeamDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           

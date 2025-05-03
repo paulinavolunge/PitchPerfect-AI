@@ -63,7 +63,7 @@ const RolePlay = () => {
     },
     {
       target: '.interaction-mode-controls',
-      content: 'Choose how you want to interact with the AI: text, voice, or both (premium features).',
+      content: 'Choose how you want to interact with the AI: text, voice, or both. Toggle between these modes based on your preference.',
       placement: isMobile ? 'bottom' : 'left',
     },
     {
