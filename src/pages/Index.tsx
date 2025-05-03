@@ -3,7 +3,7 @@ import React, { useState, lazy, Suspense, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import DemoSandbox from '@/components/demo/DemoSandbox';
@@ -121,6 +121,25 @@ const Index = () => {
         <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
           <HowItWorks />
         </Suspense>
+        
+        <section className="py-12 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg border border-gray-200 shadow-sm flex items-center gap-6">
+              <div className="hidden sm:block">
+                <Shield className="w-12 h-12 text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-medium text-xl mb-1">Data Security & Privacy</h3>
+                <p className="text-gray-600 mb-3">
+                  Your data is encrypted and protected using advanced security protocols. We value your privacy.
+                </p>
+                <Button variant="link" className="p-0 h-auto text-brand-green" onClick={() => navigate('/privacy')}>
+                  Read our Privacy Policy
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
         
         <Suspense fallback={<div className="py-12 text-center">Loading...</div>}>
           <NewsletterSignup />
