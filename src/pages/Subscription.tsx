@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -9,9 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { CheckIcon, XIcon } from 'lucide-react';
+import { CheckIcon, XIcon, Gift } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Subscription = () => {
   const { toast } = useToast();
@@ -19,12 +19,34 @@ const Subscription = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
   const [searchParams, setSearchParams] = useSearchParams();
-
+  const [referralApplied, setReferralApplied] = useState(false);
+  
   useEffect(() => {
+    // Check for referral parameter
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralApplied(true);
+      // In a real implementation, we would validate the referral code here
+      toast({
+        title: "Referral Applied!",
+        description: "You'll get 1 free month when you subscribe to a plan.",
+      });
+      
+      // Remove from URL after processing
+      searchParams.delete('ref');
+      setSearchParams(searchParams);
+    }
+    
+    // Set plan type from URL if present
+    const urlPlan = searchParams.get('plan');
+    if (urlPlan === 'yearly' || urlPlan === 'monthly') {
+      setPlanType(urlPlan);
+    }
+    
     if (user) {
       refreshSubscription();
     }
-  }, [user, refreshSubscription]);
+  }, [user, refreshSubscription, searchParams, setSearchParams, toast]);
 
   const handleUpgradeClick = async () => {
     if (!user) {
@@ -134,6 +156,17 @@ const Subscription = () => {
               <div className="mt-4 inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
                 <CheckIcon className="w-4 h-4 mr-2" />
                 You're on the {subscriptionTier} plan
+              </div>
+            )}
+            
+            {referralApplied && (
+              <div className="mt-4 max-w-md mx-auto">
+                <Alert className="bg-purple-50 border-purple-200">
+                  <Gift className="h-4 w-4 text-purple-500" />
+                  <AlertDescription className="text-sm">
+                    Referral discount applied. You'll receive 1 month free with your subscription.
+                  </AlertDescription>
+                </Alert>
               </div>
             )}
 

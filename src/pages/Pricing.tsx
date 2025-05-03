@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import ROICalculator from '@/components/ROICalculator';
 import GuidedTour from '@/components/GuidedTour';
 import { Step } from 'react-joyride';
+import TimeOffer from '@/components/promotion/TimeOffer';
 
 const Pricing = () => {
   const { user, isPremium } = useAuth();
@@ -20,6 +21,10 @@ const Pricing = () => {
   const demoRef = useRef<HTMLDivElement>(null);
   const [runTour, setRunTour] = useState(false);
   const [showStickyCTA, setShowStickyCTA] = useState(true);
+  
+  // Create a promotion expiry date (14 days from now)
+  const promoExpiryDate = new Date();
+  promoExpiryDate.setDate(promoExpiryDate.getDate() + 14);
   
   const handleUpgradeClick = () => {
     if (!user) {
@@ -154,6 +159,18 @@ const Pricing = () => {
                 </TabsList>
               </Tabs>
             </div>
+          </div>
+          
+          {/* Time-limited offer card for Team plan */}
+          <div className="max-w-md mx-auto mb-8">
+            <TimeOffer 
+              expiryDate={promoExpiryDate}
+              discount="Get 1 Month Free"
+              description="Sign up for the annual Team Plan and get your first month free"
+              variant="card"
+              ctaText="Claim This Deal"
+              ctaLink="/subscription?plan=yearly"
+            />
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto pricing-cards">

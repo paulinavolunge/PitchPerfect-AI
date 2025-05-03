@@ -1,5 +1,5 @@
 
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import DemoSandbox from '@/components/demo/DemoSandbox';
+import TimeOffer from '@/components/promotion/TimeOffer';
 
 // Lazy load below-the-fold components for better performance
 const Features = lazy(() => import('@/components/Features'));
@@ -20,6 +21,24 @@ const Index = () => {
   const { user, isPremium } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [showPromotion, setShowPromotion] = useState(true);
+  
+  // Create a promotion expiry date (30 days from now)
+  const promoExpiryDate = new Date();
+  promoExpiryDate.setDate(promoExpiryDate.getDate() + 30);
+  
+  // Check localStorage to see if user has dismissed the promo
+  useEffect(() => {
+    const hasClosedPromo = localStorage.getItem('promoAnnualDismissed');
+    if (hasClosedPromo) {
+      setShowPromotion(false);
+    }
+  }, []);
+  
+  const handleClosePromotion = () => {
+    setShowPromotion(false);
+    localStorage.setItem('promoAnnualDismissed', 'true');
+  };
   
   // Scroll to CTA section when Book Demo is clicked
   const scrollToCTA = (section: string) => {
@@ -32,6 +51,18 @@ const Index = () => {
   
   return (
     <div className="min-h-screen flex flex-col">
+      {showPromotion && (
+        <TimeOffer
+          expiryDate={promoExpiryDate}
+          discount="1 Month Free"
+          description="Get 1 month free with annual Team Plan purchase"
+          variant="banner"
+          ctaText="Claim Offer"
+          ctaLink="/pricing"
+          onClose={handleClosePromotion}
+        />
+      )}
+      
       <Navbar />
       <main className="flex-grow">
         <Hero />

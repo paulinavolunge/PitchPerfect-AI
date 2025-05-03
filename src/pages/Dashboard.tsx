@@ -9,6 +9,7 @@ import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
 import StreakBadge from '@/components/dashboard/StreakBadge';
 import LeaderboardTable from '@/components/dashboard/LeaderboardTable';
+import ReferralProgram from '@/components/dashboard/ReferralProgram';
 import { useAuth } from '@/context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Step } from 'react-joyride';
@@ -208,6 +209,9 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+              
+              {/* Referral Program */}
+              <ReferralProgram />
             </div>
             
             <div className="space-y-6">
