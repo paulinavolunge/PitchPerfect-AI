@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import Joyride, { STATUS, Step } from 'react-joyride';
+import Joyride, { STATUS, Step, ACTIONS, CallBackProps, EVENTS, TooltipRenderProps, Placement } from 'react-joyride';
 
 interface GuidedTourProps {
   steps: Step[];
@@ -30,8 +30,8 @@ const GuidedTour = ({
     }));
   }, [run]);
 
-  const handleJoyrideCallback = (data: any) => {
-    const { status, type } = data;
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status } = data;
     
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
       // Tour is complete

@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/context/AuthContext";
+import { Step } from 'react-joyride';
 
 import Index from './pages/Index';
 import About from './pages/About';
@@ -48,7 +49,7 @@ const App: React.FC = () => {
   }, [user, location.pathname]);
   
   // Define tour steps for Dashboard
-  const dashboardTourSteps = [
+  const dashboardTourSteps: Step[] = [
     {
       target: '.dashboard-overview',
       content: 'Welcome to your dashboard! Here you can see your overall performance and track your progress.',
@@ -57,17 +58,17 @@ const App: React.FC = () => {
     {
       target: '.practice-section',
       content: 'Start practicing your sales pitches here.',
-      placement: 'bottom',
+      placement: 'bottom' as const,
     },
     {
       target: '.progress-section',
       content: 'Track your improvement over time with detailed analytics.',
-      placement: 'bottom',
+      placement: 'bottom' as const,
     },
     {
       target: '.ai-suggestions',
       content: 'Get personalized tips and suggestions to improve your sales skills.',
-      placement: 'left',
+      placement: 'left' as const,
     }
   ];
   

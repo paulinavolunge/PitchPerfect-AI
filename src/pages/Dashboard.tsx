@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,17 +34,17 @@ const Dashboard = () => {
       target: '.tour-step-1',
       content: 'Start by selecting a scenario that you want to practice.',
       disableBeacon: true,
-      placement: 'bottom',
+      placement: 'bottom' as const,
     },
     {
       target: '.tour-step-2',
       content: 'Press the record button to start your practice session.',
-      placement: 'bottom',
+      placement: 'bottom' as const,
     },
     {
       target: '.tour-step-3',
       content: 'After your session, you\'ll see feedback and suggestions to improve your pitch.',
-      placement: 'top',
+      placement: 'top' as const,
     }
   ];
   

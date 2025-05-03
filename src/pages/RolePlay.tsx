@@ -46,32 +46,32 @@ const RolePlay = () => {
       target: '.scenario-selection',
       content: 'Start by selecting a scenario that matches your needs. Choose difficulty level, objection type, and industry.',
       disableBeacon: true,
-      placement: 'bottom',
+      placement: 'bottom' as const,
     },
     {
       target: '.script-upload',
       content: 'Or upload your own sales script to practice with.',
-      placement: 'top',
+      placement: 'top' as const,
     },
     {
       target: '.voice-style-controls',
       content: 'Customize the AI response style to simulate different types of customers.',
-      placement: 'bottom',
+      placement: 'bottom' as const,
     },
     {
       target: '.interaction-mode-controls',
       content: 'Choose how you want to interact with the AI: text, voice, or both (premium features).',
-      placement: 'left',
+      placement: 'left' as const,
     },
     {
       target: '.conversation-interface',
       content: 'This is where your roleplay happens. Practice handling objections and get real-time responses from the AI.',
-      placement: 'top',
+      placement: 'top' as const,
     },
     {
       target: '.help-button',
       content: 'Need help? You can always access the getting started guide from here.',
-      placement: 'left',
+      placement: 'left' as const,
     }
   ];
 
