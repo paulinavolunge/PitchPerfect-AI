@@ -13,9 +13,26 @@ if (!fs.existsSync(playDir)) {
 // Set environment variable for production build
 process.env.VITE_LOVABLE = 'false';
 
+// Run compliance preparation scripts
+console.log('Preparing Google Play Store compliance files...');
+try {
+  execSync('node scripts/prepare-android-store.js', { stdio: 'inherit' });
+  console.log('✅ Play Store compliance files prepared');
+} catch (error) {
+  console.error('❌ Error preparing Play Store compliance files:', error);
+}
+
 // Run the build commands
 console.log('Building Vite app...');
 execSync('npm run build', { stdio: 'inherit' });
+
+console.log('Updating Android manifest for permissions...');
+try {
+  execSync('node scripts/update-android-manifest.js', { stdio: 'inherit' });
+  console.log('✅ Android manifest updated');
+} catch (error) {
+  console.error('❌ Error updating Android manifest:', error);
+}
 
 console.log('Syncing Capacitor project...');
 execSync('npx cap sync android', { stdio: 'inherit' });

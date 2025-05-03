@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail } from 'lucide-react';
+import { Mail, Shield } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -47,6 +47,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><Link to="/terms" className="text-gray-300 hover:text-brand-green transition-colors">Terms of Service</Link></li>
               <li><Link to="/privacy" className="text-gray-300 hover:text-brand-green transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/data-safety" className="text-gray-300 hover:text-brand-green transition-colors">Data Safety</Link></li>
             </ul>
           </div>
         </div>
@@ -61,6 +62,9 @@ const Footer = () => {
             </Link>
             <Link to="/terms" className="text-gray-400 hover:text-brand-green text-sm transition-colors">
               Terms of Use
+            </Link>
+            <Link to="/data-safety" className="text-gray-400 hover:text-brand-green text-sm transition-colors">
+              Data Safety
             </Link>
           </div>
         </div>
