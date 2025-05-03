@@ -1,190 +1,241 @@
 
 import React, { useState, useEffect } from 'react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { X } from "lucide-react";
 
-export type ConsentType = 'data_collection' | 'analytics' | 'microphone' | 'ai_improvement';
-
-interface ConsentManagerProps {
-  children: React.ReactNode;
+interface ConsentOption {
+  id: string;
+  title: string;
+  description: string;
+  required: boolean;
+  defaultValue: boolean;
 }
 
-const ConsentManager: React.FC<ConsentManagerProps> = ({ children }) => {
-  const [showConsent, setShowConsent] = useState(false);
-  const [consentType, setConsentType] = useState<ConsentType | null>(null);
-  const [consentTitle, setConsentTitle] = useState('');
-  const [consentDescription, setConsentDescription] = useState('');
-  
-  const consentSettings = {
-    data_collection: {
-      title: 'Data Collection Consent',
-      description: 'We collect data about your practice sessions to provide personalized feedback and improve your experience. This includes recordings, transcripts, and performance metrics. You can withdraw consent at any time in your privacy settings.'
+interface ConsentPreferences {
+  analytics: boolean;
+  marketing: boolean;
+  thirdParty: boolean;
+  necessaryCookies: boolean; // Always true, required
+}
+
+const ConsentManager: React.FC = () => {
+  const { toast } = useToast();
+  const [showConsentDialog, setShowConsentDialog] = useState<boolean>(false);
+  const [consentGiven, setConsentGiven] = useState<boolean>(false);
+  const [preferences, setPreferences] = useState<ConsentPreferences>({
+    analytics: false,
+    marketing: false,
+    thirdParty: false,
+    necessaryCookies: true // Always required
+  });
+
+  // Consent options
+  const consentOptions: ConsentOption[] = [
+    {
+      id: "necessaryCookies",
+      title: "Necessary Cookies",
+      description: "These cookies are required for basic site functionality and are always enabled.",
+      required: true,
+      defaultValue: true,
     },
-    analytics: {
-      title: 'Analytics Consent',
-      description: 'We use analytics to understand how you use the app and improve our features. This data is anonymized and doesn\'t include personal information. You can withdraw consent at any time in your privacy settings.'
+    {
+      id: "analytics",
+      title: "Analytics",
+      description: "Allow us to collect information about how you use our app to improve functionality and user experience.",
+      required: false,
+      defaultValue: false,
     },
-    microphone: {
-      title: 'Microphone Access',
-      description: 'PitchPerfect AI needs access to your microphone to record your voice during practice sessions. Your recordings are encrypted and only used to provide feedback. You can delete recordings at any time.'
+    {
+      id: "marketing",
+      title: "Marketing",
+      description: "Enable personalized recommendations and marketing communications based on your usage patterns.",
+      required: false,
+      defaultValue: false,
     },
-    ai_improvement: {
-      title: 'AI Improvement Data Sharing',
-      description: 'Help us improve our AI by allowing us to use anonymized data from your sessions for training. No personally identifiable information is used. You can withdraw consent at any time in your privacy settings.'
-    }
-  };
-  
+    {
+      id: "thirdParty",
+      title: "Third-party Services",
+      description: "Allow integration with third-party services that enhance your experience (transcription services, AI feedback).",
+      required: false,
+      defaultValue: false,
+    },
+  ];
+
   useEffect(() => {
-    // Check which consents we need to ask for on first load
-    const checkConsents = () => {
-      if (localStorage.getItem('consentShown') === 'true') {
-        return;
-      }
-      
-      // If data collection consent hasn't been given yet, show that first
-      if (localStorage.getItem('dataCollectionConsent') !== 'true') {
-        showConsentDialog('data_collection');
-        return;
-      }
-      
-      // Then check analytics consent
-      if (localStorage.getItem('analyticsConsent') !== 'true') {
-        showConsentDialog('analytics');
-        return;
-      }
-      
-      // If we've shown all needed consents, mark as complete
-      localStorage.setItem('consentShown', 'true');
-    };
-    
-    // Wait a moment before showing consent to let the app load
-    const timer = setTimeout(() => {
-      checkConsents();
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    // Check if consent has been previously given
+    const savedConsent = localStorage.getItem('consent-preferences');
+    if (savedConsent) {
+      setConsentGiven(true);
+      setPreferences(JSON.parse(savedConsent));
+    } else {
+      // Show the consent dialog if no consent has been given yet
+      setShowConsentDialog(true);
+    }
   }, []);
-  
-  const showConsentDialog = (type: ConsentType) => {
-    setConsentType(type);
-    setConsentTitle(consentSettings[type].title);
-    setConsentDescription(consentSettings[type].description);
-    setShowConsent(true);
+
+  const handleToggleConsent = (optionId: keyof ConsentPreferences) => {
+    if (optionId === 'necessaryCookies') return; // Cannot toggle required options
+    
+    setPreferences(prev => ({
+      ...prev,
+      [optionId]: !prev[optionId]
+    }));
+  };
+
+  const handleAcceptAll = () => {
+    const allAccepted: ConsentPreferences = {
+      analytics: true,
+      marketing: true,
+      thirdParty: true,
+      necessaryCookies: true,
+    };
+    setPreferences(allAccepted);
+    saveConsent(allAccepted);
   };
   
-  const handleAccept = () => {
-    if (!consentType) return;
-    
-    // Save the consent in localStorage
-    localStorage.setItem(`${consentType}Consent`, 'true');
-    
-    // Show feedback to user
-    toast.success(`${consentSettings[consentType].title} accepted`);
-    
-    // Close dialog
-    setShowConsent(false);
-    setConsentType(null);
-    
-    // Check if there are more consents to show
-    if (consentType === 'data_collection') {
-      setTimeout(() => {
-        showConsentDialog('analytics');
-      }, 500);
-    } else if (consentType === 'analytics') {
-      localStorage.setItem('consentShown', 'true');
-    }
+  const handleDeclineAll = () => {
+    // Only accept necessary cookies
+    const necessaryOnly: ConsentPreferences = {
+      analytics: false,
+      marketing: false,
+      thirdParty: false,
+      necessaryCookies: true,
+    };
+    setPreferences(necessaryOnly);
+    saveConsent(necessaryOnly);
   };
-  
-  const handleDecline = () => {
-    if (!consentType) return;
+
+  const saveConsent = (prefs: ConsentPreferences) => {
+    localStorage.setItem('consent-preferences', JSON.stringify(prefs));
+    setConsentGiven(true);
+    setShowConsentDialog(false);
     
-    // Mark as declined in localStorage
-    localStorage.setItem(`${consentType}Consent`, 'false');
-    
-    // For data_collection and analytics, we still need to show the next consent
-    if (consentType === 'data_collection') {
-      toast.info('You can change this setting anytime in your privacy preferences.');
-      setTimeout(() => {
-        showConsentDialog('analytics');
-      }, 500);
-    } else if (consentType === 'analytics') {
-      localStorage.setItem('consentShown', 'true');
-      toast.info('You can change this setting anytime in your privacy preferences.');
-    }
-    
-    // Close dialog
-    setShowConsent(false);
-    setConsentType(null);
-  };
-  
-  // Expose a function to request specific consent types programmatically
-  const requestConsent = (type: ConsentType): Promise<boolean> => {
-    return new Promise((resolve) => {
-      // If consent already given, return immediately
-      if (localStorage.getItem(`${type}Consent`) === 'true') {
-        resolve(true);
-        return;
-      }
-      
-      // Set up a one-time event listener for this specific consent request
-      const handleThisConsent = (accepted: boolean) => {
-        resolve(accepted);
-      };
-      
-      // Store the handler temporarily
-      (window as any).__consentCallback = handleThisConsent;
-      
-      // Show the consent dialog
-      showConsentDialog(type);
-      
-      // Set up event handlers for this specific request
-      const originalAccept = handleAccept;
-      const originalDecline = handleDecline;
-      
-      handleAccept = () => {
-        originalAccept();
-        if ((window as any).__consentCallback) {
-          (window as any).__consentCallback(true);
-          delete (window as any).__consentCallback;
-        }
-      };
-      
-      handleDecline = () => {
-        originalDecline();
-        if ((window as any).__consentCallback) {
-          (window as any).__consentCallback(false);
-          delete (window as any).__consentCallback;
-        }
-      };
+    toast({
+      title: "Preferences Saved",
+      description: "Your privacy preferences have been updated.",
     });
+    
+    // Here you would also potentially trigger any analytics setup based on preferences
+    applyConsentPreferences(prefs);
   };
-  
-  // Expose the consent API through context
-  (window as any).requestUserConsent = requestConsent;
-  
+
+  const applyConsentPreferences = (prefs: ConsentPreferences) => {
+    // Implementation to actually apply these consent preferences
+    // For example, enabling/disabling analytics trackers, etc.
+    console.log("Applying consent preferences:", prefs);
+    
+    // Example: If analytics consent is given, initialize analytics
+    if (prefs.analytics) {
+      // Initialize analytics
+      console.log("Analytics enabled");
+    }
+    
+    // Example: If marketing consent is given
+    if (prefs.marketing) {
+      // Setup marketing cookies/trackers
+      console.log("Marketing enabled");
+    }
+    
+    // And so on for other consent types
+  };
+
+  const handleSave = () => {
+    saveConsent(preferences);
+  };
+
   return (
     <>
-      {children}
+      <Dialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Privacy Preferences</DialogTitle>
+            <DialogDescription>
+              PitchPerfect AI values your privacy. Please review our data collection practices and select your preferences.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="privacy" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="privacy">Privacy Settings</TabsTrigger>
+              <TabsTrigger value="details">Detailed Information</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="privacy" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                {consentOptions.map((option) => (
+                  <div key={option.id} className="flex items-center justify-between border-b pb-2">
+                    <div>
+                      <h4 className="font-medium">{option.title}</h4>
+                      <p className="text-sm text-muted-foreground">{option.description}</p>
+                      {option.required && <span className="text-xs text-muted-foreground">(Required)</span>}
+                    </div>
+                    <Button
+                      variant={preferences[option.id as keyof ConsentPreferences] ? "default" : "outline"}
+                      size="sm"
+                      disabled={option.required}
+                      onClick={() => handleToggleConsent(option.id as keyof ConsentPreferences)}
+                    >
+                      {preferences[option.id as keyof ConsentPreferences] ? "Enabled" : "Disabled"}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="details">
+              <div className="space-y-4 mt-4">
+                <h4 className="font-medium">How We Use Your Data</h4>
+                <p className="text-sm">
+                  PitchPerfect AI collects and processes personal data to provide our sales training services and improve your experience. 
+                  We use data about your interactions, practice sessions, and feedback to enhance our AI coaching capabilities.
+                </p>
+                
+                <h4 className="font-medium">Data Storage</h4>
+                <p className="text-sm">
+                  Your data is encrypted and stored securely using industry-standard protocols. We retain your personal information only for as long as necessary to provide you with our services.
+                </p>
+                
+                <h4 className="font-medium">Your Rights</h4>
+                <p className="text-sm">
+                  You have the right to access, correct, download, or request deletion of your personal data at any time through your account settings or by contacting us.
+                </p>
+                
+                <h4 className="font-medium">Third-Party Sharing</h4>
+                <p className="text-sm">
+                  If you enable third-party services, we may share relevant data with these providers to enhance your training experience. We do not sell your personal information.
+                </p>
+                
+                <Button variant="link" size="sm" className="px-0" asChild>
+                  <a href="/privacy" target="_blank">Read Full Privacy Policy</a>
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter className="flex-col sm:flex-row sm:justify-between">
+            <div className="flex space-x-2 mb-2 sm:mb-0">
+              <Button variant="outline" onClick={handleDeclineAll}>Decline All</Button>
+              <Button variant="outline" onClick={handleAcceptAll}>Accept All</Button>
+            </div>
+            <Button onClick={handleSave}>Save Preferences</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
-      <AlertDialog open={showConsent} onOpenChange={setShowConsent}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{consentTitle}</AlertDialogTitle>
-            <AlertDialogDescription className="text-base">
-              {consentDescription}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={handleDecline} className="w-full sm:w-auto">
-              Decline
-            </Button>
-            <Button onClick={handleAccept} className="w-full sm:w-auto">
-              Accept
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Privacy settings button (visible when dialog is closed) */}
+      {!showConsentDialog && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="fixed bottom-4 right-4 z-50 shadow-md flex items-center gap-1"
+          onClick={() => setShowConsentDialog(true)}
+        >
+          Privacy Settings <X size={16} className="ml-1" />
+        </Button>
+      )}
     </>
   );
 };
