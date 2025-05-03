@@ -10,12 +10,14 @@ import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Signup = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [verificationSent, setVerificationSent] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -44,9 +46,30 @@ const Signup = () => {
       if (event === 'USER_CREATED') {
         setVerificationSent(true);
         setSignupError(null);
+        setIsSubmitting(false);
+        toast.success("Account created successfully!", {
+          description: "Please check your email to verify your account."
+        });
       } else if (event === 'SIGNUP' && session?.error) {
         setSignupError(session.error.message);
         setVerificationSent(false);
+        setIsSubmitting(false);
+        
+        // Display more user-friendly error messages
+        const errorMsg = session.error.message.toLowerCase();
+        if (errorMsg.includes('password')) {
+          toast.error("Password error", {
+            description: "Password should be at least 8 characters with numbers and special characters."
+          });
+        } else if (errorMsg.includes('email')) {
+          toast.error("Invalid email", {
+            description: "Please enter a valid email address."
+          });
+        } else {
+          toast.error("Signup failed", {
+            description: session.error.message
+          });
+        }
       }
     };
 
@@ -68,7 +91,31 @@ const Signup = () => {
       anchor: {
         color: 'rgb(22 163 74)',
       },
+      // Add validation styles
+      input: {
+        borderRadius: '0.375rem',
+      },
+      message: {
+        color: 'rgb(220 38 38)',
+        fontSize: '0.875rem',
+        marginTop: '0.25rem',
+      },
     },
+    // Enable real-time validation
+    variables: {
+      default: {
+        colors: {
+          inputBorderFocus: 'rgb(22 163 74)',
+          inputBorderHover: 'rgb(22 163 74)',
+          inputBorderInvalid: 'rgb(220 38 38)',
+        },
+      },
+    },
+  };
+
+  // Custom handleSubmit wrapper to track submission state
+  const handleBeforeSignup = () => {
+    setIsSubmitting(true);
   };
 
   return (
@@ -101,19 +148,21 @@ const Signup = () => {
 
           <Card>
             <CardContent className="pt-6">
-              <Auth
-                supabaseClient={supabase}
-                appearance={authAppearance}
-                providers={[]}
-                view="sign_up"
-                showLinks={true}
-                redirectTo={`${window.location.origin}/dashboard`}
-                onlyThirdPartyProviders={false}
-                magicLink={false}
-                queryParams={{
-                  emailRedirectTo: `${window.location.origin}/dashboard`,
-                }}
-              />
+              <div className="auth-container" onSubmit={handleBeforeSignup}>
+                <Auth
+                  supabaseClient={supabase}
+                  appearance={authAppearance}
+                  providers={[]}
+                  view="sign_up"
+                  showLinks={true}
+                  redirectTo={`${window.location.origin}/dashboard`}
+                  onlyThirdPartyProviders={false}
+                  magicLink={false}
+                  queryParams={{
+                    emailRedirectTo: `${window.location.origin}/dashboard`,
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
           

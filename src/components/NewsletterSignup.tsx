@@ -7,10 +7,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Mail } from 'lucide-react';
+import { Mail, AlertCircle } from 'lucide-react';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' })
+  email: z.string()
+    .min(1, { message: 'Email is required' })
+    .email({ message: 'Please enter a valid email address' })
+    .refine(email => !email.endsWith('.con'), {
+      message: 'Did you mean .com? Please check your email address',
+    })
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -22,7 +27,8 @@ const NewsletterSignup = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: ''
-    }
+    },
+    mode: 'onBlur' // Validate on blur for better UX
   });
 
   const onSubmit = async (data: FormValues) => {
@@ -40,10 +46,10 @@ const NewsletterSignup = () => {
       
       form.reset();
     } catch (error) {
+      console.error('Newsletter signup error:', error);
       toast.error("Couldn't complete your subscription", {
         description: "Please try again later."
       });
-      console.error('Newsletter signup error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -68,17 +74,25 @@ const NewsletterSignup = () => {
               <FormField
                 control={form.control}
                 name="email"
-                render={({ field }) => (
-                  <FormItem className="flex-grow">
+                render={({ field, fieldState }) => (
+                  <FormItem className="flex-grow relative">
                     <FormControl>
-                      <Input 
-                        placeholder="Enter your email" 
-                        type="email"
-                        className="h-12"
-                        {...field} 
-                      />
+                      <div className="relative">
+                        <Input 
+                          placeholder="Enter your email" 
+                          type="email"
+                          className={`h-12 ${fieldState.error ? 'border-red-500 focus-visible:ring-red-300' : ''}`}
+                          aria-invalid={fieldState.error ? "true" : "false"}
+                          {...field} 
+                        />
+                        {fieldState.error && (
+                          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500">
+                            <AlertCircle className="h-4 w-4" />
+                          </span>
+                        )}
+                      </div>
                     </FormControl>
-                    <FormMessage className="text-left" />
+                    <FormMessage className="text-left absolute text-xs" />
                   </FormItem>
                 )}
               />
