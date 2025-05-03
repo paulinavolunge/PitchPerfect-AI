@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -249,7 +248,7 @@ const Pricing = () => {
                   className="w-full bg-brand-green hover:bg-brand-green/90"
                 >
                   {!user 
-                    ? (planType === "monthly" ? "Start Monthly Plan" : "Start Yearly Plan")
+                    ? `Sign up - ${planType === "monthly" ? "Monthly" : "Yearly"} Plan`
                     : (isPremium 
                         ? "Manage Subscription" 
                         : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`)
