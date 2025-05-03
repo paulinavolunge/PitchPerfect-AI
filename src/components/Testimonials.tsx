@@ -1,6 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight, Rocket } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const testimonials = [
   {
@@ -17,34 +22,148 @@ const testimonials = [
     quote: "The AI feedback is like having a personal coach available 24/7. I practice every morning before my calls and it's been game-changing.",
     author: "Jessica Patel",
     role: "Account Manager, Swift Enterprise"
+  },
+  {
+    quote: "My cold call success rate doubled after just two weeks of using PitchPerfect AI. The real-time feedback makes all the difference.",
+    author: "David Rodriguez",
+    role: "Business Development, Nexus Group"
+  },
+  {
+    quote: "Our entire sales team uses PitchPerfect AI daily. It's transformed our approach to customer conversations and boosted revenue.",
+    author: "Emma Wilson",
+    role: "VP of Sales, Future Technologies"
   }
 ];
 
 const Testimonials = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [autoRotate, setAutoRotate] = useState(true);
+  const isMobile = useIsMobile();
+  
+  // Calculate how many testimonials to display based on screen size
+  const displayCount = isMobile ? 1 : 3;
+  
+  // Automatically rotate testimonials
+  useEffect(() => {
+    let intervalId: number | undefined;
+    
+    if (autoRotate) {
+      intervalId = window.setInterval(() => {
+        setCurrentIndex(prevIndex => 
+          (prevIndex + 1) % (testimonials.length - displayCount + 1)
+        );
+      }, 5000);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [autoRotate, displayCount]);
+  
+  // Pause rotation when user interacts
+  const handleNavigation = (direction: 'prev' | 'next') => {
+    setAutoRotate(false);
+    
+    if (direction === 'prev') {
+      setCurrentIndex(prev => 
+        prev === 0 ? testimonials.length - displayCount : prev - 1
+      );
+    } else {
+      setCurrentIndex(prev => 
+        (prev + 1) % (testimonials.length - displayCount + 1)
+      );
+    }
+    
+    // Resume auto-rotation after a period of inactivity
+    setTimeout(() => setAutoRotate(true), 10000);
+  };
+  
+  // Get visible testimonials
+  const visibleTestimonials = testimonials.slice(currentIndex, currentIndex + displayCount);
+
   return (
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl font-bold mb-4 text-brand-dark">What Our Users Say</h2>
-          <p className="text-lg text-brand-dark/70">
+          <p className="text-lg text-brand-dark/70 mb-10">
             Don't just take our word for it - hear from sales professionals who have transformed their pitches
           </p>
+          
+          <Link to="/signup" className="inline-block mb-6">
+            <Button 
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+            >
+              Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+            </Button>
+          </Link>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((testimonial, index) => (
-            <Card key={index} className="border-none shadow-lg">
-              <CardContent className="p-8">
-                <div className="mb-6 text-4xl text-brand-green">"</div>
-                <p className="mb-6 text-brand-dark/80 italic">
-                  {testimonial.quote}
-                </p>
-                <div>
-                  <p className="font-medium text-brand-dark">{testimonial.author}</p>
-                  <p className="text-sm text-brand-dark/70">{testimonial.role}</p>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="relative">
+          <div className="flex justify-between items-center absolute top-1/2 left-0 right-0 -translate-y-1/2 z-10 px-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleNavigation('prev')}
+              className="bg-white shadow-lg border hover:bg-gray-50"
+              aria-label="Previous testimonial"
+            >
+              <ArrowLeft size={18} />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleNavigation('next')}
+              className="bg-white shadow-lg border hover:bg-gray-50"
+              aria-label="Next testimonial"
+            >
+              <ArrowRight size={18} />
+            </Button>
+          </div>
+          
+          <div className="overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={currentIndex}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.5 }}
+                className="grid grid-cols-1 md:grid-cols-3 gap-8"
+              >
+                {visibleTestimonials.map((testimonial, index) => (
+                  <Card key={index} className="border-none shadow-lg">
+                    <CardContent className="p-8">
+                      <div className="mb-6 text-4xl text-brand-green">"</div>
+                      <p className="mb-6 text-brand-dark/80 italic">
+                        {testimonial.quote}
+                      </p>
+                      <div>
+                        <p className="font-medium text-brand-dark">{testimonial.author}</p>
+                        <p className="text-sm text-brand-dark/70">{testimonial.role}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+        
+        <div className="flex justify-center mt-8">
+          {Array.from({ length: testimonials.length - displayCount + 1 }).map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setCurrentIndex(idx);
+                setAutoRotate(false);
+                setTimeout(() => setAutoRotate(true), 10000);
+              }}
+              className={`h-2 w-2 mx-1 rounded-full ${
+                currentIndex === idx ? 'bg-brand-green' : 'bg-gray-300'
+              }`}
+              aria-label={`Go to testimonial ${idx + 1}`}
+            />
           ))}
         </div>
       </div>

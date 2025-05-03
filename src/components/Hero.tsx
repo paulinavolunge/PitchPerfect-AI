@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Rocket } from 'lucide-react';
@@ -73,21 +74,21 @@ const Hero = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="flex flex-wrap gap-4"
           >
-            <Button 
-              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
-              onClick={handleScrollToDemo}
-            >
-              Start Free Trial <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
-            </Button>
-            <Link to="/demo">
+            <Link to="/signup">
               <Button 
-                variant="outline" 
-                className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+                className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
               >
-                Play Demo
-                <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+                Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
               </Button>
             </Link>
+            <Button 
+              variant="outline" 
+              className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              onClick={handleScrollToDemo}
+            >
+              See Demo
+              <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+            </Button>
           </motion.div>
           <p className="text-sm text-brand-dark/60">
             Trusted by 10,000+ sales professionals from leading companies
