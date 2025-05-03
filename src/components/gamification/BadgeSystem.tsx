@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Trophy, 
@@ -24,7 +23,7 @@ export interface Badge {
   level?: number;
   progress?: number;
   maxProgress?: number;
-  colorClass: string;
+  colorClass: string;  // The property is colorClass, not color
 }
 
 interface BadgeProps {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
@@ -368,7 +367,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 icon: "bolt", 
                 progress: 100,
                 unlocked: true,
-                color: "amber"
+                colorClass: "amber"  // Changed from color to colorClass to match the Badge type
               }
             ]}
             nextMilestone={{
