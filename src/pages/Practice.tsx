@@ -4,26 +4,100 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Mic, MicOff, Pause, Play, RefreshCcw } from 'lucide-react';
+import { Mic, MicOff, Pause, Play, RefreshCcw, Award } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
+import ProgressSummary from '@/components/gamification/ProgressSummary';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import StreakBadge from '@/components/dashboard/StreakBadge';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Badge } from '@/components/gamification/BadgeSystem';
+import QuickStartGuide from '@/components/onboarding/QuickStartGuide';
+import { Step } from 'react-joyride';
+import GuidedTour from '@/components/GuidedTour';
 
 const Practice = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showProgressSummary, setShowProgressSummary] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
+  const [showTour, setShowTour] = useState(false);
   const { user, isPremium } = useAuth();
   const { toast } = useToast();
+
+  // Mock data for progress summary
+  const mockStats = [
+    { label: "Clarity", value: 76, previousValue: 71, increase: true },
+    { label: "Engagement", value: 82, previousValue: 74, increase: true },
+    { label: "Pacing", value: 65, previousValue: 68, decrease: true }
+  ];
+  
+  const mockFeedback = [
+    { text: "Clear explanation of the product's core functionality", type: 'strength' as const },
+    { text: "Good enthusiasm and energy throughout the pitch", type: 'strength' as const },
+    { text: "Strong closing statement with clear call-to-action", type: 'strength' as const },
+    { text: "Speaking pace was 15% too fast in the technical section", type: 'improvement' as const },
+    { text: "Consider adding more specific customer examples", type: 'improvement' as const },
+    { text: "The value proposition could be stated earlier in the pitch", type: 'improvement' as const }
+  ];
+  
+  const mockEarnedBadges: Badge[] = [
+    {
+      id: 'first-pitch',
+      name: 'First Pitch',
+      description: 'Completed your first practice pitch',
+      icon: <Award />,
+      unlocked: true,
+      colorClass: 'bg-brand-green',
+    }
+  ];
+  
+  const mockNextMilestone = {
+    name: "Complete 5 Practice Sessions",
+    progress: 1,
+    total: 5
+  };
+
+  // Practice tour steps
+  const tourSteps: Step[] = [
+    {
+      target: '.practice-scenario',
+      content: 'This is your practice scenario. You can see details about what you should focus on in your pitch.',
+      disableBeacon: true,
+    },
+    {
+      target: '.record-button',
+      content: 'Click this button to start recording your practice pitch. Click again when you\'re finished.',
+      placement: 'top' as const,
+    },
+    {
+      target: '.playback-controls',
+      content: 'Use these controls to listen to examples or pause your recording.',
+      placement: 'bottom' as const,
+    },
+    {
+      target: '.tips-section',
+      content: 'Review these tips to help improve your pitch for this specific scenario.',
+      placement: 'top' as const,
+    }
+  ];
   
   useEffect(() => {
     if (user) {
       fetchUserStreak();
+      
+      const hasSeenPracticeTour = localStorage.getItem('hasSeenPracticeTour');
+      if (!hasSeenPracticeTour) {
+        setShowTour(true);
+      }
     }
-  }, [user]);
+    
+    if (!isPremium) {
+      setShowPremiumModal(true);
+    }
+  }, [user, isPremium]);
   
   const fetchUserStreak = async () => {
     if (!user?.id) return;
@@ -56,6 +130,7 @@ const Practice = () => {
     
     if (isRecording) {
       setShowFeedback(true);
+      setShowProgressSummary(true);
       updatePracticeStreak();
     }
     setIsRecording(!isRecording);
@@ -141,10 +216,21 @@ const Practice = () => {
     setIsRecording(false);
     setShowFeedback(false);
   };
+  
+  const handleTourComplete = () => {
+    localStorage.setItem('hasSeenPracticeTour', 'true');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      
+      {/* Practice Tour */}
+      <GuidedTour
+        steps={tourSteps}
+        run={showTour}
+        onComplete={handleTourComplete}
+      />
       
       <main className="flex-grow pt-20 pb-12"> {/* Adjusted top padding */}
         <div className="container mx-auto px-4">
@@ -163,7 +249,13 @@ const Practice = () => {
               </Button>
             </div>
             
-            <Card className="mb-8">
+            {!localStorage.getItem('hasSeenPracticeTour') && (
+              <div className="mb-8">
+                <QuickStartGuide onStartTour={() => setShowTour(true)} />
+              </div>
+            )}
+            
+            <Card className="mb-8 practice-scenario">
               <CardContent className="p-8">
                 <div className="text-center">
                   <h2 className="text-xl font-medium mb-6">Product Demo Pitch</h2>
@@ -174,7 +266,7 @@ const Practice = () => {
                         Demonstrate your product's key features and benefits in a clear, engaging 2-3 minute pitch.
                       </p>
                       
-                      <div className="flex justify-center">
+                      <div className="flex justify-center record-button">
                         <Button
                           className={`rounded-full h-20 w-20 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-brand-green hover:bg-brand-green/90'}`}
                           onClick={toggleRecording}
@@ -194,7 +286,7 @@ const Practice = () => {
                         </div>
                       )}
                       
-                      <div className="flex justify-center gap-4">
+                      <div className="flex justify-center gap-4 playback-controls">
                         <Button variant="outline" className="flex items-center gap-2" aria-label="Play example">
                           <Play size={16} />
                           Example
@@ -258,7 +350,7 @@ const Practice = () => {
                       </div>
                       
                       <div className="flex justify-center gap-4">
-                        <Button className="btn-primary" onClick={resetPractice}>
+                        <Button className="btn-primary bg-brand-green hover:bg-brand-green/90" onClick={resetPractice}>
                           Try Again
                         </Button>
                         <Button variant="outline">
@@ -271,7 +363,7 @@ const Practice = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="tips-section">
               <CardContent className="p-6">
                 <h3 className="font-medium text-lg mb-4 text-brand-dark">Tips for this scenario</h3>
                 <ul className="space-y-3">
@@ -306,6 +398,20 @@ const Practice = () => {
         onOpenChange={setShowPremiumModal} 
         featureName="voice practice"
       />
+      
+      {/* Progress Summary Dialog */}
+      <Dialog open={showProgressSummary} onOpenChange={setShowProgressSummary}>
+        <DialogContent className="sm:max-w-2xl">
+          <ProgressSummary
+            sessionName="Product Demo Pitch"
+            stats={mockStats}
+            feedback={mockFeedback}
+            earnedBadges={mockEarnedBadges}
+            nextMilestone={mockNextMilestone}
+            onClose={() => setShowProgressSummary(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -30,6 +30,7 @@ import CallRecordings from './pages/CallRecordings';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import AccountDelete from './pages/AccountDelete';
+import OnboardingWizard from './components/onboarding/OnboardingWizard';
 
 const queryClient = new QueryClient();
 
@@ -37,12 +38,17 @@ const App: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [showDashboardTour, setShowDashboardTour] = useState(false);
+  const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
 
-  // Check if we should show dashboard tour
+  // Check if we should show onboarding or dashboard tour
   useEffect(() => {
-    if (user && location.pathname === '/dashboard') {
+    if (user) {
+      const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
       const hasSeenDashboardTour = localStorage.getItem('hasSeenDashboardTour');
-      if (!hasSeenDashboardTour) {
+      
+      if (!hasCompletedOnboarding) {
+        setShowOnboardingWizard(true);
+      } else if (location.pathname === '/dashboard' && !hasSeenDashboardTour) {
         setShowDashboardTour(true);
       }
     }
@@ -76,11 +82,36 @@ const App: React.FC = () => {
     localStorage.setItem('hasSeenDashboardTour', 'true');
   };
   
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('hasCompletedOnboarding', 'true');
+    if (location.pathname === '/dashboard') {
+      setShowDashboardTour(true);
+    }
+  };
+  
+  const handleStartTour = () => {
+    setShowOnboardingWizard(false);
+    if (location.pathname === '/dashboard') {
+      setShowDashboardTour(true);
+    } else if (location.pathname === '/roleplay') {
+      // Let the roleplay tour handle itself
+      localStorage.setItem('hasCompletedOnboarding', 'true');
+    }
+  };
+  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <main className="min-h-screen bg-background">
           <Toaster />
+          
+          {/* Onboarding Wizard */}
+          <OnboardingWizard 
+            open={showOnboardingWizard} 
+            onOpenChange={setShowOnboardingWizard}
+            onStartTour={handleStartTour}
+          />
+          
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />

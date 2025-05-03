@@ -15,7 +15,9 @@ import { useNavigate } from 'react-router-dom';
 import PremiumModal from "@/components/PremiumModal";
 import GuidedTour from "@/components/GuidedTour";
 import GettingStartedModal from "@/components/onboarding/GettingStartedModal";
+import QuickStartGuide from "@/components/onboarding/QuickStartGuide";
 import { Step } from 'react-joyride';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RolePlay = () => {
   const [isScenarioSelected, setIsScenarioSelected] = useState(false);
@@ -39,6 +41,7 @@ const RolePlay = () => {
   const { toast } = useToast();
   const { isPremium, user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Define tour steps
   const tourSteps: Step[] = [
@@ -46,39 +49,41 @@ const RolePlay = () => {
       target: '.scenario-selection',
       content: 'Start by selecting a scenario that matches your needs. Choose difficulty level, objection type, and industry.',
       disableBeacon: true,
-      placement: 'bottom' as const,
+      placement: isMobile ? 'bottom' : 'right',
     },
     {
       target: '.script-upload',
       content: 'Or upload your own sales script to practice with.',
-      placement: 'top' as const,
+      placement: isMobile ? 'top' : 'bottom',
     },
     {
       target: '.voice-style-controls',
       content: 'Customize the AI response style to simulate different types of customers.',
-      placement: 'bottom' as const,
+      placement: isMobile ? 'bottom' : 'bottom',
     },
     {
       target: '.interaction-mode-controls',
       content: 'Choose how you want to interact with the AI: text, voice, or both (premium features).',
-      placement: 'left' as const,
+      placement: isMobile ? 'bottom' : 'left',
     },
     {
       target: '.conversation-interface',
       content: 'This is where your roleplay happens. Practice handling objections and get real-time responses from the AI.',
-      placement: 'top' as const,
+      placement: isMobile ? 'top' : 'top',
     },
     {
       target: '.help-button',
       content: 'Need help? You can always access the getting started guide from here.',
-      placement: 'left' as const,
+      placement: isMobile ? 'top' : 'left',
     }
   ];
 
   // Check if first time user
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenRoleplayOnboarding');
-    if (user && !hasSeenOnboarding) {
+    const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
+    
+    if (user && !hasSeenOnboarding && hasCompletedOnboarding) {
       setShowGettingStartedModal(true);
     }
     
@@ -148,6 +153,7 @@ const RolePlay = () => {
   
   const handleTourComplete = () => {
     localStorage.setItem('hasSeenRoleplayOnboarding', 'true');
+    localStorage.setItem('hasCompletedOnboarding', 'true');
     toast({
       title: "Tour Completed",
       description: "You're all set! Start practicing your sales skills now.",
@@ -172,6 +178,7 @@ const RolePlay = () => {
         steps={tourSteps}
         run={showTour}
         onComplete={handleTourComplete}
+        spotlightClicks={true}
       />
       
       {/* Getting Started Modal */}
@@ -197,6 +204,13 @@ const RolePlay = () => {
                     Getting Started Guide
                   </Button>
                 </div>
+                
+                {/* Quick Start Guide for first-time users */}
+                {!localStorage.getItem('hasSeenRoleplayOnboarding') && (
+                  <div className="mt-6">
+                    <QuickStartGuide onStartTour={handleStartTour} />
+                  </div>
+                )}
               </div>
               
               <div className="scenario-selection">

@@ -8,6 +8,9 @@ interface GuidedTourProps {
   onComplete: () => void;
   showSkipButton?: boolean;
   continuous?: boolean;
+  stepIndex?: number;
+  spotlightClicks?: boolean;
+  styles?: any;
 }
 
 const GuidedTour = ({ 
@@ -15,27 +18,35 @@ const GuidedTour = ({
   run, 
   onComplete, 
   showSkipButton = true,
-  continuous = true 
+  continuous = true,
+  stepIndex = 0,
+  spotlightClicks = false,
+  styles = {}
 }: GuidedTourProps) => {
   const [tourState, setTourState] = useState({
     run,
     steps,
-    stepIndex: 0,
+    stepIndex,
   });
 
   useEffect(() => {
     setTourState(prevState => ({
       ...prevState,
       run,
+      stepIndex,
     }));
-  }, [run]);
+  }, [run, stepIndex]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status } = data;
+    const { status, action, index } = data;
     
     // Use explicit comparison with STATUS constants instead of array includes
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
       // Tour is complete
+      setTourState(prevState => ({ ...prevState, run: false }));
+      onComplete();
+    } else if (action === ACTIONS.NEXT && index === steps.length - 1) {
+      // Last step
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
@@ -45,18 +56,22 @@ const GuidedTour = ({
     <Joyride
       callback={handleJoyrideCallback}
       continuous={continuous}
-      hideCloseButton
+      hideCloseButton={false}
       run={tourState.run}
       scrollToFirstStep
       showProgress
       showSkipButton={showSkipButton}
+      stepIndex={tourState.stepIndex}
       steps={steps}
+      spotlightClicks={spotlightClicks}
+      disableScrolling={false}
       styles={{
         options: {
           zIndex: 10000,
           primaryColor: '#16a34a', // brand-green
           backgroundColor: '#ffffff',
           textColor: '#334155', // brand-dark
+          arrowColor: '#ffffff',
         },
         buttonSkip: {
           color: '#334155',
@@ -70,6 +85,7 @@ const GuidedTour = ({
         spotlight: {
           backgroundColor: 'transparent',
         },
+        ...styles,
       }}
     />
   );
