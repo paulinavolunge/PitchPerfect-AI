@@ -32,12 +32,15 @@ import AccountDelete from './pages/AccountDelete';
 
 const queryClient = new QueryClient();
 
+// Determine if we're in development mode
+const isDevelopment = import.meta.env.DEV === true;
+
 const App: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Only show the tour on the dashboard and only if the user is logged in
-  const showTour = location.pathname === '/dashboard' && !!user;
+  // Only show the tour on the dashboard, only if the user is logged in, and only in development mode
+  const showTour = location.pathname === '/dashboard' && !!user && isDevelopment;
   
   // Define tour steps for GuidedTour
   const tourSteps = [
@@ -60,6 +63,7 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <main className="min-h-screen bg-background">
+          {/* Only include toaster in the DOM if needed */}
           <Toaster />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -85,6 +89,7 @@ const App: React.FC = () => {
             <Route path="/account-delete" element={<AccountDelete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          {/* Only render the tour in development mode */}
           {showTour && 
             <GuidedTour 
               steps={tourSteps} 

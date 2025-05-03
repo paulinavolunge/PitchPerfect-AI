@@ -23,6 +23,6 @@ export default defineConfig(({ mode }) => ({
   },
   // Set the VITE_LOVABLE environment variable based on mode
   define: {
-    'import.meta.env.VITE_LOVABLE': mode === 'production' ? '"false"' : '"true"',
+    'import.meta.env.VITE_LOVABLE': mode === 'production' ? 'false' : 'true',
   }
 }));

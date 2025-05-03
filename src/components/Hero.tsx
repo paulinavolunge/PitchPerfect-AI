@@ -11,6 +11,9 @@ const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Determine if we're in development mode
+  const isDevelopment = import.meta.env.DEV === true;
 
   useEffect(() => {
     // Ensure the video plays automatically when loaded
