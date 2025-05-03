@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,8 @@ import Footer from '@/components/Footer';
 import { Search } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import { useToast } from '@/components/ui/use-toast';
+import AIDisclosure from '@/components/AIDisclosure';
+import Bot from '@/components/ui/icons/Chat';
 
 const Tips = () => {
   const { toast } = useToast();
@@ -181,15 +182,21 @@ const Tips = () => {
       
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-6 text-brand-dark">AI Sales Tips & Scripts</h1>
+          <h1 className="text-3xl font-bold mb-2 text-brand-dark">AI Sales Tips & Scripts</h1>
+          
+          <AIDisclosure 
+            variant="compact"
+            description="This page contains AI-generated sales tips and scripts. Review and adapt them to your specific needs."
+            className="mb-4"
+          />
           
           {activeScripts.length > 0 && (
-            <Card className="mb-8 border-brand-green">
+            <Card className="mb-8 border-purple-300/30">
               <CardContent className="p-6">
                 <h2 className="text-xl font-medium mb-4 text-brand-dark">Your Active Scripts</h2>
                 <div className="space-y-4">
                   {activeScripts.map((script, index) => (
-                    <div key={index} className="p-3 bg-brand-green/5 border border-brand-green/20 rounded-lg">
+                    <div key={index} className="p-3 bg-purple-300/5 border border-purple-300/20 rounded-lg">
                       <h3 className="font-medium text-brand-dark">{script.title}</h3>
                       <p className="text-sm text-brand-dark/70 mt-1">{script.description}</p>
                     </div>
@@ -199,7 +206,7 @@ const Tips = () => {
             </Card>
           )}
           
-          <Card className="mb-8 border-brand-green/30">
+          <Card className="mb-8 border-purple-300/30">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-6 items-center">
                 <div className="md:w-2/3">
@@ -208,16 +215,17 @@ const Tips = () => {
                     Get custom-tailored sales tips and script suggestions based on your industry, target audience, and improvement areas.
                   </p>
                   <Button 
-                    className="btn-primary"
+                    className="btn-primary bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
                     onClick={handleGeneratePersonalizedTips}
                   >
+                    <Bot size={16} />
                     Generate Personalized Tips
                   </Button>
                 </div>
                 <div className="md:w-1/3 flex justify-center">
-                  <div className="bg-brand-green/20 rounded-full p-6 w-24 h-24 flex items-center justify-center">
-                    <div className="bg-brand-green text-white rounded-full p-2">
-                      <div className="w-8 h-8" />
+                  <div className="bg-purple-100 rounded-full p-6 w-24 h-24 flex items-center justify-center">
+                    <div className="bg-purple-600 text-white rounded-full p-2">
+                      <Bot size={24} />
                     </div>
                   </div>
                 </div>

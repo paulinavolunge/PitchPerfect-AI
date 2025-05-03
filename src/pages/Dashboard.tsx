@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,9 @@ import GuidedTour from '@/components/GuidedTour';
 import MicrophoneTest from '@/components/MicrophoneTest';
 import { VoiceSynthesis } from '@/utils/VoiceSynthesis';
 import { supabase } from '@/lib/supabase';
-import { FileAudio, Mic, Users } from 'lucide-react';
+import { FileAudio, Mic, Users, Bot } from 'lucide-react';
+import AIDisclosure from '@/components/AIDisclosure';
+import AISettingsModal from '@/components/AISettingsModal';
 
 const Dashboard = () => {
   const { user, refreshSubscription } = useAuth();
@@ -27,6 +28,7 @@ const Dashboard = () => {
   const [tourCompleted, setTourCompleted] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
   const navigate = useNavigate();
+  const [showAISettings, setShowAISettings] = useState(false);
   
   // Define tour steps
   const tourSteps: Step[] = [
@@ -137,8 +139,23 @@ const Dashboard = () => {
                 <Users size={16} />
                 Role Play
               </Button>
+              
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => setShowAISettings(true)}
+              >
+                <Bot size={16} className="text-purple-600" />
+                AI Settings
+              </Button>
             </div>
           </div>
+          
+          <AIDisclosure 
+            variant="compact"
+            description="Your dashboard contains AI-generated insights and suggestions based on your practice sessions."
+            className="mb-6"
+          />
           
           <div className="mb-8">
             <UserSubscriptionStatus />
@@ -260,6 +277,12 @@ const Dashboard = () => {
       </main>
       
       <Footer />
+      
+      {/* AI Settings Modal */}
+      <AISettingsModal
+        open={showAISettings}
+        onOpenChange={setShowAISettings}
+      />
     </div>
   );
 };
