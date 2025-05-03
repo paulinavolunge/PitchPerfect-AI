@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Rocket } from 'lucide-react';
@@ -37,13 +36,7 @@ const Hero = () => {
     const demoSection = document.getElementById('demo-sandbox');
     if (demoSection) {
       demoSection.scrollIntoView({ behavior: 'smooth' });
-      
-      // Trigger the start demo function if it exists in the global scope
-      setTimeout(() => {
-        const startDemoEvent = new CustomEvent('start-demo-auto');
-        window.dispatchEvent(startDemoEvent);
-        setSessionStarted(true);
-      }, 800); // Small delay to ensure the section is in view
+      // We're removing the auto-start behavior - don't trigger the demo start event
     }
   };
 

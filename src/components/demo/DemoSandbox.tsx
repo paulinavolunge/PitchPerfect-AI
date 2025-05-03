@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Clock, RefreshCw } from 'lucide-react';
@@ -99,7 +98,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       }
     }
 
-    // Set up event listener for auto-starting the demo
+    // Set up event listener for button-triggered demo start
     const handleAutoDemoStart = () => {
       if (demoState === DemoState.INTRO) {
         startDemo();
