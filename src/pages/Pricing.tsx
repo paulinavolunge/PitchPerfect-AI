@@ -18,6 +18,7 @@ const Pricing = () => {
   const navigate = useNavigate();
   const demoRef = useRef<HTMLDivElement>(null);
   const [runTour, setRunTour] = useState(false);
+  const [showStickyCTA, setShowStickyCTA] = useState(true);
   
   const handleUpgradeClick = () => {
     if (!user) {
@@ -34,6 +35,32 @@ const Pricing = () => {
       navigate('/demo');
     }
   };
+
+  // Track scroll position to manage sticky CTA visibility
+  React.useEffect(() => {
+    const handleScroll = () => {
+      // Get the position of the ROI calculator
+      const roiCalc = document.querySelector('.roi-calculator');
+      if (roiCalc) {
+        const rect = roiCalc.getBoundingClientRect();
+        // If the ROI calculator is visible and being interacted with, hide the global sticky CTA
+        // to avoid duplicate CTAs since the calculator now has its own CTA
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          setShowStickyCTA(false);
+        } else {
+          setShowStickyCTA(true);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    // Run once on initial load
+    handleScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Tour steps
   const steps: Step[] = [
@@ -243,16 +270,18 @@ const Pricing = () => {
         </div>
       </main>
       
-      {/* Sticky CTA Button */}
-      <div className="sticky-cta fixed bottom-6 left-0 right-0 flex justify-center z-40">
-        <Button 
-          onClick={scrollToDemo} 
-          className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-6 rounded-full shadow-lg animate-bounce-subtle"
-          size="lg"
-        >
-          Try It Free
-        </Button>
-      </div>
+      {/* Sticky CTA Button - Only visible when not interacting with ROI calculator */}
+      {showStickyCTA && (
+        <div className="sticky-cta fixed bottom-6 left-0 right-0 flex justify-center z-40">
+          <Button 
+            onClick={scrollToDemo} 
+            className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-6 rounded-full shadow-lg animate-bounce-subtle"
+            size="lg"
+          >
+            Try It Free
+          </Button>
+        </div>
+      )}
       
       <Footer />
       

@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { InfoIcon } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const ROICalculator = () => {
   const [monthlyQuota, setMonthlyQuota] = useState<string>('10000');
@@ -57,7 +59,7 @@ const ROICalculator = () => {
   };
 
   return (
-    <Card className="p-6 shadow-md bg-white dark:bg-gray-800">
+    <Card className="p-6 shadow-md bg-white dark:bg-gray-800 relative">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-brand-dark mb-2">ROI Calculator</h2>
         <p className="text-gray-600 dark:text-gray-300">
@@ -194,6 +196,18 @@ const ROICalculator = () => {
           <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
             Return on investment based on your inputs
           </p>
+        </div>
+        
+        {/* Sticky CTA inside the ROI calculator */}
+        <div className="mt-6 sticky-roi-cta">
+          <Link to="/signup">
+            <Button 
+              className="w-full bg-brand-green hover:bg-brand-green/90 text-white py-6 h-auto text-lg font-medium shadow-lg hover:shadow-xl transition-all"
+            >
+              Start Free Trial Now
+            </Button>
+          </Link>
+          <p className="text-xs text-center mt-2 text-gray-500">No credit card required</p>
         </div>
       </div>
     </Card>
