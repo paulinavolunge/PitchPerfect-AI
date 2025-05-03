@@ -9,6 +9,7 @@ import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
+import MicrophoneGuard from '@/components/MicrophoneGuard';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
@@ -68,7 +69,9 @@ const Demo = () => {
                 Talk about overcoming pricing objections for 60 seconds, and get instant feedback.
               </p>
               
-              <DemoSandbox onComplete={handleDemoComplete} />
+              <MicrophoneGuard>
+                <DemoSandbox onComplete={handleDemoComplete} />
+              </MicrophoneGuard>
             </div>
           </div>
         </div>
