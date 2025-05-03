@@ -15,6 +15,7 @@ import { Step } from 'react-joyride';
 const Pricing = () => {
   const { user, isPremium } = useAuth();
   const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
+  const [enterpriseSize, setEnterpriseSize] = useState<"small" | "medium" | "large">("small");
   const navigate = useNavigate();
   const demoRef = useRef<HTMLDivElement>(null);
   const [runTour, setRunTour] = useState(false);
@@ -85,6 +86,49 @@ const Pricing = () => {
   const handleTourComplete = () => {
     localStorage.setItem('pricing_tour_completed', 'true');
   };
+
+  // Enterprise plan details based on size
+  const enterprisePlans = {
+    small: {
+      name: "Small Enterprise",
+      price: "$500",
+      users: "10-25",
+      features: [
+        "All Team features",
+        "Basic custom AI training",
+        "Standard analytics dashboard",
+        "SSO integration",
+        "Email support"
+      ]
+    },
+    medium: {
+      name: "Medium Enterprise",
+      price: "$1,500",
+      users: "26-100",
+      features: [
+        "All Small Enterprise features",
+        "Advanced custom AI training",
+        "Enhanced analytics and reporting",
+        "Advanced SSO and security",
+        "Priority support with 24-hour response"
+      ]
+    },
+    large: {
+      name: "Large Enterprise",
+      price: "$3,000+",
+      users: "101+",
+      features: [
+        "All Medium Enterprise features",
+        "Fully customized AI training",
+        "Executive analytics dashboard",
+        "Custom integrations",
+        "Dedicated account manager",
+        "Custom onboarding and training"
+      ]
+    }
+  };
+
+  const selectedEnterprisePlan = enterprisePlans[enterpriseSize];
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -219,38 +263,49 @@ const Pricing = () => {
               <CardHeader className="pb-2">
                 <CardTitle className="text-2xl">Enterprise</CardTitle>
                 <CardDescription>For larger organizations</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">Custom</span>
+                <div className="mt-4 mb-2">
+                  <Tabs 
+                    value={enterpriseSize} 
+                    onValueChange={(v) => setEnterpriseSize(v as "small" | "medium" | "large")}
+                    className="w-full"
+                  >
+                    <TabsList className="grid grid-cols-3 mb-2">
+                      <TabsTrigger value="small" className="text-xs">Small</TabsTrigger>
+                      <TabsTrigger value="medium" className="text-xs">Medium</TabsTrigger>
+                      <TabsTrigger value="large" className="text-xs">Large</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <div className="text-center">
+                    <span className="text-xl font-semibold">{selectedEnterprisePlan.name}</span>
+                    <div className="mt-2">
+                      <span className="text-3xl font-bold">{selectedEnterprisePlan.price}</span>
+                      <span className="text-gray-500 ml-2">/ month</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedEnterprisePlan.users} users
+                    </p>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className="pt-4">
                 <ul className="space-y-3">
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>All Team features</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Custom AI training and scenarios</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Advanced analytics and reporting</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>SSO and advanced security</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Dedicated account manager</span>
-                  </li>
+                  {selectedEnterprisePlan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" variant="outline">
-                  Contact Sales
-                </Button>
+                <div className="w-full space-y-2">
+                  <Button className="w-full" variant="outline" onClick={() => window.location.href = "mailto:sales@pitchperfectai.com?subject=Enterprise Pricing Inquiry"}>
+                    Contact Sales
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Custom pricing and features available upon request
+                  </p>
+                </div>
               </CardFooter>
             </Card>
           </div>
