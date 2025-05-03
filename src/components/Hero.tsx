@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Rocket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -73,11 +73,10 @@ const Hero = () => {
             className="flex flex-wrap gap-4"
           >
             <Button 
-              className="btn-primary flex items-center gap-2 group"
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white flex items-center gap-2 group"
               onClick={handleScrollToDemo}
             >
-              Try free 
-              <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
+              Start Free Trial <Rocket className="group-hover:translate-x-1 transition-transform" size={18} />
             </Button>
             <Link to="/demo">
               <Button variant="outline" className="btn-secondary flex items-center gap-2 group">
