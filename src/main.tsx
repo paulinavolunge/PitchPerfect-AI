@@ -6,18 +6,22 @@ import './index.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider as CustomThemeProvider } from '@/context/ThemeContext';
 
-// Determine if we're in development mode
+// Determine if we're in development mode or Lovable mode
+const isLovable = import.meta.env.VITE_LOVABLE === 'true';
 const isDevelopment = import.meta.env.DEV === true;
 
-// Load development tools only in development mode
-if (isDevelopment && window.document) {
-  console.log('Development mode active - loading development tools');
+// Load development tools only in development mode or Lovable mode
+if ((isDevelopment || isLovable) && window.document) {
+  console.log('Development or Lovable mode active - loading development tools');
   
   // Dynamically load the Lovable script in development mode
-  const script = document.createElement('script');
-  script.src = 'https://cdn.gpteng.co/gptengineer.js';
-  script.type = 'module';
-  document.body.appendChild(script);
+  // This is a backup in case the script in index.html doesn't load
+  if (!window.gptEng) {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.gpteng.co/gptengineer.js';
+    script.type = 'module';
+    document.body.appendChild(script);
+  }
 }
 
 createRoot(document.getElementById("root")!).render(
