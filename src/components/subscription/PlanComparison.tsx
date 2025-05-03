@@ -170,12 +170,12 @@ const PlanComparison: React.FC<PlanComparisonProps> = ({ isPremium, onUpgradeCli
           <div className="mt-4">
             {planType === "monthly" ? (
               <>
-                <span className="text-3xl font-bold">$9.99</span>
+                <span className="text-3xl font-bold">$29</span>
                 <span className="text-lg text-muted-foreground">/month</span>
               </>
             ) : (
               <>
-                <span className="text-3xl font-bold">$99</span>
+                <span className="text-3xl font-bold">$290</span>
                 <span className="text-lg text-muted-foreground">/year</span>
                 <p className="text-sm text-green-600 mt-1">Save 17% compared to monthly</p>
               </>

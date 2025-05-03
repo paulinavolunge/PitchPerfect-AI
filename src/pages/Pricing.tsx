@@ -170,6 +170,7 @@ const Pricing = () => {
                     <>
                       <span className="text-4xl font-bold">$290</span>
                       <span className="text-gray-500 ml-2">/ user / year</span>
+                      <p className="text-sm text-green-600 mt-1">Save $58 (17% off)</p>
                     </>
                   )}
                 </div>

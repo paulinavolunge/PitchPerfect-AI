@@ -141,8 +141,8 @@ const Subscription = () => {
               <div className="mt-8 max-w-xs mx-auto">
                 <Tabs value={planType} onValueChange={(v) => setPlanType(v as "monthly" | "yearly")}>
                   <TabsList className="grid grid-cols-2">
-                    <TabsTrigger value="monthly" className="text-sm">Monthly ($9.99/mo)</TabsTrigger>
-                    <TabsTrigger value="yearly" className="text-sm">Yearly ($99/yr)</TabsTrigger>
+                    <TabsTrigger value="monthly" className="text-sm">Monthly ($29/mo)</TabsTrigger>
+                    <TabsTrigger value="yearly" className="text-sm">Yearly ($290/yr)</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
