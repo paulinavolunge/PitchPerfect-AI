@@ -13,11 +13,17 @@ type AuthContextType = {
   subscriptionTier: string | null;
   subscriptionEnd: string | null;
   emailVerified: boolean;
+  trialActive: boolean;
+  trialEndsAt: Date | null;
   signOut: () => Promise<void>;
   refreshSubscription: () => Promise<void>;
+  startFreeTrial: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const TRIAL_DURATION_DAYS = 7;
+const TRIAL_KEY = 'trial_start_date';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -28,7 +34,98 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [trialActive, setTrialActive] = useState(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
   const { toast } = useToast();
+
+  // Check if the user has an active trial
+  const checkTrialStatus = () => {
+    if (!user) {
+      setTrialActive(false);
+      setTrialEndsAt(null);
+      return;
+    }
+
+    // Get the trial start date from localStorage
+    const trialStartDateStr = localStorage.getItem(`${TRIAL_KEY}_${user.id}`);
+    
+    if (!trialStartDateStr) {
+      setTrialActive(false);
+      setTrialEndsAt(null);
+      return;
+    }
+
+    const trialStartDate = new Date(trialStartDateStr);
+    const now = new Date();
+    const trialEndDate = new Date(trialStartDate);
+    trialEndDate.setDate(trialEndDate.getDate() + TRIAL_DURATION_DAYS);
+    
+    // Check if the trial is still active
+    const isActive = now < trialEndDate;
+    setTrialActive(isActive);
+    setTrialEndsAt(isActive ? trialEndDate : null);
+    
+    // If trial just ended, show a notification
+    if (!isActive && localStorage.getItem(`${TRIAL_KEY}_notification_${user.id}`) !== 'shown') {
+      toast({
+        title: "Free trial ended",
+        description: "Your 7-day free trial has ended. Upgrade to Premium to continue accessing premium features.",
+      });
+      localStorage.setItem(`${TRIAL_KEY}_notification_${user.id}`, 'shown');
+    }
+  };
+
+  // Start a free trial for the user
+  const startFreeTrial = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You need to be logged in to start a free trial.",
+        variant: "destructive",
+      });
+      return Promise.reject("Authentication required");
+    }
+
+    // Check if user already has a trial
+    const existingTrialDate = localStorage.getItem(`${TRIAL_KEY}_${user.id}`);
+    if (existingTrialDate) {
+      const trialStartDate = new Date(existingTrialDate);
+      const trialEndDate = new Date(trialStartDate);
+      trialEndDate.setDate(trialEndDate.getDate() + TRIAL_DURATION_DAYS);
+      
+      // If trial is still active, just notify the user
+      if (new Date() < trialEndDate) {
+        setTrialActive(true);
+        setTrialEndsAt(trialEndDate);
+        toast({
+          title: "Trial already active",
+          description: `Your trial is already active and will end on ${trialEndDate.toLocaleDateString()}.`,
+        });
+        return Promise.resolve();
+      }
+    }
+
+    // Set the trial start date
+    const now = new Date();
+    localStorage.setItem(`${TRIAL_KEY}_${user.id}`, now.toISOString());
+    
+    // Calculate end date
+    const trialEndDate = new Date(now);
+    trialEndDate.setDate(trialEndDate.getDate() + TRIAL_DURATION_DAYS);
+    
+    setTrialActive(true);
+    setTrialEndsAt(trialEndDate);
+    
+    // Remove any previous notification shown flag
+    localStorage.removeItem(`${TRIAL_KEY}_notification_${user.id}`);
+    
+    toast({
+      title: "Free trial started!",
+      description: `You now have ${TRIAL_DURATION_DAYS} days of access to premium features.`,
+    });
+    
+    return Promise.resolve();
+  };
 
   useEffect(() => {
     const getSession = async () => {
@@ -47,6 +144,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (data.session?.user) {
             setEmailVerified(data.session.user.email_confirmed_at !== null);
             refreshSubscription();
+            checkTrialStatus();
           }
         }
       } catch (err) {
@@ -74,16 +172,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             toast({
               title: "Email verified",
               description: "Your email has been successfully verified.",
-              variant: "default", // Changed from "success" to "default"
+              variant: "default",
             });
           }
           
           refreshSubscription();
+          checkTrialStatus();
         } else {
           setEmailVerified(false);
           setIsPremium(false);
           setSubscriptionTier(null);
           setSubscriptionEnd(null);
+          setTrialActive(false);
+          setTrialEndsAt(null);
         }
         
         setLoading(false);
@@ -94,6 +195,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // Check trial status periodically (every 10 minutes)
+  useEffect(() => {
+    if (!user) return;
+    
+    const checkInterval = setInterval(checkTrialStatus, 10 * 60 * 1000);
+    
+    return () => {
+      clearInterval(checkInterval);
+    };
+  }, [user]);
 
   const signOut = async () => {
     try {
@@ -141,8 +253,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscriptionTier,
       subscriptionEnd,
       emailVerified,
+      trialActive,
+      trialEndsAt,
       signOut,
       refreshSubscription,
+      startFreeTrial,
     }}>
       {children}
     </AuthContext.Provider>

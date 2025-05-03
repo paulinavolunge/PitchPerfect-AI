@@ -44,7 +44,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { isPremium } = useAuth();
+  const { isPremium, trialActive } = useAuth();
   const voiceSynthRef = useRef<VoiceSynthesis | null>(null);
 
   useEffect(() => {
@@ -62,20 +62,20 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   }, []);
 
   useEffect(() => {
-    // Check if trying to use voice features without premium
-    if (mode !== 'text' && !isPremium) {
+    // Check if trying to use voice features without premium or trial
+    if (mode !== 'text' && !isPremium && !trialActive) {
       setActualMode('text');
       if (mode === 'voice' || mode === 'hybrid') {
         setShowPremiumModal(true);
       }
     } else {
       setActualMode(mode);
-      // Default voice to enabled when premium user selects voice/hybrid mode
-      if (isPremium && (mode === 'voice' || mode === 'hybrid')) {
+      // Default voice to enabled when premium user or trial user selects voice/hybrid mode
+      if ((isPremium || trialActive) && (mode === 'voice' || mode === 'hybrid')) {
         setVoiceEnabled(true);
       }
     }
-  }, [mode, isPremium]);
+  }, [mode, isPremium, trialActive]);
 
   useEffect(() => {
     // Initialize with AI greeting
@@ -90,7 +90,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setMessages([initialMessage]);
     
     // Speak the initial greeting if voice is enabled
-    if (voiceEnabled && isPremium && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
+    if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
       speakMessage(initialMessage.text);
     }
     
@@ -172,14 +172,14 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       setMessages((prev) => [...prev, aiMessage]);
       
       // Speak the AI response if voice is enabled
-      if (voiceEnabled && isPremium && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
+      if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
         speakMessage(aiResponse);
       }
     }, 1000);
   };
 
   const toggleVoice = () => {
-    if (!isPremium && !voiceEnabled) {
+    if (!isPremium && !trialActive && !voiceEnabled) {
       setShowPremiumModal(true);
       return;
     }
@@ -202,7 +202,14 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   return (
     <>
       <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden">
-        <div className="bg-white p-2 flex justify-end items-center border-b">
+        <div className="bg-white p-2 flex justify-between items-center border-b">
+          <div className="flex items-center">
+            {trialActive && (
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full mr-2">
+                Trial
+              </span>
+            )}
+          </div>
           <div className="flex items-center space-x-2">
             <Label htmlFor="voice-mode" className="text-sm">AI Voice</Label>
             <Switch
@@ -210,7 +217,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
               checked={voiceEnabled}
               onCheckedChange={toggleVoice}
               aria-label="Toggle voice responses"
-              disabled={!isPremium}
+              disabled={!isPremium && !trialActive}
             />
           </div>
         </div>

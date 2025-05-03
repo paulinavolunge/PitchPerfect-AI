@@ -1,9 +1,17 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { LockKeyhole } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useAuth } from '@/context/AuthContext';
+import { Lock } from 'lucide-react';
 
 interface PremiumModalProps {
   open: boolean;
@@ -11,63 +19,99 @@ interface PremiumModalProps {
   featureName: string;
 }
 
-const PremiumModal = ({ open, onOpenChange, featureName }: PremiumModalProps) => {
+const PremiumModal: React.FC<PremiumModalProps> = ({
+  open,
+  onOpenChange,
+  featureName,
+}) => {
   const navigate = useNavigate();
+  const { user, isPremium, trialActive, trialEndsAt, startFreeTrial } = useAuth();
 
-  const handleUpgradeClick = () => {
+  const handleUpgrade = () => {
     onOpenChange(false);
     navigate('/subscription');
+  };
+
+  const handleStartTrial = async () => {
+    try {
+      await startFreeTrial();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error starting trial:', error);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <div className="mx-auto bg-brand-green/10 p-3 rounded-full">
-            <LockKeyhole className="h-6 w-6 text-brand-green" />
+          <div className="mx-auto bg-amber-100 p-3 rounded-full mb-4">
+            <Lock className="h-6 w-6 text-amber-600" />
           </div>
-          <DialogTitle className="text-center pt-4">Premium Feature</DialogTitle>
-          <DialogDescription className="text-center">
-            {featureName.charAt(0).toUpperCase() + featureName.slice(1)} is a premium feature. Upgrade to access this and all other premium features.
+          <DialogTitle className="text-center text-xl">Premium Feature</DialogTitle>
+          <DialogDescription className="text-center pt-2">
+            {trialActive ? (
+              <>
+                <p className="mb-2">
+                  You're currently in your free trial period which ends on {formatDate(trialEndsAt!)}
+                </p>
+                <p>
+                  Enjoy access to <span className="font-medium">{featureName}</span> and other premium features!
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mb-2">
+                  <span className="font-medium">{featureName}</span> is a premium feature.
+                </p>
+                <p>
+                  {!user 
+                    ? "Sign up to start your 7-day free trial or upgrade to premium."
+                    : "Start your 7-day free trial or upgrade to premium to access this feature."}
+                </p>
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
-          <h3 className="font-medium text-center mb-4">Premium Benefits</h3>
-          <ul className="space-y-2">
-            <li className="flex items-start">
-              <CheckIcon className="h-5 w-5 text-brand-green mr-2 flex-shrink-0 mt-0.5" />
-              <span>Voice interaction with AI roleplays</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-5 w-5 text-brand-green mr-2 flex-shrink-0 mt-0.5" />
-              <span>Advanced objection tracking and analytics</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-5 w-5 text-brand-green mr-2 flex-shrink-0 mt-0.5" />
-              <span>Access to all industry scenarios</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-5 w-5 text-brand-green mr-2 flex-shrink-0 mt-0.5" />
-              <span>Unlimited practice sessions</span>
-            </li>
-          </ul>
-        </div>
-        
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto"
-          >
-            Maybe Later
-          </Button>
-          <Button 
-            onClick={handleUpgradeClick}
-            className="w-full sm:w-auto bg-brand-green hover:bg-brand-green/90"
-          >
-            Upgrade Now
-          </Button>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          {!user ? (
+            <>
+              <Button variant="outline" onClick={() => {
+                onOpenChange(false);
+                navigate('/signup');
+              }} className="w-full">
+                Sign Up
+              </Button>
+              <Button onClick={() => {
+                onOpenChange(false);
+                navigate('/login');
+              }} className="w-full bg-brand-green hover:bg-brand-green/90">
+                Login
+              </Button>
+            </>
+          ) : trialActive ? (
+            <Button onClick={handleUpgrade} className="w-full bg-brand-green hover:bg-brand-green/90">
+              Upgrade to Premium
+            </Button>
+          ) : (
+            <>
+              <Button onClick={handleStartTrial} variant="outline" className="w-full">
+                Start 7-Day Free Trial
+              </Button>
+              <Button onClick={handleUpgrade} className="w-full bg-brand-green hover:bg-brand-green/90">
+                Upgrade to Premium
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -75,22 +119,3 @@ const PremiumModal = ({ open, onOpenChange, featureName }: PremiumModalProps) =>
 };
 
 export default PremiumModal;
-
-function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
