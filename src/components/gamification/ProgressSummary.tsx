@@ -88,7 +88,7 @@ const ProgressSummary: React.FC<ProgressSummaryProps> = ({
           </div>
         </div>
         
-        <AIContentWrapper badgeProps={{ variant: "subtle" }} className="mb-6 p-4">
+        <AIContentWrapper className="mb-6 p-4">
           <h3 className="text-sm font-medium mb-3">AI Feedback</h3>
           <div className="space-y-3">
             {feedback.filter(item => item.type === 'strength').length > 0 && (

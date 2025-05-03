@@ -40,8 +40,8 @@ const GuidedTour = ({
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, action, index } = data;
     
-    // Use explicit comparison with STATUS constants instead of array includes
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+    // Fix: Check the status against the STATUS enum values directly
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       // Tour is complete
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
