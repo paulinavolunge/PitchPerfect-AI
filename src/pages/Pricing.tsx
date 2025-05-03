@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -26,6 +27,10 @@ const Pricing = () => {
       return;
     }
     navigate('/subscription');
+  };
+
+  const handleSignupClick = () => {
+    navigate('/signup', { state: { from: '/subscription', plan: planType } });
   };
 
   const scrollToDemo = () => {
@@ -243,17 +248,21 @@ const Pricing = () => {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button 
-                  onClick={!user ? () => navigate('/signup') : handleUpgradeClick} 
-                  className="w-full bg-brand-green hover:bg-brand-green/90"
-                >
-                  {!user 
-                    ? `Sign up - ${planType === "monthly" ? "Monthly" : "Yearly"} Plan`
-                    : (isPremium 
-                        ? "Manage Subscription" 
-                        : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`)
-                  }
-                </Button>
+                {!user ? (
+                  <Button 
+                    onClick={handleSignupClick} 
+                    className="w-full bg-brand-green hover:bg-brand-green/90"
+                  >
+                    Sign up - {planType === "monthly" ? "Monthly" : "Yearly"} Team
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleUpgradeClick} 
+                    className="w-full bg-brand-green hover:bg-brand-green/90"
+                  >
+                    {isPremium ? "Manage Subscription" : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`}
+                  </Button>
+                )}
               </CardFooter>
             </Card>
             
