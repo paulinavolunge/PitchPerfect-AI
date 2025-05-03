@@ -1,13 +1,13 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Search } from 'lucide-react';
+import { Search, Bot } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import { useToast } from '@/components/ui/use-toast';
 import AIDisclosure from '@/components/AIDisclosure';
-import Bot from '@/components/ui/icons/Chat';
 
 const Tips = () => {
   const { toast } = useToast();
