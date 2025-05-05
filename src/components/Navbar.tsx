@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 const Navbar: React.FC = () => {
   const {
     user,
@@ -18,12 +20,15 @@ const Navbar: React.FC = () => {
   } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
+  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+  
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
@@ -48,6 +53,7 @@ const Navbar: React.FC = () => {
     name: 'Tips',
     href: '/tips'
   }];
+  
   const guestNavigationItems = [{
     name: 'About',
     href: '/about'
@@ -61,7 +67,9 @@ const Navbar: React.FC = () => {
     name: 'Demo',
     href: '/demo'
   }];
-  return <nav className="bg-background border-b sticky top-0 z-50">
+  
+  return (
+    <nav className="bg-background border-b sticky top-0 z-50">
       <div className="container max-w-screen-xl flex flex-wrap items-center justify-between py-3 mx-auto">
         <Link to="/" className="flex items-center space-x-2 rtl:space-x-reverse">
           <span className="self-center text-2xl font-semibold whitespace-nowrap text-brand-dark">
@@ -89,20 +97,33 @@ const Navbar: React.FC = () => {
               </SheetDescription>
             </SheetHeader>
             <div className="grid gap-4 py-4">
-              {user ? <>
-                  {userNavigationItems.map(item => <Link key={item.name} to={item.href} className="block py-2 text-brand-dark hover:text-brand-blue">{item.name}</Link>)}
+              {user ? (
+                <>
+                  {userNavigationItems.map(item => (
+                    <Link key={item.name} to={item.href} className="block py-2 text-brand-dark hover:text-brand-blue">
+                      {item.name}
+                    </Link>
+                  ))}
                   <Button variant="destructive" size="sm" onClick={signOut} className="w-full">Sign Out</Button>
-                </> : <>
-                  {guestNavigationItems.map(item => <Link key={item.name} to={item.href} className="block py-2 text-brand-dark hover:text-brand-blue">{item.name}</Link>)}
+                </>
+              ) : (
+                <>
+                  {guestNavigationItems.map(item => (
+                    <Link key={item.name} to={item.href} className="block py-2 text-brand-dark hover:text-brand-blue">
+                      {item.name}
+                    </Link>
+                  ))}
                   <Link to="/login" className="block py-2 text-brand-dark hover:text-brand-blue">Login</Link>
                   <Link to="/signup" className="block py-2 text-brand-dark hover:text-brand-blue">Sign Up</Link>
-                </>}
+                </>
+              )}
             </div>
           </SheetContent>
         </Sheet>
 
         <div className="hidden md:flex items-center space-x-4">
-          {user ? <DropdownMenu>
+          {user ? (
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
                   <Avatar className="h-8 w-8">
@@ -114,17 +135,34 @@ const Navbar: React.FC = () => {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {userNavigationItems.map(item => <DropdownMenuItem key={item.name} onClick={() => navigate(item.href)}>{item.name}</DropdownMenuItem>)}
+                {userNavigationItems.map(item => (
+                  <DropdownMenuItem key={item.name} onClick={() => navigate(item.href)}>
+                    {item.name}
+                  </DropdownMenuItem>
+                ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu> : <>
-              {guestNavigationItems.map(item => <Link key={item.name} to={item.href} className="text-lg text-brand-dark hover:text-brand-blue hover:underline py-2 px-6 rounded-lg transition duration-300 ease-in-out\\<a href=\"#\" class=\"text-lg text-brand-dark hover:text-brand-blue hover:underline py-2 px-6 rounded-lg transition duration-300 ease-in-out\">Link Text</a>\n">{item.name}</Link>)}
+            </DropdownMenu>
+          ) : (
+            <>
+              {guestNavigationItems.map(item => (
+                <Link 
+                  key={item.name} 
+                  to={item.href} 
+                  className="text-lg text-brand-dark hover:text-brand-blue hover:underline py-2 px-6 rounded-lg transition duration-300 ease-in-out"
+                >
+                  {item.name}
+                </Link>
+              ))}
               <Link to="/login" className="text-sm text-brand-dark hover:text-brand-blue">Login</Link>
               <Link to="/signup" className="text-sm text-brand-dark hover:text-brand-blue">Sign Up</Link>
-            </>}
+            </>
+          )}
         </div>
       </div>
-    </nav>;
+    </nav>
+  );
 };
+
 export default Navbar;
