@@ -79,6 +79,17 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     }
   };
 
+  // Determine button text for Team plan based on user status and plan type
+  const getTeamButtonText = () => {
+    if (!user) {
+      return planType === "monthly" ? "Sign up Monthly Team" : "Sign up Yearly Team";
+    } else if (isPremium) {
+      return "Manage Subscription";
+    } else {
+      return `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`;
+    }
+  };
+
   return (
     <>
       {/* Time-limited offer card for Team plan */}
@@ -140,10 +151,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
             { name: "Unlimited AI tips and suggestions" },
             { name: "Priority support" }
           ]}
-          buttonText={!user 
-            ? (planType === "monthly" ? "Sign up Monthly Team" : "Sign up Yearly Team")
-            : (isPremium ? "Manage Subscription" : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`)
-          }
+          buttonText={getTeamButtonText()}
           buttonAction={!user ? handleSignupClick : handleUpgradeClick}
           isCurrentPlan={isPremium}
           isPopular={true}
