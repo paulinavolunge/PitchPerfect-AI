@@ -2,15 +2,20 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Rocket } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import VideoPlayer from '@/components/VideoPlayer';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { user, startFreeTrial } = useAuth();
+  const { toast } = useToast();
   
   // Determine if we're in development mode
   const isDevelopment = import.meta.env.DEV === true;
@@ -50,6 +55,26 @@ const Hero = () => {
     setSessionStarted(true);
   };
 
+  const handleStartFreeTrial = async () => {
+    try {
+      if (user) {
+        // If user is already logged in, start the free trial
+        await startFreeTrial();
+        navigate('/dashboard');
+      } else {
+        // If user is not logged in, redirect to signup
+        navigate('/signup');
+      }
+    } catch (error) {
+      console.error('Error starting free trial:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem starting your free trial. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <section className="pt-20 md:pt-24 pb-16 md:pb-20 bg-gradient-to-b from-brand-blue/10 to-white overflow-hidden">
       <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center">
@@ -71,13 +96,12 @@ const Hero = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="flex flex-wrap gap-4"
           >
-            <Link to="/signup">
-              <Button 
-                className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
-              >
-                Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
-              </Button>
-            </Link>
+            <Button 
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              onClick={handleStartFreeTrial}
+            >
+              Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+            </Button>
             <Button 
               variant="outline" 
               className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
