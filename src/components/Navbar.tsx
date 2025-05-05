@@ -119,7 +119,7 @@ const Navbar: React.FC = () => {
                 <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu> : <>
-              {guestNavigationItems.map(item => <Link key={item.name} to={item.href} className="text-lg text-brand-dark hover:text-brand-blue hover:underline py-2 px-6 rounded-lg transition duration-300 ease-in-out\n">{item.name}</Link>)}
+              {guestNavigationItems.map(item => <Link key={item.name} to={item.href} className="text-lg text-brand-dark hover:text-brand-blue hover:underline py-2 px-6 rounded-lg transition duration-300 ease-in-out\\<a href=\"#\" class=\"text-lg text-brand-dark hover:text-brand-blue hover:underline py-2 px-6 rounded-lg transition duration-300 ease-in-out\">Link Text</a>\n">{item.name}</Link>)}
               <Link to="/login" className="text-sm text-brand-dark hover:text-brand-blue">Login</Link>
               <Link to="/signup" className="text-sm text-brand-dark hover:text-brand-blue">Sign Up</Link>
             </>}
