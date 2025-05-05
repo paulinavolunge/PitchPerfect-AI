@@ -50,7 +50,7 @@ const VideoPlayer = ({
             className="bg-brand-blue hover:bg-brand-blue/90 text-white flex items-center gap-2"
             size="lg"
           >
-            <Play size={18} /> Start Interactive Demo
+            <Play size={18} /> Watch Demo
           </Button>
         </div>
       )}
