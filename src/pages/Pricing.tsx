@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -270,7 +269,7 @@ const Pricing = () => {
                     onClick={handleSignupClick} 
                     className="w-full bg-brand-green hover:bg-brand-green/90"
                   >
-                    Sign up - {planType === "monthly" ? "Monthly" : "Yearly"} Team
+                    Sign up {planType === "monthly" ? "Monthly" : "Yearly"} Team
                   </Button>
                 ) : (
                   <Button 
