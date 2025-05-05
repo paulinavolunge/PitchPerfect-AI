@@ -82,7 +82,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
   // Determine button text for Team plan based on user status and plan type
   const getTeamButtonText = () => {
     if (!user) {
-      return planType === "monthly" ? "Sign up Monthly Team" : "Sign up Yearly Team";
+      return planType === "monthly" ? "Sign up for Monthly Team" : "Sign up for Yearly Team";
     } else if (isPremium) {
       return "Manage Subscription";
     } else {
@@ -155,6 +155,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           buttonAction={!user ? handleSignupClick : handleUpgradeClick}
           isCurrentPlan={isPremium}
           isPopular={true}
+          disabled={false} // Ensure button is never disabled for Team plan
         />
         
         {/* Enterprise Plan */}
