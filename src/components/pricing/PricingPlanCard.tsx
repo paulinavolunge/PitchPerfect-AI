@@ -138,7 +138,7 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
           className={`w-full ${buttonVariant === 'default' ? 'bg-brand-green hover:bg-brand-green/90' : ''}`}
           variant={buttonVariant}
           onClick={buttonAction}
-          disabled={type === 'team' ? false : disabled || (isCurrentPlan && type !== 'team')}
+          disabled={disabled || (isCurrentPlan && type !== 'team')}
         >
           {buttonText}
         </Button>
