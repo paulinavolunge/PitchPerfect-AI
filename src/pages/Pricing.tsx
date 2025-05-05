@@ -1,16 +1,15 @@
+
 import React, { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { CheckIcon } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ROICalculator from '@/components/ROICalculator';
 import GuidedTour from '@/components/GuidedTour';
 import { Step } from 'react-joyride';
-import TimeOffer from '@/components/promotion/TimeOffer';
+import PricingHeader from '@/components/pricing/PricingHeader';
+import PricingPlans from '@/components/pricing/PricingPlans';
+import StickyCTA from '@/components/pricing/StickyCTA';
 
 const Pricing = () => {
   const { user, isPremium } = useAuth();
@@ -24,18 +23,6 @@ const Pricing = () => {
   // Create a promotion expiry date (14 days from now)
   const promoExpiryDate = new Date();
   promoExpiryDate.setDate(promoExpiryDate.getDate() + 14);
-  
-  const handleUpgradeClick = () => {
-    if (!user) {
-      navigate('/login', { state: { from: '/subscription' } });
-      return;
-    }
-    navigate('/subscription');
-  };
-
-  const handleSignupClick = () => {
-    navigate('/signup', { state: { from: '/subscription', plan: planType } });
-  };
 
   const scrollToDemo = () => {
     if (demoRef.current) {
@@ -95,244 +82,20 @@ const Pricing = () => {
     localStorage.setItem('pricing_tour_completed', 'true');
   };
 
-  // Enterprise plan details based on size
-  const enterprisePlans = {
-    small: {
-      name: "Small Enterprise",
-      price: "$500",
-      users: "10-25",
-      features: [
-        "All Team features",
-        "Basic custom AI training",
-        "Standard analytics dashboard",
-        "SSO integration",
-        "Email support"
-      ]
-    },
-    medium: {
-      name: "Medium Enterprise",
-      price: "$1,500",
-      users: "26-100",
-      features: [
-        "All Small Enterprise features",
-        "Advanced custom AI training",
-        "Enhanced analytics and reporting",
-        "Advanced SSO and security",
-        "Priority support with 24-hour response"
-      ]
-    },
-    large: {
-      name: "Large Enterprise",
-      price: "$3,000+",
-      users: "101+",
-      features: [
-        "All Medium Enterprise features",
-        "Fully customized AI training",
-        "Executive analytics dashboard",
-        "Custom integrations",
-        "Dedicated account manager",
-        "Custom onboarding and training"
-      ]
-    }
-  };
-
-  const selectedEnterprisePlan = enterprisePlans[enterpriseSize];
-
   return (
     <div className="min-h-screen flex flex-col relative">
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-brand-dark mb-4">Simple, Transparent Pricing</h1>
-            <p className="text-lg text-brand-dark/70 max-w-2xl mx-auto">
-              Choose the plan that's right for you and start improving your sales conversations today.
-            </p>
-            
-            <div className="mt-8 max-w-xs mx-auto">
-              <Tabs value={planType} onValueChange={(v) => setPlanType(v as "monthly" | "yearly")}>
-                <TabsList className="grid grid-cols-2">
-                  <TabsTrigger value="monthly" className="text-sm">Monthly</TabsTrigger>
-                  <TabsTrigger value="yearly" className="text-sm">Yearly (Save 17%)</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          </div>
+          <PricingHeader planType={planType} setPlanType={setPlanType} />
           
-          {/* Time-limited offer card for Team plan */}
-          <div className="max-w-md mx-auto mb-8">
-            <TimeOffer 
-              expiryDate={promoExpiryDate}
-              discount="Get 1 Month Free"
-              description="Sign up for the annual Team Plan and get your first month free"
-              variant="card"
-              ctaText="Claim This Deal"
-              ctaLink="/subscription?plan=yearly"
-            />
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto pricing-cards">
-            {/* Solo Plan */}
-            <Card className="border-2 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-2xl">Solo</CardTitle>
-                <CardDescription>Perfect for individuals</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">$0</span>
-                  <span className="text-gray-500 ml-2">forever</span>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <ul className="space-y-3">
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Basic sales practice tools</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Limited AI tips and feedback</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Progress tracking dashboard</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Community support</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {!user ? (
-                  <Button className="w-full" variant="outline" onClick={() => navigate('/signup')}>
-                    Sign up free
-                  </Button>
-                ) : (
-                  <Button className="w-full" variant="outline" onClick={() => navigate('/dashboard')} disabled={isPremium}>
-                    Current plan
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-            
-            {/* Team Plan */}
-            <Card className="border-2 border-brand-green shadow-lg">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-2xl">Team</CardTitle>
-                  <span className="bg-brand-green/20 text-brand-green text-xs font-medium px-2 py-1 rounded">POPULAR</span>
-                </div>
-                <CardDescription>For growing teams</CardDescription>
-                <div className="mt-4">
-                  {planType === "monthly" ? (
-                    <>
-                      <span className="text-4xl font-bold">$29</span>
-                      <span className="text-gray-500 ml-2">/ user / month</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-4xl font-bold">$290</span>
-                      <span className="text-gray-500 ml-2">/ user / year</span>
-                      <p className="text-sm text-green-600 mt-1">Save $58 (17% off)</p>
-                    </>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <ul className="space-y-3">
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>All Solo plan features</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span><strong>AI roleplay practice</strong> with voice or text</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Team analytics dashboard</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Unlimited AI tips and suggestions</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Priority support</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {!user ? (
-                  <Button 
-                    onClick={handleSignupClick} 
-                    className="w-full bg-brand-green hover:bg-brand-green/90"
-                  >
-                    {planType === "monthly" ? "Sign up Monthly Team" : "Sign up Yearly Team"}
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={handleUpgradeClick} 
-                    className="w-full bg-brand-green hover:bg-brand-green/90"
-                  >
-                    {isPremium ? "Manage Subscription" : `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`}
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-            
-            {/* Enterprise Plan */}
-            <Card className="border-2 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-2xl">Enterprise</CardTitle>
-                <CardDescription>For larger organizations</CardDescription>
-                <div className="mt-4 mb-2">
-                  <Tabs 
-                    value={enterpriseSize} 
-                    onValueChange={(v) => setEnterpriseSize(v as "small" | "medium" | "large")}
-                    className="w-full"
-                  >
-                    <TabsList className="grid grid-cols-3 mb-2">
-                      <TabsTrigger value="small" className="text-xs">Small</TabsTrigger>
-                      <TabsTrigger value="medium" className="text-xs">Medium</TabsTrigger>
-                      <TabsTrigger value="large" className="text-xs">Large</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <div className="text-center">
-                    <span className="text-xl font-semibold">{selectedEnterprisePlan.name}</span>
-                    <div className="mt-2">
-                      <span className="text-3xl font-bold">{selectedEnterprisePlan.price}</span>
-                      <span className="text-gray-500 ml-2">/ month</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {selectedEnterprisePlan.users} users
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <ul className="space-y-3">
-                  {selectedEnterprisePlan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <div className="w-full space-y-2">
-                  <Button className="w-full" variant="outline" onClick={() => window.location.href = "mailto:sales@pitchperfectai.com?subject=Enterprise Pricing Inquiry"}>
-                    Contact Sales
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground">
-                    Custom pricing and features available upon request
-                  </p>
-                </div>
-              </CardFooter>
-            </Card>
-          </div>
+          <PricingPlans 
+            planType={planType} 
+            enterpriseSize={enterpriseSize} 
+            setEnterpriseSize={setEnterpriseSize} 
+            promoExpiryDate={promoExpiryDate} 
+          />
           
           <div className="max-w-3xl mx-auto mt-20 roi-calculator">
             <ROICalculator />
@@ -350,22 +113,10 @@ const Pricing = () => {
         </div>
       </main>
       
-      {/* Sticky CTA Button - Only visible when not interacting with ROI calculator */}
-      {showStickyCTA && (
-        <div className="sticky-cta fixed bottom-6 left-0 right-0 flex justify-center z-40">
-          <Button 
-            onClick={scrollToDemo} 
-            className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-6 rounded-full shadow-lg animate-bounce-subtle"
-            size="lg"
-          >
-            Try It Free
-          </Button>
-        </div>
-      )}
+      <StickyCTA show={showStickyCTA} onClick={scrollToDemo} />
       
       <Footer />
       
-      {/* Guided Tour */}
       <GuidedTour
         steps={steps}
         run={runTour}
