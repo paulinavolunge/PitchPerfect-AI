@@ -3,12 +3,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import GuestBanner from '@/components/GuestBanner';
 import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
 import { Volume2, Volume1, VolumeX, Mic, MessageSquare, Airplay, BookOpen, HelpCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
 import { useAuth } from "@/context/AuthContext";
+import { useGuestMode } from "@/context/GuestModeContext";
 import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +42,7 @@ const RolePlay = () => {
   const [showTour, setShowTour] = useState(false);
   const { toast } = useToast();
   const { isPremium, user } = useAuth();
+  const { isGuestMode } = useGuestMode();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -80,18 +83,37 @@ const RolePlay = () => {
 
   // Check if first time user
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('hasSeenRoleplayOnboarding');
-    const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
-    
-    if (user && !hasSeenOnboarding && hasCompletedOnboarding) {
-      setShowGettingStartedModal(true);
+    // Check if guest mode and set default scenario for quick start
+    if (isGuestMode && !isScenarioSelected) {
+      // Set a default scenario for guest users
+      setScenario({
+        difficulty: 'Medium',
+        objection: 'Price',
+        industry: 'SaaS'
+      });
+      setIsScenarioSelected(true);
+      
+      // Show a welcome toast
+      toast({
+        title: "Welcome to Guest Mode",
+        description: "You're using PitchPerfect AI as a guest. Your progress won't be saved.",
+      });
+    }
+    // Regular user flow
+    else if (user && !isGuestMode) {
+      const hasSeenOnboarding = localStorage.getItem('hasSeenRoleplayOnboarding');
+      const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
+      
+      if (!hasSeenOnboarding && hasCompletedOnboarding) {
+        setShowGettingStartedModal(true);
+      }
     }
     
-    // Check if premium, if not show premium modal
-    if (!isPremium) {
+    // Check premium status for regular users (not for guests)
+    if (!isGuestMode && !isPremium && user) {
       setShowPremiumModal(true);
     }
-  }, [isPremium, user]);
+  }, [isPremium, user, isGuestMode, isScenarioSelected, toast]);
 
   const handleScenarioSelect = (selectedScenario: typeof scenario) => {
     setScenario(selectedScenario);
@@ -139,7 +161,8 @@ const RolePlay = () => {
   };
 
   const handleModeChange = (newMode: 'voice' | 'text' | 'hybrid') => {
-    if (!isPremium && (newMode === 'voice' || newMode === 'hybrid')) {
+    // In guest mode, allow all features for demo
+    if (!isGuestMode && !isPremium && (newMode === 'voice' || newMode === 'hybrid')) {
       setShowPremiumModal(true);
       return;
     }
@@ -172,6 +195,9 @@ const RolePlay = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      
+      {/* Guest Banner */}
+      {isGuestMode && <GuestBanner />}
       
       {/* Guided Tour */}
       <GuidedTour
@@ -298,7 +324,7 @@ const RolePlay = () => {
                           onClick={() => handleModeChange('voice')}
                           aria-label="Voice mode"
                           className="data-[state=on]:bg-brand-blue data-[state=on]:text-white"
-                          disabled={!isPremium}
+                          disabled={!isPremium && !isGuestMode}
                         >
                           <Mic size={18} />
                         </Toggle>
@@ -327,7 +353,7 @@ const RolePlay = () => {
                           onClick={() => handleModeChange('hybrid')}
                           aria-label="Hybrid mode"
                           className="data-[state=on]:bg-brand-blue data-[state=on]:text-white"
-                          disabled={!isPremium}
+                          disabled={!isPremium && !isGuestMode}
                         >
                           <Airplay size={18} />
                         </Toggle>
@@ -370,6 +396,35 @@ const RolePlay = () => {
                   </p>
                 </div>
               )}
+              
+              {isGuestMode && (
+                <div className="mt-6 bg-brand-blue/10 p-6 rounded-lg text-center">
+                  <h3 className="text-lg font-medium mb-2 text-brand-dark">Enjoying the experience?</h3>
+                  <p className="text-brand-dark/70 mb-4">
+                    Sign up for free to save your progress and access more features.
+                  </p>
+                  <div className="flex justify-center gap-3">
+                    <Button 
+                      variant="default" 
+                      onClick={() => {
+                        navigate('/signup');
+                      }}
+                      className="bg-brand-blue hover:bg-brand-blue/90"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Sign Up Free
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        navigate('/pricing');
+                      }}
+                    >
+                      View Plans
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -377,18 +432,20 @@ const RolePlay = () => {
       
       <Footer />
       
-      {/* Premium Modal */}
-      <PremiumModal 
-        open={showPremiumModal} 
-        onOpenChange={(isOpen) => {
-          setShowPremiumModal(isOpen);
-          if (!isOpen && !isPremium) {
-            // Redirect to subscription page if they close the modal but aren't premium
-            navigate("/subscription");
-          }
-        }}
-        featureName="AI roleplay practice"
-      />
+      {/* Premium Modal - only show for registered users, not for guests */}
+      {!isGuestMode && (
+        <PremiumModal 
+          open={showPremiumModal} 
+          onOpenChange={(isOpen) => {
+            setShowPremiumModal(isOpen);
+            if (!isOpen && !isPremium && user) {
+              // Redirect to subscription page if they close the modal but aren't premium
+              navigate("/subscription");
+            }
+          }}
+          featureName="AI roleplay practice"
+        />
+      )}
     </div>
   );
 };

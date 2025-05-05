@@ -1,12 +1,13 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Rocket } from 'lucide-react';
+import { ArrowRight, Rocket, UserPlus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import VideoPlayer from '@/components/VideoPlayer';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/context/AuthContext';
+import { useGuestMode } from '@/context/GuestModeContext';
 import { useToast } from '@/hooks/use-toast';
 
 const Hero = () => {
@@ -15,6 +16,7 @@ const Hero = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { user, startFreeTrial } = useAuth();
+  const { startGuestMode } = useGuestMode();
   const { toast } = useToast();
   
   // Determine if we're in development mode
@@ -75,6 +77,15 @@ const Hero = () => {
     }
   };
 
+  const handleTryAsGuest = () => {
+    startGuestMode();
+    toast({
+      title: "Guest Mode Activated",
+      description: "Try PitchPerfect AI without creating an account. Your data won't be saved.",
+    });
+    navigate('/roleplay');
+  };
+
   return (
     <section className="pt-20 md:pt-24 pb-16 md:pb-20 bg-gradient-to-b from-brand-blue/10 to-white overflow-hidden">
       <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center">
@@ -109,6 +120,14 @@ const Hero = () => {
             >
               Start Demo
               <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="text-brand-dark hover:bg-gray-100 flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              onClick={handleTryAsGuest}
+            >
+              <UserPlus className="group-hover:scale-110 transition-transform" size={isMobile ? 20 : 18} />
+              Try as Guest
             </Button>
           </motion.div>
           <p className="text-sm text-brand-dark/60">

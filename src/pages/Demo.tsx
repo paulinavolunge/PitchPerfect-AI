@@ -4,19 +4,24 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DemoSandbox from '@/components/demo/DemoSandbox';
 import WaitlistModal from '@/components/demo/WaitlistModal';
+import GuestBanner from '@/components/GuestBanner';
 import WebhookSettings from '@/components/WebhookSettings';
 import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, UserPlus } from 'lucide-react';
 import MicrophoneGuard from '@/components/MicrophoneGuard';
 import AIDisclosure from '@/components/AIDisclosure';
+import { useGuestMode } from '@/context/GuestModeContext';
+import { useNavigate } from 'react-router-dom';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [showWebhookSettings, setShowWebhookSettings] = useState(false);
   const [sessionData, setSessionData] = useState<any>(null);
   const [crmProvider, setCrmProvider] = useState<CRMProvider>("zapier");
+  const { isGuestMode } = useGuestMode();
+  const navigate = useNavigate();
   
   const handleDemoComplete = (data?: any) => {
     // Save session data
@@ -24,8 +29,10 @@ const Demo = () => {
       setSessionData(data);
     }
     
-    // Show the waitlist modal
-    setShowWaitlistModal(true);
+    // Only show the waitlist modal for non-guest users
+    if (!isGuestMode) {
+      setShowWaitlistModal(true);
+    }
     
     // Then send the data to CRM via webhook
     if (data) {
@@ -45,10 +52,15 @@ const Demo = () => {
         });
     }
   };
+
+  const handleTryMoreFeatures = () => {
+    navigate('/roleplay');
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {isGuestMode && <GuestBanner />}
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -80,6 +92,31 @@ const Demo = () => {
                 <DemoSandbox onComplete={handleDemoComplete} />
               </MicrophoneGuard>
             </div>
+            
+            {isGuestMode && sessionData && (
+              <div className="bg-brand-blue/10 rounded-lg p-6 text-center mb-8">
+                <h3 className="text-xl font-medium mb-2 text-brand-dark">Want to try more features?</h3>
+                <p className="text-brand-dark/70 mb-4">
+                  You're using PitchPerfect AI in guest mode. Try our role-playing feature or sign up to save your progress.
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Button 
+                    onClick={handleTryMoreFeatures}
+                    className="bg-brand-blue hover:bg-brand-blue/90"
+                  >
+                    Try Role-Playing
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/signup')}
+                    className="flex items-center gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Sign Up Free
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

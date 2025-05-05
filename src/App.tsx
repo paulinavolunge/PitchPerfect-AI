@@ -28,6 +28,7 @@ import NotFound from '@/pages/NotFound';
 import AccountDelete from '@/pages/AccountDelete';
 import DataSafety from '@/pages/DataSafety';
 import { AuthProvider } from '@/context/AuthContext';
+import { GuestModeProvider } from '@/context/GuestModeContext';
 import {
   QueryClient,
   QueryClientProvider,
@@ -40,33 +41,35 @@ function App() {
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/password-reset" element={<PasswordReset />} />
-            <Route path="/update-password" element={<UpdatePassword />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/practice" element={<Practice />} />
-            <Route path="/roleplay" element={<RolePlay />} />
-            <Route path="/progress" element={<Progress />} />
-            <Route path="/recordings" element={<CallRecordings />} />
-            <Route path="/team-dashboard" element={<TeamDashboard />} />
-            <Route path="/tips" element={<Tips />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/subscription" element={<Subscription />} />
-            <Route path="/success" element={<Success />} />
-            <Route path="/cancel" element={<Cancel />} />
-            <Route path="/compare" element={<Compare />} />
-            <Route path="/demo" element={<Demo />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/data-safety" element={<DataSafety />} />
-            <Route path="/account-delete" element={<AccountDelete />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
+          <GuestModeProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/password-reset" element={<PasswordReset />} />
+              <Route path="/update-password" element={<UpdatePassword />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/practice" element={<Practice />} />
+              <Route path="/roleplay" element={<RolePlay />} />
+              <Route path="/progress" element={<Progress />} />
+              <Route path="/recordings" element={<CallRecordings />} />
+              <Route path="/team-dashboard" element={<TeamDashboard />} />
+              <Route path="/tips" element={<Tips />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/subscription" element={<Subscription />} />
+              <Route path="/success" element={<Success />} />
+              <Route path="/cancel" element={<Cancel />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="/demo" element={<Demo />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/data-safety" element={<DataSafety />} />
+              <Route path="/account-delete" element={<AccountDelete />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </GuestModeProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

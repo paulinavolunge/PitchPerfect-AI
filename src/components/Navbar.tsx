@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
+import { useGuestMode } from "@/context/GuestModeContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Moon, Sun, Menu, X } from 'lucide-react';
+import { Moon, Sun, Menu, X, UserPlus, LogIn } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +19,7 @@ const Navbar: React.FC = () => {
     theme,
     setTheme
   } = useTheme();
+  const { isGuestMode, endGuestMode } = useGuestMode();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   
@@ -31,6 +33,20 @@ const Navbar: React.FC = () => {
   
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  const handleSignup = () => {
+    if (isGuestMode) {
+      endGuestMode();
+    }
+    navigate('/signup');
+  };
+
+  const handleLogin = () => {
+    if (isGuestMode) {
+      endGuestMode();
+    }
+    navigate('/login');
   };
 
   // Navigation items
@@ -63,6 +79,14 @@ const Navbar: React.FC = () => {
   }, {
     name: 'Pricing',
     href: '/pricing'
+  }, {
+    name: 'Demo',
+    href: '/demo'
+  }];
+
+  const guestModeItems = [{
+    name: 'Role Play',
+    href: '/roleplay'
   }, {
     name: 'Demo',
     href: '/demo'
@@ -106,6 +130,23 @@ const Navbar: React.FC = () => {
                   ))}
                   <Button variant="destructive" size="sm" onClick={signOut} className="w-full">Sign Out</Button>
                 </>
+              ) : isGuestMode ? (
+                <>
+                  {guestModeItems.map(item => (
+                    <Link key={item.name} to={item.href} className="block py-2 text-brand-dark hover:text-brand-blue">
+                      {item.name}
+                    </Link>
+                  ))}
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-brand-dark/70 mb-2">Want to save your progress?</p>
+                    <Button onClick={handleSignup} className="w-full mb-2 bg-brand-blue hover:bg-brand-blue/90">
+                      <UserPlus className="h-4 w-4 mr-2" /> Sign Up Free
+                    </Button>
+                    <Button variant="outline" onClick={handleLogin} className="w-full">
+                      <LogIn className="h-4 w-4 mr-2" /> Log In
+                    </Button>
+                  </div>
+                </>
               ) : (
                 <>
                   {guestNavigationItems.map(item => (
@@ -144,6 +185,36 @@ const Navbar: React.FC = () => {
                 <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : isGuestMode ? (
+            <>
+              {guestModeItems.map(item => (
+                <Link 
+                  key={item.name} 
+                  to={item.href} 
+                  className="text-lg text-brand-dark hover:text-brand-blue hover:underline py-2 px-3 rounded-lg transition duration-300 ease-in-out"
+                >
+                  {item.name}
+                </Link>
+              ))}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleLogin}
+                className="ml-2"
+              >
+                <LogIn className="h-4 w-4 mr-1" />
+                Log In
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleSignup}
+                className="bg-brand-blue hover:bg-brand-blue/90"
+              >
+                <UserPlus className="h-4 w-4 mr-1" />
+                Sign Up
+              </Button>
+            </>
           ) : (
             <>
               {guestNavigationItems.map(item => (
