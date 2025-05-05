@@ -134,28 +134,19 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
         </ul>
       </CardContent>
       <CardFooter>
-        {type !== 'enterprise' ? (
-          <Button 
-            className={`w-full ${buttonVariant === 'default' ? 'bg-brand-green hover:bg-brand-green/90' : ''}`}
-            variant={buttonVariant}
-            onClick={buttonAction}
-            disabled={disabled || (isCurrentPlan && type !== 'team')}
-          >
-            {buttonText}
-          </Button>
-        ) : (
-          <div className="w-full space-y-2">
-            <Button 
-              className="w-full" 
-              variant="outline" 
-              onClick={buttonAction}
-            >
-              {buttonText}
-            </Button>
-            <p className="text-xs text-center text-muted-foreground">
-              Custom pricing and features available upon request
-            </p>
-          </div>
+        <Button 
+          className={`w-full ${buttonVariant === 'default' ? 'bg-brand-green hover:bg-brand-green/90' : ''}`}
+          variant={buttonVariant}
+          onClick={buttonAction}
+          disabled={type === 'team' ? false : disabled || (isCurrentPlan && type !== 'team')}
+        >
+          {buttonText}
+        </Button>
+        
+        {type === 'enterprise' && (
+          <p className="text-xs text-center text-muted-foreground mt-2">
+            Custom pricing and features available upon request
+          </p>
         )}
       </CardFooter>
     </Card>

@@ -155,7 +155,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           buttonAction={!user ? handleSignupClick : handleUpgradeClick}
           isCurrentPlan={isPremium}
           isPopular={true}
-          disabled={false} // Ensure button is never disabled for Team plan
+          // Always enable the Team button regardless of current plan status
+          disabled={false}
         />
         
         {/* Enterprise Plan */}
