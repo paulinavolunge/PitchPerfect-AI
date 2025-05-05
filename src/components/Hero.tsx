@@ -107,7 +107,7 @@ const Hero = () => {
               className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
               onClick={handleScrollToDemo}
             >
-              See Demo
+              Start Demo
               <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
             </Button>
           </motion.div>
