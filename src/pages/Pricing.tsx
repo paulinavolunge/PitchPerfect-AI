@@ -269,7 +269,7 @@ const Pricing = () => {
                     onClick={handleSignupClick} 
                     className="w-full bg-brand-green hover:bg-brand-green/90"
                   >
-                    Sign up {planType === "monthly" ? "Monthly" : "Yearly"} Team
+                    {planType === "monthly" ? "Sign up Monthly Team" : "Sign up Yearly Team"}
                   </Button>
                 ) : (
                   <Button 
