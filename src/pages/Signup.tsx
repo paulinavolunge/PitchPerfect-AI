@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Auth } from '@supabase/auth-ui-react';
@@ -24,23 +23,19 @@ const Signup = () => {
       navigate('/dashboard');
     }
 
-    // Check for verification success in URL
     const checkEmailConfirmation = async () => {
       const { error } = await supabase.auth.getSession();
       if (!error) {
-        // If successful confirmation, clear any errors
         setSignupError(null);
       }
     };
 
-    // Check for email confirmation hash in URL
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     if (hashParams.get('access_token') || hashParams.get('error_description')) {
       checkEmailConfirmation();
     }
   }, [user, navigate]);
 
-  // Set up listener for auth state changes
   useEffect(() => {
     const handleAuthChange = (event: string, session: any) => {
       if (event === 'USER_CREATED') {
@@ -54,8 +49,7 @@ const Signup = () => {
         setSignupError(session.error.message);
         setVerificationSent(false);
         setIsSubmitting(false);
-        
-        // Display more user-friendly error messages
+
         const errorMsg = session.error.message.toLowerCase();
         if (errorMsg.includes('password')) {
           toast.error("Password error", {
@@ -91,7 +85,6 @@ const Signup = () => {
       anchor: {
         color: 'rgb(22 163 74)',
       },
-      // Add validation styles
       input: {
         borderRadius: '0.375rem',
       },
@@ -101,7 +94,6 @@ const Signup = () => {
         marginTop: '0.25rem',
       },
     },
-    // Enable real-time validation
     variables: {
       default: {
         colors: {
@@ -113,7 +105,6 @@ const Signup = () => {
     },
   };
 
-  // Custom handleSubmit wrapper to track submission state
   const handleBeforeSignup = () => {
     setIsSubmitting(true);
   };
@@ -148,7 +139,7 @@ const Signup = () => {
 
           <Card>
             <CardContent className="pt-6">
-              <div className="auth-container" onSubmit={handleBeforeSignup}>
+              <form onSubmit={handleBeforeSignup}>
                 <Auth
                   supabaseClient={supabase}
                   appearance={authAppearance}
@@ -162,10 +153,10 @@ const Signup = () => {
                     emailRedirectTo: `${window.location.origin}/dashboard`,
                   }}
                 />
-              </div>
+              </form>
             </CardContent>
           </Card>
-          
+
           <div className="text-center mt-6">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
