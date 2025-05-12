@@ -61,15 +61,25 @@
   html {
     scroll-behavior: smooth;
   }
+
+  /* Accessibility improvements */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-blue;
+  }
+
+  /* Skip to content link for keyboard navigation */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-brand-blue focus:font-medium focus:rounded-md focus:shadow-md;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-blue text-white font-medium rounded-md px-6 py-2.5 hover:opacity-90 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-brand-blue text-white font-medium rounded-md px-6 py-3 hover:opacity-90 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0 focus:ring-2 focus:ring-brand-blue/50 focus:outline-none;
   }
   
   .btn-secondary {
-    @apply bg-secondary text-brand-dark font-medium rounded-md px-6 py-2.5 hover:bg-brand-blue/20 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-secondary text-brand-dark font-medium rounded-md px-6 py-3 hover:bg-brand-blue/20 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0 focus:ring-2 focus:ring-brand-blue/50 focus:outline-none;
   }
 
   .card-hover {
@@ -88,6 +98,24 @@
     border-width: 8px 8px 0;
     border-style: solid;
     border-color: white transparent;
+  }
+  
+  /* Navigation styles */
+  .nav-active {
+    @apply text-brand-blue font-medium relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-brand-blue after:bottom-0 after:left-0;
+  }
+  
+  /* Form styles */
+  .form-input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-blue focus:border-brand-blue transition-colors;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-brand-dark mb-1;
+  }
+  
+  .form-error {
+    @apply text-red-600 text-sm mt-1;
   }
   
   /* New design components */
@@ -121,6 +149,10 @@
   animation: slideUp 0.5s ease-out forwards;
 }
 
+.animate-bounce-subtle {
+  animation: bounceSoft 3s infinite ease-in-out;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -129,4 +161,65 @@
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes bounceSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Media query for improved mobile experience */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .btn-primary, .btn-secondary {
+    @apply w-full justify-center;
+  }
+}
+
+/* Print styles for accessibility */
+@media print {
+  body {
+    @apply text-black bg-white;
+  }
+  
+  .no-print {
+    display: none;
+  }
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: more) {
+  body {
+    @apply text-black bg-white;
+  }
+  
+  a:not(.btn-primary):not(.btn-secondary) {
+    @apply underline;
+  }
+  
+  .btn-primary {
+    @apply bg-black text-white border-2 border-black;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-black border-2 border-black;
+  }
+}
+
+/* Motion preferences for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-fade, .animate-slide-up, .animate-bounce-subtle {
+    animation: none !important;
+  }
 }

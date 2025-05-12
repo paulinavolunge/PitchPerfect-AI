@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import Index from '@/pages/Index';
@@ -33,8 +33,50 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
+import { useToast } from '@/hooks/use-toast';
 
-const queryClient = new QueryClient()
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 60000,
+    },
+  },
+});
+
+// Analytics tracking component
+const RouteChangeTracker = () => {
+  const location = useLocation();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Track page views
+    const currentPath = location.pathname + location.search;
+    
+    // Implement Google Analytics page view tracking
+    if (typeof window.gtag === 'function') {
+      window.gtag('config', 'UA-XXXXX-X', {
+        page_path: currentPath,
+      });
+    }
+
+    // Error tracking for detecting navigation issues
+    const handleError = (error: ErrorEvent) => {
+      console.error('Navigation error:', error);
+      // You can send this to your error tracking service
+    };
+
+    window.addEventListener('error', handleError);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+    };
+  }, [location]);
+
+  return null;
+};
 
 function App() {
   return (
@@ -42,6 +84,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <GuestModeProvider>
+            <RouteChangeTracker />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
@@ -74,6 +117,13 @@ function App() {
       </QueryClientProvider>
     </ThemeProvider>
   );
+}
+
+// Add TypeScript definition for Google Analytics
+declare global {
+  interface Window {
+    gtag: (command: string, targetId: string, config?: any) => void;
+  }
 }
 
 export default App;

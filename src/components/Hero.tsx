@@ -95,7 +95,7 @@ const Hero = () => {
           transition={{ duration: 0.6 }}
           className="lg:w-1/2 space-y-5 md:space-y-6 mb-8 lg:mb-0"
         >
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-brand-dark leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-brand-dark leading-tight">
             Perfect your pitch <span className="text-brand-blue">with AI—live.</span>
           </h1>
           <p className="text-lg md:text-xl text-brand-dark/80 max-w-xl">
@@ -108,23 +108,26 @@ const Hero = () => {
             className="flex flex-wrap gap-4"
           >
             <Button 
-              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
               onClick={handleStartFreeTrial}
+              aria-label="Try Free Now"
             >
               Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
             </Button>
             <Button 
               variant="outline" 
-              className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
               onClick={handleScrollToDemo}
+              aria-label="Start Demo"
             >
               Start Demo
               <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
             </Button>
             <Button 
               variant="ghost" 
-              className="text-brand-dark hover:bg-gray-100 flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              className="text-brand-dark hover:bg-gray-100 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
               onClick={handleTryAsGuest}
+              aria-label="Try as Guest"
             >
               <UserPlus className="group-hover:scale-110 transition-transform" size={isMobile ? 20 : 18} />
               Try as Guest
@@ -145,7 +148,7 @@ const Hero = () => {
             posterSrc="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
             videoSrc="/demo-video.mp4"
             fallbackSrc="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
-            className="max-w-lg mx-auto shadow-lg"
+            className="max-w-lg mx-auto shadow-lg rounded-lg overflow-hidden"
             onStartClick={handleStartDemo}
             showStartButton={!sessionStarted}
           />

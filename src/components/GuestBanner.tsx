@@ -24,28 +24,28 @@ const GuestBanner: React.FC<GuestBannerProps> = ({ className = '' }) => {
   };
 
   return (
-    <div className={`bg-brand-blue/10 border-b border-brand-blue/20 py-2 ${className}`}>
+    <div className={`bg-brand-blue/10 border-b border-brand-blue/20 py-3 ${className}`}>
       <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between">
-        <p className="text-sm text-brand-dark mb-2 sm:mb-0">
+        <p className="text-sm text-brand-dark mb-3 sm:mb-0 text-center sm:text-left">
           <span className="font-medium">Guest Mode:</span> Your progress won't be saved. Sign up to unlock all features.
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button
             variant="outline"
             size="sm"
-            className="text-xs"
+            className="text-xs font-medium hover:bg-gray-100"
             onClick={handleLogin}
           >
-            <LogIn className="h-3 w-3 mr-1" />
+            <LogIn className="h-3 w-3 mr-1.5" />
             Log In
           </Button>
           <Button
             variant="default"
             size="sm"
-            className="text-xs bg-brand-blue hover:bg-brand-blue/90"
+            className="text-xs font-medium bg-brand-blue hover:bg-brand-blue/90"
             onClick={handleSignup}
           >
-            <UserPlus className="h-3 w-3 mr-1" />
+            <UserPlus className="h-3 w-3 mr-1.5" />
             Sign Up Free
           </Button>
         </div>
