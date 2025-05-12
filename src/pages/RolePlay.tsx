@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import GuestBanner from '@/components/GuestBanner';
 import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
-import { Volume2, Volume1, VolumeX, Mic, MessageSquare, Airplay, BookOpen, HelpCircle } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Mic, MessageSquare, Airplay, BookOpen, HelpCircle, UserPlus } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
 import { useAuth } from "@/context/AuthContext";
