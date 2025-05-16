@@ -1,9 +1,10 @@
 
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
+import { ThemeProvider } from '@/context/ThemeContext';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
@@ -84,41 +85,43 @@ function App() {
   return (
     <HelmetProvider>
       <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <GuestModeProvider>
-              <RouteChangeTracker />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/password-reset" element={<PasswordReset />} />
-                <Route path="/update-password" element={<UpdatePassword />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/practice" element={<Practice />} />
-                <Route path="/roleplay" element={<RolePlay />} />
-                <Route path="/progress" element={<Progress />} />
-                <Route path="/recordings" element={<CallRecordings />} />
-                <Route path="/team-dashboard" element={<TeamDashboard />} />
-                <Route path="/tips" element={<Tips />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/subscription" element={<Subscription />} />
-                <Route path="/success" element={<Success />} />
-                <Route path="/cancel" element={<Cancel />} />
-                <Route path="/compare" element={<Compare />} />
-                <Route path="/demo" element={<Demo />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/data-safety" element={<DataSafety />} />
-                <Route path="/account-delete" element={<AccountDelete />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <MobileNavBar />
-              <Toaster />
-            </GuestModeProvider>
-          </AuthProvider>
-        </QueryClientProvider>
+        <NextThemeProvider attribute="class" defaultTheme="light">
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <GuestModeProvider>
+                <RouteChangeTracker />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/password-reset" element={<PasswordReset />} />
+                  <Route path="/update-password" element={<UpdatePassword />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/practice" element={<Practice />} />
+                  <Route path="/roleplay" element={<RolePlay />} />
+                  <Route path="/progress" element={<Progress />} />
+                  <Route path="/recordings" element={<CallRecordings />} />
+                  <Route path="/team-dashboard" element={<TeamDashboard />} />
+                  <Route path="/tips" element={<Tips />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/subscription" element={<Subscription />} />
+                  <Route path="/success" element={<Success />} />
+                  <Route path="/cancel" element={<Cancel />} />
+                  <Route path="/compare" element={<Compare />} />
+                  <Route path="/demo" element={<Demo />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/data-safety" element={<DataSafety />} />
+                  <Route path="/account-delete" element={<AccountDelete />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <MobileNavBar />
+                <Toaster />
+              </GuestModeProvider>
+            </AuthProvider>
+          </QueryClientProvider>
+        </NextThemeProvider>
       </ThemeProvider>
     </HelmetProvider>
   );

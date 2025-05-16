@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useTheme as useNextTheme } from 'next-themes';
 
 type Theme = 'light' | 'dark';
 
@@ -12,6 +13,7 @@ const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<Theme>('light');
+  const { setTheme: setNextTheme } = useNextTheme();
 
   useEffect(() => {
     // Check if theme exists in localStorage
@@ -24,6 +26,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
+    setNextTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
