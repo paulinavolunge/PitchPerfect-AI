@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Clock, RefreshCw } from 'lucide-react';
@@ -9,6 +8,9 @@ import { getSampleScenario } from '@/utils/demoUtils';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { trackDemoActivation, checkTranscriptionConfidence } from '@/utils/analyticsUtils';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import AudioWaveform from '@/components/animations/AudioWaveform';
+import ConfettiEffect from '@/components/animations/ConfettiEffect';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Import the speech recognition types from the global window augmentations
 declare global {
@@ -60,6 +62,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const [scoreData, setScoreData] = useState<any>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [lowConfidence, setLowConfidence] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const { toast } = useToast();
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -319,6 +322,12 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
   const handleViewScore = () => {
     setDemoState(DemoState.COMPLETE);
+    
+    // Trigger confetti if score is good
+    if (scoreData.overallScore >= 7) {
+      setShowConfetti(true);
+    }
+    
     setTimeout(() => {
       onComplete?.({
         ...scoreData,
@@ -335,105 +344,159 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
   return (
     <div className="space-y-6" ref={sandboxRef}>
-      {permissionDenied && demoState === DemoState.RECORDING && (
-        <Alert variant="destructive" className="mb-4 border-red-500 bg-red-50">
-          <AlertTitle>Microphone access denied</AlertTitle>
-          <AlertDescription className="flex justify-between items-center">
-            <span>We can't hear you. Please allow microphone access.</span>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={retryMicrophoneAccess}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className="h-4 w-4" /> Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+      <ConfettiEffect active={showConfetti} duration={3000} onComplete={() => setShowConfetti(false)} />
       
-      {lowConfidence && demoState === DemoState.RECORDING && (
-        <Alert className="mb-4 border-amber-500 bg-amber-50">
-          <AlertTitle>Speech detection issue</AlertTitle>
-          <AlertDescription className="flex justify-between items-center">
-            <span>It's a bit fast—could you speak a little slower?</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSlowSpeechRetry}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className="h-4 w-4" /> Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Alerts */}
+      <AnimatePresence>
+        {permissionDenied && demoState === DemoState.RECORDING && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Alert variant="destructive" className="mb-4 border-red-500 bg-red-50">
+              <AlertTitle>Microphone access denied</AlertTitle>
+              <AlertDescription className="flex justify-between items-center">
+                <span>We can't hear you. Please allow microphone access.</span>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={retryMicrophoneAccess}
+                  className="flex items-center gap-1 hover:scale-105 transition-transform"
+                >
+                  <RefreshCw className="h-4 w-4" /> Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+        
+        {lowConfidence && demoState === DemoState.RECORDING && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Alert className="mb-4 border-amber-500 bg-amber-50">
+              <AlertTitle>Speech detection issue</AlertTitle>
+              <AlertDescription className="flex justify-between items-center">
+                <span>It's a bit fast—could you speak a little slower?</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSlowSpeechRetry}
+                  className="flex items-center gap-1 hover:scale-105 transition-transform"
+                >
+                  <RefreshCw className="h-4 w-4" /> Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {demoState === DemoState.INTRO && (
-        <div className="text-center space-y-6">
+        <motion.div 
+          className="text-center space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-xl font-semibold text-brand-dark">Demo Scenario: Handling Pricing Objections</h2>
           <p className="text-brand-dark/70">
             When you click "Start Demo", you'll have 60 seconds to practice handling pricing objections.
             Speak clearly into your microphone, and we'll transcribe and score your pitch.
           </p>
+          
           <Button 
             onClick={() => startDemo('button')}
-            className="bg-brand-blue hover:bg-brand-blue/90 text-white flex items-center gap-2"
+            className="bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-md hover:shadow-lg"
             size="lg"
           >
             <Play size={18} /> Start Demo
           </Button>
-        </div>
+        </motion.div>
       )}
 
       {demoState === DemoState.RECORDING && (
-        <div className="space-y-6">
+        <motion.div 
+          className="space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-brand-dark">Recording...</h2>
-            <div className="flex items-center gap-2 text-brand-blue font-medium">
+            <motion.div 
+              className="flex items-center gap-2 text-brand-blue font-medium"
+              animate={{ scale: timeRemaining <= 10 ? [1, 1.05, 1] : 1 }}
+              transition={{ repeat: timeRemaining <= 10 ? Infinity : 0, duration: 0.5 }}
+            >
               <Clock size={20} />
               {formatTime(timeRemaining)}
-            </div>
+            </motion.div>
           </div>
           
-          <div className="bg-brand-blue/10 rounded-lg p-4">
+          <motion.div 
+            className="bg-gradient-to-br from-brand-blue/10 to-[#008D95]/10 rounded-lg p-4"
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <h3 className="font-medium mb-2">Scenario: Pricing Objection</h3>
             <p>"Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less."</p>
+          </motion.div>
+          
+          {/* Voice waveform visualization */}
+          <div className="py-4">
+            <AudioWaveform isActive={isListening} isUser={true} color="#008D95" className="mb-2" />
           </div>
           
           <DemoTranscript text={transcript} isRecording={isListening} />
           
           <Button 
             onClick={endDemo}
-            className="w-full bg-brand-blue hover:bg-brand-blue/90 text-white"
+            className="w-full bg-brand-blue hover:bg-brand-blue/90 text-white hover:scale-105 transition-transform"
           >
             End Demo Early
           </Button>
-        </div>
+        </motion.div>
       )}
 
       {demoState === DemoState.SCORING && scoreData && (
-        <div className="space-y-6">
+        <motion.div 
+          className="space-y-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-xl font-semibold text-brand-dark">Your Results</h2>
           <DemoScorecard scoreData={scoreData} />
+          
           <Button 
             onClick={handleViewScore}
-            className="w-full bg-brand-blue hover:bg-brand-blue/90 text-white"
+            className="w-full bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-transform shadow-md hover:shadow-lg"
           >
             View Full Analysis
           </Button>
-        </div>
+        </motion.div>
       )}
 
       {demoState === DemoState.COMPLETE && scoreData && (
-        <div className="space-y-4">
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-xl font-semibold text-brand-dark">Analysis Complete</h2>
           <p>Sign up for PitchPerfect AI to get detailed feedback and continuous improvement.</p>
-        </div>
+        </motion.div>
       )}
     </div>
   );
 };
 
 export default DemoSandbox;
-

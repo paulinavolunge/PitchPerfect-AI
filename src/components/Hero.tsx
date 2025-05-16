@@ -9,6 +9,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/context/AuthContext';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useToast } from '@/hooks/use-toast';
+import WaveAnimation from '@/components/animations/WaveAnimation';
+import ParallaxSection from '@/components/animations/ParallaxSection';
 
 const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -87,7 +89,11 @@ const Hero = () => {
   };
 
   return (
-    <section className="pt-20 md:pt-24 pb-16 md:pb-20 bg-gradient-to-b from-brand-blue/10 to-white overflow-hidden">
+    <ParallaxSection className="pt-20 md:pt-24 pb-16 md:pb-20 overflow-hidden relative">
+      <div className="absolute inset-0 -z-10 opacity-50">
+        <WaveAnimation color="#008D95" amplitude={15} opacity={0.2} />
+      </div>
+      
       <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -108,7 +114,7 @@ const Hero = () => {
             className="flex flex-wrap gap-4"
           >
             <Button 
-              className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
               onClick={handleStartFreeTrial}
               aria-label="Try Free Now"
             >
@@ -116,7 +122,7 @@ const Hero = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
               onClick={handleScrollToDemo}
               aria-label="Start Demo"
             >
@@ -125,7 +131,7 @@ const Hero = () => {
             </Button>
             <Button 
               variant="ghost" 
-              className="bg-white text-brand-dark hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              className="bg-white text-brand-dark hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
               onClick={handleTryAsGuest}
               aria-label="Try as Guest"
             >
@@ -148,15 +154,16 @@ const Hero = () => {
             posterSrc="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
             videoSrc="/demo-video.mp4"
             fallbackSrc="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
-            className="max-w-lg mx-auto shadow-lg rounded-lg overflow-hidden"
+            className="max-w-lg mx-auto shadow-lg rounded-lg overflow-hidden relative z-10"
             onStartClick={handleStartDemo}
             showStartButton={!sessionStarted}
           />
           
-          <div className="absolute inset-0 bg-brand-blue opacity-10 rounded-lg -z-10 transform translate-x-4 translate-y-4"></div>
+          {/* Enhanced background effect */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-brand-blue/20 to-[#008D95]/30 rounded-lg -z-10 transform translate-x-4 translate-y-4 blur-lg"></div>
         </motion.div>
       </div>
-    </section>
+    </ParallaxSection>
   );
 };
 

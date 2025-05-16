@@ -21,6 +21,9 @@ import { supabase } from '@/lib/supabase';
 import { FileAudio, Mic, Users, Bot } from 'lucide-react';
 import AIDisclosure from '@/components/AIDisclosure';
 import AISettingsModal from '@/components/AISettingsModal';
+import TiltCard from '@/components/animations/TiltCard';
+import { motion, AnimatePresence } from 'framer-motion';
+import ParallaxSection from '@/components/animations/ParallaxSection';
 
 const Dashboard = () => {
   const { user, refreshSubscription } = useAuth();
@@ -107,9 +110,14 @@ const Dashboard = () => {
         onComplete={handleTourComplete}
       />
       
-      <main className="flex-grow pt-24 pb-12">
+      <ParallaxSection className="flex-grow pt-24 pb-12" depth={0.1}>
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <motion.div 
+            className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <div>
               <h1 className="text-3xl font-bold text-brand-dark mb-1">Dashboard</h1>
               <p className="text-brand-dark/70">Welcome back, {user?.user_metadata?.first_name || 'there'}!</p>
@@ -118,7 +126,7 @@ const Dashboard = () => {
             <div className="flex flex-wrap gap-3">
               <Button 
                 variant="outline" 
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 hover:scale-105 transition-transform"
                 onClick={() => navigate('/call-recordings')}
               >
                 <FileAudio size={16} />
@@ -127,7 +135,7 @@ const Dashboard = () => {
               
               <Button 
                 variant="outline" 
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 hover:scale-105 transition-transform"
                 onClick={() => navigate('/practice')}
               >
                 <Mic size={16} />
@@ -135,7 +143,7 @@ const Dashboard = () => {
               </Button>
               
               <Button 
-                className="flex items-center gap-2 bg-brand-blue hover:bg-brand-blue/90"
+                className="flex items-center gap-2 bg-gradient-to-r from-brand-blue to-[#6d8fca] hover:from-[#4580dc] hover:to-[#5c7eb9] text-white hover:scale-105 transition-transform shadow-sm hover:shadow-md"
                 onClick={() => navigate('/roleplay')}
               >
                 <Users size={16} />
@@ -144,68 +152,114 @@ const Dashboard = () => {
               
               <Button 
                 variant="outline" 
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 hover:scale-105 transition-transform border border-purple-200 hover:bg-purple-50"
                 onClick={() => setShowAISettings(true)}
               >
                 <Bot size={16} className="text-purple-600" />
                 AI Settings
               </Button>
             </div>
-          </div>
+          </motion.div>
           
-          <AIDisclosure 
-            variant="compact"
-            description="Your dashboard contains AI-generated insights and suggestions based on your practice sessions."
-            className="mb-6"
-          />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <AIDisclosure 
+              variant="compact"
+              description="Your dashboard contains AI-generated insights and suggestions based on your practice sessions."
+              className="mb-6"
+            />
+          </motion.div>
           
-          <div className="mb-8">
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
             <UserSubscriptionStatus />
-          </div>
+          </motion.div>
           
-          <DashboardStats streakCount={streakCount} />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <DashboardStats streakCount={streakCount} />
+          </motion.div>
           
-          {showMicTest && (
-            <div className="mb-8">
-              <MicrophoneTest 
-                onTestComplete={handleMicTestComplete}
-                autoStart={true} 
-              />
-            </div>
-          )}
+          <AnimatePresence>
+            {showMicTest && (
+              <motion.div 
+                className="mb-8"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <MicrophoneTest 
+                  onTestComplete={handleMicTestComplete}
+                  autoStart={true} 
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           {/* Team Leaderboard Section */}
-          <div className="mt-8 mb-8">
+          <motion.div 
+            className="mt-8 mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
             <LeaderboardTable />
-          </div>
+          </motion.div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-            <div className="lg:col-span-2 space-y-8">
-              <Card>
-                <CardHeader className="bg-brand-blue/10 pb-4">
+            <motion.div 
+              className="lg:col-span-2 space-y-8"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <Card className="overflow-hidden shadow-md">
+                <CardHeader className="bg-gradient-to-r from-brand-blue/10 to-brand-blue/5 pb-4">
                   <CardTitle className="text-xl text-brand-dark">Recent Practice Sessions</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <motion.div 
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    >
                       <div>
                         <h3 className="font-medium">Product Demo Pitch</h3>
                         <p className="text-sm text-brand-dark/70">2 hours ago • 3:45 min</p>
                       </div>
-                      <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10">View Feedback</Button>
-                    </div>
+                      <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">View Feedback</Button>
+                    </motion.div>
                     
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <motion.div 
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    >
                       <div>
                         <h3 className="font-medium">Cold Call Introduction</h3>
                         <p className="text-sm text-brand-dark/70">Yesterday • 2:12 min</p>
                       </div>
-                      <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10">View Feedback</Button>
-                    </div>
+                      <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">View Feedback</Button>
+                    </motion.div>
                     
-                    <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full flex items-center justify-center gap-2 hover:scale-102 transition-transform"
+                    >
                       View All Sessions
-                      <ArrowRight size={16} />
+                      <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
                     </Button>
                   </div>
                 </CardContent>
@@ -213,11 +267,16 @@ const Dashboard = () => {
               
               {/* Referral Program */}
               <ReferralProgram />
-            </div>
+            </motion.div>
             
-            <div className="space-y-6">
-              <Card className="bg-brand-green/5 border-brand-green/30">
-                <CardContent className="p-6 tour-step-1">
+            <motion.div 
+              className="space-y-6"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <TiltCard tiltFactor={3} glareOpacity={0.1} className="bg-gradient-to-br from-brand-green/5 to-teal-100/20 border-brand-green/30 rounded-lg shadow-sm">
+                <div className="p-6 tour-step-1">
                   <h3 className="text-xl font-medium mb-4 text-brand-dark">Quick Practice</h3>
                   <p className="text-brand-dark/70 mb-6">
                     Ready to improve your pitch skills? Start a new practice session now.
@@ -233,13 +292,13 @@ const Dashboard = () => {
                     <div className="tour-step-2">
                       {showMicTest ? (
                         <Link to="/practice">
-                          <Button className="w-full mb-4 bg-brand-green hover:bg-brand-green/90">
+                          <Button className="w-full mb-4 bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-all">
                             Start New Practice
                           </Button>
                         </Link>
                       ) : (
                         <Button 
-                          className="w-full mb-4 bg-brand-green hover:bg-brand-green/90" 
+                          className="w-full mb-4 bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-all" 
                           onClick={handleStartPractice}
                         >
                           Start New Practice
@@ -248,38 +307,46 @@ const Dashboard = () => {
                     </div>
                   )}
                   <Link to="/roleplay">
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full hover:scale-105 transition-transform">
                       Try Roleplay Scenarios
                     </Button>
                   </Link>
-                </CardContent>
-              </Card>
+                </div>
+              </TiltCard>
               
               <div className="space-y-4 tour-step-3">
                 <h3 className="font-medium text-xl text-brand-dark">AI Suggestions</h3>
-                <AISuggestionCard
-                  title="Use Benefit-Focused Language"
-                  description="Try framing features in terms of customer benefits using phrases like 'which means that you can...'"
-                  type="tip"
-                />
                 
-                <AISuggestionCard
-                  title="Elevator Pitch Template"
-                  description="Our [product] helps [target audience] to [solve problem] by [unique approach] unlike [alternative]."
-                  type="script"
-                />
+                <TiltCard tiltFactor={2} className="bg-white rounded-lg shadow-sm border border-gray-100">
+                  <AISuggestionCard
+                    title="Use Benefit-Focused Language"
+                    description="Try framing features in terms of customer benefits using phrases like 'which means that you can...'"
+                    type="tip"
+                  />
+                </TiltCard>
+                
+                <TiltCard tiltFactor={2} className="bg-white rounded-lg shadow-sm border border-gray-100">
+                  <AISuggestionCard
+                    title="Elevator Pitch Template"
+                    description="Our [product] helps [target audience] to [solve problem] by [unique approach] unlike [alternative]."
+                    type="script"
+                  />
+                </TiltCard>
                 
                 <Link to="/tips">
-                  <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2 hover:scale-105 transition-transform"
+                  >
                     View All Tips
-                    <ArrowRight size={16} />
+                    <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
                   </Button>
                 </Link>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </main>
+      </ParallaxSection>
       
       <Footer />
       

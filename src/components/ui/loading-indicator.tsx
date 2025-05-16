@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import LoadingWave from './loading-wave';
 
 interface LoadingIndicatorProps {
   message?: string;
@@ -13,25 +13,14 @@ const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   size = 'medium',
   className = ''
 }) => {
-  const sizeClass = {
-    small: 'text-sm',
-    medium: 'text-base',
-    large: 'text-lg'
-  };
-  
-  const iconSize = {
-    small: 16,
-    medium: 24,
-    large: 32
-  };
-  
   return (
-    <div className={`flex flex-col items-center justify-center py-4 ${className}`} 
-         role="status" 
-         aria-live="polite">
-      <Loader2 className={`animate-spin ${sizeClass[size]} text-brand-blue mb-2`} size={iconSize[size]} />
-      {message && <p className={`${sizeClass[size]} text-brand-dark/70`}>{message}</p>}
-    </div>
+    <LoadingWave
+      message={message}
+      size={size}
+      className={className}
+      color="#008D95"
+      logoColor="#4A90E6"
+    />
   );
 };
 

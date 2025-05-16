@@ -70,6 +70,19 @@ export default {
         "brand-dark": "#333333",
         "brand-gray": "#555555",
         "brand-light": "#F6F6F7",
+        "teal": {
+          "50": "#f0fdfa",
+          "100": "#ccfbf1",
+          "200": "#99f6e4",
+          "300": "#5eead4",
+          "400": "#2dd4bf",
+          "500": "#14b8a6",
+          "600": "#0d9488",
+          "700": "#0f766e",
+          "800": "#115e59",
+          "900": "#134e4a",
+          "950": "#042f2e",
+        }
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -104,6 +117,22 @@ export default {
         'bounce-subtle': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-5px)' }
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' }
+        },
+        'pulse-glow': {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(0, 141, 149, 0)' },
+          '50%': { boxShadow: '0 0 10px 2px rgba(0, 141, 149, 0.3)' }
+        },
+        'pulse-scale': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.05)' }
+        },
+        'rotate-slow': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' }
         }
       },
       animation: {
@@ -113,7 +142,15 @@ export default {
         'fade-in': 'fade-in 0.5s ease-out',
         'scale-in': 'scale-in 0.3s ease-out',
         'slide-in': 'slide-in 0.3s ease-out',
-        'bounce-subtle': 'bounce-subtle 2s infinite ease-in-out'
+        'bounce-subtle': 'bounce-subtle 2s infinite ease-in-out',
+        'float': 'float 5s infinite ease-in-out',
+        'pulse-glow': 'pulse-glow 2s infinite ease-in-out',
+        'pulse-scale': 'pulse-scale 2s infinite ease-in-out',
+        'rotate-slow': 'rotate-slow 8s linear infinite'
+      },
+      scale: {
+        '102': '1.02',
+        '103': '1.03',
       }
     }
   },
