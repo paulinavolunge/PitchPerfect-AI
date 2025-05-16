@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Bot } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 export interface AIContentBadgeProps {
@@ -42,73 +42,67 @@ const AIContentBadge = ({
 
   if (type === 'badge') {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div 
-              className={cn(
-                'bg-purple-100 text-purple-800 rounded-full px-2 py-0.5 flex items-center gap-1 w-fit',
-                sizeClasses[size],
-                position && positionClasses[position],
-                className
-              )}
-            >
-              <Bot size={iconSizes[size]} />
-              <span>AI Generated</span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p className="max-w-xs text-sm">{tooltipContent}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  if (type === 'icon') {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div 
-              className={cn(
-                'bg-purple-100 text-purple-800 rounded-full p-1',
-                position && positionClasses[position],
-                className
-              )}
-            >
-              <Bot size={iconSizes[size]} />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p className="max-w-xs text-sm">{tooltipContent}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  // Label type (simple text with icon)
-  return (
-    <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span 
+          <div 
             className={cn(
-              'inline-flex items-center gap-1 text-purple-800',
+              'bg-purple-100 text-purple-800 rounded-full px-2 py-0.5 flex items-center gap-1 w-fit',
               sizeClasses[size],
+              position && positionClasses[position],
               className
             )}
           >
             <Bot size={iconSizes[size]} />
-            <span>AI</span>
-          </span>
+            <span>AI Generated</span>
+          </div>
         </TooltipTrigger>
         <TooltipContent side="top">
           <p className="max-w-xs text-sm">{tooltipContent}</p>
         </TooltipContent>
       </Tooltip>
-    </TooltipProvider>
+    );
+  }
+
+  if (type === 'icon') {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div 
+            className={cn(
+              'bg-purple-100 text-purple-800 rounded-full p-1',
+              position && positionClasses[position],
+              className
+            )}
+          >
+            <Bot size={iconSizes[size]} />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p className="max-w-xs text-sm">{tooltipContent}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  // Label type (simple text with icon)
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span 
+          className={cn(
+            'inline-flex items-center gap-1 text-purple-800',
+            sizeClasses[size],
+            className
+          )}
+        >
+          <Bot size={iconSizes[size]} />
+          <span>AI</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        <p className="max-w-xs text-sm">{tooltipContent}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
