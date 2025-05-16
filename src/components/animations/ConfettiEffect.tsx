@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { Party } from 'lucide-react';
 
 interface ConfettiEffectProps {
   active: boolean;
