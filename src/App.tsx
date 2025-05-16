@@ -41,12 +41,6 @@ import AccountDelete from '@/pages/AccountDelete';
 import DataSafety from '@/pages/DataSafety';
 import { AuthProvider } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
-import { HelmetProvider } from 'react-helmet-async';
-import MobileNavBar from '@/components/MobileNavBar';
-import {
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
 
 // Create a client for React Query
 const queryClient = new QueryClient({
