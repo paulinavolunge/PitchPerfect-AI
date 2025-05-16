@@ -2,6 +2,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import AIContentBadge from '@/components/AIContentBadge';
 
 const About = () => {
   return (
@@ -10,7 +11,9 @@ const About = () => {
       <main className="flex-grow container mx-auto px-6 py-12">
         <h1 className="text-4xl font-bold mb-8 text-brand-dark">About PitchPerfect AI</h1>
         
-        <div className="prose prose-lg max-w-4xl">
+        <div className="prose prose-lg max-w-4xl relative">
+          <AIContentBadge position="top-right" type="badge" />
+          
           <p className="text-lg mb-6">
             PitchPerfect AI was created to empower sales professionals to practice and perfect 
             their pitch delivery and objection handling in a real-world simulation — anytime, 
