@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 interface FeedbackPromptProps {
   sessionId?: string;
@@ -20,6 +22,7 @@ const FeedbackPrompt: React.FC<FeedbackPromptProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const submitFeedback = async (wasHelpful: boolean) => {
     if (hasSubmitted) return;
@@ -27,9 +30,50 @@ const FeedbackPrompt: React.FC<FeedbackPromptProps> = ({
     setIsSubmitting(true);
     
     try {
-      // In the future, this would send feedback to your API
-      // For now, we'll just simulate the API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Store feedback in localStorage for guest users or when offline
+      const feedbackData = {
+        sessionId: sessionId || `session-${Date.now()}`,
+        feedbackType,
+        wasHelpful,
+        timestamp: new Date().toISOString(),
+        userId: user?.id || 'guest'
+      };
+      
+      // Store in localStorage (for all users as backup)
+      const existingFeedback = JSON.parse(localStorage.getItem('user_feedback') || '[]');
+      existingFeedback.push(feedbackData);
+      localStorage.setItem('user_feedback', JSON.stringify(existingFeedback));
+      
+      // Also send to analytics if available
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'user_feedback', {
+          'session_id': feedbackData.sessionId,
+          'feedback_type': feedbackData.feedbackType,
+          'was_helpful': wasHelpful,
+          'user_id': feedbackData.userId
+        });
+      }
+      
+      // If user is logged in and Supabase is available, store in database
+      if (user?.id && supabase) {
+        try {
+          const { error } = await supabase
+            .from('user_feedback')
+            .insert([{
+              user_id: user.id,
+              session_id: sessionId || `session-${Date.now()}`,
+              feedback_type: feedbackType,
+              is_helpful: wasHelpful,
+              created_at: new Date().toISOString()
+            }]);
+            
+          if (error) {
+            console.error('Error saving feedback to database:', error);
+          }
+        } catch (dbError) {
+          console.error('Database error when saving feedback:', dbError);
+        }
+      }
       
       // Call the callback if provided
       if (onFeedbackSubmitted) {

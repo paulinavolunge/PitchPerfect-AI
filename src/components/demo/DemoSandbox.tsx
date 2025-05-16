@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Clock, RefreshCw } from 'lucide-react';
@@ -6,6 +7,8 @@ import DemoScorecard from './DemoScorecard';
 import { useToast } from '@/hooks/use-toast';
 import { getSampleScenario } from '@/utils/demoUtils';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { trackDemoActivation, checkTranscriptionConfidence } from '@/utils/analyticsUtils';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Import the speech recognition types from the global window augmentations
 declare global {
@@ -56,6 +59,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const [isListening, setIsListening] = useState(false);
   const [scoreData, setScoreData] = useState<any>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [lowConfidence, setLowConfidence] = useState(false);
   const { toast } = useToast();
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -75,6 +79,19 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         recognitionRef.current.interimResults = true;
 
         recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          // Get confidence from results
+          const confidence = Array.from(event.results)
+            .map(result => result[0])
+            .map(result => result.confidence)
+            .reduce((acc, val) => acc + val, 0) / event.results.length;
+          
+          // Check if confidence is low
+          if (checkTranscriptionConfidence(confidence)) {
+            setLowConfidence(true);
+          } else {
+            setLowConfidence(false);
+          }
+            
           const transcript = Array.from(event.results)
             .map(result => result[0])
             .map(result => result.transcript)
@@ -101,7 +118,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     // Set up event listener for button-triggered demo start
     const handleAutoDemoStart = () => {
       if (demoState === DemoState.INTRO) {
-        startDemo();
+        startDemo('auto');
       }
     };
 
@@ -174,7 +191,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           // Small delay to ensure user has time to register what they're seeing
           setTimeout(() => {
             if (demoState === DemoState.INTRO) {
-              startDemo();
+              startDemo('scroll');
             }
           }, 1500);
         }
@@ -190,7 +207,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     };
   }, [demoState]);
 
-  const startDemo = () => {
+  const startDemo = (activationType: 'auto' | 'button' | 'scroll' = 'button') => {
     if (!recognitionRef.current) {
       toast({
         title: "Voice recognition not supported",
@@ -200,8 +217,12 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       return;
     }
     
+    // Track demo activation
+    trackDemoActivation(activationType);
+    
     try {
       setPermissionDenied(false);
+      setLowConfidence(false);
       recognitionRef.current.start();
       setIsListening(true);
       setDemoState(DemoState.RECORDING);
@@ -242,7 +263,24 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
   const retryMicrophoneAccess = () => {
     setPermissionDenied(false);
-    startDemo();
+    startDemo('button');
+  };
+
+  const handleSlowSpeechRetry = () => {
+    setLowConfidence(false);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setTimeout(() => {
+        if (recognitionRef.current) {
+          recognitionRef.current.start();
+          setIsListening(true);
+          toast({
+            title: "Recording restarted",
+            description: "Try speaking a bit slower and more clearly.",
+          });
+        }
+      }, 500);
+    }
   };
 
   const generateScore = (transcript: string) => {
@@ -314,6 +352,23 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         </Alert>
       )}
       
+      {lowConfidence && demoState === DemoState.RECORDING && (
+        <Alert className="mb-4 border-amber-500 bg-amber-50">
+          <AlertTitle>Speech detection issue</AlertTitle>
+          <AlertDescription className="flex justify-between items-center">
+            <span>It's a bit fast—could you speak a little slower?</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSlowSpeechRetry}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" /> Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {demoState === DemoState.INTRO && (
         <div className="text-center space-y-6">
           <h2 className="text-xl font-semibold text-brand-dark">Demo Scenario: Handling Pricing Objections</h2>
@@ -322,7 +377,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             Speak clearly into your microphone, and we'll transcribe and score your pitch.
           </p>
           <Button 
-            onClick={startDemo}
+            onClick={() => startDemo('button')}
             className="bg-brand-blue hover:bg-brand-blue/90 text-white flex items-center gap-2"
             size="lg"
           >
@@ -381,3 +436,4 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 };
 
 export default DemoSandbox;
+

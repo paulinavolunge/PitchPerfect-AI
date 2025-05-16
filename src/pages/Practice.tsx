@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,7 @@ import { Badge } from '@/components/gamification/BadgeSystem';
 import QuickStartGuide from '@/components/onboarding/QuickStartGuide';
 import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
+import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
 
 const Practice = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -220,7 +220,27 @@ const Practice = () => {
   const handleTourComplete = () => {
     localStorage.setItem('hasSeenPracticeTour', 'true');
   };
-
+  
+  const handleFeedbackSubmitted = (wasHelpful: boolean) => {
+    // In the future, you could adjust training algorithms based on user feedback
+    console.log('Practice session feedback:', wasHelpful ? 'helpful' : 'not helpful');
+    
+    // You might want to update the UI based on feedback
+    if (wasHelpful) {
+      toast({
+        title: "Great!",
+        description: "We'll keep refining your practice experience.",
+        variant: "default",
+      });
+    } else {
+      toast({
+        title: "Thanks for your feedback",
+        description: "We'll work on improving your practice sessions.",
+        variant: "default",
+      });
+    }
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -362,6 +382,14 @@ const Practice = () => {
                 </div>
               </CardContent>
             </Card>
+            
+            {/* Add feedback prompt before the tips section */}
+            <div className="mb-8 p-4 bg-blue-50 border-l-4 border-blue-300 rounded-lg">
+              <FeedbackPrompt 
+                feedbackType="practice"
+                onFeedbackSubmitted={handleFeedbackSubmitted}
+              />
+            </div>
             
             <Card className="tips-section">
               <CardContent className="p-6">
