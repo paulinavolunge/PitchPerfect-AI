@@ -23,6 +23,13 @@ if ((isDevelopment || isLovable) && window.document) {
   }
 }
 
+// Type declaration for window
+declare global {
+  interface Window {
+    gptEng?: any;
+  }
+}
+
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <App />

@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTheme as useNextTheme } from 'next-themes';
+import { trackEvent } from '@/utils/analytics';
 
 export function useTheme() {
   const { theme, setTheme, systemTheme } = useNextTheme();
@@ -18,13 +19,11 @@ export function useTheme() {
     // Save to localStorage through next-themes (it handles this internally)
     setTheme(newTheme);
     
-    // Optional analytics event
-    if (typeof window !== 'undefined' && 'gtag' in window) {
-      window.gtag('event', 'dark_mode_toggle', {
-        event_category: 'user_preference',
-        event_label: newTheme
-      });
-    }
+    // Track theme change event
+    trackEvent('dark_mode_toggle', {
+      event_category: 'user_preference',
+      event_label: newTheme
+    });
   };
 
   // Get the actual theme accounting for system preference

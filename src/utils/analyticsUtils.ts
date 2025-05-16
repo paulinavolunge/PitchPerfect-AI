@@ -1,5 +1,6 @@
 
 // Analytics utility for PitchPerfect AI
+import { trackEvent } from './analytics';
 
 /**
  * Track demo activation events
@@ -9,13 +10,11 @@ export const trackDemoActivation = (activationType: 'auto' | 'button' | 'scroll'
   try {
     console.log(`Demo activated via: ${activationType}`);
     
-    // In production, this would send to your analytics service
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'demo_activated', {
-        'activation_type': activationType,
-        'timestamp': new Date().toISOString()
-      });
-    }
+    // Track event using our analytics utility
+    trackEvent('demo_activated', {
+      'activation_type': activationType,
+      'timestamp': new Date().toISOString()
+    });
     
     // You could also store locally or send to your backend
     const demoActivations = JSON.parse(localStorage.getItem('demo_activations') || '[]');
@@ -43,13 +42,11 @@ export const trackVoiceResponseTime = (responseTimeMs: number) => {
       // In production, this would trigger an alert system
     }
     
-    // In production, this would send to your analytics service
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'voice_response_time', {
-        'time_ms': responseTimeMs,
-        'exceeded_sla': responseTimeMs > 3000
-      });
-    }
+    // Track event using our analytics utility
+    trackEvent('voice_response_time', {
+      'time_ms': responseTimeMs,
+      'exceeded_sla': responseTimeMs > 3000
+    });
   } catch (error) {
     console.error('Error tracking voice response time:', error);
   }
@@ -65,12 +62,10 @@ export const checkTranscriptionConfidence = (confidence: number): boolean => {
   try {
     console.log(`Transcription confidence: ${confidence}`);
     
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'transcription_confidence', {
-        'confidence': confidence,
-        'below_threshold': confidence < 0.6
-      });
-    }
+    trackEvent('transcription_confidence', {
+      'confidence': confidence,
+      'below_threshold': confidence < 0.6
+    });
   } catch (error) {
     console.error('Error tracking transcription confidence:', error);
   }

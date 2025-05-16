@@ -1,11 +1,20 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
 import { ThemeProvider } from '@/context/ThemeContext';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { HelmetProvider } from 'react-helmet-async';
+import MobileNavBar from '@/components/MobileNavBar';
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+import { initGA, trackPageView } from '@/utils/analytics';
+
+// Import all page components
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
@@ -55,17 +64,11 @@ const RouteChangeTracker = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Track page views
     const currentPath = location.pathname + location.search;
+    trackPageView(currentPath);
     
-    // Implement Google Analytics page view tracking
-    if (typeof window.gtag === 'function') {
-      window.gtag('config', 'UA-XXXXX-X', {
-        page_path: currentPath,
-      });
-    }
-
     // Error tracking for detecting navigation issues
     const handleError = (error: ErrorEvent) => {
       console.error('Navigation error:', error);
@@ -83,6 +86,11 @@ const RouteChangeTracker = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // Initialize Google Analytics
+    initGA();
+  }, []);
+
   return (
     <HelmetProvider>
       <NextThemeProvider>
@@ -127,13 +135,6 @@ function App() {
       </NextThemeProvider>
     </HelmetProvider>
   );
-}
-
-// Add TypeScript definition for Google Analytics
-declare global {
-  interface Window {
-    gtag: (command: string, targetId: string, config?: any) => void;
-  }
 }
 
 export default App;
