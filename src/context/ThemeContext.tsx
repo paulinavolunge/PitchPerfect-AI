@@ -1,8 +1,9 @@
+import React, { createContext, useContext } from 'react';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useTheme as useNextTheme } from 'next-themes';
+// This is now just a wrapper around next-themes
+// We keep it to maintain compatibility with existing code
 
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextProps {
   theme: Theme;
@@ -12,27 +13,9 @@ interface ThemeContextProps {
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [theme, setTheme] = useState<Theme>('light');
-  const { setTheme: setNextTheme } = useNextTheme();
-
-  useEffect(() => {
-    // Check if theme exists in localStorage
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-    }
-  }, []);
-
-  const handleThemeChange = (newTheme: Theme) => {
-    setTheme(newTheme);
-    setNextTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-  };
-
+  // This is now just a compatibility layer - actual theme handling is in next-themes
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: handleThemeChange }}>
+    <ThemeContext.Provider value={{ theme: 'system', setTheme: () => {} }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -41,7 +24,11 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 export const useTheme = (): ThemeContextProps => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // Return a dummy implementation since we're using next-themes now
+    return {
+      theme: 'system',
+      setTheme: () => {}
+    };
   }
   return context;
 };

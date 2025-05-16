@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -133,7 +132,11 @@ export default {
         'rotate-slow': {
           '0%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' }
-        }
+        },
+        'icon-switch': {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '50%': { transform: 'rotate(180deg)' }
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -146,11 +149,15 @@ export default {
         'float': 'float 5s infinite ease-in-out',
         'pulse-glow': 'pulse-glow 2s infinite ease-in-out',
         'pulse-scale': 'pulse-scale 2s infinite ease-in-out',
-        'rotate-slow': 'rotate-slow 8s linear infinite'
+        'rotate-slow': 'rotate-slow 8s linear infinite',
+        'icon-switch': 'icon-switch 0.5s ease-in-out forwards',
       },
       scale: {
         '102': '1.02',
         '103': '1.03',
+      },
+      transitionProperty: {
+        'theme': 'background-color, color, border-color, text-decoration-color, fill, stroke',
       }
     }
   },

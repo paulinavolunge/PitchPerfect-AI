@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
 import { useGuestMode } from "@/context/GuestModeContext";
-import { useTheme } from "@/context/ThemeContext";
-import { Moon, Sun, Menu, X, UserPlus, LogIn } from 'lucide-react';
+import { useTheme } from "@/hooks/use-theme";
+import { Moon, Sun, Menu, UserPlus, LogIn } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 
 const Navbar: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme, mounted } = useTheme();
   const { isGuestMode, endGuestMode } = useGuestMode();
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,10 +34,6 @@ const Navbar: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
-  
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
 
   const handleSignup = () => {
     if (isGuestMode) {
@@ -83,20 +79,26 @@ const Navbar: React.FC = () => {
     >
       <div className="container max-w-screen-xl flex flex-wrap items-center justify-between py-3 mx-auto px-4">
         <Link to="/" className="flex items-center space-x-2 rtl:space-x-reverse">
-          <span className="self-center text-2xl font-semibold whitespace-nowrap text-brand-dark">
+          <span className="self-center text-2xl font-semibold whitespace-nowrap text-brand-dark dark:text-white">
             PitchPerfect AI
           </span>
         </Link>
         
         <div className="flex items-center md:order-3">
           {/* Theme Toggle */}
-          <button 
-            onClick={toggleTheme} 
-            aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-            className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 mr-2"
-          >
-            {theme === "light" ? <Moon className="h-5 w-5 text-brand-dark" /> : <Sun className="h-5 w-5 text-white" />}
-          </button>
+          {mounted && (
+            <button 
+              onClick={toggleTheme} 
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-300 mr-2"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5 text-white transition-transform rotate-0 scale-100 duration-300" />
+              ) : (
+                <Moon className="h-5 w-5 text-brand-dark transition-transform rotate-0 scale-100 duration-300" />
+              )}
+            </button>
+          )}
           
           {/* Mobile Menu Button */}
           <Sheet>
