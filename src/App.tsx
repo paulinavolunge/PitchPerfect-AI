@@ -103,6 +103,7 @@ function App() {
                     <Route path="/roleplay" element={<RolePlay />} />
                     <Route path="/progress" element={<Progress />} />
                     <Route path="/recordings" element={<CallRecordings />} />
+                    <Route path="/call-recordings" element={<CallRecordings />} />  {/* Added this route as an alias */}
                     <Route path="/team-dashboard" element={<TeamDashboard />} />
                     <Route path="/tips" element={<Tips />} />
                     <Route path="/about" element={<About />} />
