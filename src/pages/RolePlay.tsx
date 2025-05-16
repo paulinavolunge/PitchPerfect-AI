@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import GuestBanner from '@/components/GuestBanner';
 import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
-import { Volume2, Volume1, VolumeX, Mic, MessageSquare, Airplay, BookOpen, HelpCircle, UserPlus } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Mic, MessageSquare, Airplay, BookOpen, HelpCircle, UserPlus, Save } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
 import { useAuth } from "@/context/AuthContext";
@@ -20,6 +20,10 @@ import GettingStartedModal from "@/components/onboarding/GettingStartedModal";
 import QuickStartGuide from "@/components/onboarding/QuickStartGuide";
 import { Step } from 'react-joyride';
 import { useIsMobile } from '@/hooks/use-mobile';
+import LoadingIndicator from '@/components/ui/loading-indicator';
+import ReturnToDashboard from '@/components/navigation/ReturnToDashboard';
+import { useAutoSave } from '@/hooks/use-auto-save';
+import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
 
 const RolePlay = () => {
   const [isScenarioSelected, setIsScenarioSelected] = useState(false);
@@ -40,11 +44,42 @@ const RolePlay = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showGettingStartedModal, setShowGettingStartedModal] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const { isPremium, user } = useAuth();
   const { isGuestMode } = useGuestMode();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  // Auto-save functionality
+  const { lastSaved, saveData, restoreData, clearSavedData } = useAutoSave({
+    key: 'roleplay-session',
+    data: {
+      scenario,
+      voiceMode,
+      voiceStyle,
+      volume,
+      userScript,
+      isScenarioSelected
+    },
+    onRestore: (savedData) => {
+      if (savedData) {
+        setScenario(savedData.scenario);
+        setVoiceMode(savedData.voiceMode);
+        setVoiceStyle(savedData.voiceStyle);
+        setVolume(savedData.volume);
+        setUserScript(savedData.userScript);
+        setIsScenarioSelected(savedData.isScenarioSelected);
+        
+        if (savedData.isScenarioSelected) {
+          toast({
+            title: "Session Restored",
+            description: "We've restored your previous session. You can continue where you left off.",
+          });
+        }
+      }
+    }
+  });
 
   // Define tour steps
   const tourSteps: Step[] = [
@@ -118,6 +153,8 @@ const RolePlay = () => {
   const handleScenarioSelect = (selectedScenario: typeof scenario) => {
     setScenario(selectedScenario);
     setIsScenarioSelected(true);
+    saveData(); // Save session data
+    
     toast({
       title: "Scenario Selected",
       description: `You've chosen a ${selectedScenario.difficulty} ${selectedScenario.industry} scenario with ${selectedScenario.objection} objections.`,
@@ -126,6 +163,7 @@ const RolePlay = () => {
 
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
+    saveData(); // Save session data
   };
 
   const getVolumeIcon = () => {
@@ -136,6 +174,8 @@ const RolePlay = () => {
 
   const handleVoiceStyleChange = (style: 'friendly' | 'assertive' | 'skeptical' | 'rushed') => {
     setVoiceStyle(style);
+    saveData(); // Save session data
+    
     toast({
       title: "Voice Style Changed",
       description: `AI voice style set to ${style}.`,
@@ -153,7 +193,9 @@ const RolePlay = () => {
         industry: 'Custom',
         custom: 'Custom Script'
       });
+      saveData(); // Save session data
     }
+    
     toast({
       title: "Script Ready",
       description: "Your sales script has been saved. Let's practice!",
@@ -168,6 +210,8 @@ const RolePlay = () => {
     }
     
     setVoiceMode(newMode);
+    saveData(); // Save session data
+    
     toast({
       title: "Mode Changed",
       description: `Interaction mode set to ${newMode}.`,
@@ -190,6 +234,23 @@ const RolePlay = () => {
 
   const showGettingStartedGuide = () => {
     setShowGettingStartedModal(true);
+  };
+
+  const handleSaveSession = () => {
+    saveData();
+    toast({
+      title: "Session Saved",
+      description: "Your progress has been saved.",
+    });
+  };
+  
+  const handleProcessingStateChange = (isProcessing: boolean) => {
+    setIsProcessing(isProcessing);
+  };
+  
+  const handleFeedbackSubmitted = (wasHelpful: boolean) => {
+    // In the future, you could store this feedback or adjust AI behavior
+    console.log('Session feedback:', wasHelpful ? 'helpful' : 'not helpful');
   };
   
   return (
@@ -218,6 +279,18 @@ const RolePlay = () => {
         <div className="container mx-auto px-4">
           {!isScenarioSelected ? (
             <div className="space-y-8">
+              <div className="flex justify-between items-center mb-4">
+                <ReturnToDashboard />
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={showGettingStartedGuide}
+                >
+                  <BookOpen size={16} />
+                  Getting Started Guide
+                </Button>
+              </div>
+            
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
                 <h2 className="text-xl font-semibold mb-4 text-center text-brand-dark">Choose a scenario or upload your script to start practicing</h2>
                 <div className="flex justify-center">
@@ -251,7 +324,10 @@ const RolePlay = () => {
           ) : (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold text-brand-dark">Role Play Practice</h1>
+                <div className="flex items-center gap-3">
+                  <ReturnToDashboard />
+                  <h1 className="text-2xl font-bold text-brand-dark">Role Play Practice</h1>
+                </div>
                 
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2 voice-style-controls">
@@ -361,6 +437,21 @@ const RolePlay = () => {
                       <TooltipContent>Voice and text</TooltipContent>
                     </Tooltip>
                     
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={handleSaveSession}
+                          className="h-8 w-8"
+                          aria-label="Save session"
+                        >
+                          <Save size={18} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Save Session</TooltipContent>
+                    </Tooltip>
+                    
                     <div className="ml-2 help-button">
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -380,20 +471,41 @@ const RolePlay = () => {
                 </div>
                 
                 <div className="conversation-interface">
+                  {isProcessing && (
+                    <LoadingIndicator className="my-4" />
+                  )}
+                  
                   <ConversationInterface 
                     mode={voiceMode} 
                     scenario={scenario} 
                     voiceStyle={voiceStyle}
                     volume={volume}
                     userScript={userScript}
+                    onProcessingStateChange={handleProcessingStateChange}
                   />
                 </div>
               </div>
+              
               {userScript && (
                 <div className="mt-4 p-4 bg-brand-blue/10 rounded-lg">
                   <p className="text-sm text-brand-dark/70">
                     Practicing with your uploaded script. The AI will respond based on your script content.
                   </p>
+                </div>
+              )}
+              
+              {/* Feedback prompt */}
+              <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-300 rounded-lg">
+                <FeedbackPrompt 
+                  feedbackType="roleplay"
+                  onFeedbackSubmitted={handleFeedbackSubmitted}
+                />
+              </div>
+              
+              {/* Last save information */}
+              {lastSaved && !isGuestMode && (
+                <div className="mt-2 text-xs text-brand-dark/50 text-right">
+                  Last saved: {lastSaved.toLocaleTimeString()}
                 </div>
               )}
               
@@ -409,7 +521,8 @@ const RolePlay = () => {
                       onClick={() => {
                         navigate('/signup');
                       }}
-                      className="bg-brand-blue hover:bg-brand-blue/90"
+                      className="bg-[#3A66DB] hover:bg-[#3A66DB]/90 text-white font-medium px-6 py-3 rounded-md shadow-sm hover:shadow-md transition-all scale-105"
+                      size="lg"
                     >
                       <UserPlus className="h-4 w-4 mr-2" />
                       Sign Up Free
@@ -419,6 +532,7 @@ const RolePlay = () => {
                       onClick={() => {
                         navigate('/pricing');
                       }}
+                      size="lg"
                     >
                       View Plans
                     </Button>

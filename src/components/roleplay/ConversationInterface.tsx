@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
@@ -11,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import ProgressSummary from '../gamification/ProgressSummary';
 import { Button } from '@/components/ui/button';
 import { Flag, CheckCircle } from 'lucide-react';
+import LoadingIndicator from '@/components/ui/loading-indicator';
+import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
 
 interface Message {
   id: string;
@@ -30,6 +33,7 @@ interface ConversationInterfaceProps {
   voiceStyle: 'friendly' | 'assertive' | 'skeptical' | 'rushed';
   volume: number;
   userScript?: string | null;
+  onProcessingStateChange?: (isProcessing: boolean) => void;
 }
 
 const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
@@ -37,7 +41,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   scenario,
   voiceStyle,
   volume,
-  userScript
+  userScript,
+  onProcessingStateChange
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
@@ -46,16 +51,57 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [userIdleTime, setUserIdleTime] = useState(0);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isPremium, trialActive } = useAuth();
   const voiceSynthRef = useRef<VoiceSynthesis | null>(null);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [sessionStats, setSessionStats] = useState({
     responseTime: 0,
     clarity: 0,
     relevance: 0,
     effectiveness: 0,
   });
+
+  // Suggested responses based on the scenario
+  const suggestedResponses = {
+    'Price': [
+      "I understand price is a concern. Let's look at the ROI our solution provides...",
+      "Our pricing reflects the value we deliver. For example...",
+      "What specific budget constraints are you working within?"
+    ],
+    'Timing': [
+      "I understand timing is important. When would be ideal to implement?",
+      "What timeline would work better for your organization?",
+      "The implementation can be phased to accommodate your schedule."
+    ],
+    'Competitor': [
+      "I'd like to understand what you appreciate about their solution.",
+      "Our differentiator is actually in how we handle...",
+      "What specific features are most important to your team?"
+    ],
+    'Need': [
+      "What specific challenges is your team currently facing?",
+      "How are you currently addressing this problem?",
+      "Would it be helpful if I shared how other companies in your industry use our solution?"
+    ],
+    'Default': [
+      "Could you tell me more about your specific concerns?",
+      "What aspects of this solution are most important to you?",
+      "How does your team currently handle this process?"
+    ]
+  };
+
+  // Get the appropriate suggestions based on scenario
+  const getRelevantSuggestions = () => {
+    if (scenario.objection in suggestedResponses) {
+      return suggestedResponses[scenario.objection as keyof typeof suggestedResponses];
+    }
+    return suggestedResponses.Default;
+  };
 
   useEffect(() => {
     // Initialize voice synthesis
@@ -67,6 +113,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       // Stop speaking when component unmounts
       if (voiceSynthRef.current) {
         voiceSynthRef.current.stop();
+      }
+      
+      // Clear idle timer
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
       }
     };
   }, []);
@@ -110,6 +161,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+    
+    // Reset idle timer
+    resetIdleTimer();
   }, [scenario]);
 
   useEffect(() => {
@@ -118,6 +172,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+  
+  // Update parent component with processing state
+  useEffect(() => {
+    if (onProcessingStateChange) {
+      onProcessingStateChange(isProcessing);
+    }
+  }, [isProcessing, onProcessingStateChange]);
 
   const getAIPersona = () => {
     const styles = {
@@ -152,7 +213,33 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     }
   };
 
+  const resetIdleTimer = () => {
+    // Clear existing timer
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    
+    setUserIdleTime(0);
+    setShowSuggestions(false);
+    
+    // Set new timer - check every 5 seconds
+    idleTimerRef.current = setInterval(() => {
+      setUserIdleTime(prev => {
+        const newTime = prev + 5;
+        // Show suggestions after 15 seconds of inactivity
+        if (newTime >= 15 && !showSuggestions && messages.length > 0) {
+          setShowSuggestions(true);
+        }
+        return newTime;
+      });
+    }, 5000);
+  };
+
   const handleSendMessage = (text: string) => {
+    // Reset idle timer when user sends a message
+    resetIdleTimer();
+    setShowSuggestions(false);
+    
     // Add user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -172,6 +259,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     // Check if session should complete after this message
     const shouldCompleteSession = messages.length >= 8; // Complete after 4 exchanges
     
+    // Show processing state
+    setIsProcessing(true);
+    
     // Simulate thinking delay
     setTimeout(() => {
       // Generate AI response
@@ -185,6 +275,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       };
       
       setMessages((prev) => [...prev, aiMessage]);
+      setIsProcessing(false);
       
       // Speak the AI response if voice is enabled
       if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
@@ -210,7 +301,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         });
       }
       
-    }, 1000);
+    }, 1500);
   };
 
   const toggleVoice = () => {
@@ -275,6 +366,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       speakMessage(initialMessage.text);
     }
   };
+  
+  const handleUseSuggestion = (suggestion: string) => {
+    handleSendMessage(suggestion);
+  };
 
   return (
     <>
@@ -291,7 +386,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             <Button 
               variant="outline"
               size="sm"
-              className="flex items-center gap-1 text-xs h-7"
+              className="flex items-center gap-1 text-xs h-8 min-w-[100px]"
               onClick={handleFinishSession}
             >
               <Flag className="h-3 w-3" />
@@ -312,18 +407,44 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         
         <MessageList messages={messages} isAISpeaking={isAISpeaking} />
         
+        {isProcessing && (
+          <div className="p-4 bg-white border-t">
+            <LoadingIndicator size="small" />
+          </div>
+        )}
+        
+        {showSuggestions && !sessionComplete && !isProcessing && (
+          <div className="bg-blue-50 p-3 border-t">
+            <p className="text-xs text-brand-dark/70 mb-2">Need help with your response? Try one of these:</p>
+            <div className="flex flex-wrap gap-2">
+              {getRelevantSuggestions().map((suggestion, index) => (
+                <Button 
+                  key={index} 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleUseSuggestion(suggestion)}
+                  className="text-xs py-1 h-auto"
+                >
+                  {suggestion.length > 40 ? suggestion.substring(0, 37) + '...' : suggestion}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+        
         {sessionComplete && !showFeedback ? (
           <div className="bg-brand-green/10 p-4 flex flex-col items-center justify-center">
             <p className="text-brand-dark mb-2">Session complete! Ready to see your feedback?</p>
             <Button 
               onClick={handleShowFeedback}
               className="bg-brand-green hover:bg-brand-green/90 flex items-center gap-2"
+              size="lg"
             >
               <CheckCircle size={16} />
               View Session Feedback
             </Button>
           </div>
-        ) : !showFeedback && (
+        ) : !showFeedback && !isProcessing && (
           <ChatInput mode={actualMode} onSendMessage={handleSendMessage} />
         )}
         
@@ -333,6 +454,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       {/* Session Feedback */}
       {showFeedback && (
         <div className="mt-4">
+          <div className="bg-blue-50 border-l-4 border-blue-300 rounded-lg p-4 mb-4">
+            <FeedbackPrompt 
+              feedbackType="roleplay"
+              sessionId={messages[0]?.id} 
+            />
+          </div>
           <ProgressSummary
             sessionName={`${scenario.industry} - ${scenario.objection} Objection Handling`}
             stats={[
@@ -367,7 +494,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 icon: "bolt", 
                 progress: 100,
                 unlocked: true,
-                colorClass: "amber"  // Changed from color to colorClass to match the Badge type
+                colorClass: "amber"
               }
             ]}
             nextMilestone={{

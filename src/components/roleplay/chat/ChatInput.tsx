@@ -1,234 +1,184 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Mic, MicOff, Send } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/context/AuthContext';
-import PremiumModal from '@/components/PremiumModal';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
-// Add SpeechRecognition type definitions
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-  error: any;
-}
-
-interface SpeechRecognitionError extends Event {
-  error: string;
-  message: string;
-}
-
-// Speech Recognition types
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start: () => void;
-  stop: () => void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionError) => void) | null;
-  onend: (() => void) | null;
-}
-
-// Declare global interfaces
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecognition;
-    webkitSpeechRecognition?: new () => SpeechRecognition;
-  }
-}
+import { Textarea } from '@/components/ui/textarea';
 
 interface ChatInputProps {
   mode: 'voice' | 'text' | 'hybrid';
-  onSendMessage: (text: string) => void;
+  onSendMessage: (message: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ mode, onSendMessage }) => {
-  const [inputText, setInputText] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const { toast } = useToast();
-  const { isPremium } = useAuth();
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+const ChatInput: React.FC<ChatInputProps> = ({
+  mode,
+  onSendMessage,
+  disabled = false,
+  placeholder = "Type your response..."
+}) => {
+  const [message, setMessage] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
+  const [recognitionActive, setRecognitionActive] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Initialize speech recognition
   useEffect(() => {
-    // Initialize speech recognition
-    if (typeof window !== 'undefined' && 
-        ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      const SpeechRecognitionConstructor = window.SpeechRecognition || 
-                                          window.webkitSpeechRecognition;
-                                          
-      if (SpeechRecognitionConstructor) {
-        recognitionRef.current = new SpeechRecognitionConstructor();
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
-
-        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-          const transcript = Array.from(event.results)
-            .map(result => result[0])
-            .map(result => result.transcript)
-            .join('');
-            
-          setInputText(transcript);
-        };
-
-        recognitionRef.current.onerror = (event: SpeechRecognitionError) => {
-          console.error('Speech recognition error', event.error);
-          setIsListening(false);
-          toast({
-            title: "Voice recognition error",
-            description: `Error: ${event.error}. Please try again or use text input.`,
-            variant: "destructive",
-          });
-        };
-      }
-    }
-
-    // Cleanup
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.onresult = null;
-        recognitionRef.current.onerror = null;
-        if (isListening) {
-          recognitionRef.current.stop();
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (SpeechRecognition) {
+      setIsVoiceSupported(true);
+      
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('');
+          
+        setMessage(transcript);
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event);
+        setIsRecording(false);
+        setRecognitionActive(false);
+      };
+      
+      recognition.onend = () => {
+        setRecognitionActive(false);
+        if (isRecording) {
+          // If recording is still active, restart recognition
+          // (triggered by auto-timeout rather than user clicking stop)
+          recognition.start();
+          setRecognitionActive(true);
         }
+      };
+      
+      recognitionRef.current = recognition;
+    }
+    
+    return () => {
+      if (recognitionRef.current && recognitionActive) {
+        recognitionRef.current.stop();
       }
     };
-  }, [toast]);
+  }, []);
+  
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [message]);
 
-  const handleSendMessage = () => {
-    if (!inputText.trim()) return;
-    onSendMessage(inputText);
-    setInputText('');
+  const toggleRecording = () => {
+    if (!isVoiceSupported || !recognitionRef.current) return;
+    
+    if (isRecording) {
+      recognitionRef.current.stop();
+      setRecognitionActive(false);
+    } else {
+      setMessage(''); // Clear any existing message
+      try {
+        recognitionRef.current.start();
+        setRecognitionActive(true);
+      } catch (err) {
+        console.error('Could not start recording', err);
+      }
+    }
+    
+    setIsRecording(!isRecording);
+  };
+
+  const handleSend = () => {
+    if (!message.trim()) return;
+    
+    onSendMessage(message.trim());
+    setMessage('');
+    
+    // Stop recording if active
+    if (isRecording) {
+      toggleRecording();
+    }
+    
+    // Focus textarea after sending
+    if (textareaRef.current) {
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 10);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSend();
     }
   };
-
-  const toggleListening = () => {
-    if (!isPremium) {
-      setShowPremiumModal(true);
-      return;
-    }
-    
-    if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      setIsListening(false);
-      toast({
-        title: "Voice recording stopped",
-        description: "Your voice has been processed into text.",
-        variant: "default",
-      });
-    } else {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.start();
-          setIsListening(true);
-          toast({
-            title: "Listening...",
-            description: "Speak now. Your voice will be processed into text.",
-            variant: "default",
-          });
-        } catch (error) {
-          console.error('Speech recognition error:', error);
-          toast({
-            title: "Voice recognition error",
-            description: "Could not start voice recognition. Please try again.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        toast({
-          title: "Voice recognition not supported",
-          description: "Your browser does not support voice recognition. Please use text input.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
+  
+  const showVoiceButton = mode === 'voice' || mode === 'hybrid';
+  const showTextInput = mode === 'text' || mode === 'hybrid';
 
   return (
-    <>
-      <div className="border-t p-4 bg-white shadow-sm transition-all animate-fade-in">
-        <div className="flex items-end gap-2">
-          {(mode === 'voice' || mode === 'hybrid') && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={toggleListening}
-                  className={`rounded-full p-2 transition-all ${
-                    isListening
-                      ? 'bg-red-500 hover:bg-red-600 text-white'
-                      : 'bg-brand-blue hover:bg-brand-blue/90 text-white'
-                  }`}
-                  size="icon"
-                  aria-label={isListening ? "Stop recording" : "Start recording"}
-                >
-                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isListening ? "Stop recording" : "Start voice input"}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-          
-          {(mode === 'text' || mode === 'hybrid') && (
+    <div className="border-t p-3 bg-white">
+      <div className="flex items-end gap-2">
+        {showTextInput && (
+          <div className="flex-grow relative">
             <Textarea
-              placeholder="Type your message..."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-grow resize-none border-brand-blue/20 focus:border-brand-blue/50 transition-all"
-              rows={2}
+              placeholder={placeholder}
+              disabled={disabled}
+              className="resize-none min-h-[44px] pr-10 py-2"
+              rows={1}
+              aria-label="Your message"
             />
-          )}
-          
-          {(mode === 'text' || mode === 'hybrid') && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!inputText.trim()}
-                  className="bg-brand-blue hover:bg-brand-blue/90 text-white rounded-full p-2 transition-all"
-                  size="icon"
-                  aria-label="Send message"
-                >
-                  <Send size={18} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Send message</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-        
-        {isListening && (
-          <div className="mt-2 text-center text-sm text-brand-blue animate-pulse">
-            Listening... Speak clearly
           </div>
         )}
+        
+        <div className="flex items-center gap-2">
+          {showVoiceButton && (
+            <Button
+              type="button"
+              size="icon"
+              variant={isRecording ? "destructive" : "outline"}
+              onClick={toggleRecording}
+              disabled={!isVoiceSupported || disabled}
+              className="h-10 w-10 rounded-full"
+              aria-label={isRecording ? "Stop recording" : "Start recording"}
+            >
+              {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
+            </Button>
+          )}
+          
+          <Button
+            type="button"
+            size="icon"
+            onClick={handleSend}
+            disabled={!message.trim() || disabled}
+            className="h-10 w-10 bg-[#3A66DB] hover:bg-[#3A66DB]/90 text-white"
+            aria-label="Send message"
+          >
+            <Send size={18} />
+          </Button>
+        </div>
       </div>
-
-      <PremiumModal 
-        open={showPremiumModal} 
-        onOpenChange={setShowPremiumModal}
-        featureName="voice input"
-      />
-    </>
+      
+      {isRecording && (
+        <div className="text-xs text-red-500 mt-1 animate-pulse">
+          Recording... Speak clearly into your microphone
+        </div>
+      )}
+    </div>
   );
 };
 
