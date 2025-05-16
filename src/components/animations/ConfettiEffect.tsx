@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Confetti } from 'lucide-react';
+import { Party } from 'lucide-react';
 
 interface ConfettiEffectProps {
   active: boolean;
@@ -69,38 +69,46 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({
   
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-      {particles.map(particle => (
-        <div
-          key={particle.id}
-          className="absolute"
-          style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            color: particle.color,
-            transform: `scale(${particle.size}) rotate(${particle.rotation}deg)`,
-            animation: `
-              confetti-fall-x-${particle.id} ${duration}ms linear forwards,
-              confetti-fall-y-${particle.id} ${duration}ms ease-in forwards,
-              confetti-rotate-${particle.id} ${duration}ms linear infinite
-            `
-          }}
-        >
-          <Confetti size={24} />
-          <style jsx>{`
-            @keyframes confetti-fall-x-${particle.id} {
-              to { transform: translateX(${particle.speedX * 100}px) scale(${particle.size}) rotate(${particle.rotation + particle.speedRotation * 360}deg); }
-            }
+      {particles.map(particle => {
+        // Define the keyframes for this particle's animations
+        const keyframeStyles = `
+          @keyframes confetti-fall-x-${particle.id} {
+            to { transform: translateX(${particle.speedX * 100}px) scale(${particle.size}) rotate(${particle.rotation + particle.speedRotation * 360}deg); }
+          }
+          
+          @keyframes confetti-fall-y-${particle.id} {
+            to { transform: translateY(${window.innerHeight}px); }
+          }
+          
+          @keyframes confetti-rotate-${particle.id} {
+            to { transform: rotate(${particle.speedRotation > 0 ? 360 : -360}deg); }
+          }
+        `;
+        
+        return (
+          <div
+            key={particle.id}
+            className="absolute"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              color: particle.color,
+              transform: `scale(${particle.size}) rotate(${particle.rotation}deg)`,
+              animation: `
+                confetti-fall-x-${particle.id} ${duration}ms linear forwards,
+                confetti-fall-y-${particle.id} ${duration}ms ease-in forwards,
+                confetti-rotate-${particle.id} ${duration}ms linear infinite
+              `
+            }}
+          >
+            {/* Custom confetti shape instead of using a Lucide icon */}
+            <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: particle.color }}></div>
             
-            @keyframes confetti-fall-y-${particle.id} {
-              to { transform: translateY(${window.innerHeight}px); }
-            }
-            
-            @keyframes confetti-rotate-${particle.id} {
-              to { transform: rotate(${particle.speedRotation > 0 ? 360 : -360}deg); }
-            }
-          `}</style>
-        </div>
-      ))}
+            {/* Add the keyframe styles in a regular style tag */}
+            <style dangerouslySetInnerHTML={{ __html: keyframeStyles }} />
+          </div>
+        );
+      })}
     </div>
   );
 };
