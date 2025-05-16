@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider as CustomThemeProvider } from '@/context/ThemeContext';
 
 // Determine if we're in development mode or Lovable mode
 const isLovable = import.meta.env.VITE_LOVABLE === 'true';
@@ -26,10 +25,6 @@ if ((isDevelopment || isLovable) && window.document) {
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
-    <CustomThemeProvider>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </CustomThemeProvider>
+    <App />
   </BrowserRouter>
 );
