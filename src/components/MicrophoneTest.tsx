@@ -1,7 +1,9 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mic, MicOff, Check, X, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
+import LoadingIndicator from '@/components/ui/loading-indicator';
 import { Capacitor } from '@capacitor/core';
 
 interface MicrophoneTestProps {
@@ -119,8 +121,8 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
         
         // Use green color when input is detected, otherwise use red
         canvasCtx.fillStyle = audioDetected ? 
-          'rgb(34, 197, 94)' : 
-          'rgb(239, 68, 68)';
+          'rgb(34, 197, 94)' : // Green when sound detected
+          'rgb(239, 68, 68)';  // Red when no sound
         
         canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
         x += barWidth + 1;
@@ -191,6 +193,7 @@ const MicrophoneTest = ({ onTestComplete, autoStart = true }: MicrophoneTestProp
             {!testComplete ? (
               <div className="text-center">
                 <p className="text-lg font-medium">Checking microphone...</p>
+                <LoadingIndicator size="small" message="Testing microphone" />
               </div>
             ) : (
               <div className="text-center py-4">
