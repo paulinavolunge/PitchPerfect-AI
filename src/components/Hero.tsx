@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Rocket, UserPlus } from 'lucide-react';
@@ -96,7 +95,7 @@ const Hero = () => {
           className="lg:w-1/2 space-y-5 md:space-y-6 mb-8 lg:mb-0"
         >
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-brand-dark leading-tight">
-            Perfect your pitch <span className="text-brand-blue">with AI—live.</span>
+            Beat Every Objection <span className="text-[#008D95]">with AI-Powered Practice</span>
           </h1>
           <p className="text-lg md:text-xl text-brand-dark/80 max-w-xl">
             Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching.
@@ -108,11 +107,11 @@ const Hero = () => {
             className="flex flex-wrap gap-4"
           >
             <Button 
-              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
               onClick={handleStartFreeTrial}
               aria-label="Try Free Now"
             >
-              Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+              Begin a Practice Call <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
             </Button>
             <Button 
               variant="outline" 

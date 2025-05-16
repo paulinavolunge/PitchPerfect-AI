@@ -1,5 +1,5 @@
-
 import React, { useState, lazy, Suspense, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import { Button } from '@/components/ui/button';
@@ -66,6 +66,18 @@ const Index = () => {
   
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>PitchPerfect AI – Real-Time Objection Handling Practice for Sales Pros</title>
+        <meta name="description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching. Master objection handling and close more deals." />
+        <meta property="og:title" content="PitchPerfect AI – Real-Time Objection Handling Practice for Sales Pros" />
+        <meta property="og:description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://pitchperfectai.ai" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="PitchPerfect AI – Sales Practice Platform" />
+        <meta name="twitter:description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching." />
+      </Helmet>
+      
       {showPromotion && (
         <TimeOffer
           expiryDate={promoExpiryDate}
