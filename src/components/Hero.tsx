@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Rocket, UserPlus } from 'lucide-react';
@@ -124,7 +125,7 @@ const Hero = () => {
             </Button>
             <Button 
               variant="ghost" 
-              className="text-brand-dark hover:bg-gray-100 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
+              className="bg-white text-brand-dark hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg"
               onClick={handleTryAsGuest}
               aria-label="Try as Guest"
             >
