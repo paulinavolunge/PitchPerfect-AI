@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
 import MicrophoneTest from '@/components/MicrophoneTest';
-import { VoiceSynthesis } from '@/utils/VoiceSynthesis';
+import VoiceSynthesis from '@/utils/VoiceSynthesis';
 import { supabase } from '@/lib/supabase';
 import { FileAudio, Mic, Users, Bot } from 'lucide-react';
 import AIDisclosure from '@/components/AIDisclosure';
