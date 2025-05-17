@@ -17,13 +17,9 @@ export const initGA = () => {
         return;
       }
 
-      const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+      // Use environment variable or fallback to hardcoded ID if not available
+      const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-HVCRJT504Y';
       
-      if (!measurementId) {
-        console.error('Google Analytics Measurement ID is missing. Set VITE_GA_MEASUREMENT_ID in your environment variables');
-        return;
-      }
-
       // Google Analytics 4 script
       const script = document.createElement('script');
       script.async = true;
@@ -60,12 +56,8 @@ export const trackPageView = (path: string) => {
       return;
     }
     
-    const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-    
-    if (!measurementId) {
-      console.error('Google Analytics Measurement ID is missing');
-      return;
-    }
+    // Use environment variable or fallback to hardcoded ID if not available
+    const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-HVCRJT504Y';
     
     window.gtag('event', 'page_view', {
       page_path: path,
