@@ -56,7 +56,6 @@ const queryClient = new QueryClient({
 // Analytics tracking component
 const RouteChangeTracker = () => {
   const location = useLocation();
-  const { toast } = useToast();
 
   useEffect(() => {
     // Track page views
@@ -81,8 +80,12 @@ const RouteChangeTracker = () => {
 
 function App() {
   useEffect(() => {
-    // Initialize Google Analytics
+    // Initialize Google Analytics as early as possible
     initGA();
+    
+    // Track initial page view
+    const currentPath = window.location.pathname + window.location.search;
+    trackPageView(currentPath);
   }, []);
 
   return (

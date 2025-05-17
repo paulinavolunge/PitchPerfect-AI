@@ -4,10 +4,14 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { initGA } from './utils/analytics';
 
 // Determine if we're in development mode or Lovable mode
 const isLovable = import.meta.env.VITE_LOVABLE === 'true';
 const isDevelopment = import.meta.env.DEV === true;
+
+// Ensure GA is initialized as early as possible
+initGA();
 
 // Load development tools only in development mode or Lovable mode
 if ((isDevelopment || isLovable) && window.document) {
