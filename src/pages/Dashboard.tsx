@@ -1,10 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, FileAudio, Mic, Users, Bot } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
@@ -17,13 +17,16 @@ import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
 import MicrophoneTest from '@/components/MicrophoneTest';
 import VoiceSynthesis from '@/utils/VoiceSynthesis';
-import { supabase } from '@/lib/supabase';
-import { FileAudio, Mic, Users, Bot } from 'lucide-react';
 import AIDisclosure from '@/components/AIDisclosure';
 import AISettingsModal from '@/components/AISettingsModal';
 import TiltCard from '@/components/animations/TiltCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import ParallaxSection from '@/components/animations/ParallaxSection';
+import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
+import RefreshAnimation from '@/components/dashboard/RefreshAnimation';
+import FadeTransition from '@/components/animations/FadeTransition';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const Dashboard = () => {
   const { user, refreshSubscription } = useAuth();
@@ -31,9 +34,18 @@ const Dashboard = () => {
   const [showMicTest, setShowMicTest] = useState(false);
   const [micTestPassed, setMicTestPassed] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
-  const [streakCount, setStreakCount] = useState(0);
   const navigate = useNavigate();
   const [showAISettings, setShowAISettings] = useState(false);
+  
+  // Use our new hook for dashboard data and settings
+  const {
+    isLoading,
+    isRefreshing,
+    streakCount,
+    settings,
+    updateSettings,
+    refreshDashboardData
+  } = useDashboardData();
   
   // Define tour steps
   const tourSteps: Step[] = [
@@ -77,6 +89,9 @@ const Dashboard = () => {
   };
   
   const handleStartPractice = () => {
+    // Flag that will be checked when returning from practice
+    sessionStorage.setItem('startingPractice', 'true');
+    
     // Show microphone test before starting practice
     setShowMicTest(true);
   };
@@ -99,6 +114,10 @@ const Dashboard = () => {
     }
   };
   
+  const handleTabChange = (value: string) => {
+    updateSettings({ activeTab: value });
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -111,16 +130,27 @@ const Dashboard = () => {
       />
       
       <ParallaxSection className="flex-grow pt-24 pb-12" depth={0.1}>
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 overflow-x-hidden">
           <motion.div 
             className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div>
+            <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-brand-dark mb-1">Dashboard</h1>
-              <p className="text-brand-dark/70">Welcome back, {user?.user_metadata?.first_name || 'there'}!</p>
+              <RefreshAnimation isRefreshing={isRefreshing} />
+              <div className="text-sm text-muted-foreground">
+                {!isLoading && (
+                  <button
+                    onClick={() => refreshDashboardData(true)}
+                    className="text-brand-blue hover:underline focus:outline-none"
+                    aria-label="Refresh dashboard data"
+                  >
+                    Refresh
+                  </button>
+                )}
+              </div>
             </div>
             
             <div className="flex flex-wrap gap-3">
@@ -161,6 +191,108 @@ const Dashboard = () => {
             </div>
           </motion.div>
           
+          {/* View Tabs */}
+          <Tabs 
+            value={settings.activeTab}
+            onValueChange={handleTabChange}
+            className="mb-6"
+          >
+            <TabsList className="mb-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="history">Session History</TabsTrigger>
+              <TabsTrigger value="analysis">Detailed Analysis</TabsTrigger>
+            </TabsList>
+            
+            <FadeTransition show={true} duration={300}>
+              <div style={{ minHeight: isLoading ? '600px' : 'auto' }}>
+                {isLoading ? (
+                  <DashboardSkeleton />
+                ) : (
+                  <>
+                    <TabsContent value="overview" className="mt-0">
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <motion.div 
+                          className="mb-8"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                        >
+                          <UserSubscriptionStatus />
+                        </motion.div>
+                        
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.4 }}
+                        >
+                          <DashboardStats streakCount={streakCount} />
+                        </motion.div>
+                      </motion.div>
+                    </TabsContent>
+                    
+                    <TabsContent value="history" className="mt-0">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Card className="overflow-hidden shadow-md mb-8">
+                          <CardHeader className="bg-gradient-to-r from-brand-blue/10 to-brand-blue/5 pb-4">
+                            <CardTitle className="text-xl text-brand-dark">All Practice Sessions</CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-6">
+                            <div className="space-y-4">
+                              {[1, 2, 3, 4, 5].map((i) => (
+                                <motion.div 
+                                  key={i}
+                                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
+                                  whileHover={{ scale: 1.02 }}
+                                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                >
+                                  <div>
+                                    <h3 className="font-medium">Session #{i}</h3>
+                                    <p className="text-sm text-brand-dark/70">
+                                      {i} {i === 1 ? 'hour' : 'days'} ago • {Math.floor(Math.random() * 5) + 1}:{Math.floor(Math.random() * 60).toString().padStart(2, '0')} min
+                                    </p>
+                                  </div>
+                                  <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">
+                                    View Feedback
+                                  </Button>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    </TabsContent>
+                    
+                    <TabsContent value="analysis" className="mt-0">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {/* Team Leaderboard Section */}
+                        <motion.div 
+                          className="mt-8 mb-8"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.5 }}
+                        >
+                          <LeaderboardTable />
+                        </motion.div>
+                      </motion.div>
+                    </TabsContent>
+                  </>
+                )}
+              </div>
+            </FadeTransition>
+          </Tabs>
+          
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -171,23 +303,6 @@ const Dashboard = () => {
               description="Your dashboard contains AI-generated insights and suggestions based on your practice sessions."
               className="mb-6"
             />
-          </motion.div>
-          
-          <motion.div 
-            className="mb-8"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <UserSubscriptionStatus />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <DashboardStats streakCount={streakCount} />
           </motion.div>
           
           <AnimatePresence>
@@ -206,16 +321,6 @@ const Dashboard = () => {
               </motion.div>
             )}
           </AnimatePresence>
-          
-          {/* Team Leaderboard Section */}
-          <motion.div 
-            className="mt-8 mb-8"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            <LeaderboardTable />
-          </motion.div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             <motion.div 
