@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Rocket, UserPlus } from 'lucide-react';
+import { ArrowRight, Rocket, UserPlus, Clock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -17,7 +17,7 @@ const Hero = () => {
   const [sessionStarted, setSessionStarted] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { user, startFreeTrial } = useAuth();
+  const { user, isPremium, startFreeTrial, trialActive, trialEndsAt } = useAuth();
   const { startGuestMode } = useGuestMode();
   const { toast } = useToast();
   
@@ -59,6 +59,16 @@ const Hero = () => {
     setSessionStarted(true);
   };
 
+  // Calculate days remaining in trial
+  const calculateDaysRemaining = () => {
+    if (!trialEndsAt) return 0;
+    
+    const now = new Date();
+    const diffTime = trialEndsAt.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  };
+
   const handleStartFreeTrial = async () => {
     try {
       if (user) {
@@ -88,6 +98,52 @@ const Hero = () => {
     navigate('/roleplay');
   };
 
+  // Render appropriate button based on user status
+  const renderActionButton = () => {
+    if (!user) {
+      return (
+        <Button 
+          className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
+          onClick={handleStartFreeTrial}
+          aria-label="Try Free Now"
+        >
+          Begin a Practice Call <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+        </Button>
+      );
+    } else if (trialActive) {
+      return (
+        <Button 
+          className="bg-amber-500 hover:bg-amber-600 text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
+          onClick={() => navigate('/dashboard')}
+          aria-label="Your Trial Status"
+        >
+          <Clock className="mr-1" size={isMobile ? 20 : 18} />
+          Trial - {calculateDaysRemaining()} days left
+        </Button>
+      );
+    } else if (isPremium) {
+      return (
+        <Button 
+          className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
+          onClick={() => navigate('/dashboard')}
+          aria-label="Go to Dashboard"
+        >
+          Dashboard <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+        </Button>
+      );
+    } else {
+      return (
+        <Button 
+          className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
+          onClick={() => navigate('/subscription')}
+          aria-label="Upgrade to Premium"
+        >
+          Upgrade to Premium <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+        </Button>
+      );
+    }
+  };
+
   return (
     <ParallaxSection className="pt-20 md:pt-24 pb-16 md:pb-20 overflow-hidden relative">
       <div className="absolute inset-0 -z-10 opacity-50">
@@ -113,13 +169,8 @@ const Hero = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="flex flex-wrap gap-4"
           >
-            <Button 
-              className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-              onClick={handleStartFreeTrial}
-              aria-label="Try Free Now"
-            >
-              Begin a Practice Call <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
-            </Button>
+            {renderActionButton()}
+            
             <Button 
               variant="outline" 
               className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
