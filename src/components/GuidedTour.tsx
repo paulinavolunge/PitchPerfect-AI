@@ -57,7 +57,8 @@ const GuidedTour = ({
     }
     
     // Handle tour completion
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+    // Fix: Use STATUS enum values directly for comparison instead of string literals
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       // Tour is complete
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
