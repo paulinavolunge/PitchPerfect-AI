@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,7 @@ const Dashboard = () => {
     refreshDashboardData
   } = useDashboardData();
   
-  // Define tour steps with clear IDs and better targeting
+  // Define tour steps with clear IDs and better targeting - removed the 4th step
   const tourSteps: Step[] = [
     {
       target: '.tour-step-1',
@@ -69,13 +68,6 @@ const Dashboard = () => {
     },
     {
       target: '.tour-step-3',
-      content: 'After your session, you\'ll see feedback and suggestions to improve your pitch.',
-      placement: 'top' as const,
-      spotlightPadding: 10,
-      title: 'Step 3: Review Feedback',
-    },
-    {
-      target: 'body',
       content: (
         <div className="text-center">
           <div className="flex justify-center mb-4">
@@ -84,7 +76,7 @@ const Dashboard = () => {
             </div>
           </div>
           <h2 className="text-xl font-bold mb-2">You're all set!</h2>
-          <p className="mb-4">You've completed the tour and you're ready to start using PitchPerfect AI.</p>
+          <p className="mb-4">After your session, you'll see feedback and suggestions to improve your pitch.</p>
           <Button 
             onClick={() => {
               // Explicitly handle the close button click
@@ -95,16 +87,14 @@ const Dashboard = () => {
             }} 
             className="bg-brand-green hover:bg-brand-green/90"
           >
-            Close
+            Finish
           </Button>
         </div>
       ),
-      placement: 'center' as const,
+      placement: 'top' as const,
+      spotlightPadding: 10,
+      hideBackButton: false,
       disableBeacon: true,
-      hideBackButton: true,
-      hideCloseButton: true,
-      spotlightClicks: true, // Enable clicking on the button in the spotlight
-      disableOverlayClose: true,
     }
   ];
   
@@ -193,7 +183,7 @@ const Dashboard = () => {
           onComplete={handleTourComplete}
           continuous={true}
           scrollToSteps={true}
-          spotlightClicks={false}
+          spotlightClicks={true}
         />
       )}
       

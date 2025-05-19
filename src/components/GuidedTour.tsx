@@ -65,8 +65,10 @@ const GuidedTour = ({
           onComplete();
         }
       }
-    } else if (action === ACTIONS.PREV) {
-      // Handle going to previous step when the Back button is clicked
+    }
+    
+    // Handle going to previous step when the Back button is clicked
+    if (action === ACTIONS.PREV) {
       const prevStepIndex = index - 1;
       
       if (prevStepIndex >= 0) {
@@ -76,8 +78,10 @@ const GuidedTour = ({
           stepIndex: prevStepIndex
         }));
       }
-    } else if (action === ACTIONS.CLOSE || status === STATUS.SKIPPED) {
-      // Handle when close button is clicked or tour is skipped
+    } 
+    
+    // Handle when close button is clicked or tour is skipped
+    if (action === ACTIONS.CLOSE || status === STATUS.SKIPPED) {
       console.log('Tour closed or skipped');
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
@@ -87,13 +91,6 @@ const GuidedTour = ({
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       // Tour is complete
       console.log('Tour finished or skipped, status:', status);
-      setTourState(prevState => ({ ...prevState, run: false }));
-      onComplete();
-    }
-    
-    // Also handle primary button clicks on the final step (for the custom Close button)
-    if (index === steps.length - 1 && type === EVENTS.STEP_AFTER) {
-      console.log('Final step action triggered');
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
@@ -123,7 +120,7 @@ const GuidedTour = ({
       scrollOffset={100} // Add some padding when scrolling to elements
       disableOverlayClose={true} // Prevent closing by clicking on the overlay
       locale={{
-        last: "Finish Tour",  // Change the text of the last button
+        last: "Finish",  // Change the text of the last button
         next: "Next",
         skip: "Skip",
         back: "Back"
