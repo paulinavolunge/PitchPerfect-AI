@@ -4,6 +4,7 @@ import PricingPlanCard from './PricingPlanCard';
 import TimeOffer from '@/components/promotion/TimeOffer';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Clock } from 'lucide-react';
 
 interface PricingPlansProps {
   planType: "monthly" | "yearly";
@@ -18,8 +19,18 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
   setEnterpriseSize, 
   promoExpiryDate 
 }) => {
-  const { user, isPremium } = useAuth();
+  const { user, isPremium, trialActive, trialEndsAt } = useAuth();
   const navigate = useNavigate();
+  
+  // Calculate days remaining in trial
+  const calculateDaysRemaining = () => {
+    if (!trialEndsAt) return 0;
+    
+    const now = new Date();
+    const diffTime = trialEndsAt.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  };
   
   // Handle actions
   const handleUpgradeClick = () => {
@@ -85,6 +96,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
       return planType === "monthly" ? "Sign up for Monthly Team" : "Sign up for Yearly Team";
     } else if (isPremium) {
       return "Manage Subscription";
+    } else if (trialActive) {
+      return `Upgrade Trial to ${planType === "monthly" ? "Monthly" : "Yearly"}`;
     } else {
       return `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`;
     }
@@ -104,6 +117,18 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
         />
       </div>
       
+      {trialActive && !isPremium && (
+        <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg max-w-md mx-auto text-center">
+          <div className="flex items-center justify-center mb-2">
+            <Clock className="h-5 w-5 text-amber-600 mr-2" />
+            <p className="font-medium text-amber-800">Your free trial is active</p>
+          </div>
+          <p className="text-amber-700 text-sm mb-2">
+            You have {calculateDaysRemaining()} days left in your trial. Upgrade now to keep access to premium features.
+          </p>
+        </div>
+      )}
+      
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto pricing-cards">
         {/* Solo Plan */}
         <PricingPlanCard
@@ -121,8 +146,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           buttonText={!user ? "Sign up free" : "Current plan"}
           buttonVariant="outline"
           buttonAction={() => navigate('/signup')}
-          isCurrentPlan={user && !isPremium}
-          disabled={isPremium}
+          isCurrentPlan={user && !isPremium && !trialActive}
+          disabled={isPremium || trialActive}
         />
         
         {/* Team Plan */}
@@ -153,8 +178,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           ]}
           buttonText={getTeamButtonText()}
           buttonAction={!user ? handleSignupClick : handleUpgradeClick}
-          isCurrentPlan={isPremium}
+          isCurrentPlan={isPremium || trialActive}
           isPopular={true}
+          trialBadge={trialActive && !isPremium}
           // Always enable the Team button regardless of current plan status
           disabled={false}
         />

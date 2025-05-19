@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -8,14 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { CheckIcon, XIcon, Gift } from 'lucide-react';
+import { CheckIcon, XIcon, Gift, Clock } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Subscription = () => {
   const { toast } = useToast();
-  const { user, isPremium, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
+  const { user, isPremium, subscriptionTier, subscriptionEnd, trialActive, trialEndsAt, refreshSubscription } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,6 +48,16 @@ const Subscription = () => {
       refreshSubscription();
     }
   }, [user, refreshSubscription, searchParams, setSearchParams, toast]);
+
+  // Calculate days remaining in trial
+  const calculateDaysRemaining = () => {
+    if (!trialEndsAt) return 0;
+    
+    const now = new Date();
+    const diffTime = trialEndsAt.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  };
 
   const handleUpgradeClick = async () => {
     if (!user) {
@@ -140,6 +151,26 @@ const Subscription = () => {
     return <Navigate to="/login" state={{ from: '/subscription' }} />;
   }
 
+  const getPageTitle = () => {
+    if (isPremium) {
+      return "Your Subscription";
+    } else if (trialActive) {
+      return "Upgrade Your Trial";
+    } else {
+      return "Choose Your Plan";
+    }
+  };
+
+  const getPageSubtitle = () => {
+    if (isPremium) {
+      return "Manage your premium features and subscription settings.";
+    } else if (trialActive) {
+      return `You're currently on a free trial with ${calculateDaysRemaining()} days remaining. Upgrade to keep access to premium features.`;
+    } else {
+      return "Unlock premium features to elevate your sales conversations and close more deals with confidence.";
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -147,15 +178,22 @@ const Subscription = () => {
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-brand-dark mb-4">Choose Your Plan</h1>
+            <h1 className="text-3xl font-bold text-brand-dark mb-4">{getPageTitle()}</h1>
             <p className="text-lg text-brand-dark/70 max-w-2xl mx-auto">
-              Unlock premium features to elevate your sales conversations and close more deals with confidence.
+              {getPageSubtitle()}
             </p>
             
             {isPremium && (
               <div className="mt-4 inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
                 <CheckIcon className="w-4 h-4 mr-2" />
                 You're on the {subscriptionTier} plan
+              </div>
+            )}
+
+            {trialActive && !isPremium && (
+              <div className="mt-4 inline-flex items-center px-4 py-2 bg-amber-100 text-amber-800 rounded-full">
+                <Clock className="w-4 h-4 mr-2" />
+                Trial - {calculateDaysRemaining()} days remaining
               </div>
             )}
             
@@ -187,6 +225,7 @@ const Subscription = () => {
             onUpgradeClick={handleUpgradeClick} 
             isLoading={isLoading}
             planType={planType}
+            trialActive={trialActive}
           />
           
           {isPremium && subscriptionEnd && (

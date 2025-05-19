@@ -10,9 +10,10 @@ import { Step } from 'react-joyride';
 import PricingHeader from '@/components/pricing/PricingHeader';
 import PricingPlans from '@/components/pricing/PricingPlans';
 import StickyCTA from '@/components/pricing/StickyCTA';
+import { Clock } from 'lucide-react';
 
 const Pricing = () => {
-  const { user, isPremium } = useAuth();
+  const { user, isPremium, trialActive, trialEndsAt } = useAuth();
   const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
   const [enterpriseSize, setEnterpriseSize] = useState<"small" | "medium" | "large">("small");
   const navigate = useNavigate();
@@ -30,6 +31,16 @@ const Pricing = () => {
     } else {
       navigate('/demo');
     }
+  };
+
+  // Calculate days remaining in trial
+  const calculateDaysRemaining = () => {
+    if (!trialEndsAt) return 0;
+    
+    const now = new Date();
+    const diffTime = trialEndsAt.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
   };
 
   // Track scroll position to manage sticky CTA visibility
@@ -82,13 +93,54 @@ const Pricing = () => {
     localStorage.setItem('pricing_tour_completed', 'true');
   };
 
+  // Get appropriate CTA text based on user status
+  const getStickyCTAText = () => {
+    if (!user) {
+      return "Try Free Demo";
+    } else if (trialActive) {
+      return "Continue Your Trial";
+    } else if (isPremium) {
+      return "Go to Dashboard";
+    } else {
+      return "Start Free Trial";
+    }
+  };
+
+  // Handle sticky CTA click based on user status
+  const handleStickyCTAClick = () => {
+    if (!user) {
+      scrollToDemo();
+    } else if (trialActive || isPremium) {
+      navigate('/dashboard');
+    } else {
+      navigate('/subscription');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative">
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          <PricingHeader planType={planType} setPlanType={setPlanType} />
+          {trialActive && !isPremium && (
+            <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg max-w-lg mx-auto text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Clock className="h-5 w-5 text-amber-600 mr-2" />
+                <p className="font-medium text-amber-800">Your free trial is active</p>
+              </div>
+              <p className="text-amber-700 text-sm mb-2">
+                You have {calculateDaysRemaining()} days left. Choose a plan to continue access after your trial ends.
+              </p>
+            </div>
+          )}
+          
+          <PricingHeader 
+            planType={planType} 
+            setPlanType={setPlanType} 
+            trialActive={trialActive} 
+            isPremium={isPremium} 
+          />
           
           <PricingPlans 
             planType={planType} 
@@ -113,7 +165,11 @@ const Pricing = () => {
         </div>
       </main>
       
-      <StickyCTA show={showStickyCTA} onClick={scrollToDemo} />
+      <StickyCTA 
+        show={showStickyCTA} 
+        onClick={handleStickyCTAClick} 
+        text={getStickyCTAText()}
+      />
       
       <Footer />
       

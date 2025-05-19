@@ -1,116 +1,208 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckIcon } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-interface PlanFeature {
+import { CheckIcon, XIcon, Clock } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+
+interface FeatureItem {
   name: string;
   highlight?: boolean;
+  included?: boolean;
 }
-interface EnterpriseSize {
-  name: string;
-  price: string;
-  users: string;
-  features: string[];
+
+interface EnterpriseSizes {
+  small: {
+    name: string;
+    price: string;
+    users: string;
+    features: string[];
+  };
+  medium: {
+    name: string;
+    price: string;
+    users: string;
+    features: string[];
+  };
+  large: {
+    name: string;
+    price: string;
+    users: string;
+    features: string[];
+  };
 }
+
+interface EnterpriseProps {
+  sizes: EnterpriseSizes;
+  enterpriseSize: "small" | "medium" | "large";
+  setEnterpriseSize: (size: "small" | "medium" | "large") => void;
+}
+
 interface PricingPlanCardProps {
-  type: 'solo' | 'team' | 'enterprise';
+  type: "solo" | "team" | "enterprise";
   title: string;
   description: string;
-  price: string | React.ReactNode;
+  price: React.ReactNode;
   priceDescription?: string;
-  features: PlanFeature[];
+  features: FeatureItem[];
   buttonText: string;
-  buttonVariant?: 'default' | 'outline';
+  buttonVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   buttonAction: () => void;
   isCurrentPlan?: boolean;
   isPopular?: boolean;
   disabled?: boolean;
-  enterpriseProps?: {
-    sizes: {
-      small: EnterpriseSize;
-      medium: EnterpriseSize;
-      large: EnterpriseSize;
-    };
-    enterpriseSize: "small" | "medium" | "large";
-    setEnterpriseSize: (size: "small" | "medium" | "large") => void;
-  };
+  trialBadge?: boolean;
+  enterpriseProps?: EnterpriseProps;
 }
-const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
+
+const PricingPlanCard: React.FC<PricingPlanCardProps> = ({ 
   type,
-  title,
-  description,
-  price,
-  priceDescription,
-  features,
-  buttonText,
-  buttonVariant = 'default',
+  title, 
+  description, 
+  price, 
+  priceDescription, 
+  features, 
+  buttonText, 
+  buttonVariant = "default", 
   buttonAction,
-  isCurrentPlan = false,
-  isPopular = false,
-  disabled = false,
+  isCurrentPlan,
+  isPopular,
+  disabled,
+  trialBadge,
   enterpriseProps
 }) => {
-  const selectedEnterprisePlan = enterpriseProps && enterpriseProps.sizes[enterpriseProps.enterpriseSize];
-  return <Card className={`border-2 ${isPopular ? 'border-brand-green shadow-lg' : 'shadow-sm'}`}>
-      <CardHeader className="pb-2">
-        {type !== 'enterprise' ? <>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-2xl">{title}</CardTitle>
-              {isPopular && <span className="bg-brand-green/20 text-brand-green text-xs font-medium px-2 py-1 rounded">POPULAR</span>}
-              {isCurrentPlan && <span className="bg-brand-green/20 text-brand-green text-xs font-medium px-2 py-1 rounded">CURRENT</span>}
+  const [expanded, setExpanded] = useState(false);
+  
+  const renderFeatureItem = (item: FeatureItem, index: number) => (
+    <li key={index} className={`flex items-center gap-2 py-1 ${item.highlight ? 'font-medium' : ''}`}>
+      {item.included !== false ? (
+        <CheckIcon className={`h-5 w-5 ${item.highlight ? 'text-brand-blue' : 'text-green-500'}`} />
+      ) : (
+        <XIcon className="h-5 w-5 text-gray-400" />
+      )}
+      <span>{item.name}</span>
+    </li>
+  );
+  
+  // Enterprise size selection
+  const renderEnterpriseSizeSelector = () => {
+    if (!enterpriseProps) return null;
+    
+    const { sizes, enterpriseSize, setEnterpriseSize } = enterpriseProps;
+    
+    return (
+      <div className="mb-6 mt-4 border-t border-b py-4">
+        <RadioGroup value={enterpriseSize} onValueChange={(value) => setEnterpriseSize(value as any)}>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="small" id="enterprise-small" />
+              <Label htmlFor="enterprise-small" className="flex-1">
+                <span className="font-medium">{sizes.small.name}</span>
+                <p className="text-sm text-gray-500">({sizes.small.users} users)</p>
+              </Label>
+              <span className="font-medium">{sizes.small.price}</span>
             </div>
-            <CardDescription>{description}</CardDescription>
-            <div className="mt-4">
-              {price}
-              {priceDescription && <span className="text-gray-500 ml-2">{priceDescription}</span>}
+            
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="medium" id="enterprise-medium" />
+              <Label htmlFor="enterprise-medium" className="flex-1">
+                <span className="font-medium">{sizes.medium.name}</span>
+                <p className="text-sm text-gray-500">({sizes.medium.users} users)</p>
+              </Label>
+              <span className="font-medium">{sizes.medium.price}</span>
             </div>
-          </> : <>
-            <CardTitle className="text-2xl">{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-            <div className="mt-4 mb-2">
-              <Tabs value={enterpriseProps?.enterpriseSize} onValueChange={v => enterpriseProps?.setEnterpriseSize(v as "small" | "medium" | "large")} className="w-full">
-                <TabsList className="grid grid-cols-3 mb-2">
-                  <TabsTrigger value="small" className="text-xs">Small</TabsTrigger>
-                  <TabsTrigger value="medium" className="text-xs">Medium</TabsTrigger>
-                  <TabsTrigger value="large" className="text-xs">Large</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              {selectedEnterprisePlan && <div className="text-center">
-                  <span className="text-xl font-semibold">{selectedEnterprisePlan.name}</span>
-                  <div className="mt-2">
-                    <span className="text-3xl font-bold">{selectedEnterprisePlan.price}</span>
-                    <span className="text-gray-500 ml-2">/ month</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {selectedEnterprisePlan.users} users
-                  </p>
-                </div>}
+            
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="large" id="enterprise-large" />
+              <Label htmlFor="enterprise-large" className="flex-1">
+                <span className="font-medium">{sizes.large.name}</span>
+                <p className="text-sm text-gray-500">({sizes.large.users} users)</p>
+              </Label>
+              <span className="font-medium">{sizes.large.price}</span>
             </div>
-          </>}
-      </CardHeader>
-      <CardContent className={type === 'enterprise' ? 'pt-4' : 'pt-6'}>
-        <ul className="space-y-3">
-          {type !== 'enterprise' ? features.map((feature, index) => <li key={index} className="flex items-start">
-                <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                <span className={feature.highlight ? 'font-medium' : ''}>{feature.name}</span>
-              </li>) : selectedEnterprisePlan?.features.map((feature, index) => <li key={index} className="flex items-start">
-                <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                <span>{feature}</span>
-              </li>)}
-        </ul>
-      </CardContent>
-      <CardFooter>
-        <Button variant={buttonVariant} onClick={buttonAction} disabled={disabled || isCurrentPlan && type !== 'team'} className="text-slate-300 bg-slate-200 hover:bg-slate-100 rounded-none">
+          </div>
+        </RadioGroup>
+      </div>
+    );
+  };
+  
+  // Enterprise features based on selected size
+  const renderEnterpriseFeatures = () => {
+    if (!enterpriseProps) return null;
+    
+    const { sizes, enterpriseSize } = enterpriseProps;
+    const selectedSize = sizes[enterpriseSize];
+    
+    return (
+      <ul className="space-y-2 mb-6">
+        {selectedSize.features.map((feature, index) => (
+          <li key={index} className="flex items-center gap-2 py-1">
+            <CheckIcon className="h-5 w-5 text-green-500" />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+  
+  return (
+    <div 
+      className={`rounded-xl border bg-card text-card-foreground shadow transition-all duration-300 ease-in-out overflow-hidden relative flex flex-col
+        ${isPopular ? 'scale-105 shadow-lg border-brand-blue/20 z-10' : 'hover:shadow-md'}
+        ${isCurrentPlan ? 'ring-2 ring-brand-green' : ''}
+      `}
+    >
+      {isPopular && (
+        <div className="bg-brand-blue py-1 px-4 absolute top-0 right-0 rounded-bl-xl text-white text-xs font-medium">
+          Most Popular
+        </div>
+      )}
+      
+      {isCurrentPlan && !trialBadge && (
+        <div className="bg-brand-green py-1 px-4 absolute top-0 left-0 rounded-br-xl text-white text-xs font-medium">
+          Current Plan
+        </div>
+      )}
+
+      {trialBadge && (
+        <div className="bg-amber-500 py-1 px-4 absolute top-0 left-0 rounded-br-xl text-white text-xs font-medium flex items-center">
+          <Clock className="h-3 w-3 mr-1" /> Trial Active
+        </div>
+      )}
+      
+      <div className="p-6 flex-1">
+        <h3 className="text-2xl font-semibold">{title}</h3>
+        <p className="text-sm text-gray-500 mb-4">{description}</p>
+        
+        <div className="mb-6">
+          <div className="flex items-end">
+            {price}
+          </div>
+          {priceDescription && (
+            <p className="text-sm text-gray-500">{priceDescription}</p>
+          )}
+        </div>
+        
+        {type === 'enterprise' ? renderEnterpriseSizeSelector() : null}
+        {type === 'enterprise' ? renderEnterpriseFeatures() : (
+          <ul className="space-y-2 mb-6">
+            {features.map((item, index) => renderFeatureItem(item, index))}
+          </ul>
+        )}
+      </div>
+      
+      <div className="p-6 pt-0">
+        <Button 
+          onClick={buttonAction}
+          variant={buttonVariant} 
+          disabled={disabled}
+          className={`w-full ${isPopular && buttonVariant === 'default' ? 'bg-brand-blue hover:bg-brand-blue/90' : ''}`}
+        >
           {buttonText}
         </Button>
-        
-        {type === 'enterprise' && <p className="text-xs text-center text-muted-foreground mt-2">
-            Custom pricing and features available upon request
-          </p>}
-      </CardFooter>
-    </Card>;
+      </div>
+    </div>
+  );
 };
+
 export default PricingPlanCard;

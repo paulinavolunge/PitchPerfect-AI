@@ -1,25 +1,39 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface StickyCTAProps {
   show: boolean;
   onClick: () => void;
+  text?: string;
 }
 
-const StickyCTA: React.FC<StickyCTAProps> = ({ show, onClick }) => {
-  if (!show) return null;
-
+const StickyCTA: React.FC<StickyCTAProps> = ({ 
+  show = true, 
+  onClick,
+  text = "Try Free Demo"
+}) => {
   return (
-    <div className="sticky-cta fixed bottom-6 left-0 right-0 flex justify-center z-40">
-      <Button 
-        onClick={onClick} 
-        className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-6 rounded-full shadow-lg animate-bounce-subtle"
-        size="lg"
-      >
-        Try It Free
-      </Button>
-    </div>
+    <AnimatePresence>
+      {show && (
+        <motion.div 
+          className="fixed bottom-6 right-6 z-40 sticky-cta"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Button
+            onClick={onClick}
+            size="lg"
+            className="rounded-full px-6 py-6 h-auto shadow-lg hover:shadow-xl bg-brand-blue hover:bg-brand-blue/90 text-white font-medium"
+          >
+            {text}
+          </Button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
