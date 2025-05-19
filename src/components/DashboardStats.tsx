@@ -44,8 +44,8 @@ const DashboardStats = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Key Metrics */}
-      <div className="grid grid-cols-3 lg:col-span-3 gap-6">
-        <Card className="col-span-3 sm:col-span-1">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:col-span-3 gap-6">
+        <Card className="col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Pitches</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
@@ -58,7 +58,7 @@ const DashboardStats = ({
           </CardContent>
         </Card>
         
-        <Card className="col-span-3 sm:col-span-1">
+        <Card className="col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -71,7 +71,7 @@ const DashboardStats = ({
           </CardContent>
         </Card>
         
-        <Card className="col-span-3 sm:col-span-1">
+        <Card className="col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Streak</CardTitle>
             <Flame className="h-4 w-4 text-muted-foreground" />
@@ -93,21 +93,18 @@ const DashboardStats = ({
           <CardTitle>Recent Pitch Activity</CardTitle>
         </CardHeader>
         <CardContent className="px-2">
-          <ChartContainer className="aspect-[4/3]" config={chartConfig}>
-            {/* Fix: Wrap the ResponsiveContainer in a React.Fragment to make it a single React element */}
-            <React.Fragment>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={recentPitches}>
-                  <XAxis dataKey="name" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="count" name="Pitches" fill="var(--color-pitch)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-              <ChartLegend>
-                <ChartLegendContent />
-              </ChartLegend>
-            </React.Fragment>
+          <ChartContainer className="aspect-[4/3] h-[300px] sm:h-[350px]" config={chartConfig}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={recentPitches}>
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" name="Pitches" fill="var(--color-pitch)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+            <ChartLegend>
+              <ChartLegendContent />
+            </ChartLegend>
           </ChartContainer>
         </CardContent>
       </Card>

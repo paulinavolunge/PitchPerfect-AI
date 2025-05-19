@@ -227,6 +227,33 @@
   .enhanced-card {
     @apply transition-all duration-300 transform hover:shadow-lg hover:-translate-y-1 rounded-lg border border-gray-100;
   }
+  
+  /* iOS Safari fix for content disappearing */
+  .ios-fix {
+    /* This is to prevent Safari from hiding overflow */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  /* Fix vertical height issues on iOS */
+  .min-h-ios-safe {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix for iOS fixed position */
+  .ios-fixed-safe {
+    position: fixed;
+    /* Additional padding for iOS devices to account for the safe area */
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Touch target size improvements for mobile taps */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 @layer utilities {
@@ -281,4 +308,44 @@
   .transition-smooth {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  
+  /* iOS Safari specific fixes */
+  @supports (-webkit-touch-callout: none) {
+    .h-screen {
+      height: -webkit-fill-available;
+    }
+    
+    .min-h-screen {
+      min-height: -webkit-fill-available;
+    }
+    
+    /* Fix for iOS sticky elements */
+    .sticky-ios-fix {
+      position: -webkit-sticky;
+      position: sticky;
+    }
+    
+    /* Fix for iOS overflow scrolling */
+    .scroll-ios {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+}
+
+/* Add iOS viewport fix to ensure proper rendering */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Make sure scrolling works properly on iOS */
+html {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Improve iOS touch interactions */
+a, button {
+  -webkit-tap-highlight-color: transparent;
 }

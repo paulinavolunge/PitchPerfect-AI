@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ const ReferralProgram = () => {
     monthsEarned: 0
   });
   
-  React.useEffect(() => {
+  useEffect(() => {
     // Fetch referral data for the current user
     const fetchReferralData = async () => {
       if (!user) return;
@@ -78,7 +78,7 @@ const ReferralProgram = () => {
   };
 
   return (
-    <Card>
+    <Card className="overflow-visible">
       <CardHeader className="bg-gradient-to-r from-purple-100 to-blue-50 pb-4">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl text-brand-dark">Referral Program</CardTitle>
@@ -94,7 +94,7 @@ const ReferralProgram = () => {
               you'll get <span className="font-semibold">1 month of free premium access</span>.
             </p>
             
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <Input 
                 value={referralLink} 
                 readOnly 

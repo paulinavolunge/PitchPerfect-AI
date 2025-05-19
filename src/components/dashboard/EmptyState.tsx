@@ -29,15 +29,15 @@ const EmptyState = ({
 
   return (
     <Card className="w-full border border-dashed border-gray-200">
-      <CardContent className="flex flex-col items-center justify-center p-10 text-center">
+      <CardContent className="flex flex-col items-center justify-center p-6 text-center">
         {icon}
         <h3 className="text-xl font-medium text-gray-900 mb-2">{title}</h3>
         <p className="text-gray-500 mb-6 max-w-md">{description}</p>
         
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <Button 
             onClick={() => navigate(actionRoute)}
-            className="bg-brand-green hover:bg-brand-green/90 text-white flex items-center gap-2"
+            className="bg-brand-green hover:bg-brand-green/90 text-white flex items-center gap-2 w-full sm:w-auto"
           >
             {actionLabel}
             <ArrowRight size={16} />
@@ -47,7 +47,7 @@ const EmptyState = ({
             <Button 
               variant="outline" 
               onClick={() => navigate(secondaryAction.route)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-auto"
             >
               {secondaryAction.label}
             </Button>

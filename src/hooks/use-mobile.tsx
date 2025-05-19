@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
@@ -16,4 +17,17 @@ export function useIsMobile() {
   }, [])
 
   return !!isMobile
+}
+
+export function useIsIOS() {
+  const [isIOS, setIsIOS] = React.useState(false)
+
+  React.useEffect(() => {
+    // Check for iOS devices
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    setIsIOS(isIOSDevice)
+  }, [])
+
+  return isIOS
 }
