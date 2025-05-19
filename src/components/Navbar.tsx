@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
 import { useGuestMode } from "@/context/GuestModeContext";
-import { Menu, UserPlus, LogIn } from 'lucide-react';
+import { Menu, UserPlus, LogIn, Home, UserRound } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,6 +45,18 @@ const Navbar: React.FC = () => {
       endGuestMode();
     }
     navigate('/login');
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (user?.user_metadata?.first_name && user?.user_metadata?.last_name) {
+      return `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name.charAt(0)}`;
+    } else if (user?.user_metadata?.name) {
+      return user.user_metadata.name.charAt(0);
+    } else if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return '';
   };
 
   // Navigation items
@@ -95,6 +107,19 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center">
             <NavigationMenu>
               <NavigationMenuList>
+                <NavigationMenuItem>
+                  <Link 
+                    to="/"
+                    className={`group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${
+                      location.pathname === '/' 
+                        ? 'bg-accent/50 text-accent-foreground' 
+                        : 'text-foreground'
+                    }`}
+                  >
+                    <Home className="h-4 w-4 mr-2" />
+                    Home
+                  </Link>
+                </NavigationMenuItem>
                 {mainNavItems.map(item => (
                   <NavigationMenuItem key={item.name}>
                     <Link 
@@ -133,6 +158,16 @@ const Navbar: React.FC = () => {
               <div className="grid gap-4 py-4">
                 {user ? (
                   <>
+                    <Link 
+                      to="/"
+                      className={`flex items-center py-2 px-3 rounded-md ${
+                        location.pathname === '/' 
+                          ? 'bg-brand-blue/10 text-brand-blue font-medium' 
+                          : 'text-brand-dark hover:bg-gray-100'
+                      }`}
+                    >
+                      <Home className="h-4 w-4 mr-2" /> Home
+                    </Link>
                     {userNavigationItems.map(item => (
                       <Link 
                         key={item.name} 
@@ -210,13 +245,19 @@ const Navbar: React.FC = () => {
                 <Button variant="ghost" className="h-10 w-10 p-0 rounded-full">
                   <Avatar className="h-9 w-9 border">
                     <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || "User"} />
-                    <AvatarFallback>{user?.user_metadata?.first_name?.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-brand-blue text-white">
+                      {getUserInitials() || <UserRound className="h-5 w-5" />}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/')}>
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </DropdownMenuItem>
                 {userNavigationItems.map(item => (
                   <DropdownMenuItem key={item.name} onClick={() => navigate(item.href)}>
                     {item.name}
@@ -226,7 +267,7 @@ const Navbar: React.FC = () => {
                 <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : isGuestMode ? (
+          ) : (
             <>
               {guestModeItems.map(item => (
                 <Link 
@@ -257,38 +298,6 @@ const Navbar: React.FC = () => {
                 className="bg-brand-blue hover:bg-brand-blue/90"
               >
                 <UserPlus className="h-4 w-4 mr-1" />
-                Sign Up
-              </Button>
-            </>
-          ) : (
-            <>
-              {guestNavigationItems.map(item => (
-                <Link 
-                  key={item.name} 
-                  to={item.href} 
-                  className={`font-medium ${
-                    location.pathname === item.href 
-                      ? 'text-brand-blue' 
-                      : 'text-brand-dark/90 hover:text-brand-blue'
-                  } hover:underline py-2 px-3 transition duration-300 ease-in-out`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={handleLogin}
-                className="ml-2"
-              >
-                Log In
-              </Button>
-              <Button 
-                variant="default"
-                size="sm"
-                onClick={handleSignup}
-                className="bg-brand-blue hover:bg-brand-blue/90"
-              >
                 Sign Up
               </Button>
             </>
