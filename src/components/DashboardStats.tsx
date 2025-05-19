@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -9,6 +8,7 @@ import {
 } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { Activity, TrendingUp, Users, Flame } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Chart config for colors
 const chartConfig = {
@@ -41,6 +41,8 @@ const DashboardStats = ({
     { category: 'Need', mastered: 0 },
   ]
 }: DashboardStatsProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Key Metrics */}
@@ -94,17 +96,19 @@ const DashboardStats = ({
         </CardHeader>
         <CardContent className="px-2">
           <ChartContainer className="aspect-[4/3] h-[300px] sm:h-[350px]" config={chartConfig}>
+            {/* Wrapping the children in a single ResponsiveContainer to fix the type error */}
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={recentPitches}>
                 <XAxis dataKey="name" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
                 <Bar dataKey="count" name="Pitches" fill="var(--color-pitch)" radius={[4, 4, 0, 0]} />
+                {/* Adding ChartLegend inside BarChart to keep it as a single element */}
+                <ChartLegend>
+                  <ChartLegendContent />
+                </ChartLegend>
               </BarChart>
             </ResponsiveContainer>
-            <ChartLegend>
-              <ChartLegendContent />
-            </ChartLegend>
           </ChartContainer>
         </CardContent>
       </Card>
