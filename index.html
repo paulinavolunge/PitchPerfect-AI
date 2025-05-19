@@ -1,26 +1,24 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#ffffff" />
     <link rel="icon" href="/favicon.ico" />
     <title>PitchPerfect AI</title>
-    <!-- Theme script to prevent flash -->
+    <!-- Force light theme -->
     <script>
       (function() {
+        // Always use light theme
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        
+        // Store light theme in localStorage to prevent flashing
         try {
-          // Get stored theme or check OS preference
-          const savedTheme = localStorage.getItem('theme');
-          const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          
-          // Set theme before the page renders
-          if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-            document.documentElement.classList.add('dark');
-          }
+          localStorage.setItem('theme', 'light');
         } catch (e) {
-          console.error('Error setting initial theme:', e);
+          console.error('Error setting theme:', e);
         }
       })();
     </script>

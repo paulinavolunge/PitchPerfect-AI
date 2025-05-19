@@ -1,10 +1,7 @@
-
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { useToast } from "@/hooks/use-toast"
-import { ThemeProvider } from '@/context/ThemeContext';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { HelmetProvider } from 'react-helmet-async';
 import MobileNavBar from '@/components/MobileNavBar';
@@ -91,7 +88,7 @@ function App() {
 
   return (
     <HelmetProvider>
-      <NextThemeProvider>
+      <NextThemeProvider forcedTheme="light">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <GuestModeProvider>
