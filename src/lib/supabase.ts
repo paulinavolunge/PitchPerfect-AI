@@ -11,6 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true, // Keep the session in localStorage
     autoRefreshToken: true, // Refresh token automatically
     detectSessionInUrl: true, // Detect session in URL for email confirmation
+    flowType: 'pkce', // Use PKCE flow for more secure authentication
   },
   global: {
     headers: {
@@ -43,6 +44,8 @@ supabase.auth.onAuthStateChange((event, session) => {
     console.log('User updated');
   } else if (event === 'PASSWORD_RECOVERY') {
     console.log('Password recovery requested');
+  } else if (event === 'USER_CREATED') {
+    console.log('User created successfully');
   }
 });
 

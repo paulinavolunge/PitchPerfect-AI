@@ -1,8 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
@@ -10,8 +8,37 @@ import Footer from '@/components/Footer';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import FadeTransition from '@/components/animations/FadeTransition';
+
+// Form schema for validation
+const signupSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .regex(/[0-9]/, { message: "Password must contain at least one number" })
+    .regex(/[^a-zA-Z0-9]/, { message: "Password must contain at least one special character" }),
+  confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -20,112 +47,89 @@ const Signup = () => {
   const [signupError, setSignupError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Initialize form
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    }
+  });
+
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
 
-    const checkEmailConfirmation = async () => {
-      const { error } = await supabase.auth.getSession();
-      if (!error) {
-        setSignupError(null);
-      }
-    };
-
+    // Check for hash params (email confirmation)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     if (hashParams.get('access_token') || hashParams.get('error_description')) {
-      checkEmailConfirmation();
+      const errorDescription = hashParams.get('error_description');
+      if (errorDescription) {
+        setSignupError(decodeURIComponent(errorDescription));
+        toast.error("Email confirmation failed", {
+          description: decodeURIComponent(errorDescription)
+        });
+      } else {
+        toast.success("Email verified successfully!", {
+          description: "You can now sign in to your account."
+        });
+      }
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    const handleAuthChange = (event: string, session: any) => {
-      if (event === 'USER_CREATED') {
-        setVerificationSent(true);
-        setSignupError(null);
-        setIsSubmitting(false);
-        toast.success("Account created successfully!", {
-          description: "Please check your email to verify your account."
-        });
-      } else if (event === 'SIGNUP' && session?.error) {
-        setSignupError(session.error.message);
-        setVerificationSent(false);
-        setIsSubmitting(false);
+  const onSubmit = async (data: SignupFormValues) => {
+    setIsSubmitting(true);
+    setSignupError(null);
+    
+    try {
+      // Call Supabase auth signup
+      const { data: userData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        }
+      });
 
-        const errorMsg = session.error.message.toLowerCase();
-        if (errorMsg.includes('password')) {
-          toast.error("Password error", {
-            description: "Password should be at least 8 characters with numbers and special characters."
-          });
-        } else if (errorMsg.includes('email')) {
-          toast.error("Invalid email", {
-            description: "Please enter a valid email address."
+      if (error) {
+        throw error;
+      }
+
+      if (userData) {
+        if (userData.user && !userData.user.email_confirmed_at) {
+          setVerificationSent(true);
+          toast.success("Signup successful!", {
+            description: "Please check your email to verify your account."
           });
         } else {
-          toast.error("Signup failed", {
-            description: session.error.message
-          });
+          // In case auto-confirm is enabled
+          toast.success("Account created successfully!");
+          navigate('/dashboard');
         }
       }
-    };
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const authAppearance = {
-    theme: ThemeSupa,
-    style: {
-      button: {
-        borderRadius: '0.375rem',
-        backgroundColor: 'rgb(22 163 74)',
-        color: 'white',
-        fontWeight: '500',
-        padding: '0.625rem 1rem',
-        transition: 'all 0.2s ease-in-out',
-      },
-      anchor: {
-        color: 'rgb(22 163 74)',
-        fontWeight: '500',
-      },
-      input: {
-        borderRadius: '0.375rem',
-        padding: '0.625rem 1rem',
-        borderWidth: '1px',
-        transition: 'all 0.2s ease-in-out',
-      },
-      message: {
-        color: 'rgb(220 38 38)',
-        fontSize: '0.875rem',
-        marginTop: '0.25rem',
-        fontWeight: '400',
-      },
-      container: {
-        gap: '1rem',
-      },
-      label: {
-        fontWeight: '500',
-        marginBottom: '0.25rem',
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      setSignupError(error.message || 'Failed to create account');
+      
+      const errorMsg = error.message.toLowerCase();
+      if (errorMsg.includes('password')) {
+        toast.error("Password error", {
+          description: "Password should be at least 8 characters with numbers and special characters."
+        });
+      } else if (errorMsg.includes('email')) {
+        toast.error("Invalid email", {
+          description: "Please enter a valid email address."
+        });
+      } else {
+        toast.error("Signup failed", {
+          description: error.message
+        });
       }
-    },
-    variables: {
-      default: {
-        colors: {
-          inputBorderFocus: 'rgb(22 163 74)',
-          inputBorderHover: 'rgb(22 163 74)',
-          inputBorderInvalid: 'rgb(220 38 38)',
-          brand: 'rgb(22 163 74)',
-          brandAccent: 'rgb(21 128 61)',
-        },
-      },
-    },
-  };
-
-  const handleBeforeSignup = () => {
-    setIsSubmitting(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleBackToHome = () => {
@@ -142,7 +146,7 @@ const Signup = () => {
             <p className="text-brand-dark/70 mt-2">Sign up to get started with PitchPerfect AI</p>
           </div>
 
-          {verificationSent && (
+          <FadeTransition show={verificationSent} duration={300} className="mb-6">
             <Alert className="mb-6 bg-green-50 border-green-200">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
               <AlertTitle className="text-green-700 font-semibold">Verification email sent!</AlertTitle>
@@ -150,9 +154,9 @@ const Signup = () => {
                 Please check your inbox and click the link to verify your email address.
               </AlertDescription>
             </Alert>
-          )}
+          </FadeTransition>
 
-          {signupError && (
+          <FadeTransition show={!!signupError} duration={300} className="mb-6">
             <Alert className="mb-6 bg-red-50 border-red-200">
               <AlertCircle className="h-5 w-5 text-red-500" />
               <AlertTitle className="text-red-700 font-semibold">Sign up error</AlertTitle>
@@ -160,7 +164,7 @@ const Signup = () => {
                 {signupError}
               </AlertDescription>
             </Alert>
-          )}
+          </FadeTransition>
 
           <Card className="shadow-lg border-gray-100">
             <CardHeader className="bg-white rounded-t-lg px-6 py-4 border-b border-gray-100">
@@ -175,21 +179,74 @@ const Signup = () => {
               </Button>
             </CardHeader>
             <CardContent className="pt-6">
-              <form onSubmit={handleBeforeSignup}>
-                <Auth
-                  supabaseClient={supabase}
-                  appearance={authAppearance}
-                  providers={[]}
-                  view="sign_up"
-                  showLinks={true}
-                  redirectTo={`${window.location.origin}/dashboard`}
-                  onlyThirdPartyProviders={false}
-                  magicLink={false}
-                  queryParams={{
-                    emailRedirectTo: `${window.location.origin}/dashboard`,
-                  }}
-                />
-              </form>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Enter your email" 
+                            autoComplete="email"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            placeholder="Create a password" 
+                            autoComplete="new-password"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            placeholder="Confirm your password" 
+                            autoComplete="new-password"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-brand-green hover:bg-green-600"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+                  </Button>
+                </form>
+              </Form>
               
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-500">
