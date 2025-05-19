@@ -39,6 +39,7 @@ import Terms from '@/pages/Terms';
 import NotFound from '@/pages/NotFound';
 import AccountDelete from '@/pages/AccountDelete';
 import DataSafety from '@/pages/DataSafety';
+import EmailConfirmed from '@/pages/EmailConfirmed';
 import { AuthProvider } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
 
@@ -121,6 +122,7 @@ function App() {
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/data-safety" element={<DataSafety />} />
                   <Route path="/account-delete" element={<AccountDelete />} />
+                  <Route path="/email-confirmed" element={<EmailConfirmed />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <MobileNavBar />

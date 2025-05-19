@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -72,9 +71,7 @@ const Signup = () => {
           description: decodeURIComponent(errorDescription)
         });
       } else {
-        toast.success("Email verified successfully!", {
-          description: "You can now sign in to your account."
-        });
+        navigate('/email-confirmed');
       }
     }
   }, [user, navigate]);

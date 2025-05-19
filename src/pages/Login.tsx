@@ -29,6 +29,16 @@ const Login = () => {
     if (searchParams.get('verified') === 'true') {
       setVerificationMessage("Email verified successfully! You can now log in.");
     }
+    
+    // Check for auth completion via hash parameters
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (hashParams.get('access_token') && !hashParams.get('error_description')) {
+      // Successfully authenticated via email confirmation
+      navigate('/email-confirmed');
+    } else if (hashParams.get('error_description')) {
+      // Handle the error in login page
+      setLoginError(decodeURIComponent(hashParams.get('error_description') || ''));
+    }
   }, [user, navigate, location]);
 
   useEffect(() => {
