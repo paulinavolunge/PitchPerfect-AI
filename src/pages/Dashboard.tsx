@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ArrowRight, FileAudio, Mic, Users, Bot } from 'lucide-react';
+import { ArrowRight, FileAudio, Mic, Users, Bot, Check } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
@@ -36,6 +36,7 @@ const Dashboard = () => {
   const [showMicTest, setShowMicTest] = useState(false);
   const [micTestPassed, setMicTestPassed] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
+  const [showFinalConfirmation, setShowFinalConfirmation] = useState(false);
   const navigate = useNavigate();
   const [showAISettings, setShowAISettings] = useState(false);
   
@@ -72,6 +73,32 @@ const Dashboard = () => {
       placement: 'top' as const,
       spotlightPadding: 10,
       title: 'Review Feedback',
+    },
+    {
+      target: 'body',
+      content: (
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="bg-green-100 rounded-full p-3">
+              <Check className="h-8 w-8 text-brand-green" />
+            </div>
+          </div>
+          <h2 className="text-xl font-bold mb-2">You're all set!</h2>
+          <p className="mb-4">You've completed the tour and you're ready to start using PitchPerfect AI.</p>
+          <Button 
+            onClick={() => setShowTour(false)} 
+            className="bg-brand-green hover:bg-brand-green/90"
+          >
+            Close
+          </Button>
+        </div>
+      ),
+      placement: 'center' as const,
+      disableBeacon: true,
+      hideBackButton: true,
+      hideCloseButton: true,
+      spotlightClicks: false,
+      disableOverlayClose: true,
     }
   ];
   

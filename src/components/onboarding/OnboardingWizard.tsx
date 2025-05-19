@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -66,6 +67,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
       onStartTour();
     }
   };
+  
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    }
+  };
 
   const handleSkip = () => {
     onOpenChange(false);
@@ -132,12 +139,22 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         )}
 
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between mt-2">
-          <Button 
-            variant="outline" 
-            onClick={handleSkip}
-          >
-            Skip
-          </Button>
+          {step > 0 ? (
+            <Button 
+              variant="outline" 
+              onClick={handleBack}
+              className="flex items-center gap-2"
+            >
+              Back
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              onClick={handleSkip}
+            >
+              Skip
+            </Button>
+          )}
           <Button 
             onClick={handleNext} 
             className="flex items-center gap-2 bg-brand-green hover:bg-brand-green/90"

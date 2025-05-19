@@ -54,6 +54,16 @@ const GuidedTour = ({
           stepIndex: nextStepIndex
         }));
       }
+    } else if (action === ACTIONS.PREV) {
+      // Handle going to previous step when the Back button is clicked
+      const prevStepIndex = index - 1;
+      
+      if (prevStepIndex >= 0) {
+        setTourState(prevState => ({
+          ...prevState,
+          stepIndex: prevStepIndex
+        }));
+      }
     }
     
     // Handle tour completion
