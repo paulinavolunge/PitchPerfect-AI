@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -241,6 +242,7 @@ const Signup = () => {
                     type="submit" 
                     className="w-full text-white bg-brand-green hover:bg-green-600 font-medium shadow-sm"
                     disabled={isSubmitting}
+                    style={{ opacity: 1 }} /* Ensure the button is always visible */
                   >
                     {isSubmitting ? 'Creating Account...' : 'Sign Up'}
                   </Button>
