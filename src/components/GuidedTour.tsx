@@ -32,12 +32,14 @@ const GuidedTour = ({
   });
 
   useEffect(() => {
+    console.log('GuidedTour useEffect - run:', run, 'stepIndex:', stepIndex);
     setTourState(prevState => ({
       ...prevState,
       run,
       stepIndex,
+      steps, // Update steps when they change too
     }));
-  }, [run, stepIndex]);
+  }, [run, stepIndex, steps]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, action, index, type } = data;
@@ -96,6 +98,14 @@ const GuidedTour = ({
       onComplete();
     }
   };
+
+  // Add debug message to see if component renders correctly
+  console.log('GuidedTour rendering:', { 
+    tourState, 
+    run: tourState.run,
+    stepIndex: tourState.stepIndex,
+    stepsLength: steps.length
+  });
 
   return (
     <Joyride

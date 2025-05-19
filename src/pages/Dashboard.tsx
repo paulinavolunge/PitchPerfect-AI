@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -184,15 +185,17 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Guided Tour */}
-      <GuidedTour
-        steps={tourSteps}
-        run={showTour}
-        onComplete={handleTourComplete}
-        continuous={true}
-        scrollToSteps={true}
-        spotlightClicks={false}
-      />
+      {/* Guided Tour - Show it above everything else with debugging info */}
+      {user && (
+        <GuidedTour
+          steps={tourSteps}
+          run={showTour}
+          onComplete={handleTourComplete}
+          continuous={true}
+          scrollToSteps={true}
+          spotlightClicks={false}
+        />
+      )}
       
       <ParallaxSection className="flex-grow pt-24 pb-12" depth={0.1}>
         <div className="container mx-auto px-4 overflow-x-hidden">
