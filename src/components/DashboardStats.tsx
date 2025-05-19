@@ -10,28 +10,6 @@ import {
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { Activity, TrendingUp, Users, Flame } from 'lucide-react';
 
-// Mock data for the stats
-const mockData = {
-  totalPitches: 28,
-  winRate: 72,
-  objectionMastery: 65,
-  recentPitches: [
-    { name: 'Mon', count: 3 },
-    { name: 'Tue', count: 5 },
-    { name: 'Wed', count: 2 },
-    { name: 'Thu', count: 4 },
-    { name: 'Fri', count: 6 },
-    { name: 'Sat', count: 1 },
-    { name: 'Sun', count: 0 },
-  ],
-  objectionCategories: [
-    { category: 'Price', mastered: 80 },
-    { category: 'Timing', mastered: 65 },
-    { category: 'Competition', mastered: 70 },
-    { category: 'Need', mastered: 45 },
-  ]
-};
-
 // Chart config for colors
 const chartConfig = {
   pitch: {
@@ -45,9 +23,24 @@ const chartConfig = {
 
 interface DashboardStatsProps {
   streakCount?: number;
+  pitchCount?: number;
+  winRate?: number | null;
+  recentPitches?: { name: string; count: number }[];
+  objectionCategories?: { category: string; mastered: number }[];
 }
 
-const DashboardStats = ({ streakCount = 0 }: DashboardStatsProps) => {
+const DashboardStats = ({ 
+  streakCount = 0, 
+  pitchCount = 0,
+  winRate = 0,
+  recentPitches = [],
+  objectionCategories = [
+    { category: 'Price', mastered: 0 },
+    { category: 'Timing', mastered: 0 },
+    { category: 'Competition', mastered: 0 },
+    { category: 'Need', mastered: 0 },
+  ]
+}: DashboardStatsProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Key Metrics */}
@@ -58,9 +51,9 @@ const DashboardStats = ({ streakCount = 0 }: DashboardStatsProps) => {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockData.totalPitches}</div>
+            <div className="text-2xl font-bold">{pitchCount}</div>
             <p className="text-xs text-muted-foreground">
-              +12% from last month
+              {pitchCount > 0 ? '+12% from last month' : 'No activity yet'}
             </p>
           </CardContent>
         </Card>
@@ -71,9 +64,9 @@ const DashboardStats = ({ streakCount = 0 }: DashboardStatsProps) => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockData.winRate}%</div>
+            <div className="text-2xl font-bold">{winRate ? `${winRate}%` : 'N/A'}</div>
             <div className="mt-2">
-              <Progress value={mockData.winRate} className="h-2" />
+              <Progress value={winRate || 0} className="h-2" />
             </div>
           </CardContent>
         </Card>
@@ -104,7 +97,7 @@ const DashboardStats = ({ streakCount = 0 }: DashboardStatsProps) => {
             {/* Fix: Wrap the ResponsiveContainer in a React.Fragment to make it a single React element */}
             <React.Fragment>
               <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={mockData.recentPitches}>
+                <BarChart data={recentPitches}>
                   <XAxis dataKey="name" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
@@ -126,7 +119,7 @@ const DashboardStats = ({ streakCount = 0 }: DashboardStatsProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockData.objectionCategories.map((category) => (
+            {objectionCategories.map((category) => (
               <div key={category.category} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="font-medium">{category.category}</div>

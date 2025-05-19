@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ArrowRight, FileAudio, Mic, Users, Bot, Check } from 'lucide-react';
+import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3 } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
@@ -28,6 +28,7 @@ import FadeTransition from '@/components/animations/FadeTransition';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import EmptyState from '@/components/dashboard/EmptyState';
 
 const TOUR_STORAGE_KEY = 'pitchperfect_tour_completed';
 
@@ -40,12 +41,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [showAISettings, setShowAISettings] = useState(false);
   
-  // Use our new hook for dashboard data and settings
+  // Use our updated hook for dashboard data and settings
   const {
     isLoading,
     isRefreshing,
     streakCount,
     settings,
+    dashboardData,
     updateSettings,
     refreshDashboardData
   } = useDashboardData();
@@ -288,7 +290,23 @@ const Dashboard = () => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5, delay: 0.4 }}
                         >
-                          <DashboardStats streakCount={streakCount} />
+                          {dashboardData.hasData ? (
+                            <DashboardStats 
+                              streakCount={streakCount} 
+                              pitchCount={dashboardData.pitchCount}
+                              winRate={dashboardData.winRate}
+                              recentPitches={dashboardData.recentPitches}
+                              objectionCategories={dashboardData.objectionCategories}
+                            />
+                          ) : (
+                            <EmptyState 
+                              title="No pitch data yet"
+                              description="Complete your first practice session to see your performance stats here."
+                              actionLabel="Start Your First Practice"
+                              actionRoute="/practice"
+                              icon={<BarChart3 className="h-12 w-12 text-gray-300 mb-4" />}
+                            />
+                          )}
                         </motion.div>
                       </motion.div>
                     </TabsContent>
@@ -299,33 +317,47 @@ const Dashboard = () => {
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <Card className="overflow-hidden shadow-md mb-8">
-                          <CardHeader className="bg-gradient-to-r from-brand-blue/10 to-brand-blue/5 pb-4">
-                            <CardTitle className="text-xl text-brand-dark">All Practice Sessions</CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-6">
-                            <div className="space-y-4">
-                              {[1, 2, 3, 4, 5].map((i) => (
-                                <motion.div 
-                                  key={i}
-                                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
-                                  whileHover={{ scale: 1.02 }}
-                                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                >
-                                  <div>
-                                    <h3 className="font-medium">Session #{i}</h3>
-                                    <p className="text-sm text-brand-dark/70">
-                                      {i} {i === 1 ? 'hour' : 'days'} ago • {Math.floor(Math.random() * 5) + 1}:{Math.floor(Math.random() * 60).toString().padStart(2, '0')} min
-                                    </p>
-                                  </div>
-                                  <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">
-                                    View Feedback
-                                  </Button>
-                                </motion.div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
+                        {dashboardData.hasData ? (
+                          <Card className="overflow-hidden shadow-md mb-8">
+                            <CardHeader className="bg-gradient-to-r from-brand-blue/10 to-brand-blue/5 pb-4">
+                              <CardTitle className="text-xl text-brand-dark">All Practice Sessions</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                              <div className="space-y-4">
+                                {[1, 2, 3].slice(0, Math.min(dashboardData.pitchCount, 3)).map((i) => (
+                                  <motion.div 
+                                    key={i}
+                                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
+                                    whileHover={{ scale: 1.02 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                  >
+                                    <div>
+                                      <h3 className="font-medium">Session #{i}</h3>
+                                      <p className="text-sm text-brand-dark/70">
+                                        {i} {i === 1 ? 'hour' : 'days'} ago • {Math.floor(Math.random() * 5) + 1}:{Math.floor(Math.random() * 60).toString().padStart(2, '0')} min
+                                      </p>
+                                    </div>
+                                    <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">
+                                      View Feedback
+                                    </Button>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          <EmptyState 
+                            title="No practice sessions yet"
+                            description="Start your first practice session to see your history here."
+                            actionLabel="Start Practice"
+                            actionRoute="/practice"
+                            icon={<FileAudio className="h-12 w-12 text-gray-300 mb-4" />}
+                            secondaryAction={{
+                              label: "Try Roleplay Instead",
+                              route: "/roleplay"
+                            }}
+                          />
+                        )}
                       </motion.div>
                     </TabsContent>
                     
@@ -342,7 +374,17 @@ const Dashboard = () => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5, delay: 0.5 }}
                         >
-                          <LeaderboardTable />
+                          {dashboardData.hasData ? (
+                            <LeaderboardTable />
+                          ) : (
+                            <EmptyState 
+                              title="Analysis not available yet"
+                              description="Complete more practice sessions to unlock detailed performance analysis."
+                              actionLabel="Start Practice"
+                              actionRoute="/practice"
+                              icon={<BarChart3 className="h-12 w-12 text-gray-300 mb-4" />}
+                            />
+                          )}
                         </motion.div>
                       </motion.div>
                     </TabsContent>
@@ -393,39 +435,51 @@ const Dashboard = () => {
                   <CardTitle className="text-xl text-brand-dark">Recent Practice Sessions</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <motion.div 
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                      <div>
-                        <h3 className="font-medium">Product Demo Pitch</h3>
-                        <p className="text-sm text-brand-dark/70">2 hours ago • 3:45 min</p>
-                      </div>
-                      <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">View Feedback</Button>
-                    </motion.div>
-                    
-                    <motion.div 
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                      <div>
-                        <h3 className="font-medium">Cold Call Introduction</h3>
-                        <p className="text-sm text-brand-dark/70">Yesterday • 2:12 min</p>
-                      </div>
-                      <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">View Feedback</Button>
-                    </motion.div>
-                    
-                    <Button 
-                      variant="outline" 
-                      className="w-full flex items-center justify-center gap-2 hover:scale-102 transition-transform"
-                    >
-                      View All Sessions
-                      <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-                    </Button>
-                  </div>
+                  {dashboardData.hasData ? (
+                    <div className="space-y-4">
+                      <motion.div 
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <div>
+                          <h3 className="font-medium">Product Demo Pitch</h3>
+                          <p className="text-sm text-brand-dark/70">2 hours ago • 3:45 min</p>
+                        </div>
+                        <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">View Feedback</Button>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <div>
+                          <h3 className="font-medium">Cold Call Introduction</h3>
+                          <p className="text-sm text-brand-dark/70">Yesterday • 2:12 min</p>
+                        </div>
+                        <Button variant="ghost" className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform">View Feedback</Button>
+                      </motion.div>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center gap-2 hover:scale-102 transition-transform"
+                      >
+                        View All Sessions
+                        <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-gray-500 mb-4">No practice sessions yet. Start your first practice to see your progress here.</p>
+                      <Button 
+                        onClick={() => navigate("/practice")} 
+                        className="bg-brand-green hover:bg-brand-green/90"
+                      >
+                        Start First Practice
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
               
