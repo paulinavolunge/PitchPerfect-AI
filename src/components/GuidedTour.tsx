@@ -80,6 +80,12 @@ const GuidedTour = ({
       disableScrolling={!scrollToSteps}
       scrollOffset={100} // Add some padding when scrolling to elements
       disableOverlayClose={true} // Prevent closing by clicking on the overlay
+      locale={{
+        last: "Finish Tour",  // Change the text of the last button
+        next: "Next",
+        skip: "Skip",
+        back: "Back"
+      }}
       styles={{
         options: {
           zIndex: 10000,
