@@ -46,7 +46,7 @@ const GuidedTour = ({
     console.log('Tour callback:', { status, action, index, type, stepsLength: steps.length });
     
     // Handle tour step navigation
-    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
+    if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
       // Update step index for next step
       if (action === ACTIONS.NEXT) {
         // Only advance if we're not already on the last step
