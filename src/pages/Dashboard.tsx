@@ -36,7 +36,6 @@ const Dashboard = () => {
   const [showMicTest, setShowMicTest] = useState(false);
   const [micTestPassed, setMicTestPassed] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
-  const [showFinalConfirmation, setShowFinalConfirmation] = useState(false);
   const navigate = useNavigate();
   const [showAISettings, setShowAISettings] = useState(false);
   
@@ -113,8 +112,11 @@ const Dashboard = () => {
     const hasTourBeenCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
     const isNewSession = sessionStorage.getItem('newSessionLogin') === 'true';
     
+    console.log('Tour status check:', { hasTourBeenCompleted, isNewSession, user: !!user });
+    
     if (user && (!hasTourBeenCompleted || isNewSession)) {
       // Show the tour if user is logged in and hasn't seen it before or explicitly requested it
+      console.log('Showing tour to user');
       setShowTour(true);
       
       // Clear the new session flag
@@ -131,6 +133,7 @@ const Dashboard = () => {
   
   const handleTourComplete = () => {
     // Save tour completion in localStorage
+    console.log('Tour completed, saving to localStorage');
     localStorage.setItem(TOUR_STORAGE_KEY, 'true');
     setTourCompleted(true);
     setShowTour(false);
@@ -141,6 +144,7 @@ const Dashboard = () => {
   
   const handleRestartTour = () => {
     // Remove tour completion flag and restart tour
+    console.log('Restarting tour');
     localStorage.removeItem(TOUR_STORAGE_KEY);
     setShowTour(true);
     setTourCompleted(false);

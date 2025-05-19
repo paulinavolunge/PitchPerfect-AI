@@ -51,10 +51,16 @@ const GuidedTour = ({
       if (action === ACTIONS.NEXT) {
         // Only advance if we're not already on the last step
         if (index < steps.length - 1) {
+          console.log(`Moving from step ${index} to step ${index + 1}`);
           setTourState(prevState => ({
             ...prevState,
             stepIndex: index + 1
           }));
+        } else {
+          // This is the last regular step, handle completion
+          console.log('Last step reached, completing tour');
+          setTourState(prevState => ({ ...prevState, run: false }));
+          onComplete();
         }
       }
     } else if (action === ACTIONS.PREV) {
@@ -62,13 +68,15 @@ const GuidedTour = ({
       const prevStepIndex = index - 1;
       
       if (prevStepIndex >= 0) {
+        console.log(`Moving back from step ${index} to step ${prevStepIndex}`);
         setTourState(prevState => ({
           ...prevState,
           stepIndex: prevStepIndex
         }));
       }
-    } else if (action === ACTIONS.CLOSE) {
-      // Handle when close button is clicked
+    } else if (action === ACTIONS.CLOSE || status === STATUS.SKIPPED) {
+      // Handle when close button is clicked or tour is skipped
+      console.log('Tour closed or skipped');
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
@@ -76,12 +84,14 @@ const GuidedTour = ({
     // Handle tour completion
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       // Tour is complete
+      console.log('Tour finished or skipped, status:', status);
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
     
     // Also handle primary button clicks on the final step (for the custom Close button)
     if (index === steps.length - 1 && type === EVENTS.STEP_AFTER) {
+      console.log('Final step action triggered');
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
