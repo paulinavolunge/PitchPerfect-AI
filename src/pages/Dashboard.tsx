@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,7 +87,13 @@ const Dashboard = () => {
           <h2 className="text-xl font-bold mb-2">You're all set!</h2>
           <p className="mb-4">You've completed the tour and you're ready to start using PitchPerfect AI.</p>
           <Button 
-            onClick={() => setShowTour(false)} 
+            onClick={() => {
+              // Explicitly handle the close button click
+              localStorage.setItem(TOUR_STORAGE_KEY, 'true');
+              setTourCompleted(true);
+              setShowTour(false);
+              toast.success('Tour completed! You\'re ready to start practicing.');
+            }} 
             className="bg-brand-green hover:bg-brand-green/90"
           >
             Close
@@ -97,7 +104,7 @@ const Dashboard = () => {
       disableBeacon: true,
       hideBackButton: true,
       hideCloseButton: true,
-      spotlightClicks: false,
+      spotlightClicks: true, // Enable clicking on the button in the spotlight
       disableOverlayClose: true,
     }
   ];

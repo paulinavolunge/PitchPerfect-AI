@@ -64,12 +64,21 @@ const GuidedTour = ({
           stepIndex: prevStepIndex
         }));
       }
+    } else if (action === ACTIONS.CLOSE) {
+      // Handle when close button is clicked
+      setTourState(prevState => ({ ...prevState, run: false }));
+      onComplete();
     }
     
     // Handle tour completion
-    // Fix: Use STATUS enum values directly for comparison instead of string literals
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       // Tour is complete
+      setTourState(prevState => ({ ...prevState, run: false }));
+      onComplete();
+    }
+    
+    // Also handle primary button clicks on the final step (for the custom Close button)
+    if (index === steps.length - 1 && type === EVENTS.STEP_AFTER) {
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
