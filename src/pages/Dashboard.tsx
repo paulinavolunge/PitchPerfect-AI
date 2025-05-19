@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +26,9 @@ import RefreshAnimation from '@/components/dashboard/RefreshAnimation';
 import FadeTransition from '@/components/animations/FadeTransition';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+
+const TOUR_STORAGE_KEY = 'pitchperfect_tour_completed';
 
 const Dashboard = () => {
   const { user, refreshSubscription } = useAuth();
@@ -47,33 +49,45 @@ const Dashboard = () => {
     refreshDashboardData
   } = useDashboardData();
   
-  // Define tour steps
+  // Define tour steps with clear IDs and better targeting
   const tourSteps: Step[] = [
     {
       target: '.tour-step-1',
       content: 'Start by selecting a scenario that you want to practice.',
       disableBeacon: true,
       placement: 'bottom' as const,
+      spotlightPadding: 10,
+      title: 'Select a Scenario',
     },
     {
       target: '.tour-step-2',
       content: 'Press the record button to start your practice session.',
       placement: 'bottom' as const,
+      spotlightPadding: 10,
+      title: 'Start Recording',
     },
     {
       target: '.tour-step-3',
       content: 'After your session, you\'ll see feedback and suggestions to improve your pitch.',
       placement: 'top' as const,
+      spotlightPadding: 10,
+      title: 'Review Feedback',
     }
   ];
   
   useEffect(() => {
     // Check if user has completed the tour before
-    const hasTourBeenShown = localStorage.getItem('tourCompleted');
+    const hasTourBeenCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
+    const isNewSession = sessionStorage.getItem('newSessionLogin') === 'true';
     
-    if (user && !hasTourBeenShown) {
-      // Show the tour if user is logged in and hasn't seen it before
+    if (user && (!hasTourBeenCompleted || isNewSession)) {
+      // Show the tour if user is logged in and hasn't seen it before or explicitly requested it
       setShowTour(true);
+      
+      // Clear the new session flag
+      sessionStorage.removeItem('newSessionLogin');
+    } else {
+      setTourCompleted(!!hasTourBeenCompleted);
     }
     
     // Refresh subscription status when dashboard loads
@@ -84,8 +98,19 @@ const Dashboard = () => {
   
   const handleTourComplete = () => {
     // Save tour completion in localStorage
-    localStorage.setItem('tourCompleted', 'true');
+    localStorage.setItem(TOUR_STORAGE_KEY, 'true');
     setTourCompleted(true);
+    setShowTour(false);
+    
+    // Show a toast message when the tour is completed
+    toast.success('Tour completed! You\'re ready to start practicing.');
+  };
+  
+  const handleRestartTour = () => {
+    // Remove tour completion flag and restart tour
+    localStorage.removeItem(TOUR_STORAGE_KEY);
+    setShowTour(true);
+    setTourCompleted(false);
   };
   
   const handleStartPractice = () => {
@@ -127,6 +152,9 @@ const Dashboard = () => {
         steps={tourSteps}
         run={showTour}
         onComplete={handleTourComplete}
+        continuous={true}
+        scrollToSteps={true}
+        spotlightClicks={false}
       />
       
       <ParallaxSection className="flex-grow pt-24 pb-12" depth={0.1}>

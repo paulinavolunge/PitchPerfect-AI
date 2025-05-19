@@ -56,6 +56,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
       setStep(step + 1);
     } else {
       onOpenChange(false);
+      
+      // Set a flag in sessionStorage to indicate a new session
+      sessionStorage.setItem('newSessionLogin', 'true');
+      
+      // Remove any existing tour completion flag to ensure the tour runs
+      localStorage.removeItem('pitchperfect_tour_completed');
+      
+      // Start the guided tour
       onStartTour();
     }
   };
@@ -63,6 +71,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   const handleSkip = () => {
     onOpenChange(false);
     localStorage.setItem('hasCompletedOnboarding', 'true');
+    localStorage.setItem('pitchperfect_tour_completed', 'true'); // Also mark tour as completed if skipped
   };
 
   const handleGoToFeature = (path: string) => {

@@ -11,6 +11,7 @@ interface GuidedTourProps {
   stepIndex?: number;
   spotlightClicks?: boolean;
   styles?: any;
+  scrollToSteps?: boolean;
 }
 
 const GuidedTour = ({ 
@@ -21,7 +22,8 @@ const GuidedTour = ({
   continuous = true,
   stepIndex = 0,
   spotlightClicks = false,
-  styles = {}
+  styles = {},
+  scrollToSteps = true
 }: GuidedTourProps) => {
   const [tourState, setTourState] = useState({
     run,
@@ -38,15 +40,25 @@ const GuidedTour = ({
   }, [run, stepIndex]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, action, index } = data;
+    const { status, action, index, type } = data;
     
-    // Fix: Check the status against the STATUS enum values directly
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+    // Handle tour step navigation
+    if (type === EVENTS.STEP_AFTER || action === ACTIONS.NEXT) {
+      // Update step index for next step
+      const nextStepIndex = index + 1;
+      
+      // If there are more steps, move to the next one
+      if (nextStepIndex < steps.length) {
+        setTourState(prevState => ({
+          ...prevState,
+          stepIndex: nextStepIndex
+        }));
+      }
+    }
+    
+    // Handle tour completion
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
       // Tour is complete
-      setTourState(prevState => ({ ...prevState, run: false }));
-      onComplete();
-    } else if (action === ACTIONS.NEXT && index === steps.length - 1) {
-      // Last step
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
@@ -58,13 +70,15 @@ const GuidedTour = ({
       continuous={continuous}
       hideCloseButton={false}
       run={tourState.run}
-      scrollToFirstStep
+      scrollToFirstStep={scrollToSteps}
       showProgress
       showSkipButton={showSkipButton}
       stepIndex={tourState.stepIndex}
       steps={steps}
       spotlightClicks={spotlightClicks}
-      disableScrolling={false}
+      disableScrolling={!scrollToSteps}
+      scrollOffset={100} // Add some padding when scrolling to elements
+      disableOverlayClose={true} // Prevent closing by clicking on the overlay
       styles={{
         options: {
           zIndex: 10000,
@@ -72,6 +86,18 @@ const GuidedTour = ({
           backgroundColor: '#ffffff',
           textColor: '#334155', // brand-dark
           arrowColor: '#ffffff',
+        },
+        buttonNext: {
+          backgroundColor: '#16a34a',
+          color: '#ffffff',
+          fontSize: '14px',
+          borderRadius: '4px',
+          padding: '8px 16px',
+        },
+        buttonBack: {
+          color: '#334155',
+          fontSize: '14px',
+          marginRight: '10px',
         },
         buttonSkip: {
           color: '#334155',
