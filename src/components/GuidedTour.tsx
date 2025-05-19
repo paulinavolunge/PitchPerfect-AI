@@ -32,7 +32,7 @@ const GuidedTour = ({
   });
 
   useEffect(() => {
-    console.log('GuidedTour useEffect - run:', run, 'stepIndex:', stepIndex);
+    console.log('GuidedTour useEffect - run:', run, 'stepIndex:', stepIndex, 'steps length:', steps.length);
     setTourState(prevState => ({
       ...prevState,
       run,
@@ -49,7 +49,6 @@ const GuidedTour = ({
     
     // Handle tour step navigation
     if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
-      // Update step index for next step
       if (action === ACTIONS.NEXT) {
         // Only advance if we're not already on the last step
         if (index < steps.length - 1) {
@@ -59,7 +58,7 @@ const GuidedTour = ({
             stepIndex: index + 1
           }));
         } else {
-          // This is the last regular step, handle completion
+          // This is the last step, handle completion
           console.log('Last step reached, completing tour');
           setTourState(prevState => ({ ...prevState, run: false }));
           onComplete();
@@ -78,7 +77,7 @@ const GuidedTour = ({
           stepIndex: prevStepIndex
         }));
       }
-    } 
+    }
     
     // Handle when close button is clicked or tour is skipped
     if (action === ACTIONS.CLOSE || status === STATUS.SKIPPED) {
@@ -101,65 +100,68 @@ const GuidedTour = ({
     tourState, 
     run: tourState.run,
     stepIndex: tourState.stepIndex,
-    stepsLength: steps.length
+    stepsLength: steps.length,
+    runFromProps: run
   });
 
   return (
-    <Joyride
-      callback={handleJoyrideCallback}
-      continuous={continuous}
-      hideCloseButton={false}
-      run={tourState.run}
-      scrollToFirstStep={scrollToSteps}
-      showProgress
-      showSkipButton={showSkipButton}
-      stepIndex={tourState.stepIndex}
-      steps={steps}
-      spotlightClicks={spotlightClicks}
-      disableScrolling={!scrollToSteps}
-      scrollOffset={100} // Add some padding when scrolling to elements
-      disableOverlayClose={true} // Prevent closing by clicking on the overlay
-      locale={{
-        last: "Finish",  // Change the text of the last button
-        next: "Next",
-        skip: "Skip",
-        back: "Back"
-      }}
-      styles={{
-        options: {
-          zIndex: 10000,
-          primaryColor: '#16a34a', // brand-green
-          backgroundColor: '#ffffff',
-          textColor: '#334155', // brand-dark
-          arrowColor: '#ffffff',
-        },
-        buttonNext: {
-          backgroundColor: '#16a34a',
-          color: '#ffffff',
-          fontSize: '14px',
-          borderRadius: '4px',
-          padding: '8px 16px',
-        },
-        buttonBack: {
-          color: '#334155',
-          fontSize: '14px',
-          marginRight: '10px',
-        },
-        buttonSkip: {
-          color: '#334155',
-          fontSize: '14px',
-          borderRadius: '4px',
-          border: '1px solid #e2e8f0',
-          padding: '8px 16px',
-          backgroundColor: 'transparent',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        },
-        spotlight: {
-          backgroundColor: 'transparent',
-        },
-        ...styles,
-      }}
-    />
+    <div data-testid="guided-tour" style={{ zIndex: 9999 }}>
+      <Joyride
+        callback={handleJoyrideCallback}
+        continuous={continuous}
+        hideCloseButton={false}
+        run={tourState.run}
+        scrollToFirstStep={scrollToSteps}
+        showProgress
+        showSkipButton={showSkipButton}
+        stepIndex={tourState.stepIndex}
+        steps={steps}
+        spotlightClicks={spotlightClicks}
+        disableScrolling={!scrollToSteps}
+        scrollOffset={100} // Add some padding when scrolling to elements
+        disableOverlayClose={true} // Prevent closing by clicking on the overlay
+        locale={{
+          last: "Finish",  // Change the text of the last button
+          next: "Next",
+          skip: "Skip",
+          back: "Back"
+        }}
+        styles={{
+          options: {
+            zIndex: 10000,
+            primaryColor: '#16a34a', // brand-green
+            backgroundColor: '#ffffff',
+            textColor: '#334155', // brand-dark
+            arrowColor: '#ffffff',
+          },
+          buttonNext: {
+            backgroundColor: '#16a34a',
+            color: '#ffffff',
+            fontSize: '14px',
+            borderRadius: '4px',
+            padding: '8px 16px',
+          },
+          buttonBack: {
+            color: '#334155',
+            fontSize: '14px',
+            marginRight: '10px',
+          },
+          buttonSkip: {
+            color: '#334155',
+            fontSize: '14px',
+            borderRadius: '4px',
+            border: '1px solid #e2e8f0',
+            padding: '8px 16px',
+            backgroundColor: 'transparent',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          },
+          spotlight: {
+            backgroundColor: 'transparent',
+          },
+          ...styles,
+        }}
+      />
+    </div>
   );
 };
 

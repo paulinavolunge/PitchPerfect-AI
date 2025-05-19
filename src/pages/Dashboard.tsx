@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,7 @@ const Dashboard = () => {
     refreshDashboardData
   } = useDashboardData();
   
-  // Define tour steps with clear IDs and better targeting - removed the 4th step
+  // Define tour steps with clear IDs and better targeting - three steps only
   const tourSteps: Step[] = [
     {
       target: '.tour-step-1',
