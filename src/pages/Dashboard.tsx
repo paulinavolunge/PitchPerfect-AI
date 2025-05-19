@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,21 +58,21 @@ const Dashboard = () => {
       disableBeacon: true,
       placement: 'bottom' as const,
       spotlightPadding: 10,
-      title: 'Select a Scenario',
+      title: 'Step 1: Select a Scenario',
     },
     {
       target: '.tour-step-2',
       content: 'Press the record button to start your practice session.',
       placement: 'bottom' as const,
       spotlightPadding: 10,
-      title: 'Start Recording',
+      title: 'Step 2: Start Recording',
     },
     {
       target: '.tour-step-3',
       content: 'After your session, you\'ll see feedback and suggestions to improve your pitch.',
       placement: 'top' as const,
       spotlightPadding: 10,
-      title: 'Review Feedback',
+      title: 'Step 3: Review Feedback',
     },
     {
       target: 'body',

@@ -42,17 +42,20 @@ const GuidedTour = ({
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, action, index, type } = data;
     
+    // For debugging
+    console.log('Tour callback:', { status, action, index, type, stepsLength: steps.length });
+    
     // Handle tour step navigation
-    if (type === EVENTS.STEP_AFTER || action === ACTIONS.NEXT) {
+    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
       // Update step index for next step
-      const nextStepIndex = index + 1;
-      
-      // If there are more steps, move to the next one
-      if (nextStepIndex < steps.length) {
-        setTourState(prevState => ({
-          ...prevState,
-          stepIndex: nextStepIndex
-        }));
+      if (action === ACTIONS.NEXT) {
+        // Only advance if we're not already on the last step
+        if (index < steps.length - 1) {
+          setTourState(prevState => ({
+            ...prevState,
+            stepIndex: index + 1
+          }));
+        }
       }
     } else if (action === ACTIONS.PREV) {
       // Handle going to previous step when the Back button is clicked
