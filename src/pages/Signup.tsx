@@ -238,16 +238,14 @@ const Signup = () => {
                     )}
                   />
                   
-                  <Button 
-                    type="submit" 
-                    className="w-full text-white bg-brand-green hover:bg-green-600 font-medium shadow-sm"
-                    disabled={isSubmitting}
-                    style={{ opacity: 1 }} /* Ensure the button is always visible */
-                  >
-                    {isSubmitting ? 'Creating Account...' : 'Sign Up'}
-                  </Button>
-                </form>
-              </Form>
+           <Button 
+  type="submit" 
+  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded shadow-md transition-all duration-150"
+  disabled={isSubmitting}
+>
+  {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+</Button>
+
               
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-500">
