@@ -44,8 +44,17 @@ supabase.auth.onAuthStateChange((event, session) => {
     console.log('User updated');
   } else if (event === 'PASSWORD_RECOVERY') {
     console.log('Password recovery requested');
-  } else if (event === 'USER_CREATED') {
-    console.log('User created successfully');
+  } else if (event === 'TOKEN_REFRESHED') {
+    // This event happens when a user's session token is refreshed
+    console.log('User session refreshed');
+  } else if (event === 'INITIAL_SESSION') {
+    // This event happens when the initial session is loaded
+    console.log('Initial session loaded');
+    // We can use this to detect a new user that just registered
+    if (session?.user?.app_metadata?.provider === 'email' && 
+        session?.user?.created_at === session?.user?.updated_at) {
+      console.log('New user created via email');
+    }
   }
 });
 
@@ -74,3 +83,4 @@ export const invokeSafeFunction = async (functionName: string, options?: any) =>
 // Export the length of the encryption key used for RLS policies
 // This helps with debugging RLS policies that might depend on encrypted fields
 export const ENCRYPTION_KEY_LENGTH = 256;
+
