@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
 
 const Navbar: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -70,6 +71,14 @@ const Navbar: React.FC = () => {
     { name: 'Role Play', href: '/roleplay' },
     { name: 'Demo', href: '/demo' }
   ];
+
+  // Main navigation items for authenticated users
+  const mainNavItems = [
+    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Practice', href: '/practice' },
+    { name: 'Role Play', href: '/roleplay' },
+    { name: 'Tips', href: '/tips' }
+  ];
   
   return (
     <nav 
@@ -83,6 +92,30 @@ const Navbar: React.FC = () => {
             PitchPerfect AI
           </span>
         </Link>
+        
+        {/* Main Navigation Menu for authenticated users */}
+        {user && !isGuestMode && (
+          <div className="hidden md:flex items-center">
+            <NavigationMenu>
+              <NavigationMenuList>
+                {mainNavItems.map(item => (
+                  <NavigationMenuItem key={item.name}>
+                    <Link 
+                      to={item.href}
+                      className={`group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${
+                        location.pathname === item.href 
+                          ? 'bg-accent/50 text-accent-foreground' 
+                          : 'text-foreground'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  </NavigationMenuItem>
+                ))}
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+        )}
         
         <div className="flex items-center md:order-3">
           {/* Theme Toggle */}

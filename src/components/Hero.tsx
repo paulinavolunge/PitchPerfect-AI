@@ -129,15 +129,19 @@ const Hero = () => {
               Start Demo
               <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
             </Button>
-            <Button 
-              variant="ghost" 
-              className="bg-white text-brand-dark hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-              onClick={handleTryAsGuest}
-              aria-label="Try as Guest"
-            >
-              <UserPlus className="group-hover:scale-110 transition-transform" size={isMobile ? 20 : 18} />
-              Try as Guest
-            </Button>
+            
+            {/* Only show the Try as Guest button if user is not authenticated */}
+            {!user && (
+              <Button 
+                variant="ghost" 
+                className="bg-white text-brand-dark hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
+                onClick={handleTryAsGuest}
+                aria-label="Try as Guest"
+              >
+                <UserPlus className="group-hover:scale-110 transition-transform" size={isMobile ? 20 : 18} />
+                Try as Guest
+              </Button>
+            )}
           </motion.div>
           <p className="text-sm text-brand-dark/60">
             Trusted by 10,000+ sales professionals from leading companies
