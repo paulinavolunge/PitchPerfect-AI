@@ -144,7 +144,9 @@ const PlanComparison: React.FC<PlanComparisonProps> = ({
 
   const handleTrialClick = async (e: React.MouseEvent) => {
     e.preventDefault();
-    await startFreeTrial();
+    // Instead of using the separate startFreeTrial function,
+    // we'll use the same checkout flow which now has trial_period_days set to 7
+    await onUpgradeClick();
   };
 
   return (
@@ -171,8 +173,9 @@ const PlanComparison: React.FC<PlanComparisonProps> = ({
                 variant="outline" 
                 className="mt-6 w-full"
                 onClick={handleTrialClick}
-                disabled={isPremium}
+                disabled={isPremium || isLoading}
               >
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isPremium ? 'Available Features' : 'Start 7-Day Free Trial'}
               </Button>
             ) : (

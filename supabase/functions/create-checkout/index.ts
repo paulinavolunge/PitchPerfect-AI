@@ -45,11 +45,16 @@ serve(async (req) => {
       reqBody = {};
     }
 
-    const priceType = reqBody.price || "monthly";
+    // Extract priceId from request body or fallback to environment variables
+    const priceId = reqBody.priceId || "";
     const successUrl = reqBody.successUrl || `${req.headers.get("origin")}/subscription?success=true`;
     const cancelUrl = reqBody.cancelUrl || `${req.headers.get("origin")}/subscription?canceled=true`;
 
-    logStep("Request parameters", { priceType, successUrl, cancelUrl });
+    logStep("Request parameters", { priceId, successUrl, cancelUrl });
+
+    if (!priceId) {
+      throw new Error("Missing required priceId parameter");
+    }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2023-10-16" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -63,22 +68,11 @@ serve(async (req) => {
       customerId = newCustomer.id;
       logStep("Created new customer", { customerId });
     }
-
-    // Get price IDs from environment variables
-    const MONTHLY_PRICE_ID = Deno.env.get("STRIPE_MONTHLY_PRICE_ID");
-    const YEARLY_PRICE_ID = Deno.env.get("STRIPE_YEARLY_PRICE_ID");
     
-    if (!MONTHLY_PRICE_ID || !YEARLY_PRICE_ID) {
-      throw new Error("Missing required Stripe price IDs in environment variables");
-    }
-    
-    logStep("Retrieved price IDs", { 
-      monthly: MONTHLY_PRICE_ID.substring(0, 5) + "...", 
-      yearly: YEARLY_PRICE_ID.substring(0, 5) + "..." 
+    logStep("Creating checkout session with price", { 
+      priceId: priceId.substring(0, 5) + "..."
     });
 
-    const priceId = priceType === "yearly" ? YEARLY_PRICE_ID : MONTHLY_PRICE_ID;
-    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
@@ -90,17 +84,18 @@ serve(async (req) => {
       mode: "subscription",
       success_url: successUrl,
       cancel_url: cancelUrl,
+      trial_period_days: 7,
+      automatic_tax: { enabled: true },
       // Add metadata to track the subscription
       metadata: {
         user_id: user.id,
-        email: user.email,
-        plan: priceType
+        email: user.email
       }
     });
 
     logStep("Checkout session created", { sessionId: session.id });
 
-    return new Response(JSON.stringify({ url: session.url }), {
+    return new Response(JSON.stringify({ sessionId: session.id, url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

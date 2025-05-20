@@ -9,10 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { CheckIcon, XIcon, Gift, Clock } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
+import { CheckIcon, XIcon, Gift, Clock, Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { loadStripe } from '@stripe/stripe-js';
+
+// Initialize Stripe with your publishable key
+const stripePromise = loadStripe('pk_test_your_stripe_publishable_key_here');
 
 const Subscription = () => {
   const { toast } = useToast();
@@ -70,9 +73,15 @@ const Subscription = () => {
 
     setIsLoading(true);
     try {
+      // Determine which price to use based on the selected plan type
+      const priceId = planType === "monthly" 
+        ? process.env.STRIPE_MONTHLY_PRICE_ID || Deno.env.get("STRIPE_MONTHLY_PRICE_ID")
+        : process.env.STRIPE_YEARLY_PRICE_ID || Deno.env.get("STRIPE_YEARLY_PRICE_ID");
+      
+      // Call create-checkout edge function with priceId
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
-          price: planType, // "monthly" or "yearly"
+          priceId,
           successUrl: `${window.location.origin}/subscription?success=true`,
           cancelUrl: `${window.location.origin}/subscription?canceled=true`,
         }
@@ -82,7 +91,23 @@ const Subscription = () => {
         throw new Error(error.message);
       }
 
-      if (data?.url) {
+      if (data?.sessionId) {
+        // Load Stripe and redirect to checkout
+        const stripe = await stripePromise;
+        if (!stripe) {
+          throw new Error("Failed to load Stripe");
+        }
+        
+        const { error: stripeError } = await stripe.redirectToCheckout({
+          sessionId: data.sessionId
+        });
+        
+        if (stripeError) {
+          console.error('Stripe redirect error:', stripeError);
+          throw new Error(stripeError.message);
+        }
+      } else if (data?.url) {
+        // Fallback to URL redirect if sessionId not available
         window.location.href = data.url;
       }
     } catch (error) {
@@ -123,6 +148,12 @@ const Subscription = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTrialClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Use the same checkout flow but indicate it's for a trial
+    await handleUpgradeClick();
   };
 
   // Handle URL query parameters for success/cancel
