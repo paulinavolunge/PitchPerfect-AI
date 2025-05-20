@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ type PlanComparisonProps = {
   onUpgradeClick: () => void;
   isLoading: boolean;
   planType: "monthly" | "yearly";
+  trialActive?: boolean;
 };
 
 const features: PlanFeature[] = [
@@ -132,8 +132,14 @@ const enterprisePackages: EnterprisePackage[] = [
   }
 ];
 
-const PlanComparison: React.FC<PlanComparisonProps> = ({ isPremium, onUpgradeClick, isLoading, planType }) => {
-  const { trialActive, startFreeTrial } = useAuth();
+const PlanComparison: React.FC<PlanComparisonProps> = ({ 
+  isPremium, 
+  onUpgradeClick, 
+  isLoading, 
+  planType,
+  trialActive = false 
+}) => {
+  const { startFreeTrial } = useAuth();
   const [selectedEnterprise, setSelectedEnterprise] = React.useState<number>(0);
 
   const handleTrialClick = async (e: React.MouseEvent) => {
