@@ -36,7 +36,11 @@ const Navbar: React.FC = () => {
 
   // Add auth debugging
   useEffect(() => {
-    console.log('Auth state in Navbar:', { user, isGuestMode });
+    console.log('Auth state in Navbar:', { 
+      user, 
+      isGuestMode, 
+      showAuthenticatedUI: user !== null && !isGuestMode,
+    });
   }, [user, isGuestMode]);
 
   const handleSignup = () => {
@@ -53,12 +57,16 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  // Handle logout with improved state cleanup
+  // Handle logout with improved state cleanup and forced navigation
   const handleSignOut = async () => {
     try {
       await signOut();
-      // Force navigation to home page to ensure state is reset
+      // Force navigation to home page with replace to prevent back navigation
       navigate('/', { replace: true });
+      // Add a small delay before triggering a page refresh to ensure state is cleared
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     } catch (error) {
       console.error('Error during sign out:', error);
     }
@@ -66,11 +74,13 @@ const Navbar: React.FC = () => {
 
   // Get user initials for avatar
   const getUserInitials = () => {
-    if (user?.user_metadata?.first_name && user?.user_metadata?.last_name) {
+    if (!user) return '';
+    
+    if (user.user_metadata?.first_name && user.user_metadata?.last_name) {
       return `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name.charAt(0)}`;
-    } else if (user?.user_metadata?.name) {
+    } else if (user.user_metadata?.name) {
       return user.user_metadata.name.charAt(0);
-    } else if (user?.email) {
+    } else if (user.email) {
       return user.email.charAt(0).toUpperCase();
     }
     return '';
@@ -107,7 +117,8 @@ const Navbar: React.FC = () => {
   ];
 
   // Determine if we should show the authenticated UI elements
-  const showAuthenticatedUI = user !== null && !isGuestMode;
+  // Strict check to ensure user is not null AND we're not in guest mode
+  const showAuthenticatedUI = Boolean(user) && !isGuestMode;
   
   return (
     <nav 

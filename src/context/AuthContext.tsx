@@ -139,6 +139,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Clear state completely in case of error
           setUser(null);
           setSession(null);
+          setIsPremium(false);
+          setSubscriptionTier(null);
+          setSubscriptionEnd(null);
+          setTrialActive(false);
+          setTrialEndsAt(null);
+          setEmailVerified(false);
         } else {
           setSession(data.session);
           setUser(data.session?.user ?? null);
@@ -164,6 +170,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Clear state in case of error
         setUser(null);
         setSession(null);
+        setIsPremium(false);
+        setSubscriptionTier(null);
+        setSubscriptionEnd(null);
+        setTrialActive(false);
+        setTrialEndsAt(null);
+        setEmailVerified(false);
       } finally {
         setLoading(false);
       }
@@ -238,9 +250,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
-      
-      // Clear all user state
+      // First clear all user state completely before calling signOut
+      // This ensures UI updates immediately even before the auth state change event
       setUser(null);
       setSession(null);
       setIsPremium(false);
@@ -249,6 +260,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setTrialActive(false);
       setTrialEndsAt(null);
       setEmailVerified(false);
+      
+      // Then call Supabase signOut
+      await supabase.auth.signOut();
       
       toast({
         title: "Signed out successfully",
