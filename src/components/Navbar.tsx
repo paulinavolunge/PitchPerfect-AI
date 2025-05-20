@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
@@ -34,12 +33,14 @@ const Navbar: React.FC = () => {
     };
   }, []);
 
-  // Add auth debugging
+  // Add auth debugging with expanded logging
   useEffect(() => {
     console.log('Auth state in Navbar:', { 
       user, 
       isGuestMode, 
-      showAuthenticatedUI: user !== null && !isGuestMode,
+      user_is_null: user === null,
+      user_type: typeof user,
+      showAuthenticatedUI: Boolean(user) && !isGuestMode,
     });
   }, [user, isGuestMode]);
 
@@ -57,16 +58,12 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  // Handle logout with improved state cleanup and forced navigation
+  // Handle logout with improved state cleanup, forced navigation, and page reload
   const handleSignOut = async () => {
     try {
       await signOut();
-      // Force navigation to home page with replace to prevent back navigation
-      navigate('/', { replace: true });
-      // Add a small delay before triggering a page refresh to ensure state is cleared
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      // Completely reset the app state after logout
+      window.location.href = '/'; // Force a full page reload and navigation to home
     } catch (error) {
       console.error('Error during sign out:', error);
     }
@@ -117,8 +114,8 @@ const Navbar: React.FC = () => {
   ];
 
   // Determine if we should show the authenticated UI elements
-  // Strict check to ensure user is not null AND we're not in guest mode
-  const showAuthenticatedUI = Boolean(user) && !isGuestMode;
+  // Extra strict check to ensure user is truly authenticated
+  const showAuthenticatedUI = Boolean(user) && user !== null && !isGuestMode;
   
   return (
     <nav 

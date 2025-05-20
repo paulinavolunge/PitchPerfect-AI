@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Rocket, UserPlus, Clock } from 'lucide-react';
@@ -43,6 +42,16 @@ const Hero = () => {
       window.removeEventListener('start-demo-auto', handleDemoStart);
     };
   }, []);
+
+  // Add debug logging
+  useEffect(() => {
+    console.log('Hero component auth state:', { 
+      user_exists: Boolean(user), 
+      isPremium, 
+      trialActive, 
+      trialEndsAt 
+    });
+  }, [user, isPremium, trialActive, trialEndsAt]);
 
   const handleScrollToDemo = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -98,9 +107,10 @@ const Hero = () => {
     navigate('/roleplay');
   };
 
-  // Render appropriate button based on user status
+  // Render appropriate button based on user status with extra safety checks
   const renderActionButton = () => {
-    if (!user) {
+    // Additional safety check to ensure user is truly null when it should be
+    if (!user || user === null) {
       // Case 1: User is not logged in
       return (
         <Button 
