@@ -9,10 +9,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper logging function for debugging
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  logStep("Function started");
 
   // Create a Supabase client
   const supabaseClient = createClient(
@@ -26,6 +34,8 @@ serve(async (req) => {
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+    
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Get the request body
     let reqBody;
@@ -39,27 +49,41 @@ serve(async (req) => {
     const successUrl = reqBody.successUrl || `${req.headers.get("origin")}/subscription?success=true`;
     const cancelUrl = reqBody.cancelUrl || `${req.headers.get("origin")}/subscription?canceled=true`;
 
+    logStep("Request parameters", { priceType, successUrl, cancelUrl });
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2023-10-16" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      logStep("Using existing customer", { customerId });
     } else {
       // Create a new customer
       const newCustomer = await stripe.customers.create({ email: user.email });
       customerId = newCustomer.id;
+      logStep("Created new customer", { customerId });
     }
 
-    // Define price IDs for monthly and yearly plans
-    // In production, these would come from environment variables
-    const MONTHLY_PRICE_ID = Deno.env.get("STRIPE_MONTHLY_PRICE_ID") || "price_monthly";
-    const YEARLY_PRICE_ID = Deno.env.get("STRIPE_YEARLY_PRICE_ID") || "price_yearly";
+    // Get price IDs from environment variables
+    const MONTHLY_PRICE_ID = Deno.env.get("STRIPE_MONTHLY_PRICE_ID");
+    const YEARLY_PRICE_ID = Deno.env.get("STRIPE_YEARLY_PRICE_ID");
+    
+    if (!MONTHLY_PRICE_ID || !YEARLY_PRICE_ID) {
+      throw new Error("Missing required Stripe price IDs in environment variables");
+    }
+    
+    logStep("Retrieved price IDs", { 
+      monthly: MONTHLY_PRICE_ID.substring(0, 5) + "...", 
+      yearly: YEARLY_PRICE_ID.substring(0, 5) + "..." 
+    });
 
+    const priceId = priceType === "yearly" ? YEARLY_PRICE_ID : MONTHLY_PRICE_ID;
+    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
         {
-          price: priceType === "yearly" ? YEARLY_PRICE_ID : MONTHLY_PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -74,12 +98,16 @@ serve(async (req) => {
       }
     });
 
+    logStep("Checkout session created", { sessionId: session.id });
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
