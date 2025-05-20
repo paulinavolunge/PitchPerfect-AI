@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -24,11 +23,11 @@ import {
 } from '@/components/ui/form';
 import FadeTransition from '@/components/animations/FadeTransition';
 
-// Form schema for validation - using only the standard email validation pattern
+// Form schema for validation - using exactly the standard email validation pattern
 const signupSchema = z.object({
   email: z.string().regex(
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    { message: "Please enter a valid email address" }
+    { message: "Invalid email address" }
   ),
   password: z
     .string()
@@ -60,6 +59,11 @@ const Signup = () => {
     }
   });
 
+  // Force reset form validation on component mount as requested
+  useEffect(() => {
+    form.reset();
+  }, []);
+
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
@@ -85,7 +89,7 @@ const Signup = () => {
     setSignupError(null);
     
     try {
-      // Call Supabase auth signup
+      // Call Supabase auth signup directly without additional validation
       const { data: userData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
