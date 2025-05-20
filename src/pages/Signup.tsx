@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -23,9 +24,9 @@ import {
 } from '@/components/ui/form';
 import FadeTransition from '@/components/animations/FadeTransition';
 
-// Form schema for validation - updated with standard email validation pattern
+// Form schema for validation - using only the standard email validation pattern
 const signupSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }).regex(
+  email: z.string().regex(
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     { message: "Please enter a valid email address" }
   ),
