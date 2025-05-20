@@ -75,8 +75,8 @@ const Subscription = () => {
     try {
       // Determine which price to use based on the selected plan type
       const priceId = planType === "monthly" 
-        ? process.env.STRIPE_MONTHLY_PRICE_ID || Deno.env.get("STRIPE_MONTHLY_PRICE_ID")
-        : process.env.STRIPE_YEARLY_PRICE_ID || Deno.env.get("STRIPE_YEARLY_PRICE_ID");
+        ? process.env.STRIPE_MONTHLY_PRICE_ID || process.env.VITE_STRIPE_MONTHLY_PRICE_ID
+        : process.env.STRIPE_YEARLY_PRICE_ID || process.env.VITE_STRIPE_YEARLY_PRICE_ID;
       
       // Call create-checkout edge function with priceId
       const { data, error } = await supabase.functions.invoke('create-checkout', {
