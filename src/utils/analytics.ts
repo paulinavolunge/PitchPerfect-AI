@@ -1,6 +1,7 @@
-// Google Analytics 4 Implementation with Google Tag Manager support
 
-// Initialize Google Analytics
+// Google Analytics 4 and Meta Pixel Implementation with Google Tag Manager support
+
+// Initialize Google Analytics and Meta Pixel
 export const initGA = () => {
   try {
     // Check if already initialized to prevent duplicate initialization
@@ -38,6 +39,11 @@ export const trackPageView = (path: string) => {
       page_location: window.location.href
     });
     
+    // Track pageview with Meta Pixel
+    if (window.fbq) {
+      window.fbq('track', 'PageView');
+    }
+    
     console.log(`Page view tracked via GTM: ${path}`);
   } catch (error) {
     console.error('Error tracking page view:', error);
@@ -61,6 +67,26 @@ export const trackEvent = (
       ...eventParams
     });
     
+    // Track event with Meta Pixel for specific conversion events
+    if (window.fbq) {
+      // Map common events to Meta Pixel standard events
+      const metaPixelEvents: Record<string, string> = {
+        'signup': 'CompleteRegistration',
+        'login': 'Lead',
+        'purchase': 'Purchase',
+        'start_trial': 'StartTrial',
+        'demo_started': 'Lead',
+        'subscription': 'Subscribe'
+      };
+      
+      if (metaPixelEvents[eventName]) {
+        window.fbq('track', metaPixelEvents[eventName], eventParams);
+      } else {
+        // Track custom event
+        window.fbq('trackCustom', eventName, eventParams);
+      }
+    }
+    
     console.log(`Event tracked via GTM: ${eventName}`, eventParams);
   } catch (error) {
     console.error(`Error tracking event ${eventName}:`, error);
@@ -72,5 +98,6 @@ declare global {
   interface Window {
     dataLayer: any[];
     gtag: (command: string, ...args: any[]) => void;
+    fbq: any;
   }
 }

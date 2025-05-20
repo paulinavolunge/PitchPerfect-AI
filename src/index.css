@@ -112,6 +112,35 @@
     @apply outline-2 outline-offset-2 outline-brand-blue;
   }
 
+  /* Improved tap target sizes on mobile and tablet */
+  @media (max-width: 1024px) {
+    button, 
+    a,
+    [role="button"],
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"],
+    .tap-target {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0.5rem;
+    }
+
+    /* Ensure link text remains properly sized */
+    a {
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    /* All icons in buttons need to be adequately sized */
+    button svg, 
+    a svg, 
+    [role="button"] svg {
+      min-width: 24px;
+      min-height: 24px;
+    }
+  }
+  
   /* Skip to content link for keyboard navigation */
   .skip-link {
     @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-brand-blue focus:font-medium focus:rounded-md focus:shadow-md;
@@ -199,7 +228,7 @@
     @apply animate-pulse bg-gray-200 rounded;
   }
   
-  /* Touch targets for mobile */
+  /* Enhanced touch targets for mobile */
   .touch-target {
     @apply min-h-[44px] min-w-[44px];
   }

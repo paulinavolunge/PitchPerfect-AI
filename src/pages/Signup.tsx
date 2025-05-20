@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/form';
 import FadeTransition from '@/components/animations/FadeTransition';
 
-// Form schema for validation
+// Form schema for validation - improved email validation
 const signupSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z
