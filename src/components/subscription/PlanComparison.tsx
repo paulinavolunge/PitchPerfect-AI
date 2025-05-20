@@ -258,6 +258,8 @@ const PlanComparison: React.FC<PlanComparisonProps> = ({
                 </>
               ) : isPremium ? (
                 'Current Plan'
+              ) : trialActive ? (
+                'Upgrade Now'
               ) : (
                 'Upgrade to Premium'
               )}

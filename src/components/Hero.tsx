@@ -101,6 +101,7 @@ const Hero = () => {
   // Render appropriate button based on user status
   const renderActionButton = () => {
     if (!user) {
+      // Case 1: User is not logged in
       return (
         <Button 
           className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
@@ -111,6 +112,7 @@ const Hero = () => {
         </Button>
       );
     } else if (trialActive) {
+      // Case 2: User is on a free trial
       return (
         <Button 
           className="bg-amber-500 hover:bg-amber-600 text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
@@ -122,16 +124,18 @@ const Hero = () => {
         </Button>
       );
     } else if (isPremium) {
+      // Case 3: User has premium subscription
       return (
         <Button 
           className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
           onClick={() => navigate('/dashboard')}
           aria-label="Go to Dashboard"
         >
-          Dashboard <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+          Go to Dashboard <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
         </Button>
       );
     } else {
+      // Case 4: User is logged in but trial has ended and not premium
       return (
         <Button 
           className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
