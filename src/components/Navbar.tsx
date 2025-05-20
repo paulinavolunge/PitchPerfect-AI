@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
@@ -33,6 +34,11 @@ const Navbar: React.FC = () => {
     };
   }, []);
 
+  // Add auth debugging
+  useEffect(() => {
+    console.log('Auth state in Navbar:', { user, isGuestMode });
+  }, [user, isGuestMode]);
+
   const handleSignup = () => {
     if (isGuestMode) {
       endGuestMode();
@@ -45,6 +51,17 @@ const Navbar: React.FC = () => {
       endGuestMode();
     }
     navigate('/login');
+  };
+
+  // Handle logout with improved state cleanup
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // Force navigation to home page to ensure state is reset
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
   };
 
   // Get user initials for avatar
@@ -88,6 +105,9 @@ const Navbar: React.FC = () => {
     { name: 'Role Play', href: '/roleplay' },
     { name: 'Tips', href: '/tips' }
   ];
+
+  // Determine if we should show the authenticated UI elements
+  const showAuthenticatedUI = user !== null && !isGuestMode;
   
   return (
     <nav 
@@ -103,7 +123,7 @@ const Navbar: React.FC = () => {
         </Link>
         
         {/* Main Navigation Menu for authenticated users */}
-        {user && !isGuestMode && (
+        {showAuthenticatedUI && (
           <div className="hidden md:flex items-center">
             <NavigationMenu>
               <NavigationMenuList>
@@ -156,7 +176,7 @@ const Navbar: React.FC = () => {
                 </SheetDescription>
               </SheetHeader>
               <div className="grid gap-4 py-4">
-                {user ? (
+                {showAuthenticatedUI ? (
                   <>
                     <Link 
                       to="/"
@@ -181,7 +201,7 @@ const Navbar: React.FC = () => {
                         {item.name}
                       </Link>
                     ))}
-                    <Button variant="destructive" size="sm" onClick={signOut} className="w-full mt-4">Sign Out</Button>
+                    <Button variant="destructive" size="sm" onClick={handleSignOut} className="w-full mt-4">Sign Out</Button>
                   </>
                 ) : isGuestMode ? (
                   <>
@@ -239,7 +259,7 @@ const Navbar: React.FC = () => {
         </div>
 
         <div className="hidden md:flex items-center space-x-4 md:order-2">
-          {user ? (
+          {showAuthenticatedUI ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-10 w-10 p-0 rounded-full">
@@ -264,24 +284,42 @@ const Navbar: React.FC = () => {
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <>
-              {guestModeItems.map(item => (
-                <Link 
-                  key={item.name} 
-                  to={item.href} 
-                  className={`font-medium text-sm ${
-                    location.pathname === item.href 
-                      ? 'text-brand-blue' 
-                      : 'text-brand-dark hover:text-brand-blue'
-                  } hover:underline py-2 px-3 transition duration-300 ease-in-out`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {isGuestMode ? (
+                // Guest mode navigation for desktop
+                guestModeItems.map(item => (
+                  <Link 
+                    key={item.name} 
+                    to={item.href} 
+                    className={`font-medium text-sm ${
+                      location.pathname === item.href 
+                        ? 'text-brand-blue' 
+                        : 'text-brand-dark hover:text-brand-blue'
+                    } hover:underline py-2 px-3 transition duration-300 ease-in-out`}
+                  >
+                    {item.name}
+                  </Link>
+                ))
+              ) : (
+                // Standard unauthenticated navigation for desktop
+                guestNavigationItems.map(item => (
+                  <Link 
+                    key={item.name} 
+                    to={item.href} 
+                    className={`font-medium text-sm ${
+                      location.pathname === item.href 
+                        ? 'text-brand-blue' 
+                        : 'text-brand-dark hover:text-brand-blue'
+                    } hover:underline py-2 px-3 transition duration-300 ease-in-out`}
+                  >
+                    {item.name}
+                  </Link>
+                ))
+              )}
               <Button 
                 variant="outline" 
                 size="sm" 

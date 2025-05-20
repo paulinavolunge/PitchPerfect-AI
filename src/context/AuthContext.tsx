@@ -136,6 +136,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           setError(error.message);
+          // Clear state completely in case of error
+          setUser(null);
+          setSession(null);
         } else {
           setSession(data.session);
           setUser(data.session?.user ?? null);
@@ -145,11 +148,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setEmailVerified(data.session.user.email_confirmed_at !== null);
             refreshSubscription();
             checkTrialStatus();
+          } else {
+            // Clear all user-specific state when no session exists
+            setIsPremium(false);
+            setSubscriptionTier(null);
+            setSubscriptionEnd(null);
+            setTrialActive(false);
+            setTrialEndsAt(null);
+            setEmailVerified(false);
           }
         }
       } catch (err) {
         console.error('Error getting session:', err);
         setError('Failed to get session');
+        // Clear state in case of error
+        setUser(null);
+        setSession(null);
       } finally {
         setLoading(false);
       }
@@ -160,31 +174,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
         
-        // Check if email is verified
-        if (session?.user) {
-          setEmailVerified(session.user.email_confirmed_at !== null);
-          
-          // Show success toast when email is confirmed
-          if (event === 'SIGNED_IN' && session.user.email_confirmed_at) {
-            toast({
-              title: "Email verified",
-              description: "Your email has been successfully verified.",
-              variant: "default",
-            });
-          }
-          
-          refreshSubscription();
-          checkTrialStatus();
-        } else {
-          setEmailVerified(false);
+        if (event === 'SIGNED_OUT') {
+          // Ensure all user state is cleared on sign out
+          setUser(null);
+          setSession(null);
           setIsPremium(false);
           setSubscriptionTier(null);
           setSubscriptionEnd(null);
           setTrialActive(false);
           setTrialEndsAt(null);
+          setEmailVerified(false);
+          console.log('User signed out, cleared auth state');
+        } else {
+          // Update session and user
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Check if email is verified
+          if (session?.user) {
+            setEmailVerified(session.user.email_confirmed_at !== null);
+            
+            // Show success toast when email is confirmed
+            if (event === 'SIGNED_IN' && session.user.email_confirmed_at) {
+              toast({
+                title: "Email verified",
+                description: "Your email has been successfully verified.",
+                variant: "default",
+              });
+            }
+            
+            refreshSubscription();
+            checkTrialStatus();
+          } else {
+            setEmailVerified(false);
+            setIsPremium(false);
+            setSubscriptionTier(null);
+            setSubscriptionEnd(null);
+            setTrialActive(false);
+            setTrialEndsAt(null);
+          }
         }
         
         setLoading(false);
@@ -210,10 +239,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
+      
+      // Clear all user state
+      setUser(null);
+      setSession(null);
+      setIsPremium(false);
+      setSubscriptionTier(null);
+      setSubscriptionEnd(null);
+      setTrialActive(false);
+      setTrialEndsAt(null);
+      setEmailVerified(false);
+      
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account.",
       });
+      
+      console.log("User signed out and state cleared manually");
     } catch (err) {
       console.error('Error signing out:', err);
       toast({
