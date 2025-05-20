@@ -1,72 +1,44 @@
-
-// Google Analytics 4 Implementation
+// Google Analytics 4 Implementation with Google Tag Manager support
 
 // Initialize Google Analytics
 export const initGA = () => {
   try {
     // Check if already initialized to prevent duplicate initialization
     if (window.dataLayer) {
-      console.log('Google Analytics already initialized');
+      console.log('Google Tag Manager already initialized');
       return;
     }
 
-    // Create script elements for Google Analytics
-    const createGAScript = () => {
-      // Check if script already exists
-      if (document.querySelector('script[src*="googletagmanager"]')) {
-        return;
-      }
-
-      // Use environment variable or fallback to hardcoded ID if not available
-      const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-HVCRJT504Y';
-      
-      // Google Analytics 4 script
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-      document.head.appendChild(script);
-
-      // Initialize dataLayer and gtag function
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = function() { window.dataLayer.push(arguments); };
-      window.gtag('js', new Date());
-      window.gtag('config', measurementId, {
-        send_page_view: false // We'll handle this manually for better control
-      });
-      
-      console.log('Google Analytics initialized with ID:', measurementId);
-    };
-
-    // Initialize GA when document is ready
-    if (document.readyState === 'complete') {
-      createGAScript();
-    } else {
-      window.addEventListener('load', createGAScript);
-    }
+    // Initialize dataLayer for GTM
+    window.dataLayer = window.dataLayer || [];
+    
+    // We don't need to create the GA script elements manually as GTM will handle this
+    // But we'll keep the gtag function available for backward compatibility
+    window.gtag = function() { window.dataLayer.push(arguments); };
+    
+    console.log('Analytics initialized with GTM');
   } catch (error) {
-    console.error('Error initializing Google Analytics:', error);
+    console.error('Error initializing Analytics:', error);
   }
 };
 
 // Page view tracking
 export const trackPageView = (path: string) => {
   try {
-    if (!window.gtag) {
-      console.warn('Google Analytics not initialized, cannot track page view');
+    if (!window.dataLayer) {
+      console.warn('dataLayer not initialized, cannot track page view');
       return;
     }
     
-    // Use environment variable or fallback to hardcoded ID if not available
-    const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-HVCRJT504Y';
-    
-    window.gtag('event', 'page_view', {
+    // Push pageview event to dataLayer for GTM
+    window.dataLayer.push({
+      event: 'page_view',
       page_path: path,
       page_title: document.title,
-      page_location: window.location.href,
-      send_to: measurementId
+      page_location: window.location.href
     });
     
-    console.log(`Page view tracked: ${path}`);
+    console.log(`Page view tracked via GTM: ${path}`);
   } catch (error) {
     console.error('Error tracking page view:', error);
   }
@@ -78,13 +50,18 @@ export const trackEvent = (
   eventParams: Record<string, any> = {}
 ) => {
   try {
-    if (!window.gtag) {
-      console.warn('Google Analytics not initialized, cannot track event');
+    if (!window.dataLayer) {
+      console.warn('dataLayer not initialized, cannot track event');
       return;
     }
     
-    window.gtag('event', eventName, eventParams);
-    console.log(`Event tracked: ${eventName}`, eventParams);
+    // Push custom event to dataLayer for GTM
+    window.dataLayer.push({
+      event: eventName,
+      ...eventParams
+    });
+    
+    console.log(`Event tracked via GTM: ${eventName}`, eventParams);
   } catch (error) {
     console.error(`Error tracking event ${eventName}:`, error);
   }

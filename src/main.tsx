@@ -6,6 +6,9 @@ import './index.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { initGA } from './utils/analytics';
 
+// Initialize dataLayer for Google Tag Manager
+window.dataLayer = window.dataLayer || [];
+
 // Determine if we're in development mode or Lovable mode
 const isLovable = import.meta.env.VITE_LOVABLE === 'true';
 const isDevelopment = import.meta.env.DEV === true;
@@ -31,6 +34,7 @@ if ((isDevelopment || isLovable) && window.document) {
 declare global {
   interface Window {
     gptEng?: any;
+    dataLayer: any[];
   }
 }
 
