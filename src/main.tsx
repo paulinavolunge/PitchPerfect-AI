@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 import { AuthProvider } from '@/context/AuthContext';
-import { initGA } from './utils/analytics';
+import { initGA, checkAnalyticsConnection } from './utils/analytics';
 
 // Initialize dataLayer for Google Tag Manager
 window.dataLayer = window.dataLayer || [];
@@ -15,6 +15,14 @@ const isDevelopment = import.meta.env.DEV === true;
 
 // Ensure GA is initialized as early as possible
 initGA();
+
+// Check analytics connection and log debug info
+if (isDevelopment) {
+  setTimeout(() => {
+    const status = checkAnalyticsConnection();
+    console.log('Analytics Connection Status:', status);
+  }, 1000); // Check after 1 second to allow scripts to load
+}
 
 // Load development tools only in development mode or Lovable mode
 if ((isDevelopment || isLovable) && window.document) {
@@ -40,6 +48,8 @@ declare global {
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </BrowserRouter>
 );

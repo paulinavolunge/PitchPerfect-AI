@@ -20,11 +20,18 @@
     <meta property="twitter:domain" content="pitchperfectai.ai" />
     
     <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id=GTM-PLR4ZJ3F'+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-PLR4ZJ3F');</script>
+    <script>
+      // Check if GTM is already loaded to prevent duplicates
+      if (!window.google_tag_manager) {
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-PLR4ZJ3F');
+        
+        console.log('GTM script injected with ID: GTM-PLR4ZJ3F');
+      }
+    </script>
     <!-- End Google Tag Manager -->
     
     <!-- Meta Pixel Code - Script part only -->
@@ -58,13 +65,19 @@
       })();
     </script>
     
-    <!-- Google Analytics tracking code -->
+    <!-- Google Analytics tracking code - Standalone GA4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-HVCRJT504Y', { send_page_view: false });
+      // Note: We're setting send_page_view to false because we'll handle page views manually
+      // This gives us more control and prevents duplicate pageviews
+      gtag('config', 'G-HVCRJT504Y', { 
+        send_page_view: false,
+        debug_mode: window.location.hostname === 'localhost' || window.location.hostname.includes('lovable.app')
+      });
+      console.log('GA4 standalone script initialized with debug mode');
     </script>
   </head>
   <body>
