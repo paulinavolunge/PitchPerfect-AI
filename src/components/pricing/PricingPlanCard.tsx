@@ -39,7 +39,7 @@ interface EnterpriseProps {
 }
 
 interface PricingPlanCardProps {
-  type: "solo" | "team" | "enterprise";
+  type: "free" | "micro" | "solo" | "professional" | "team" | "enterprise";
   title: string;
   description: string;
   price: React.ReactNode;
