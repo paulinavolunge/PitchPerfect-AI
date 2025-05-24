@@ -10,14 +10,26 @@ import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, Mail } from 'lucide-react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [loginError, setLoginError] = useState<string | null>(null);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+
+  // Show loading state while auth context loads
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
+          <p className="text-brand-dark">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (user) {
@@ -29,40 +41,28 @@ const Login = () => {
     if (searchParams.get('verified') === 'true') {
       setVerificationMessage("Email verified successfully! You can now log in.");
     }
-    
-    // Check for auth completion via hash parameters
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (hashParams.get('access_token') && !hashParams.get('error_description')) {
-      // Successfully authenticated via email confirmation
-      navigate('/email-confirmed');
-    } else if (hashParams.get('error_description')) {
-      // Handle the error in login page
-      setLoginError(decodeURIComponent(hashParams.get('error_description') || ''));
-    }
   }, [user, navigate, location]);
 
   useEffect(() => {
-    // Listen for auth errors
-    const handleAuthChange = async (event: string, session: any) => {
-      if (event === 'SIGNED_IN') {
-        // Clear any errors on successful sign in
-        setLoginError(null);
-      } else if (event === 'USER_UPDATE' && session?.error) {
-        // Handle errors during login
-        setLoginError(session.error.message);
-        
-        // Check if the error is about unverified email
-        if (session.error.message.includes('Email not confirmed')) {
-          setLoginError('Please verify your email address before logging in.');
+    // Listen for auth errors with improved cleanup
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN') {
+          // Clear any errors on successful sign in
+          setLoginError(null);
+        } else if (event === 'USER_UPDATE' && session?.error) {
+          // Handle errors during login
+          setLoginError(session.error.message);
+          
+          // Check if the error is about unverified email
+          if (session.error.message.includes('Email not confirmed')) {
+            setLoginError('Please verify your email address before logging in.');
+          }
         }
       }
-    };
+    );
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    return () => authListener?.unsubscribe();
   }, []);
 
   const authAppearance = {
@@ -115,6 +115,7 @@ const Login = () => {
                 providers={[]}
                 view="sign_in"
                 showLinks={true}
+                onlyThirdPartyProviders={false}
                 redirectTo={`${window.location.origin}/dashboard`}
               />
               
