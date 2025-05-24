@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
 import { useGuestMode } from "@/context/GuestModeContext";
-import { Menu, UserPlus, LogIn, Home, UserRound } from 'lucide-react';
+import { Menu, UserPlus, LogIn, Home, UserRound, Crown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
 
 const Navbar: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isPremium } = useAuth();
   const { isGuestMode, endGuestMode } = useGuestMode();
   const navigate = useNavigate();
   const location = useLocation();
@@ -209,6 +210,15 @@ const Navbar: React.FC = () => {
                         {item.name}
                       </Link>
                     ))}
+                    {!isPremium && (
+                      <Link 
+                        to="/pricing"
+                        className="block py-2 px-3 rounded-md bg-gradient-to-r from-brand-blue to-brand-green text-white hover:from-brand-blue/90 hover:to-brand-green/90 transition-all duration-300 text-center font-medium"
+                      >
+                        <Crown className="h-4 w-4 mr-2 inline" />
+                        Upgrade
+                      </Link>
+                    )}
                     <Button variant="destructive" size="sm" onClick={handleSignOut} className="w-full mt-4">Sign Out</Button>
                   </>
                 ) : isGuestMode ? (
@@ -268,33 +278,48 @@ const Navbar: React.FC = () => {
 
         <div className="hidden md:flex items-center space-x-4 md:order-2">
           {showAuthenticatedUI ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-10 w-10 p-0 rounded-full">
-                  <Avatar className="h-9 w-9 border">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || "User"} />
-                    <AvatarFallback className="bg-brand-blue text-white">
-                      {getUserInitials() || <UserRound className="h-5 w-5" />}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/')}>
-                  <Home className="h-4 w-4 mr-2" />
-                  Home
-                </DropdownMenuItem>
-                {userNavigationItems.map(item => (
-                  <DropdownMenuItem key={item.name} onClick={() => navigate(item.href)}>
-                    {item.name}
+            <>
+              {/* Upgrade Button for Non-Premium Users */}
+              {!isPremium && (
+                <Link to="/pricing">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2 border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white transition-all duration-300"
+                  >
+                    <Crown size={16} />
+                    Upgrade
+                  </Button>
+                </Link>
+              )}
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-10 w-10 p-0 rounded-full">
+                    <Avatar className="h-9 w-9 border">
+                      <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || "User"} />
+                      <AvatarFallback className="bg-brand-blue text-white">
+                        {getUserInitials() || <UserRound className="h-5 w-5" />}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/')}>
+                    <Home className="h-4 w-4 mr-2" />
+                    Home
                   </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  {userNavigationItems.map(item => (
+                    <DropdownMenuItem key={item.name} onClick={() => navigate(item.href)}>
+                      {item.name}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
             <>
               {isGuestMode ? (

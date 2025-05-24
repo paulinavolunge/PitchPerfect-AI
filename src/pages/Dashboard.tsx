@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3 } from 'lucide-react';
+import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3, Crown } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
@@ -37,7 +36,7 @@ const TOUR_COOLDOWN_KEY = 'pitchperfect_tour_cooldown';
 const TOUR_COOLDOWN_HOURS = 24; // 24 hours between tour resets
 
 const Dashboard = () => {
-  const { user, refreshSubscription } = useAuth();
+  const { user, refreshSubscription, isPremium, trialActive } = useAuth();
   const [showTour, setShowTour] = useState(false);
   const [showMicTest, setShowMicTest] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
@@ -316,6 +315,27 @@ const Dashboard = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Upgrade Plan Button for Non-Premium Users */}
+          {!isPremium && (
+            <motion.div 
+              className="flex justify-end mb-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Button 
+                onClick={() => {
+                  trackEvent('upgrade_button_clicked', { source: 'dashboard' });
+                  navigate('/pricing');
+                }}
+                className="bg-gradient-to-r from-brand-blue to-brand-green text-white hover:from-brand-blue/90 hover:to-brand-green/90 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                <Crown size={16} />
+                Upgrade Plan
+              </Button>
+            </motion.div>
+          )}
           
           {/* View Tabs with keyboard navigation */}
           <Tabs 
