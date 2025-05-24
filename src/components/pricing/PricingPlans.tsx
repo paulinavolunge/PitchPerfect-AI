@@ -4,7 +4,7 @@ import PricingPlanCard from './PricingPlanCard';
 import TimeOffer from '@/components/promotion/TimeOffer';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Clock } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface PricingPlansProps {
   planType: "monthly" | "yearly";
@@ -103,6 +103,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     }
   };
 
+  const daysLeft = calculateDaysRemaining();
+
   return (
     <>
       {/* Time-limited offer card for Team plan */}
@@ -120,11 +122,11 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
       {trialActive && !isPremium && (
         <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg max-w-md mx-auto text-center">
           <div className="flex items-center justify-center mb-2">
-            <Clock className="h-5 w-5 text-amber-600 mr-2" />
+            <AlertTriangle className="h-5 w-5 text-amber-600 mr-2" />
             <p className="font-medium text-amber-800">Your free trial is active</p>
           </div>
           <p className="text-amber-700 text-sm mb-2">
-            You have {calculateDaysRemaining()} days left in your trial. Upgrade now to keep access to premium features.
+            ⚠️ Only {daysLeft} days left in your trial. Upgrade now to keep access to premium features.
           </p>
         </div>
       )}

@@ -1,5 +1,6 @@
 
 import React, { useState, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +11,8 @@ import { Step } from 'react-joyride';
 import PricingHeader from '@/components/pricing/PricingHeader';
 import PricingPlans from '@/components/pricing/PricingPlans';
 import StickyCTA from '@/components/pricing/StickyCTA';
-import { Clock } from 'lucide-react';
+import { Clock, AlertTriangle } from 'lucide-react';
+import { trackEvent } from '@/utils/analytics';
 
 const Pricing = () => {
   const { user, isPremium, trialActive, trialEndsAt } = useAuth();
@@ -24,6 +26,11 @@ const Pricing = () => {
   // Create a promotion expiry date (14 days from now)
   const promoExpiryDate = new Date();
   promoExpiryDate.setDate(promoExpiryDate.getDate() + 14);
+
+  // Track page view on component mount
+  React.useEffect(() => {
+    trackEvent('pricing_page_viewed');
+  }, []);
 
   const scrollToDemo = () => {
     if (demoRef.current) {
@@ -41,6 +48,18 @@ const Pricing = () => {
     const diffTime = trialEndsAt.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(0, diffDays);
+  };
+
+  // Handle plan type change with analytics
+  const handlePlanTypeChange = (newPlanType: "monthly" | "yearly") => {
+    setPlanType(newPlanType);
+    trackEvent('plan_selected', { type: newPlanType, size: enterpriseSize });
+  };
+
+  // Handle enterprise size change with analytics
+  const handleEnterpriseSizeChange = (newSize: "small" | "medium" | "large") => {
+    setEnterpriseSize(newSize);
+    trackEvent('plan_selected', { type: planType, size: newSize });
   };
 
   // Track scroll position to manage sticky CTA visibility
@@ -91,6 +110,12 @@ const Pricing = () => {
   // Handle tour completion
   const handleTourComplete = () => {
     localStorage.setItem('pricing_tour_completed', 'true');
+    trackEvent('pricing_tour_completed');
+  };
+
+  // Handle ROI calculator interaction
+  const handleROICalculatorInteraction = () => {
+    trackEvent('roi_calculator_interacted');
   };
 
   // Get appropriate CTA text based on user status
@@ -108,6 +133,9 @@ const Pricing = () => {
 
   // Handle sticky CTA click based on user status
   const handleStickyCTAClick = () => {
+    const userStatus = user ? (isPremium ? 'premium' : 'trial') : 'guest';
+    trackEvent('sticky_cta_clicked', { userStatus });
+    
     if (!user) {
       scrollToDemo();
     } else if (trialActive || isPremium) {
@@ -117,8 +145,15 @@ const Pricing = () => {
     }
   };
 
+  const daysLeft = calculateDaysRemaining();
+
   return (
     <div className="min-h-screen flex flex-col relative">
+      <Helmet>
+        <title>Pricing | PitchPerfect AI</title>
+        <meta name="description" content="Choose a plan. Start free for 14 days. No card required." />
+      </Helmet>
+      
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
@@ -126,18 +161,18 @@ const Pricing = () => {
           {trialActive && !isPremium && (
             <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg max-w-lg mx-auto text-center">
               <div className="flex items-center justify-center mb-2">
-                <Clock className="h-5 w-5 text-amber-600 mr-2" />
+                <AlertTriangle className="h-5 w-5 text-amber-600 mr-2" />
                 <p className="font-medium text-amber-800">Your free trial is active</p>
               </div>
               <p className="text-amber-700 text-sm mb-2">
-                You have {calculateDaysRemaining()} days left. Choose a plan to continue access after your trial ends.
+                ⚠️ Only {daysLeft} days left in your trial. Choose a plan to keep access to AI tools.
               </p>
             </div>
           )}
           
           <PricingHeader 
             planType={planType} 
-            setPlanType={setPlanType} 
+            setPlanType={handlePlanTypeChange} 
             trialActive={trialActive} 
             isPremium={isPremium} 
           />
@@ -145,11 +180,11 @@ const Pricing = () => {
           <PricingPlans 
             planType={planType} 
             enterpriseSize={enterpriseSize} 
-            setEnterpriseSize={setEnterpriseSize} 
+            setEnterpriseSize={handleEnterpriseSizeChange} 
             promoExpiryDate={promoExpiryDate} 
           />
           
-          <div className="max-w-3xl mx-auto mt-20 roi-calculator">
+          <div className="max-w-3xl mx-auto mt-20 roi-calculator" onClick={handleROICalculatorInteraction}>
             <ROICalculator />
           </div>
           
