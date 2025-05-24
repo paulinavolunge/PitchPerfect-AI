@@ -10,7 +10,7 @@ import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, X } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -44,14 +44,14 @@ const Login = () => {
   }, [user, navigate, location]);
 
   useEffect(() => {
-    // Listen for auth errors with improved cleanup
+    // Listen for auth errors with proper cleanup
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN') {
           // Clear any errors on successful sign in
           setLoginError(null);
-        } else if (event === 'USER_UPDATE' && session?.error) {
-          // Handle errors during login
+        } else if (event === 'SIGNED_OUT' && session?.error) {
+          // Handle errors during login attempt
           setLoginError(session.error.message);
           
           // Check if the error is about unverified email
@@ -64,6 +64,25 @@ const Login = () => {
 
     return () => authListener?.unsubscribe();
   }, []);
+
+  // Auto-dismiss alerts after 6 seconds
+  useEffect(() => {
+    if (loginError) {
+      const timer = setTimeout(() => {
+        setLoginError(null);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [loginError]);
+
+  useEffect(() => {
+    if (verificationMessage) {
+      const timer = setTimeout(() => {
+        setVerificationMessage(null);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [verificationMessage]);
 
   const authAppearance = {
     theme: ThemeSupa,
@@ -85,25 +104,37 @@ const Login = () => {
       <main className="flex-grow pt-24 pb-12 flex items-center justify-center">
         <div className="container max-w-md px-4">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-brand-dark">Welcome Back</h1>
+            <h1 className="text-2xl font-bold text-brand-dark">Welcome Back to PitchPerfect AI</h1>
             <p className="text-brand-dark/70 mt-2">Sign in to access your account</p>
           </div>
 
           {verificationMessage && (
-            <Alert className="mb-6 bg-green-50 border-green-200">
+            <Alert className="mb-6 bg-green-50 border-green-200 relative">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <AlertDescription className="text-green-700">
+              <AlertDescription className="text-green-700 pr-8">
                 {verificationMessage}
               </AlertDescription>
+              <button
+                onClick={() => setVerificationMessage(null)}
+                className="absolute top-3 right-3 text-green-600 hover:text-green-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </Alert>
           )}
 
           {loginError && (
-            <Alert className="mb-6 bg-red-50 border-red-200">
+            <Alert className="mb-6 bg-red-50 border-red-200 relative">
               <AlertCircle className="h-5 w-5 text-red-500" />
-              <AlertDescription className="text-red-700">
+              <AlertDescription className="text-red-700 pr-8">
                 {loginError}
               </AlertDescription>
+              <button
+                onClick={() => setLoginError(null)}
+                className="absolute top-3 right-3 text-red-600 hover:text-red-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </Alert>
           )}
 
@@ -122,7 +153,7 @@ const Login = () => {
               <div className="text-center mt-4">
                 <Button 
                   variant="link" 
-                  className="text-sm"
+                  className="text-sm w-full"
                   onClick={() => navigate('/password-reset')}
                 >
                   Forgot your password?
