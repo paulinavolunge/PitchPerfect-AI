@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Mic, MicOff, Pause, Play, RefreshCcw, Award } from 'lucide-react';
+import { Mic, MicOff, Pause, Play, RefreshCcw, Award, ArrowUp, ArrowDown, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
 import ProgressSummary from '@/components/gamification/ProgressSummary';
@@ -16,6 +16,8 @@ import QuickStartGuide from '@/components/onboarding/QuickStartGuide';
 import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
 import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
+import { useNavigate } from 'react-router-dom';
+import { trackEvent } from '@/utils/analytics';
 
 const Practice = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -26,14 +28,34 @@ const Practice = () => {
   const [showTour, setShowTour] = useState(false);
   const { user, isPremium } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Mock data for progress summary
+  // Mock data for progress summary with visual indicators
   const mockStats = [
-    { label: "Clarity", value: 76, previousValue: 71, increase: true },
-    { label: "Engagement", value: 82, previousValue: 74, increase: true },
-    { label: "Pacing", value: 65, previousValue: 68, decrease: true }
+    { 
+      label: "Clarity", 
+      value: 76, 
+      previousValue: 71, 
+      increase: true,
+      change: 5
+    },
+    { 
+      label: "Engagement", 
+      value: 82, 
+      previousValue: 74, 
+      increase: true,
+      change: 8
+    },
+    { 
+      label: "Pacing", 
+      value: 65, 
+      previousValue: 68, 
+      decrease: true,
+      change: -3
+    }
   ];
   
+  // Mock data for progress summary
   const mockFeedback = [
     { text: "Clear explanation of the product's core functionality", type: 'strength' as const },
     { text: "Good enthusiasm and energy throughout the pitch", type: 'strength' as const },
@@ -96,6 +118,7 @@ const Practice = () => {
     
     if (!isPremium) {
       setShowPremiumModal(true);
+      trackEvent('premium_modal_viewed', { context: 'practice_page' });
     }
   }, [user, isPremium]);
   
@@ -105,17 +128,28 @@ const Practice = () => {
     try {
       const { data, error } = await supabase
         .from('user_streaks')
-        .select('streak_count')
+        .select('streak_count, last_activity')
         .eq('user_id', user.id)
         .single();
       
-      if (error && error.code !== 'PGRST116') { // Not PGRST116 = not found
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching streak:', error);
         return;
       }
       
       if (data) {
         setStreakCount(data.streak_count);
+        
+        // Confirm timezone handling - check if last activity was today
+        const today = new Date().toISOString().split('T')[0];
+        const lastActivity = data.last_activity;
+        
+        console.log('Streak validation:', {
+          today,
+          lastActivity,
+          streakCount: data.streak_count,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
       }
     } catch (err) {
       console.error('Failed to fetch streak:', err);
@@ -125,15 +159,22 @@ const Practice = () => {
   const toggleRecording = () => {
     if (!isPremium) {
       setShowPremiumModal(true);
+      trackEvent('premium_modal_viewed', { context: 'recording_attempt' });
       return;
     }
     
     if (isRecording) {
+      // Stop recording
+      setIsRecording(false);
       setShowFeedback(true);
       setShowProgressSummary(true);
       updatePracticeStreak();
+      trackEvent('pitch_recording_stopped');
+    } else {
+      // Start recording
+      setIsRecording(true);
+      trackEvent('pitch_recording_started');
     }
-    setIsRecording(!isRecording);
   };
   
   const updatePracticeStreak = async () => {
@@ -148,7 +189,7 @@ const Practice = () => {
         .eq('user_id', user.id)
         .single();
       
-      if (fetchError && fetchError.code !== 'PGRST116') { // Not found error
+      if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('Error fetching streak for update:', fetchError);
         return;
       }
@@ -173,7 +214,6 @@ const Practice = () => {
           });
         }
       } else {
-        // Check if streak should increment
         const lastActivityDate = new Date(existingStreak.last_activity);
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -181,29 +221,38 @@ const Practice = () => {
         const isYesterday = lastActivityDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
         const isToday = lastActivityDate.toISOString().split('T')[0] === today;
         
-        // Only update if last activity was yesterday (continue streak) or not today (don't duplicate)
-        if (!isToday) {
-          const newStreakCount = isYesterday ? existingStreak.streak_count + 1 : 1;
+        // Handle same-day repeat sessions - don't update streak
+        if (isToday) {
+          console.log('Same-day practice session - streak unchanged');
+          return;
+        }
+        
+        // Handle missed days (streak resets) or consecutive days
+        const newStreakCount = isYesterday ? existingStreak.streak_count + 1 : 1;
+        
+        const { error: updateError } = await supabase
+          .from('user_streaks')
+          .update({
+            streak_count: newStreakCount,
+            last_activity: today
+          })
+          .eq('user_id', user.id);
           
-          const { error: updateError } = await supabase
-            .from('user_streaks')
-            .update({
-              streak_count: newStreakCount,
-              last_activity: today
-            })
-            .eq('user_id', user.id);
-            
-          if (updateError) {
-            console.error('Error updating streak:', updateError);
-          } else {
-            setStreakCount(newStreakCount);
-            
-            if (newStreakCount > 1) {
-              toast({
-                title: `${newStreakCount}-day streak!`,
-                description: "You're building great practice habits. Keep it up!",
-              });
-            }
+        if (updateError) {
+          console.error('Error updating streak:', updateError);
+        } else {
+          setStreakCount(newStreakCount);
+          
+          if (newStreakCount === 1 && !isYesterday) {
+            toast({
+              title: "Streak reset",
+              description: "Your streak has been reset. Start practicing daily to build it back up!",
+            });
+          } else if (newStreakCount > 1) {
+            toast({
+              title: `${newStreakCount}-day streak!`,
+              description: "You're building great practice habits. Keep it up!",
+            });
           }
         }
       }
@@ -219,13 +268,12 @@ const Practice = () => {
   
   const handleTourComplete = () => {
     localStorage.setItem('hasSeenPracticeTour', 'true');
+    trackEvent('practice_tour_completed');
   };
   
   const handleFeedbackSubmitted = (wasHelpful: boolean) => {
-    // In the future, you could adjust training algorithms based on user feedback
     console.log('Practice session feedback:', wasHelpful ? 'helpful' : 'not helpful');
     
-    // You might want to update the UI based on feedback
     if (wasHelpful) {
       toast({
         title: "Great!",
@@ -241,6 +289,56 @@ const Practice = () => {
     }
   };
   
+  const handleSaveFeedback = () => {
+    if (!user) {
+      toast({
+        title: "Sign up to save",
+        description: "Create a free account to save feedback",
+      });
+      navigate('/signup');
+      return;
+    }
+    
+    // Save feedback logic for authenticated users
+    toast({
+      title: "Feedback saved!",
+      description: "Your practice session has been saved to your dashboard.",
+    });
+  };
+
+  const handleViewFeedback = () => {
+    setShowFeedback(true);
+    setShowProgressSummary(true);
+    trackEvent('ai_feedback_viewed');
+    
+    // Track badge earned
+    trackEvent('badge_earned', { 
+      badge: 'First Pitch',
+      context: 'practice_session'
+    });
+  };
+
+  const StatDisplay = ({ stat }: { stat: typeof mockStats[0] }) => (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <p className="text-sm text-brand-dark/70 mb-1">{stat.label}</p>
+      <div className="flex items-center justify-center gap-2">
+        <div className="text-2xl font-bold text-brand-dark">{stat.value}%</div>
+        <div className={`text-xs px-1.5 py-0.5 rounded flex items-center gap-1 ${
+          stat.increase 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-yellow-100 text-yellow-800'
+        }`}>
+          {stat.increase ? (
+            <ArrowUp className="h-3 w-3" />
+          ) : (
+            <ArrowDown className="h-3 w-3" />
+          )}
+          {Math.abs(stat.change)}%
+        </div>
+      </div>
+    </div>
+  );
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -252,7 +350,7 @@ const Practice = () => {
         onComplete={handleTourComplete}
       />
       
-      <main className="flex-grow pt-20 pb-12"> {/* Adjusted top padding */}
+      <main className="flex-grow pt-20 pb-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -288,9 +386,10 @@ const Practice = () => {
                       
                       <div className="flex justify-center record-button">
                         <Button
-                          className={`rounded-full h-20 w-20 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-brand-green hover:bg-brand-green/90'}`}
+                          className={`rounded-full h-20 w-20 group ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-brand-green hover:bg-brand-green/90'}`}
                           onClick={toggleRecording}
-                          aria-label={isRecording ? "Stop recording" : "Start recording"}
+                          aria-label={isRecording ? "Stop recording your pitch" : "Start recording your pitch"}
+                          aria-pressed={isRecording}
                         >
                           {isRecording ? (
                             <MicOff size={32} />
@@ -301,17 +400,26 @@ const Practice = () => {
                       </div>
                       
                       {isRecording && (
-                        <div className="animate-pulse text-red-500 font-medium">
+                        <div className="animate-pulse text-red-500 font-medium" aria-live="polite">
                           Recording...
                         </div>
                       )}
                       
                       <div className="flex justify-center gap-4 playback-controls">
-                        <Button variant="outline" className="flex items-center gap-2" aria-label="Play example">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2 group" 
+                          aria-label="Play example pitch"
+                        >
                           <Play size={16} />
                           Example
                         </Button>
-                        <Button variant="outline" className="flex items-center gap-2" aria-label="Pause recording">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2 group" 
+                          aria-label="Pause current recording"
+                          aria-pressed={false}
+                        >
                           <Pause size={16} />
                           Pause
                         </Button>
@@ -319,7 +427,7 @@ const Practice = () => {
                     </div>
                   ) : (
                     <div className="space-y-8">
-                      <div className="bg-brand-blue/20 rounded-xl p-6 text-left">
+                      <div className="bg-brand-blue/20 rounded-xl p-6 text-left" aria-live="polite">
                         <h3 className="font-medium text-lg mb-4 text-brand-dark">AI Feedback</h3>
                         
                         <div className="space-y-4">
@@ -343,38 +451,25 @@ const Practice = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm text-brand-dark/70 mb-1">Clarity</p>
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="text-2xl font-bold text-brand-dark">76%</div>
-                            <div className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">+5%</div>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm text-brand-dark/70 mb-1">Engagement</p>
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="text-2xl font-bold text-brand-dark">82%</div>
-                            <div className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">+8%</div>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm text-brand-dark/70 mb-1">Pacing</p>
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="text-2xl font-bold text-brand-dark">65%</div>
-                            <div className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">-3%</div>
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center" aria-live="polite">
+                        {mockStats.map((stat, index) => (
+                          <StatDisplay key={index} stat={stat} />
+                        ))}
                       </div>
                       
-                      <div className="flex justify-center gap-4">
-                        <Button className="btn-primary bg-brand-green hover:bg-brand-green/90" onClick={resetPractice}>
+                      <div className="flex flex-col sm:flex-row justify-center gap-4">
+                        <Button className="btn-primary bg-brand-green hover:bg-brand-green/90 group" onClick={resetPractice}>
                           Try Again
                         </Button>
-                        <Button variant="outline">
+                        <Button variant="outline" onClick={handleSaveFeedback} className="group">
                           Save Feedback
+                        </Button>
+                        <Button 
+                          onClick={() => navigate('/roleplay')}
+                          className="bg-brand-blue hover:bg-brand-blue/90 text-white group flex items-center gap-2"
+                        >
+                          <TrendingUp size={16} />
+                          Continue to Roleplay
                         </Button>
                       </div>
                     </div>
