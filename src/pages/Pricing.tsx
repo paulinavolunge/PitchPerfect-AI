@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
@@ -12,17 +11,22 @@ import PricingPlans from '@/components/pricing/PricingPlans';
 import PricingFAQ from '@/components/pricing/PricingFAQ';
 import ValueProposition from '@/components/pricing/ValueProposition';
 import StickyCTA from '@/components/pricing/StickyCTA';
+import Testimonials from '@/components/Testimonials';
 import { AlertTriangle } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 const Pricing = () => {
   const { user, isPremium, trialActive, trialEndsAt } = useAuth();
   const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
   const [enterpriseSize, setEnterpriseSize] = useState<"small" | "medium" | "large">("small");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const demoRef = useRef<HTMLDivElement>(null);
   const [runTour, setRunTour] = useState(false);
   const [showStickyCTA, setShowStickyCTA] = useState(true);
+  const { toast } = useToast();
   
   // Create a promotion expiry date (14 days from now)
   const promoExpiryDate = new Date();
@@ -32,6 +36,80 @@ const Pricing = () => {
   React.useEffect(() => {
     trackEvent('pricing_page_viewed');
   }, []);
+
+  // Stripe Price IDs - Replace with your actual Stripe price IDs
+  const priceIds = {
+    micro: {
+      monthly: 'price_micro_monthly', // Replace with actual Stripe price ID
+      yearly: 'price_micro_yearly'    // Replace with actual Stripe price ID
+    },
+    solo: {
+      monthly: 'price_solo_monthly',  // Replace with actual Stripe price ID
+      yearly: 'price_solo_yearly'     // Replace with actual Stripe price ID
+    },
+    professional: {
+      monthly: 'price_pro_monthly',   // Replace with actual Stripe price ID
+      yearly: 'price_pro_yearly'      // Replace with actual Stripe price ID
+    },
+    team: {
+      monthly: 'price_team_monthly',  // Replace with actual Stripe price ID
+      yearly: 'price_team_yearly'     // Replace with actual Stripe price ID
+    }
+  };
+
+  const handleCheckout = async (priceId: string, planName: string) => {
+    if (!user) {
+      trackEvent('checkout_attempt_unauthenticated', { plan: planName });
+      navigate('/signup', { state: { from: '/pricing', plan: planName } });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      trackEvent('checkout_initiated', { 
+        plan: planName, 
+        priceId, 
+        planType,
+        userId: user.id 
+      });
+
+      // Call the create-checkout edge function
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          priceId,
+          successUrl: `${window.location.origin}/subscription?success=true&plan=${planName}`,
+          cancelUrl: `${window.location.origin}/pricing?canceled=true`,
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.url) {
+        trackEvent('checkout_redirect', { plan: planName, priceId });
+        // Open Stripe checkout in the same tab
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      trackEvent('checkout_error', { 
+        plan: planName, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+      
+      toast({
+        title: "Checkout Error",
+        description: "Unable to start checkout process. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const scrollToDemo = () => {
     if (demoRef.current) {
@@ -171,12 +249,19 @@ const Pricing = () => {
               planType={planType} 
               enterpriseSize={enterpriseSize} 
               setEnterpriseSize={handleEnterpriseSizeChange} 
-              promoExpiryDate={promoExpiryDate} 
+              promoExpiryDate={promoExpiryDate}
+              onCheckout={handleCheckout}
+              priceIds={priceIds}
+              isLoading={isLoading}
             />
           </div>
           
           <div className="mt-20">
             <ValueProposition />
+          </div>
+          
+          <div className="mt-20">
+            <Testimonials />
           </div>
           
           <div className="mt-20">
@@ -189,7 +274,10 @@ const Pricing = () => {
               Join thousands of sales professionals who have improved their closing rates with PitchPerfect AI
             </p>
             <button 
-              onClick={() => navigate('/signup')}
+              onClick={() => {
+                trackEvent('final_cta_clicked', { location: 'bottom_of_pricing_page' });
+                navigate('/signup');
+              }}
               className="bg-gradient-to-r from-brand-blue to-brand-green hover:from-brand-blue/90 hover:to-brand-green/90 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               Start Your Free Trial Today

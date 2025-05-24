@@ -73,3 +73,32 @@ export const checkTranscriptionConfidence = (confidence: number): boolean => {
   // Return whether confidence is below threshold
   return confidence < 0.6;
 };
+
+/**
+ * Track pricing page events
+ */
+export const trackPricingEvents = {
+  planSelected: (planName: string, priceType: 'monthly' | 'yearly') => {
+    trackEvent('plan_selected', { plan: planName, priceType });
+  },
+  
+  checkoutInitiated: (planName: string, priceId: string, userId?: string) => {
+    trackEvent('checkout_initiated', { plan: planName, priceId, userId });
+  },
+  
+  checkoutCompleted: (planName: string, amount: number) => {
+    trackEvent('checkout_completed', { plan: planName, amount });
+  },
+  
+  checkoutAbandoned: (planName: string, step: string) => {
+    trackEvent('checkout_abandoned', { plan: planName, step });
+  },
+  
+  trialStarted: (planName: string) => {
+    trackEvent('trial_started', { plan: planName });
+  },
+  
+  subscriptionActivated: (planName: string, billingCycle: string) => {
+    trackEvent('subscription_activated', { plan: planName, billingCycle });
+  }
+};

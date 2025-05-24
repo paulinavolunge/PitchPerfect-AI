@@ -5,19 +5,33 @@ import TimeOffer from '@/components/promotion/TimeOffer';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
+import { trackEvent } from '@/utils/analytics';
+
+interface PriceIds {
+  micro: { monthly: string; yearly: string };
+  solo: { monthly: string; yearly: string };
+  professional: { monthly: string; yearly: string };
+  team: { monthly: string; yearly: string };
+}
 
 interface PricingPlansProps {
   planType: "monthly" | "yearly";
   enterpriseSize: "small" | "medium" | "large";
   setEnterpriseSize: (size: "small" | "medium" | "large") => void;
   promoExpiryDate: Date;
+  onCheckout: (priceId: string, planName: string) => void;
+  priceIds: PriceIds;
+  isLoading: boolean;
 }
 
 const PricingPlans: React.FC<PricingPlansProps> = ({ 
   planType, 
   enterpriseSize, 
   setEnterpriseSize, 
-  promoExpiryDate 
+  promoExpiryDate,
+  onCheckout,
+  priceIds,
+  isLoading
 }) => {
   const { user, isPremium, trialActive, trialEndsAt } = useAuth();
   const navigate = useNavigate();
@@ -30,21 +44,20 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(0, diffDays);
   };
-  
-  const handleUpgradeClick = () => {
-    if (!user) {
-      navigate('/login', { state: { from: '/subscription' } });
-      return;
-    }
-    navigate('/subscription');
-  };
 
   const handleSignupClick = () => {
+    trackEvent('free_plan_signup_clicked');
     navigate('/signup', { state: { from: '/subscription', plan: planType } });
   };
 
   const handleContactSales = () => {
+    trackEvent('enterprise_contact_clicked');
     window.location.href = "mailto:sales@pitchperfectai.com?subject=Enterprise Pricing Inquiry";
+  };
+
+  const handlePlanClick = (planName: string, priceId: string) => {
+    trackEvent('plan_selected', { plan: planName, priceType: planType });
+    onCheckout(priceId, planName);
   };
 
   const daysLeft = calculateDaysRemaining();
@@ -97,9 +110,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
             ]}
             buttonText={!user ? "Get Started Free" : "Current Plan"}
             buttonVariant="outline"
-            buttonAction={() => navigate('/signup')}
+            buttonAction={handleSignupClick}
             isCurrentPlan={user && !isPremium && !trialActive}
-            disabled={isPremium || trialActive}
+            disabled={isPremium || trialActive || isLoading}
           />
         </div>
       </div>
@@ -138,7 +151,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
               { name: "Email support" }
             ]}
             buttonText="Start 7-Day Trial"
-            buttonAction={!user ? handleSignupClick : handleUpgradeClick}
+            buttonAction={() => handlePlanClick('micro', priceIds.micro[planType])}
+            disabled={isLoading}
             trialBadge={false}
           />
 
@@ -170,7 +184,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
               { name: "Basic CRM integration" }
             ]}
             buttonText="Start 14-Day Trial"
-            buttonAction={!user ? handleSignupClick : handleUpgradeClick}
+            buttonAction={() => handlePlanClick('solo', priceIds.solo[planType])}
+            disabled={isLoading}
             trialBadge={false}
           />
           
@@ -203,9 +218,10 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
               { name: "Team collaboration features" }
             ]}
             buttonText="Start 14-Day Trial"
-            buttonAction={!user ? handleSignupClick : handleUpgradeClick}
+            buttonAction={() => handlePlanClick('professional', priceIds.professional[planType])}
             isCurrentPlan={isPremium || trialActive}
             isPopular={true}
+            disabled={isLoading}
             trialBadge={trialActive && !isPremium}
           />
 
@@ -239,7 +255,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
             ]}
             buttonText="Start 14-Day Trial"
             buttonVariant="outline"
-            buttonAction={!user ? handleSignupClick : handleUpgradeClick}
+            buttonAction={() => handlePlanClick('team', priceIds.team[planType])}
+            disabled={isLoading}
           />
         </div>
       </div>
@@ -269,6 +286,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           buttonText="Contact Sales"
           buttonVariant="outline"
           buttonAction={handleContactSales}
+          disabled={isLoading}
         />
       </div>
 
