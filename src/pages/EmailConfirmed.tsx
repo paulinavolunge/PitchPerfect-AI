@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { trackEvent } from '@/utils/analytics';
 
 const EmailConfirmed = () => {
   const navigate = useNavigate();
@@ -13,10 +14,25 @@ const EmailConfirmed = () => {
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
-    // Show success toast
+    // Track email verification success
+    trackEvent('email_verified', {
+      timestamp: new Date().toISOString(),
+      redirect_countdown: 5
+    });
+
+    // Show success toast with login link
     toast({
       title: "Email verified successfully!",
       description: "Your account has been confirmed. You can now log in.",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/login?verified=true')}
+        >
+          Go to login
+        </Button>
+      ),
     });
 
     // Start countdown for auto-redirect
@@ -35,6 +51,9 @@ const EmailConfirmed = () => {
   }, [navigate, toast]);
 
   const handleLoginNow = () => {
+    trackEvent('email_verified_manual_redirect', {
+      timestamp: new Date().toISOString()
+    });
     navigate('/login?verified=true');
   };
 

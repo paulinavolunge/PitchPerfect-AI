@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { trackEvent } from '@/utils/analytics';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -50,6 +51,14 @@ const Login = () => {
         if (event === 'SIGNED_IN') {
           // Clear any errors on successful sign in
           setLoginError(null);
+          
+          // Track successful login
+          trackEvent('login_success', {
+            method: 'email',
+            timestamp: new Date().toISOString(),
+            user_id: session?.user?.id
+          });
+          
         } else if (event === 'SIGNED_OUT') {
           // User signed out, clear any errors
           setLoginError(null);
@@ -106,7 +115,7 @@ const Login = () => {
           </div>
 
           {verificationMessage && (
-            <Alert className="mb-6 bg-green-50 border-green-200 relative">
+            <Alert className="mb-6 bg-green-50 border-green-200 relative" aria-live="assertive">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
               <AlertDescription className="text-green-700 pr-8">
                 {verificationMessage}
@@ -114,6 +123,7 @@ const Login = () => {
               <button
                 onClick={() => setVerificationMessage(null)}
                 className="absolute top-3 right-3 text-green-600 hover:text-green-800"
+                aria-label="Dismiss message"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -121,7 +131,7 @@ const Login = () => {
           )}
 
           {loginError && (
-            <Alert className="mb-6 bg-red-50 border-red-200 relative">
+            <Alert className="mb-6 bg-red-50 border-red-200 relative" aria-live="assertive">
               <AlertCircle className="h-5 w-5 text-red-500" />
               <AlertDescription className="text-red-700 pr-8">
                 {loginError}
@@ -129,6 +139,7 @@ const Login = () => {
               <button
                 onClick={() => setLoginError(null)}
                 className="absolute top-3 right-3 text-red-600 hover:text-red-800"
+                aria-label="Dismiss error"
               >
                 <X className="h-4 w-4" />
               </button>

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -6,7 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ArrowLeft, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import FadeTransition from '@/components/animations/FadeTransition';
+import { trackEvent } from '@/utils/analytics';
 
 // Form schema for validation - using exactly the standard email validation pattern
 const signupSchema = z.object({
@@ -59,42 +61,77 @@ const Signup = () => {
     }
   });
 
-  // Force reset form validation on component mount as requested
-  useEffect(() => {
-    form.reset();
-  }, []);
-
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
 
-    // Check for hash params (email confirmation)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (hashParams.get('access_token') || hashParams.get('error_description')) {
-      const errorDescription = hashParams.get('error_description');
-      if (errorDescription) {
-        setSignupError(decodeURIComponent(errorDescription));
-        toast.error("Email confirmation failed", {
-          description: decodeURIComponent(errorDescription)
-        });
-      } else {
-        navigate('/email-confirmed');
+    // Handle email confirmation using modern Supabase session handling
+    const handleEmailConfirmation = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session error:', error);
+          setSignupError(error.message);
+          toast.error("Email confirmation failed", {
+            description: error.message
+          });
+          return;
+        }
+
+        // Check if we just came from email confirmation
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('confirmed') === 'true' || session?.user?.email_confirmed_at) {
+          navigate('/email-confirmed');
+        }
+      } catch (error: any) {
+        console.error('Error handling email confirmation:', error);
       }
-    }
+    };
+
+    handleEmailConfirmation();
   }, [user, navigate]);
+
+  // Calculate password strength for better UX
+  const calculatePasswordStrength = (password: string): { score: number; feedback: string } => {
+    let score = 0;
+    let feedback = "Very weak";
+    
+    if (password.length >= 8) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    
+    if (score >= 4) feedback = "Strong";
+    else if (score >= 3) feedback = "Good";
+    else if (score >= 2) feedback = "Fair";
+    else if (score >= 1) feedback = "Weak";
+    
+    return { score, feedback };
+  };
+
+  const currentPassword = form.watch("password");
+  const passwordStrength = currentPassword ? calculatePasswordStrength(currentPassword) : null;
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true);
     setSignupError(null);
     
+    // Track signup attempt
+    trackEvent('signup_attempt', {
+      email_domain: data.email.split('@')[1],
+      timestamp: new Date().toISOString()
+    });
+    
     try {
-      // Call Supabase auth signup directly without additional validation
+      // Call Supabase auth signup
       const { data: userData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/dashboard?confirmed=true`,
         }
       });
 
@@ -105,11 +142,29 @@ const Signup = () => {
       if (userData) {
         if (userData.user && !userData.user.email_confirmed_at) {
           setVerificationSent(true);
-          toast.success("Signup successful!", {
-            description: "Please check your email to verify your account."
+          
+          // Track successful signup
+          trackEvent('signup_success', {
+            email_domain: data.email.split('@')[1],
+            verification_required: true,
+            timestamp: new Date().toISOString()
+          });
+
+          toast.success("Account created successfully!", {
+            description: "Please check your email to verify your account.",
+            action: {
+              label: "Go to login",
+              onClick: () => navigate('/login')
+            }
           });
         } else {
           // In case auto-confirm is enabled
+          trackEvent('signup_success', {
+            email_domain: data.email.split('@')[1],
+            verification_required: false,
+            timestamp: new Date().toISOString()
+          });
+          
           toast.success("Account created successfully!");
           navigate('/dashboard');
         }
@@ -117,6 +172,12 @@ const Signup = () => {
     } catch (error: any) {
       console.error('Signup error:', error);
       setSignupError(error.message || 'Failed to create account');
+      
+      // Track signup error
+      trackEvent('signup_error', {
+        error_type: error.message || 'unknown_error',
+        timestamp: new Date().toISOString()
+      });
       
       const errorMsg = error.message.toLowerCase();
       if (errorMsg.includes('password')) {
@@ -146,23 +207,39 @@ const Signup = () => {
       <Navbar />
       <main className="flex-grow pt-24 pb-12 flex items-center justify-center">
         <div className="container max-w-md px-4">
+          {/* Back to Home - moved outside card for better UX */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-gray-500 hover:text-brand-dark mb-6"
+            onClick={handleBackToHome}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to home
+          </Button>
+
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-brand-dark">Create an Account</h1>
-            <p className="text-brand-dark/70 mt-2">Sign up to get started with PitchPerfect AI</p>
+            <p className="text-brand-dark/70 mt-2">
+              Sign up to start mastering persuasive speech with AI roleplay.
+            </p>
           </div>
 
           <FadeTransition show={verificationSent} duration={300} className="mb-6">
-            <Alert className="mb-6 bg-green-50 border-green-200">
+            <Alert className="mb-6 bg-green-50 border-green-200" aria-live="assertive">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
               <AlertTitle className="text-green-700 font-semibold">Verification email sent!</AlertTitle>
               <AlertDescription className="text-green-700">
                 Please check your inbox and click the link to verify your email address.
+                <Link to="/login" className="block mt-2 text-green-600 hover:underline font-medium">
+                  Go to login page →
+                </Link>
               </AlertDescription>
             </Alert>
           </FadeTransition>
 
           <FadeTransition show={!!signupError} duration={300} className="mb-6">
-            <Alert className="mb-6 bg-red-50 border-red-200">
+            <Alert className="mb-6 bg-red-50 border-red-200" aria-live="assertive">
               <AlertCircle className="h-5 w-5 text-red-500" />
               <AlertTitle className="text-red-700 font-semibold">Sign up error</AlertTitle>
               <AlertDescription className="text-red-700">
@@ -171,18 +248,7 @@ const Signup = () => {
             </Alert>
           </FadeTransition>
 
-          <Card className="shadow-lg border-gray-100">
-            <CardHeader className="bg-white rounded-t-lg px-6 py-4 border-b border-gray-100">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-500 hover:text-brand-dark -ml-2 mb-2"
-                onClick={handleBackToHome}
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to home
-              </Button>
-            </CardHeader>
+          <Card className="shadow-lg border-gray-100 overflow-hidden">
             <CardContent className="pt-6">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -219,6 +285,27 @@ const Signup = () => {
                             {...field} 
                           />
                         </FormControl>
+                        {passwordStrength && currentPassword && (
+                          <div className="text-xs mt-1">
+                            <div className="flex items-center space-x-2">
+                              <div className="flex-1 bg-gray-200 rounded-full h-1">
+                                <div 
+                                  className={`h-1 rounded-full transition-all ${
+                                    passwordStrength.score >= 4 ? 'bg-green-500' :
+                                    passwordStrength.score >= 3 ? 'bg-yellow-500' : 'bg-red-500'
+                                  }`}
+                                  style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                                />
+                              </div>
+                              <span className={`font-medium ${
+                                passwordStrength.score >= 4 ? 'text-green-600' :
+                                passwordStrength.score >= 3 ? 'text-yellow-600' : 'text-red-600'
+                              }`}>
+                                {passwordStrength.feedback}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -242,6 +329,12 @@ const Signup = () => {
                       </FormItem>
                     )}
                   />
+                  
+                  {/* Trust indicator */}
+                  <div className="flex items-center text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Your data is secure and encrypted.
+                  </div>
                   
                   <Button 
                     type="submit" 
