@@ -44,25 +44,22 @@ const Login = () => {
   }, [user, navigate, location]);
 
   useEffect(() => {
-    // Listen for auth errors with proper cleanup
+    // Listen for auth state changes with proper cleanup
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN') {
           // Clear any errors on successful sign in
           setLoginError(null);
-        } else if (event === 'SIGNED_OUT' && session?.error) {
-          // Handle errors during login attempt
-          setLoginError(session.error.message);
-          
-          // Check if the error is about unverified email
-          if (session.error.message.includes('Email not confirmed')) {
-            setLoginError('Please verify your email address before logging in.');
-          }
+        } else if (event === 'SIGNED_OUT') {
+          // User signed out, clear any errors
+          setLoginError(null);
         }
+        // Note: Auth errors are typically handled by the Auth UI component itself
+        // or can be caught during the actual auth operations
       }
     );
 
-    return () => authListener?.unsubscribe();
+    return () => authListener.subscription.unsubscribe();
   }, []);
 
   // Auto-dismiss alerts after 6 seconds
