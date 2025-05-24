@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { Check } from 'lucide-react';
 
 interface PricingHeaderProps {
   planType: "monthly" | "yearly";
@@ -34,42 +35,65 @@ const PricingHeader: React.FC<PricingHeaderProps> = ({
     } else if (trialActive) {
       return "Your trial gives you access to all premium features. Choose a plan to continue when your trial ends.";
     } else {
-      return "Unlock premium features and take your sales conversations to the next level.";
+      return "Start free and scale as you grow. All plans include our core AI-powered sales training features.";
     }
   };
 
   return (
-    <div className="text-center mb-12 md:mb-16">
-      <h1 className="text-3xl md:text-4xl font-bold mb-4 text-brand-dark">{getTitle()}</h1>
-      <p className="text-lg text-brand-dark/70 max-w-2xl mx-auto mb-8">{getSubtitle()}</p>
+    <div className="text-center mb-16">
+      <h1 className="text-4xl md:text-5xl font-bold mb-6 text-brand-dark bg-gradient-to-r from-brand-dark to-brand-blue bg-clip-text">
+        {getTitle()}
+      </h1>
+      <p className="text-xl text-brand-dark/70 max-w-3xl mx-auto mb-12 leading-relaxed">
+        {getSubtitle()}
+      </p>
       
-      <div className="flex justify-center space-x-4 mb-8">
-        <button
-          className={`px-6 py-2 rounded-lg transition-all ${planType === 'monthly' 
-            ? 'bg-brand-blue text-white shadow-md' 
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-          onClick={() => setPlanType('monthly')}
-          aria-label="Show monthly pricing"
-        >
-          Monthly Billing
-        </button>
-        <button
-          className={`px-6 py-2 rounded-lg transition-all flex items-center ${planType === 'yearly' 
-            ? 'bg-brand-blue text-white shadow-md' 
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-          onClick={() => setPlanType('yearly')}
-          aria-label="Show yearly pricing"
-        >
-          Yearly Billing
-          <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Save 17%</span>
-        </button>
-      </div>
+      {!isPremium && (
+        <div className="flex items-center justify-center mb-8">
+          <div className="bg-gray-100 p-1 rounded-xl flex items-center space-x-1 shadow-inner">
+            <button
+              className={`px-6 py-3 rounded-lg transition-all duration-300 font-medium flex items-center space-x-2 ${
+                planType === 'monthly' 
+                  ? 'bg-white text-brand-dark shadow-md transform scale-105' 
+                  : 'text-gray-600 hover:text-brand-dark'
+              }`}
+              onClick={() => setPlanType('monthly')}
+              aria-label="Show monthly pricing"
+            >
+              <span>Monthly</span>
+            </button>
+            <button
+              className={`px-6 py-3 rounded-lg transition-all duration-300 font-medium flex items-center space-x-2 ${
+                planType === 'yearly' 
+                  ? 'bg-white text-brand-dark shadow-md transform scale-105' 
+                  : 'text-gray-600 hover:text-brand-dark'
+              }`}
+              onClick={() => setPlanType('yearly')}
+              aria-label="Show yearly pricing with discount"
+            >
+              <span>Annual</span>
+              <span className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center space-x-1">
+                <Check className="h-3 w-3" />
+                <span>Save 20%</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {planType === 'yearly' && !isPremium && (
+        <div className="inline-block bg-green-50 border border-green-200 rounded-lg px-4 py-2 mb-8">
+          <p className="text-green-800 text-sm font-medium">
+            🎉 Annual billing saves you 20% - That's like getting 2 months free!
+          </p>
+        </div>
+      )}
       
       {isPremium && (
         <div className="mt-6">
           <Button 
             onClick={() => navigate('/subscription')}
-            className="bg-brand-green hover:bg-brand-green/90 text-white"
+            className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-3 text-lg"
           >
             Manage Subscription
           </Button>

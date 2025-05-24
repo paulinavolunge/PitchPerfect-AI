@@ -22,7 +22,6 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
   const { user, isPremium, trialActive, trialEndsAt } = useAuth();
   const navigate = useNavigate();
   
-  // Calculate days remaining in trial
   const calculateDaysRemaining = () => {
     if (!trialEndsAt) return 0;
     
@@ -32,7 +31,6 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     return Math.max(0, diffDays);
   };
   
-  // Handle actions
   const handleUpgradeClick = () => {
     if (!user) {
       navigate('/login', { state: { from: '/subscription' } });
@@ -49,73 +47,19 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     window.location.href = "mailto:sales@pitchperfectai.com?subject=Enterprise Pricing Inquiry";
   };
 
-  // Define enterprise plan details based on size
-  const enterprisePlans = {
-    small: {
-      name: "Small Enterprise",
-      price: "$500",
-      users: "10-25",
-      features: [
-        "All Team features",
-        "Basic custom AI training",
-        "Standard analytics dashboard",
-        "SSO integration",
-        "Email support"
-      ]
-    },
-    medium: {
-      name: "Medium Enterprise",
-      price: "$1,500",
-      users: "26-100",
-      features: [
-        "All Small Enterprise features",
-        "Advanced custom AI training",
-        "Enhanced analytics and reporting",
-        "Advanced SSO and security",
-        "Priority support with 24-hour response"
-      ]
-    },
-    large: {
-      name: "Large Enterprise",
-      price: "$3,000+",
-      users: "101+",
-      features: [
-        "All Medium Enterprise features",
-        "Fully customized AI training",
-        "Executive analytics dashboard",
-        "Custom integrations",
-        "Dedicated account manager",
-        "Custom onboarding and training"
-      ]
-    }
-  };
-
-  // Determine button text for Team plan based on user status and plan type
-  const getTeamButtonText = () => {
-    if (!user) {
-      return planType === "monthly" ? "Sign up for Monthly Team" : "Sign up for Yearly Team";
-    } else if (isPremium) {
-      return "Manage Subscription";
-    } else if (trialActive) {
-      return `Upgrade Trial to ${planType === "monthly" ? "Monthly" : "Yearly"}`;
-    } else {
-      return `Upgrade to ${planType === "monthly" ? "Monthly" : "Yearly"} Team`;
-    }
-  };
-
   const daysLeft = calculateDaysRemaining();
 
   return (
     <>
-      {/* Time-limited offer card for Team plan */}
-      <div className="max-w-md mx-auto mb-8">
+      {/* Time-limited offer banner */}
+      <div className="max-w-4xl mx-auto mb-8">
         <TimeOffer 
           expiryDate={promoExpiryDate}
-          discount="Get 1 Month Free"
-          description="Sign up for the annual Team Plan and get your first month free"
+          discount="Save 20% on Annual Plans"
+          description="Switch to annual billing and get two months free"
           variant="card"
-          ctaText="Claim This Deal"
-          ctaLink="/subscription?plan=yearly"
+          ctaText="View Annual Pricing"
+          ctaLink="/pricing"
         />
       </div>
       
@@ -126,83 +70,224 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
             <p className="font-medium text-amber-800">Your free trial is active</p>
           </div>
           <p className="text-amber-700 text-sm mb-2">
-            ⚠️ Only {daysLeft} days left in your trial. Upgrade now to keep access to premium features.
+            ⚠️ Only {daysLeft} days left in your trial. Choose a plan to continue accessing premium features.
           </p>
         </div>
       )}
       
-      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto pricing-cards">
-        {/* Solo Plan */}
-        <PricingPlanCard
-          type="solo"
-          title="Solo"
-          description="Perfect for individuals"
-          price={<span className="text-4xl font-bold">$0</span>}
-          priceDescription="forever"
-          features={[
-            { name: "Basic sales practice tools" },
-            { name: "Limited AI tips and feedback" },
-            { name: "Progress tracking dashboard" },
-            { name: "Community support" }
-          ]}
-          buttonText={!user ? "Sign up free" : "Current plan"}
-          buttonVariant="outline"
-          buttonAction={() => navigate('/signup')}
-          isCurrentPlan={user && !isPremium && !trialActive}
-          disabled={isPremium || trialActive}
-        />
+      {/* Free Plan - Lead Magnet */}
+      <div className="mb-12">
+        <div className="text-center mb-8">
+          <h3 className="text-2xl font-bold text-brand-dark mb-2">Start Your Sales Training Journey</h3>
+          <p className="text-brand-dark/70 max-w-2xl mx-auto">Begin with our free plan and upgrade as you grow</p>
+        </div>
         
-        {/* Team Plan */}
-        <PricingPlanCard
-          type="team"
-          title="Team"
-          description="For growing teams"
-          price={
-            planType === "monthly" ? (
-              <>
-                <span className="text-4xl font-bold">$29</span>
-                <span className="text-gray-500 ml-2">/ user / month</span>
-              </>
-            ) : (
-              <>
-                <span className="text-4xl font-bold">$290</span>
-                <span className="text-gray-500 ml-2">/ user / year</span>
-                <p className="text-sm text-green-600 mt-1">Save $58 (17% off)</p>
-              </>
-            )
-          }
-          features={[
-            { name: "All Solo plan features" },
-            { name: "AI roleplay practice with voice or text", highlight: true },
-            { name: "Team analytics dashboard" },
-            { name: "Unlimited AI tips and suggestions" },
-            { name: "Priority support" }
-          ]}
-          buttonText={getTeamButtonText()}
-          buttonAction={!user ? handleSignupClick : handleUpgradeClick}
-          isCurrentPlan={isPremium || trialActive}
-          isPopular={true}
-          trialBadge={trialActive && !isPremium}
-          // Always enable the Team button regardless of current plan status
-          disabled={false}
-        />
+        <div className="max-w-sm mx-auto">
+          <PricingPlanCard
+            type="free"
+            title="Free"
+            description="Perfect for getting started"
+            price={<span className="text-4xl font-bold">$0</span>}
+            priceDescription="forever"
+            features={[
+              { name: "3 practice sessions per month" },
+              { name: "2 basic scenarios" },
+              { name: "Basic feedback" },
+              { name: "Community access" }
+            ]}
+            buttonText={!user ? "Get Started Free" : "Current Plan"}
+            buttonVariant="outline"
+            buttonAction={() => navigate('/signup')}
+            isCurrentPlan={user && !isPremium && !trialActive}
+            disabled={isPremium || trialActive}
+          />
+        </div>
+      </div>
+
+      {/* Main Pricing Grid */}
+      <div className="mb-8">
+        <div className="text-center mb-8">
+          <h3 className="text-2xl font-bold text-brand-dark mb-2">Choose Your Perfect Plan</h3>
+          <p className="text-brand-dark/70 max-w-2xl mx-auto">Upgrade to unlock advanced features and accelerate your sales success</p>
+        </div>
         
-        {/* Enterprise Plan */}
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
+          {/* Micro Plan */}
+          <PricingPlanCard
+            type="micro"
+            title="Micro"
+            description="For occasional practice"
+            price={
+              planType === "monthly" ? (
+                <>
+                  <span className="text-3xl font-bold">$9</span>
+                  <span className="text-gray-500 ml-2">/ month</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-3xl font-bold">$86</span>
+                  <span className="text-gray-500 ml-2">/ year</span>
+                  <p className="text-sm text-green-600 mt-1">Save $22 (20% off)</p>
+                </>
+              )
+            }
+            features={[
+              { name: "10 practice sessions/month" },
+              { name: "5 industry scenarios" },
+              { name: "Basic analytics" },
+              { name: "Email support" }
+            ]}
+            buttonText="Start 7-Day Trial"
+            buttonAction={!user ? handleSignupClick : handleUpgradeClick}
+            trialBadge={false}
+          />
+
+          {/* Solo Plan */}
+          <PricingPlanCard
+            type="solo"
+            title="Solo"
+            description="For individual sales reps"
+            price={
+              planType === "monthly" ? (
+                <>
+                  <span className="text-3xl font-bold">$19</span>
+                  <span className="text-gray-500 ml-2">/ month</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-3xl font-bold">$182</span>
+                  <span className="text-gray-500 ml-2">/ year</span>
+                  <p className="text-sm text-green-600 mt-1">Save $46 (20% off)</p>
+                </>
+              )
+            }
+            features={[
+              { name: "30 practice sessions/month" },
+              { name: "8 industry scenarios" },
+              { name: "Performance analytics" },
+              { name: "Email support" },
+              { name: "Mobile app access" },
+              { name: "Basic CRM integration" }
+            ]}
+            buttonText="Start 14-Day Trial"
+            buttonAction={!user ? handleSignupClick : handleUpgradeClick}
+            trialBadge={false}
+          />
+          
+          {/* Professional Plan - Most Popular */}
+          <PricingPlanCard
+            type="professional"
+            title="Professional"
+            description="For small sales teams"
+            price={
+              planType === "monthly" ? (
+                <>
+                  <span className="text-3xl font-bold">$79</span>
+                  <span className="text-gray-500 ml-2">/ user / month</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-3xl font-bold">$758</span>
+                  <span className="text-gray-500 ml-2">/ user / year</span>
+                  <p className="text-sm text-green-600 mt-1">Save $190 (20% off)</p>
+                </>
+              )
+            }
+            features={[
+              { name: "Unlimited practice sessions", highlight: true },
+              { name: "15+ industry + custom scenarios", highlight: true },
+              { name: "Advanced analytics & dashboards" },
+              { name: "Team performance tracking" },
+              { name: "Priority support & video tutorials" },
+              { name: "Advanced CRM integrations" },
+              { name: "Team collaboration features" }
+            ]}
+            buttonText="Start 14-Day Trial"
+            buttonAction={!user ? handleSignupClick : handleUpgradeClick}
+            isCurrentPlan={isPremium || trialActive}
+            isPopular={true}
+            trialBadge={trialActive && !isPremium}
+          />
+
+          {/* Team Plan */}
+          <PricingPlanCard
+            type="team"
+            title="Team"
+            description="For medium sales departments"
+            price={
+              planType === "monthly" ? (
+                <>
+                  <span className="text-2xl font-bold">$69-59</span>
+                  <span className="text-gray-500 ml-2">/ user / month</span>
+                  <p className="text-xs text-gray-600 mt-1">Based on team size</p>
+                </>
+              ) : (
+                <>
+                  <span className="text-2xl font-bold">$662-566</span>
+                  <span className="text-gray-500 ml-2">/ user / year</span>
+                  <p className="text-xs text-gray-600 mt-1">11-49 users</p>
+                </>
+              )
+            }
+            features={[
+              { name: "Everything in Professional" },
+              { name: "Custom scenario builder" },
+              { name: "Advanced integrations" },
+              { name: "Dedicated account manager" },
+              { name: "Custom reporting & ROI tracking" },
+              { name: "Limited white-label options" }
+            ]}
+            buttonText="Start 14-Day Trial"
+            buttonVariant="outline"
+            buttonAction={!user ? handleSignupClick : handleUpgradeClick}
+          />
+        </div>
+      </div>
+
+      {/* Enterprise Plan */}
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-6">
+          <h3 className="text-2xl font-bold text-brand-dark mb-2">Enterprise Solution</h3>
+          <p className="text-brand-dark/70">Custom solutions for large organizations</p>
+        </div>
+        
         <PricingPlanCard
           type="enterprise"
           title="Enterprise"
-          description="For larger organizations"
-          price=""
-          features={[]}
+          description="For large organizations (50+ users)"
+          price="Custom Pricing"
+          features={[
+            { name: "Everything in Team Plan" },
+            { name: "Full white-label options" },
+            { name: "Custom integrations & API access" },
+            { name: "On-premise deployment options" },
+            { name: "Premium training & onboarding" },
+            { name: "SLA guarantees" },
+            { name: "Dedicated success manager" },
+            { name: "Custom development support" }
+          ]}
           buttonText="Contact Sales"
           buttonVariant="outline"
           buttonAction={handleContactSales}
-          enterpriseProps={{
-            sizes: enterprisePlans,
-            enterpriseSize,
-            setEnterpriseSize
-          }}
         />
+      </div>
+
+      {/* Trust Elements */}
+      <div className="text-center mt-16 space-y-4">
+        <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-brand-dark/70">
+          <span className="flex items-center">
+            ✓ 14-day free trial, no credit card required
+          </span>
+          <span className="flex items-center">
+            ✓ Cancel anytime
+          </span>
+          <span className="flex items-center">
+            ✓ 30-day money-back guarantee
+          </span>
+        </div>
+        <p className="text-xs text-brand-dark/50">
+          SSL encrypted • GDPR/CCPA compliant • SOC 2 Type II certified
+        </p>
       </div>
     </>
   );

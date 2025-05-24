@@ -5,13 +5,14 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import ROICalculator from '@/components/ROICalculator';
 import GuidedTour from '@/components/GuidedTour';
 import { Step } from 'react-joyride';
 import PricingHeader from '@/components/pricing/PricingHeader';
 import PricingPlans from '@/components/pricing/PricingPlans';
+import PricingFAQ from '@/components/pricing/PricingFAQ';
+import ValueProposition from '@/components/pricing/ValueProposition';
 import StickyCTA from '@/components/pricing/StickyCTA';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 
 const Pricing = () => {
@@ -53,35 +54,31 @@ const Pricing = () => {
   // Handle plan type change with analytics
   const handlePlanTypeChange = (newPlanType: "monthly" | "yearly") => {
     setPlanType(newPlanType);
-    trackEvent('plan_selected', { type: newPlanType, size: enterpriseSize });
+    trackEvent('plan_type_selected', { type: newPlanType });
   };
 
   // Handle enterprise size change with analytics
   const handleEnterpriseSizeChange = (newSize: "small" | "medium" | "large") => {
     setEnterpriseSize(newSize);
-    trackEvent('plan_selected', { type: planType, size: newSize });
+    trackEvent('enterprise_size_selected', { size: newSize });
   };
 
   // Track scroll position to manage sticky CTA visibility
   React.useEffect(() => {
     const handleScroll = () => {
-      // Get the position of the ROI calculator
-      const roiCalc = document.querySelector('.roi-calculator');
-      if (roiCalc) {
-        const rect = roiCalc.getBoundingClientRect();
-        // If the ROI calculator is visible and being interacted with, hide the global sticky CTA
-        // to avoid duplicate CTAs since the calculator now has its own CTA
-        if (rect.top < window.innerHeight && rect.bottom > 0) {
-          setShowStickyCTA(false);
-        } else {
-          setShowStickyCTA(true);
-        }
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+      
+      // Show sticky CTA after scrolling past the header
+      if (scrollPosition > windowHeight * 0.5) {
+        setShowStickyCTA(true);
+      } else {
+        setShowStickyCTA(false);
       }
     };
 
     window.addEventListener('scroll', handleScroll);
-    // Run once on initial load
-    handleScroll();
+    handleScroll(); // Run once on initial load
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -96,13 +93,8 @@ const Pricing = () => {
       disableBeacon: true,
     },
     {
-      target: '.roi-calculator',
-      content: 'Calculate your potential return on investment with our ROI calculator.',
-      disableBeacon: true,
-    },
-    {
       target: '.sticky-cta',
-      content: 'Try our demo without signing up!',
+      content: 'Start your free trial anytime!',
       disableBeacon: true,
     }
   ];
@@ -113,19 +105,14 @@ const Pricing = () => {
     trackEvent('pricing_tour_completed');
   };
 
-  // Handle ROI calculator interaction
-  const handleROICalculatorInteraction = () => {
-    trackEvent('roi_calculator_interacted');
-  };
-
   // Get appropriate CTA text based on user status
   const getStickyCTAText = () => {
     if (!user) {
-      return "Try Free Demo";
+      return "Start Free Trial";
     } else if (trialActive) {
-      return "Continue Your Trial";
-    } else if (isPremium) {
       return "Go to Dashboard";
+    } else if (isPremium) {
+      return "Manage Subscription";
     } else {
       return "Start Free Trial";
     }
@@ -133,11 +120,11 @@ const Pricing = () => {
 
   // Handle sticky CTA click based on user status
   const handleStickyCTAClick = () => {
-    const userStatus = user ? (isPremium ? 'premium' : 'trial') : 'guest';
+    const userStatus = user ? (isPremium ? 'premium' : (trialActive ? 'trial' : 'free')) : 'guest';
     trackEvent('sticky_cta_clicked', { userStatus });
     
     if (!user) {
-      scrollToDemo();
+      navigate('/signup');
     } else if (trialActive || isPremium) {
       navigate('/dashboard');
     } else {
@@ -150,8 +137,10 @@ const Pricing = () => {
   return (
     <div className="min-h-screen flex flex-col relative">
       <Helmet>
-        <title>Pricing | PitchPerfect AI</title>
-        <meta name="description" content="Choose a plan. Start free for 14 days. No card required." />
+        <title>Pricing Plans | PitchPerfect AI - Sales Training That Works</title>
+        <meta name="description" content="Choose the perfect plan for your sales training needs. Start free and upgrade as you grow. 14-day free trial, no credit card required." />
+        <meta property="og:title" content="PitchPerfect AI Pricing - Sales Training Plans" />
+        <meta property="og:description" content="Affordable sales training plans starting at $9/month. Free trial available." />
       </Helmet>
       
       <Navbar />
@@ -177,25 +166,37 @@ const Pricing = () => {
             isPremium={isPremium} 
           />
           
-          <PricingPlans 
-            planType={planType} 
-            enterpriseSize={enterpriseSize} 
-            setEnterpriseSize={handleEnterpriseSizeChange} 
-            promoExpiryDate={promoExpiryDate} 
-          />
-          
-          <div className="max-w-3xl mx-auto mt-20 roi-calculator" onClick={handleROICalculatorInteraction}>
-            <ROICalculator />
+          <div className="pricing-cards">
+            <PricingPlans 
+              planType={planType} 
+              enterpriseSize={enterpriseSize} 
+              setEnterpriseSize={handleEnterpriseSizeChange} 
+              promoExpiryDate={promoExpiryDate} 
+            />
           </div>
           
-          <div className="text-center mt-12">
-            <p className="text-sm text-brand-dark/70">
-              All plans include a 14-day free trial. No credit card required until trial ends.
+          <div className="mt-20">
+            <ValueProposition />
+          </div>
+          
+          <div className="mt-20">
+            <PricingFAQ />
+          </div>
+          
+          <div className="text-center mt-20 bg-gradient-to-r from-brand-blue/5 to-brand-green/5 p-8 rounded-2xl">
+            <h3 className="text-2xl font-bold text-brand-dark mb-4">Ready to Transform Your Sales Performance?</h3>
+            <p className="text-lg text-brand-dark/70 mb-6 max-w-2xl mx-auto">
+              Join thousands of sales professionals who have improved their closing rates with PitchPerfect AI
             </p>
-          </div>
-          
-          <div ref={demoRef} id="demo-section" className="mt-20">
-            {/* Demo content would go here if needed */}
+            <button 
+              onClick={() => navigate('/signup')}
+              className="bg-gradient-to-r from-brand-blue to-brand-green hover:from-brand-blue/90 hover:to-brand-green/90 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              Start Your Free Trial Today
+            </button>
+            <p className="text-sm text-brand-dark/60 mt-3">
+              No credit card required • 14-day free trial • Cancel anytime
+            </p>
           </div>
         </div>
       </main>
