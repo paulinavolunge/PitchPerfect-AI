@@ -52,8 +52,18 @@ const Pricing = () => {
       yearly: 'price_pro_yearly'      // Replace with actual Stripe price ID
     },
     team: {
-      monthly: 'price_team_monthly',  // Replace with actual Stripe price ID
-      yearly: 'price_team_yearly'     // Replace with actual Stripe price ID
+      small: {
+        monthly: 'price_team_small_monthly',  // 1-9 users
+        yearly: 'price_team_small_yearly'     // 1-9 users
+      },
+      medium: {
+        monthly: 'price_team_medium_monthly', // 10-49 users
+        yearly: 'price_team_medium_yearly'    // 10-49 users
+      },
+      large: {
+        monthly: 'price_team_large_monthly',  // 50+ users
+        yearly: 'price_team_large_yearly'     // 50+ users
+      }
     }
   };
 

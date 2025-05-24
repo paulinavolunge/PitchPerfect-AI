@@ -11,7 +11,11 @@ interface PriceIds {
   micro: { monthly: string; yearly: string };
   solo: { monthly: string; yearly: string };
   professional: { monthly: string; yearly: string };
-  team: { monthly: string; yearly: string };
+  team: {
+    small: { monthly: string; yearly: string };
+    medium: { monthly: string; yearly: string };
+    large: { monthly: string; yearly: string };
+  };
 }
 
 interface PricingPlansProps {
@@ -68,8 +72,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
       <div className="max-w-4xl mx-auto mb-8">
         <TimeOffer 
           expiryDate={promoExpiryDate}
-          discount="Save 20% on Annual Plans"
-          description="Switch to annual billing and get two months free"
+          discount="Save 17% on Annual Plans"
+          description="Switch to annual billing and save on all paid plans"
           variant="card"
           ctaText="View Annual Pricing"
           ctaLink="/pricing"
@@ -138,9 +142,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                 </>
               ) : (
                 <>
-                  <span className="text-3xl font-bold">$86</span>
+                  <span className="text-3xl font-bold">$90</span>
                   <span className="text-gray-500 ml-2">/ year</span>
-                  <p className="text-sm text-green-600 mt-1">Save $22 (20% off)</p>
+                  <p className="text-sm text-green-600 mt-1">Save 17% ($18 off)</p>
                 </>
               )
             }
@@ -169,9 +173,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                 </>
               ) : (
                 <>
-                  <span className="text-3xl font-bold">$182</span>
+                  <span className="text-3xl font-bold">$190</span>
                   <span className="text-gray-500 ml-2">/ year</span>
-                  <p className="text-sm text-green-600 mt-1">Save $46 (20% off)</p>
+                  <p className="text-sm text-green-600 mt-1">Save 17% ($38 off)</p>
                 </>
               )
             }
@@ -202,9 +206,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                 </>
               ) : (
                 <>
-                  <span className="text-3xl font-bold">$758</span>
+                  <span className="text-3xl font-bold">$790</span>
                   <span className="text-gray-500 ml-2">/ user / year</span>
-                  <p className="text-sm text-green-600 mt-1">Save $190 (20% off)</p>
+                  <p className="text-sm text-green-600 mt-1">Save 17% ($158 off)</p>
                 </>
               )
             }
@@ -239,9 +243,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                 </>
               ) : (
                 <>
-                  <span className="text-2xl font-bold">$662-566</span>
+                  <span className="text-2xl font-bold">$690-590</span>
                   <span className="text-gray-500 ml-2">/ user / year</span>
-                  <p className="text-xs text-gray-600 mt-1">11-49 users</p>
+                  <p className="text-xs text-green-600 mt-1">Save 17%</p>
                 </>
               )
             }
@@ -255,8 +259,35 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
             ]}
             buttonText="Start 14-Day Trial"
             buttonVariant="outline"
-            buttonAction={() => handlePlanClick('team', priceIds.team[planType])}
+            buttonAction={() => {
+              const teamPriceId = priceIds.team[enterpriseSize][planType];
+              handlePlanClick('team', teamPriceId);
+            }}
             disabled={isLoading}
+            enterpriseProps={{
+              sizes: {
+                small: {
+                  name: "Small Team",
+                  price: planType === "monthly" ? "$69/user/month" : "$690/user/year",
+                  users: "1-9 users",
+                  features: ["Up to 9 team members", "Basic team management", "Shared analytics"]
+                },
+                medium: {
+                  name: "Medium Team", 
+                  price: planType === "monthly" ? "$64/user/month" : "$640/user/year",
+                  users: "10-49 users",
+                  features: ["Up to 49 team members", "Advanced team management", "Department analytics"]
+                },
+                large: {
+                  name: "Large Team",
+                  price: planType === "monthly" ? "$59/user/month" : "$590/user/year", 
+                  users: "50+ users",
+                  features: ["Unlimited team members", "Enterprise team management", "Organization-wide analytics"]
+                }
+              },
+              enterpriseSize,
+              setEnterpriseSize
+            }}
           />
         </div>
       </div>

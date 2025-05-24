@@ -74,7 +74,7 @@ const PricingHeader: React.FC<PricingHeaderProps> = ({
               <span>Annual</span>
               <span className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center space-x-1">
                 <Check className="h-3 w-3" />
-                <span>Save 20%</span>
+                <span>Save 17%</span>
               </span>
             </button>
           </div>
@@ -84,7 +84,7 @@ const PricingHeader: React.FC<PricingHeaderProps> = ({
       {planType === 'yearly' && !isPremium && (
         <div className="inline-block bg-green-50 border border-green-200 rounded-lg px-4 py-2 mb-8">
           <p className="text-green-800 text-sm font-medium">
-            🎉 Annual billing saves you 20% - That's like getting 2 months free!
+            🎉 Annual billing saves you 17% across all plans!
           </p>
         </div>
       )}
