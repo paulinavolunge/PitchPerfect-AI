@@ -45,10 +45,10 @@ serve(async (req) => {
       reqBody = {};
     }
 
-    // Extract priceId from request body or fallback to environment variables
+    // Extract priceId from request body
     const priceId = reqBody.priceId || "";
-    const successUrl = reqBody.successUrl || `${req.headers.get("origin")}/subscription?success=true`;
-    const cancelUrl = reqBody.cancelUrl || `${req.headers.get("origin")}/subscription?canceled=true`;
+    const successUrl = reqBody.successUrl || `${req.headers.get("origin")}/dashboard?success=true`;
+    const cancelUrl = reqBody.cancelUrl || `${req.headers.get("origin")}/pricing?canceled=true`;
 
     logStep("Request parameters", { priceId, successUrl, cancelUrl });
 
@@ -64,13 +64,18 @@ serve(async (req) => {
       logStep("Using existing customer", { customerId });
     } else {
       // Create a new customer
-      const newCustomer = await stripe.customers.create({ email: user.email });
+      const newCustomer = await stripe.customers.create({ 
+        email: user.email,
+        metadata: {
+          user_id: user.id
+        }
+      });
       customerId = newCustomer.id;
       logStep("Created new customer", { customerId });
     }
     
     logStep("Creating checkout session with price", { 
-      priceId: priceId.substring(0, 5) + "..."
+      priceId: priceId.substring(0, 20) + "..."
     });
 
     const session = await stripe.checkout.sessions.create({
@@ -84,7 +89,7 @@ serve(async (req) => {
       mode: "subscription",
       success_url: successUrl,
       cancel_url: cancelUrl,
-      trial_period_days: 7,
+      trial_period_days: 14,
       automatic_tax: { enabled: true },
       // Add metadata to track the subscription
       metadata: {

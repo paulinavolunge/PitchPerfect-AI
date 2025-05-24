@@ -37,32 +37,32 @@ const Pricing = () => {
     trackEvent('pricing_page_viewed');
   }, []);
 
-  // Stripe Price IDs - Replace with your actual Stripe price IDs
+  // Your actual Stripe Price IDs
   const priceIds = {
     micro: {
-      monthly: 'price_micro_monthly', // Replace with actual Stripe price ID
-      yearly: 'price_micro_yearly'    // Replace with actual Stripe price ID
+      monthly: 'price_1RSNCvRv5Z8vxUAitUftsd9h',
+      yearly: 'price_1RSNewRv5Z8vxUAij9QjCAwI'
     },
     solo: {
-      monthly: 'price_solo_monthly',  // Replace with actual Stripe price ID
-      yearly: 'price_solo_yearly'     // Replace with actual Stripe price ID
+      monthly: 'price_1RSNFLRv5Z8vxUAiCdjDQCVJ',
+      yearly: 'price_1RSNfSRv5Z8vxUAiWx2L9ZFs'
     },
     professional: {
-      monthly: 'price_pro_monthly',   // Replace with actual Stripe price ID
-      yearly: 'price_pro_yearly'      // Replace with actual Stripe price ID
+      monthly: 'price_1RSNFnRv5Z8vxUAiyQ4YjOoy',
+      yearly: 'price_1RSNg7Rv5Z8vxUAicG7mlT2m'
     },
     team: {
       small: {
-        monthly: 'price_team_small_monthly',  // 1-9 users
-        yearly: 'price_team_small_yearly'     // 1-9 users
+        monthly: 'price_1RSNP2Rv5Z8vxUAip2CaI6FU',
+        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy'
       },
       medium: {
-        monthly: 'price_team_medium_monthly', // 10-49 users
-        yearly: 'price_team_medium_yearly'    // 10-49 users
+        monthly: 'price_1RSNP2Rv5Z8vxUAip2CaI6FU',
+        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy'
       },
       large: {
-        monthly: 'price_team_large_monthly',  // 50+ users
-        yearly: 'price_team_large_yearly'     // 50+ users
+        monthly: 'price_1RSNP2Rv5Z8vxUAip2CaI6FU',
+        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy'
       }
     }
   };
@@ -88,7 +88,7 @@ const Pricing = () => {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           priceId,
-          successUrl: `${window.location.origin}/subscription?success=true&plan=${planName}`,
+          successUrl: `${window.location.origin}/dashboard?success=true&plan=${planName}`,
           cancelUrl: `${window.location.origin}/pricing?canceled=true`,
         }
       });
@@ -118,14 +118,6 @@ const Pricing = () => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const scrollToDemo = () => {
-    if (demoRef.current) {
-      demoRef.current.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      navigate('/demo');
     }
   };
 
