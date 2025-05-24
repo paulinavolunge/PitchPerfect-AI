@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
@@ -34,6 +33,7 @@ interface ConversationInterfaceProps {
   volume: number;
   userScript?: string | null;
   onProcessingStateChange?: (isProcessing: boolean) => void;
+  onFirstAIReply?: () => void;
 }
 
 const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
@@ -42,7 +42,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   voiceStyle,
   volume,
   userScript,
-  onProcessingStateChange
+  onProcessingStateChange,
+  onFirstAIReply
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
@@ -54,6 +55,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [userIdleTime, setUserIdleTime] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [firstAIReplyTriggered, setFirstAIReplyTriggered] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isPremium, trialActive } = useAuth();
@@ -151,6 +153,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setMessages([initialMessage]);
     setSessionComplete(false);
     setShowFeedback(false);
+    setFirstAIReplyTriggered(false);
     
     // Speak the initial greeting if voice is enabled
     if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
@@ -277,6 +280,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       setMessages((prev) => [...prev, aiMessage]);
       setIsProcessing(false);
       
+      // Trigger first AI reply callback for guest mode prompts
+      if (!firstAIReplyTriggered && onFirstAIReply) {
+        setFirstAIReplyTriggered(true);
+        onFirstAIReply();
+      }
+      
       // Speak the AI response if voice is enabled
       if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
         speakMessage(aiResponse);
@@ -360,6 +369,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     
     setMessages([initialMessage]);
     setSessionComplete(false);
+    setFirstAIReplyTriggered(false);
     
     // Speak the initial greeting if voice is enabled
     if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
@@ -386,8 +396,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             <Button 
               variant="outline"
               size="sm"
-              className="flex items-center gap-1 text-xs h-8 min-w-[100px]"
+              className="flex items-center gap-1 text-xs h-8 min-w-[100px] group"
               onClick={handleFinishSession}
+              aria-label="End current practice session"
             >
               <Flag className="h-3 w-3" />
               End Session
@@ -408,7 +419,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         <MessageList messages={messages} isAISpeaking={isAISpeaking} />
         
         {isProcessing && (
-          <div className="p-4 bg-white border-t">
+          <div className="p-4 bg-white border-t" aria-live="polite">
             <LoadingIndicator size="small" />
           </div>
         )}
@@ -423,7 +434,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                   variant="outline" 
                   size="sm" 
                   onClick={() => handleUseSuggestion(suggestion)}
-                  className="text-xs py-1 h-auto"
+                  className="text-xs py-1 h-auto group"
+                  aria-label={`Use suggested response: ${suggestion}`}
                 >
                   {suggestion.length > 40 ? suggestion.substring(0, 37) + '...' : suggestion}
                 </Button>
@@ -437,8 +449,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             <p className="text-brand-dark mb-2">Session complete! Ready to see your feedback?</p>
             <Button 
               onClick={handleShowFeedback}
-              className="bg-brand-green hover:bg-brand-green/90 flex items-center gap-2"
+              className="bg-brand-green hover:bg-brand-green/90 flex items-center gap-2 group"
               size="lg"
+              aria-label="View session feedback and performance summary"
             >
               <CheckCircle size={16} />
               View Session Feedback
