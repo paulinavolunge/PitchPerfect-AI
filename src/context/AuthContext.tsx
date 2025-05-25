@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   // Function to fully clear all auth state
-  const clearAuthState = () => {
+  const clearAuthState = useCallback(() => {
     console.log('Clearing all auth state');
     setUser(null);
     setSession(null);
@@ -48,16 +49,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setTrialActive(false);
     setTrialEndsAt(null);
     setEmailVerified(false);
-    
-    // Also remove any trial-related localStorage items
-    if (user?.id) {
-      localStorage.removeItem(`${TRIAL_KEY}_${user.id}`);
-      localStorage.removeItem(`${TRIAL_KEY}_notification_${user.id}`);
-    }
-  };
+    setError(null);
+  }, []);
 
   // Check if the user has an active trial
-  const checkTrialStatus = () => {
+  const checkTrialStatus = useCallback(() => {
     if (!user) {
       setTrialActive(false);
       setTrialEndsAt(null);
@@ -91,10 +87,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       localStorage.setItem(`${TRIAL_KEY}_notification_${user.id}`, 'shown');
     }
-  };
+  }, [user, toast]);
+
+  // Refresh subscription data
+  const refreshSubscription = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const { data: subscriptionData, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (error) {
+        console.error('Error checking subscription:', error);
+        return;
+      }
+      
+      setIsPremium(subscriptionData.subscribed || false);
+      setSubscriptionTier(subscriptionData.subscription_tier || null);
+      setSubscriptionEnd(subscriptionData.subscription_end || null);
+    } catch (err) {
+      console.error('Error refreshing subscription:', err);
+    }
+  }, [user]);
 
   // Start a free trial for the user
-  const startFreeTrial = async () => {
+  const startFreeTrial = useCallback(async () => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -143,18 +159,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
     
     return Promise.resolve();
-  };
+  }, [user, toast]);
+
+  // Sign out function
+  const signOut = useCallback(async () => {
+    try {
+      console.log('Sign out initiated');
+      
+      // First clear all user state completely before calling signOut
+      clearAuthState();
+      
+      // Then call Supabase signOut
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error in supabase.auth.signOut():', error);
+        throw error;
+      }
+      
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+      
+      console.log("User signed out and state cleared");
+    } catch (err) {
+      console.error('Error signing out:', err);
+      toast({
+        title: "Sign out failed",
+        description: "There was a problem signing out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [clearAuthState, toast]);
 
   useEffect(() => {
+    let mounted = true;
+    
     const getSession = async () => {
-      setLoading(true);
-      
       try {
         const { data, error } = await supabase.auth.getSession();
         
+        if (!mounted) return;
+        
         if (error) {
+          console.error('Error getting session:', error);
           setError(error.message);
-          // Clear state completely in case of error
           clearAuthState();
         } else {
           setSession(data.session);
@@ -163,41 +212,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Check if email is verified
           if (data.session?.user) {
             setEmailVerified(data.session.user.email_confirmed_at !== null);
-            refreshSubscription();
-            checkTrialStatus();
-          } else {
-            // Clear all user-specific state when no session exists
-            clearAuthState();
           }
         }
       } catch (err) {
         console.error('Error getting session:', err);
-        setError('Failed to get session');
-        // Clear state in case of error
-        clearAuthState();
+        if (mounted) {
+          setError('Failed to get session');
+          clearAuthState();
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     getSession();
 
-    // Set up the auth listener with improved logging
+    // Set up the auth listener
     console.log('Setting up auth listener');
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
         console.log('Auth state changed:', event, 'Session exists:', Boolean(session));
         
         if (event === 'SIGNED_OUT') {
-          // Ensure all user state is cleared on sign out
           clearAuthState();
           console.log('User signed out, cleared auth state');
         } else {
-          // Update session and user
           setSession(session);
           setUser(session?.user ?? null);
           
-          // Check if email is verified
           if (session?.user) {
             setEmailVerified(session.user.email_confirmed_at !== null);
             
@@ -209,11 +255,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 variant: "default",
               });
             }
-            
-            refreshSubscription();
-            checkTrialStatus();
-          } else {
-            clearAuthState();
           }
         }
         
@@ -222,10 +263,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     return () => {
+      mounted = false;
       console.log('Cleaning up auth listener');
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [clearAuthState, toast]);
+
+  // Effect to handle subscription and trial checks when user changes
+  useEffect(() => {
+    if (user) {
+      // Use setTimeout to avoid blocking the auth state change
+      setTimeout(() => {
+        refreshSubscription();
+        checkTrialStatus();
+      }, 0);
+    }
+  }, [user, refreshSubscription, checkTrialStatus]);
 
   // Check trial status periodically (every 10 minutes)
   useEffect(() => {
@@ -236,60 +289,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       clearInterval(checkInterval);
     };
-  }, [user]);
-
-  const signOut = async () => {
-    try {
-      console.log('Sign out initiated');
-      
-      // First clear all user state completely before calling signOut
-      // This ensures UI updates immediately even before the auth state change event
-      clearAuthState();
-      
-      // Then call Supabase signOut with better error logging
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error in supabase.auth.signOut():', error);
-        throw error;
-      }
-      
-      // Clear any auth related local storage items (just to be extra sure)
-      localStorage.removeItem('supabase.auth.token');
-      
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out of your account.",
-      });
-      
-      console.log("User signed out and state cleared manually");
-    } catch (err) {
-      console.error('Error signing out:', err);
-      toast({
-        title: "Sign out failed",
-        description: "There was a problem signing out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const refreshSubscription = async () => {
-    if (!user) return;
-    
-    try {
-      const { data: subscriptionData, error } = await supabase.functions.invoke('check-subscription');
-      
-      if (error) {
-        console.error('Error checking subscription:', error);
-        return;
-      }
-      
-      setIsPremium(subscriptionData.subscribed || false);
-      setSubscriptionTier(subscriptionData.subscription_tier || null);
-      setSubscriptionEnd(subscriptionData.subscription_end || null);
-    } catch (err) {
-      console.error('Error refreshing subscription:', err);
-    }
-  };
+  }, [user, checkTrialStatus]);
 
   return (
     <AuthContext.Provider value={{
