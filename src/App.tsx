@@ -1,5 +1,6 @@
+
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -26,7 +27,6 @@ import TeamDashboard from '@/pages/TeamDashboard';
 import Tips from '@/pages/Tips';
 import About from '@/pages/About';
 import Pricing from '@/pages/Pricing';
-import Subscription from '@/pages/Subscription';
 import Success from '@/pages/Success';
 import Cancel from '@/pages/Cancel';
 import Compare from '@/pages/Compare';
@@ -105,12 +105,13 @@ function App() {
                   <Route path="/roleplay" element={<RolePlay />} />
                   <Route path="/progress" element={<Progress />} />
                   <Route path="/recordings" element={<CallRecordings />} />
-                  <Route path="/call-recordings" element={<CallRecordings />} />  {/* Added this route as an alias */}
+                  <Route path="/call-recordings" element={<CallRecordings />} />
                   <Route path="/team-dashboard" element={<TeamDashboard />} />
                   <Route path="/tips" element={<Tips />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/subscription" element={<Subscription />} />
+                  {/* Redirect /subscription to /pricing */}
+                  <Route path="/subscription" element={<Navigate to="/pricing" replace />} />
                   <Route path="/success" element={<Success />} />
                   <Route path="/cancel" element={<Cancel />} />
                   <Route path="/compare" element={<Compare />} />
