@@ -32,8 +32,10 @@ const Footer = () => {
               <li><Link to="/about" className="text-gray-300 hover:text-brand-green transition-colors">About Us</Link></li>
               <li>
                 <a 
-                  href="mailto:contact@pitchperfect-ai.com" 
+                  href="mailto:info@pitchperfectai.ai?subject=Contact%20from%20PitchPerfect%20AI%20Website&body=Hi%20PitchPerfect%20AI%20team,%0A%0AI%20would%20like%20to%20get%20in%20touch%20regarding..." 
                   className="text-gray-300 hover:text-brand-green transition-colors inline-flex items-center gap-2"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <Mail size={16} />
                   Contact

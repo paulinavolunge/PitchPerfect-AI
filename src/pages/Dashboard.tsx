@@ -36,11 +36,37 @@ const TOUR_COOLDOWN_KEY = 'pitchperfect_tour_cooldown';
 const TOUR_COOLDOWN_HOURS = 24; // 24 hours between tour resets
 
 const Dashboard = () => {
-  const { user, refreshSubscription, isPremium, trialActive } = useAuth();
+  const { user, refreshSubscription, isPremium, trialActive, loading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+  }, [user, loading, navigate]);
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
+          <p className="text-brand-dark">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if no user (will redirect)
+  if (!user) {
+    return null;
+  }
+
   const [showTour, setShowTour] = useState(false);
   const [showMicTest, setShowMicTest] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
-  const navigate = useNavigate();
   const [showAISettings, setShowAISettings] = useState(false);
   
   // Use our updated hook for dashboard data and settings

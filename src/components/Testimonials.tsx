@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,36 +12,31 @@ const testimonials = [
     quote: "PitchPerfect AI helped me increase my close rate by 27% in just three weeks. The feedback is incredibly specific and actionable.",
     author: "Sarah Johnson",
     role: "Sales Executive, Tech Innovators Inc.",
-    avatar: "/lovable-uploads/1167785f-2451-4e85-a1ae-a2bf86c90a95.png",
-    companyLogo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+    avatar: "/lovable-uploads/1167785f-2451-4e85-a1ae-a2bf86c90a95.png"
   },
   {
     quote: "As a sales manager, I've seen my team's performance skyrocket since implementing PitchPerfect AI into our training routine.",
     author: "Michael Chen",
     role: "Sales Director, Growth Solutions",
-    avatar: "/lovable-uploads/255b0025-56b1-4a4a-b966-bb658c0c5a51.png",
-    companyLogo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png" 
+    avatar: "/lovable-uploads/255b0025-56b1-4a4a-b966-bb658c0c5a51.png"
   },
   {
     quote: "The AI feedback is like having a personal coach available 24/7. I practice every morning before my calls and it's been game-changing.",
     author: "Jessica Patel",
     role: "Account Manager, Swift Enterprise",
-    avatar: "/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png",
-    companyLogo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+    avatar: "/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
   },
   {
     quote: "My cold call success rate doubled after just two weeks of using PitchPerfect AI. The real-time feedback makes all the difference.",
     author: "David Rodriguez",
     role: "Business Development, Nexus Group",
-    avatar: "/lovable-uploads/1167785f-2451-4e85-a1ae-a2bf86c90a95.png",
-    companyLogo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+    avatar: "/lovable-uploads/1167785f-2451-4e85-a1ae-a2bf86c90a95.png"
   },
   {
     quote: "Our entire sales team uses PitchPerfect AI daily. It's transformed our approach to customer conversations and boosted revenue.",
     author: "Emma Wilson",
     role: "VP of Sales, Future Technologies",
-    avatar: "/lovable-uploads/255b0025-56b1-4a4a-b966-bb658c0c5a51.png",
-    companyLogo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+    avatar: "/lovable-uploads/255b0025-56b1-4a4a-b966-bb658c0c5a51.png"
   }
 ];
 
@@ -103,7 +97,7 @@ const Testimonials = () => {
           
           <Link to="/signup" className="inline-block mb-6">
             <Button 
-              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg touch-target"
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg touch-target animate-pulse-slow"
             >
               Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
             </Button>
@@ -145,19 +139,11 @@ const Testimonials = () => {
                 {visibleTestimonials.map((testimonial, index) => (
                   <Card key={index} className="border-none shadow-lg">
                     <CardContent className="p-8">
-                      {/* Enhanced testimonial with avatar and company branding */}
                       <div className="flex items-center mb-6">
                         <Avatar className="h-12 w-12 border-2 border-brand-green/20">
                           <AvatarImage src={testimonial.avatar} alt={testimonial.author} />
                           <AvatarFallback>{testimonial.author.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        {testimonial.companyLogo && (
-                          <img 
-                            src={testimonial.companyLogo} 
-                            alt="Company logo" 
-                            className="h-8 ml-4" 
-                          />
-                        )}
                       </div>
                       
                       <div className="mb-6 text-4xl text-brand-green">"</div>
