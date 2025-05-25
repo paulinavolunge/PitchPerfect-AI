@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -27,44 +28,41 @@ const Pricing = () => {
   const [runTour, setRunTour] = useState(false);
   const [showStickyCTA, setShowStickyCTA] = useState(true);
   const { toast } = useToast();
-  
-  // Create a promotion expiry date (14 days from now)
+
   const promoExpiryDate = new Date();
   promoExpiryDate.setDate(promoExpiryDate.getDate() + 14);
 
-  // Track page view on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     trackEvent('pricing_page_viewed');
   }, []);
 
-  // Your actual Stripe Price IDs
   const priceIds = {
     micro: {
       monthly: 'price_1RSNCvRv5Z8vxUAitUftsd9h',
-      yearly: 'price_1RSNewRv5Z8vxUAij9QjCAwI'
+      yearly: 'price_1RSNewRv5Z8vxUAij9QjCAwI',
     },
     solo: {
       monthly: 'price_1RSNFLRv5Z8vxUAiCdjDQCVJ',
-      yearly: 'price_1RSNfSRv5Z8vxUAiWx2L9ZFs'
+      yearly: 'price_1RSNfSRv5Z8vxUAiWx2L9ZFs',
     },
     professional: {
       monthly: 'price_1RSNFnRv5Z8vxUAiyQ4YjOoy',
-      yearly: 'price_1RSNg7Rv5Z8vxUAicG7mlT2m'
+      yearly: 'price_1RSNg7Rv5Z8vxUAicG7mlT2m',
     },
     team: {
       small: {
         monthly: 'price_1RSNP2Rv5Z8vxUAip2CaI6FU',
-        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy'
+        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy',
       },
       medium: {
         monthly: 'price_1RSNP2Rv5Z8vxUAip2CaI6FU',
-        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy'
+        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy',
       },
       large: {
         monthly: 'price_1RSNP2Rv5Z8vxUAip2CaI6FU',
-        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy'
-      }
-    }
+        yearly: 'price_1RSNjDRv5Z8vxUAil7WNjJfy',
+      },
+    },
   };
 
   const handleCheckout = async (priceId: string, planName: string) => {
@@ -75,141 +73,82 @@ const Pricing = () => {
     }
 
     setIsLoading(true);
-    
-    try {
-      trackEvent('checkout_initiated', { 
-        plan: planName, 
-        priceId, 
-        planType,
-        userId: user.id 
-      });
 
-      // Call the create-checkout edge function
+    try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           priceId,
           successUrl: `${window.location.origin}/dashboard?success=true&plan=${planName}`,
           cancelUrl: `${window.location.origin}/pricing?canceled=true`,
-        }
+        },
       });
 
-      if (error) {
-        throw new Error(error.message);
+      if (error || !data?.url) {
+        throw new Error(error?.message || 'No checkout URL returned');
       }
 
-      if (data?.url) {
-        trackEvent('checkout_redirect', { plan: planName, priceId });
-        // Open Stripe checkout in the same tab
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      trackEvent('checkout_error', { 
-        plan: planName, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      });
-      
+      window.location.href = data.url;
+    } catch (error: any) {
+      console.error('Checkout error:', error.message);
       toast({
-        title: "Checkout Error",
-        description: "Unable to start checkout process. Please try again.",
-        variant: "destructive",
+        title: 'Checkout Error',
+        description: 'Unable to initiate checkout. Please try again.',
+        variant: 'destructive',
+      });
+      trackEvent('checkout_error', {
+        plan: planName,
+        message: error.message,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Calculate days remaining in trial
   const calculateDaysRemaining = () => {
     if (!trialEndsAt) return 0;
-    
     const now = new Date();
     const diffTime = trialEndsAt.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
 
-  // Handle plan type change with analytics
-  const handlePlanTypeChange = (newPlanType: "monthly" | "yearly") => {
-    setPlanType(newPlanType);
-    trackEvent('plan_type_selected', { type: newPlanType });
-  };
-
-  // Handle enterprise size change with analytics
-  const handleEnterpriseSizeChange = (newSize: "small" | "medium" | "large") => {
-    setEnterpriseSize(newSize);
-    trackEvent('enterprise_size_selected', { size: newSize });
-  };
-
-  // Track scroll position to manage sticky CTA visibility
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const windowHeight = window.innerHeight;
-      
-      // Show sticky CTA after scrolling past the header
-      if (scrollPosition > windowHeight * 0.5) {
-        setShowStickyCTA(true);
-      } else {
-        setShowStickyCTA(false);
-      }
+      setShowStickyCTA(window.scrollY > window.innerHeight * 0.5);
     };
-
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Run once on initial load
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Tour steps
   const steps: Step[] = [
     {
       target: '.pricing-cards',
-      content: 'Choose the plan that best fits your needs. Compare features and pricing.',
+      content: 'Choose the plan that best fits your needs.',
       disableBeacon: true,
     },
     {
       target: '.sticky-cta',
       content: 'Start your free trial anytime!',
       disableBeacon: true,
-    }
+    },
   ];
 
-  // Handle tour completion
   const handleTourComplete = () => {
     localStorage.setItem('pricing_tour_completed', 'true');
     trackEvent('pricing_tour_completed');
   };
 
-  // Get appropriate CTA text based on user status
   const getStickyCTAText = () => {
-    if (!user) {
-      return "Start Free Trial";
-    } else if (trialActive) {
-      return "Go to Dashboard";
-    } else if (isPremium) {
-      return "Manage Subscription";
-    } else {
-      return "Start Free Trial";
-    }
+    if (!user) return 'Start Free Trial';
+    if (trialActive) return 'Go to Dashboard';
+    if (isPremium) return 'Manage Subscription';
+    return 'Start Free Trial';
   };
 
-  // Handle sticky CTA click based on user status
   const handleStickyCTAClick = () => {
-    const userStatus = user ? (isPremium ? 'premium' : (trialActive ? 'trial' : 'free')) : 'guest';
-    trackEvent('sticky_cta_clicked', { userStatus });
-    
-    if (!user) {
-      navigate('/signup');
-    } else if (trialActive || isPremium) {
-      navigate('/dashboard');
-    } else {
-      navigate('/subscription');
-    }
+    if (!user) return navigate('/signup');
+    if (trialActive || isPremium) return navigate('/dashboard');
+    navigate('/subscription');
   };
 
   const daysLeft = calculateDaysRemaining();
@@ -217,14 +156,12 @@ const Pricing = () => {
   return (
     <div className="min-h-screen flex flex-col relative">
       <Helmet>
-        <title>Pricing Plans | PitchPerfect AI - Sales Training That Works</title>
-        <meta name="description" content="Choose the perfect plan for your sales training needs. Start free and upgrade as you grow. 14-day free trial, no credit card required." />
-        <meta property="og:title" content="PitchPerfect AI Pricing - Sales Training Plans" />
-        <meta property="og:description" content="Affordable sales training plans starting at $9/month. Free trial available." />
+        <title>Pricing Plans | PitchPerfect AI</title>
+        <meta name="description" content="Choose your plan and start training your sales team with AI." />
       </Helmet>
-      
+
       <Navbar />
-      
+
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           {trialActive && !isPremium && (
@@ -234,76 +171,63 @@ const Pricing = () => {
                 <p className="font-medium text-amber-800">Your free trial is active</p>
               </div>
               <p className="text-amber-700 text-sm mb-2">
-                ⚠️ Only {daysLeft} days left in your trial. Choose a plan to keep access to AI tools.
+                ⚠️ Only {daysLeft} days left in your trial. Choose a plan to keep access.
               </p>
             </div>
           )}
-          
-          <PricingHeader 
-            planType={planType} 
-            setPlanType={handlePlanTypeChange} 
-            trialActive={trialActive} 
-            isPremium={isPremium} 
+
+          <PricingHeader
+            planType={planType}
+            setPlanType={setPlanType}
+            trialActive={trialActive}
+            isPremium={isPremium}
           />
-          
+
           <div className="pricing-cards">
-            <PricingPlans 
-              planType={planType} 
-              enterpriseSize={enterpriseSize} 
-              setEnterpriseSize={handleEnterpriseSizeChange} 
+            <PricingPlans
+              planType={planType}
+              enterpriseSize={enterpriseSize}
+              setEnterpriseSize={setEnterpriseSize}
               promoExpiryDate={promoExpiryDate}
               onCheckout={handleCheckout}
               priceIds={priceIds}
               isLoading={isLoading}
             />
           </div>
-          
+
           <div className="mt-20">
             <ValueProposition />
           </div>
-          
+
           <div className="mt-20">
             <Testimonials />
           </div>
-          
+
           <div className="mt-20">
             <PricingFAQ />
           </div>
-          
+
           <div className="text-center mt-20 bg-gradient-to-r from-brand-blue/5 to-brand-green/5 p-8 rounded-2xl">
-            <h3 className="text-2xl font-bold text-brand-dark mb-4">Ready to Transform Your Sales Performance?</h3>
+            <h3 className="text-2xl font-bold text-brand-dark mb-4">Ready to Transform Your Sales?</h3>
             <p className="text-lg text-brand-dark/70 mb-6 max-w-2xl mx-auto">
-              Join thousands of sales professionals who have improved their closing rates with PitchPerfect AI
+              Join thousands who improved their pitch with AI.
             </p>
-            <button 
-              onClick={() => {
-                trackEvent('final_cta_clicked', { location: 'bottom_of_pricing_page' });
-                navigate('/signup');
-              }}
-              className="bg-gradient-to-r from-brand-blue to-brand-green hover:from-brand-blue/90 hover:to-brand-green/90 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            <button
+              onClick={() => navigate('/signup')}
+              className="bg-gradient-to-r from-brand-blue to-brand-green text-white px-8 py-4 rounded-lg font-semibold text-lg hover:scale-105 transition-all"
             >
               Start Your Free Trial Today
             </button>
-            <p className="text-sm text-brand-dark/60 mt-3">
-              No credit card required • 14-day free trial • Cancel anytime
-            </p>
+            <p className="text-sm text-brand-dark/60 mt-3">No credit card required • Cancel anytime</p>
           </div>
         </div>
       </main>
-      
-      <StickyCTA 
-        show={showStickyCTA} 
-        onClick={handleStickyCTAClick} 
-        text={getStickyCTAText()}
-      />
-      
+
+      <StickyCTA show={showStickyCTA} onClick={handleStickyCTAClick} text={getStickyCTAText()} />
+
       <Footer />
-      
-      <GuidedTour
-        steps={steps}
-        run={runTour}
-        onComplete={handleTourComplete}
-      />
+
+      <GuidedTour steps={steps} run={runTour} onComplete={handleTourComplete} />
     </div>
   );
 };
