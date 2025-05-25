@@ -20,18 +20,7 @@ const Login = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
-  // Show loading state while auth context loads
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-brand-dark">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // All hooks must be called before any conditional returns
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
@@ -89,6 +78,18 @@ const Login = () => {
       return () => clearTimeout(timer);
     }
   }, [verificationMessage]);
+
+  // Show loading state while auth context loads - AFTER all hooks
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
+          <p className="text-brand-dark">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const authAppearance = {
     theme: ThemeSupa,
