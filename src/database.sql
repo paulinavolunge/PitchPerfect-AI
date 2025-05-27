@@ -1,6 +1,15 @@
 
+-- Create shared utility functions first
+CREATE OR REPLACE FUNCTION update_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Create subscribers table to track subscription information
-CREATE TABLE public.subscribers (
+CREATE TABLE IF NOT EXISTS public.subscribers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL UNIQUE,
@@ -15,17 +24,21 @@ CREATE TABLE public.subscribers (
 -- Enable Row Level Security
 ALTER TABLE public.subscribers ENABLE ROW LEVEL SECURITY;
 
--- Create policy for users to view their own subscription info
+-- SECURE: Fixed policies with proper user scoping
 CREATE POLICY "select_own_subscription" ON public.subscribers
 FOR SELECT
-USING (user_id = auth.uid() OR email = auth.email());
+USING (user_id = auth.uid());
 
--- Create policy for edge functions to update subscription info
 CREATE POLICY "update_own_subscription" ON public.subscribers
 FOR UPDATE
-USING (true);
+USING (user_id = auth.uid());
 
--- Create policy for edge functions to insert subscription info
 CREATE POLICY "insert_subscription" ON public.subscribers
 FOR INSERT
-WITH CHECK (true);
+WITH CHECK (user_id = auth.uid());
+
+-- Add update trigger
+CREATE TRIGGER update_subscribers_timestamp
+BEFORE UPDATE ON public.subscribers
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();
