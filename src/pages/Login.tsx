@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Auth } from '@supabase/auth-ui-react';
@@ -11,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
-import { trackEvent } from '@/utils/analytics';
+import { trackEvent } from '@/utils/analytics'; // Assuming trackEvent is for analytics, keep it.
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,7 +24,7 @@ const Login = () => {
     if (user) {
       navigate('/dashboard');
     }
-    
+
     // Check for verification message in URL params
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('verified') === 'true') {
@@ -40,20 +39,18 @@ const Login = () => {
         if (event === 'SIGNED_IN') {
           // Clear any errors on successful sign in
           setLoginError(null);
-          
+
           // Track successful login
           trackEvent('login_success', {
             method: 'email',
             timestamp: new Date().toISOString(),
             user_id: session?.user?.id
           });
-          
+
         } else if (event === 'SIGNED_OUT') {
           // User signed out, clear any errors
           setLoginError(null);
         }
-        // Note: Auth errors are typically handled by the Auth UI component itself
-        // or can be caught during the actual auth operations
       }
     );
 
@@ -149,16 +146,17 @@ const Login = () => {
 
           <Card>
             <CardContent className="pt-6">
+              {/* Removed standard email/password login and only kept third-party OAuth */}
               <Auth
                 supabaseClient={supabase}
                 appearance={authAppearance}
-                providers={[]}
+                providers={['google']} // Only Google/Gmail login
                 view="sign_in"
                 showLinks={true}
-                onlyThirdPartyProviders={false}
+                onlyThirdPartyProviders={true} // Only show Google
                 redirectTo={`${window.location.origin}/dashboard`}
               />
-              
+
               <div className="text-center mt-4">
                 <Button 
                   variant="link" 
@@ -170,13 +168,16 @@ const Login = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <div className="text-center mt-6">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <Link to="/signup" className="text-brand-green hover:underline">
+              <Link to="/signup" className="text-brand-green font-medium hover:underline">
                 Sign up
               </Link>
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              New users get 1 Free Pitch Analysis!
             </p>
           </div>
         </div>
