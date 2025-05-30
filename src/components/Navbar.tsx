@@ -152,4 +152,4 @@ const Navbar: React.FC = () => {
                 </NavigationMenuItem>
                 {mainNavItems.map(item => (
                   <NavigationMenuItem key={item.name}>
-                    <Link
+                    <Link></Link>
