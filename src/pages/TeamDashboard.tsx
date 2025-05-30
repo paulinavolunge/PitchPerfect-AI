@@ -44,15 +44,15 @@ const TeamDashboard = () => {
       
       {/* Premium Modal */}
       <PremiumModal 
-        open={showPremiumModal} 
-        onOpenChange={(isOpen) => {
+        isOpen={showPremiumModal} 
+        onClose={(isOpen) => {
           setShowPremiumModal(isOpen);
           if (!isOpen && !isPremium) {
             // Redirect to subscription page if they close the modal but aren't premium
             navigate("/subscription");
           }
         }}
-        featureName="team analytics"
+        feature="team analytics"
       />
     </div>
   );

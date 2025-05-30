@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -76,7 +77,7 @@ const Hero: React.FC = () => {
         <div className="container mx-auto px-4 py-20 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left column - Content */}
-            <FadeTransition>
+            <FadeTransition show={isVisible}>
               <div className="space-y-8">
                 <div className="space-y-4">
                   <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-200/50 shadow-sm">
@@ -140,7 +141,7 @@ const Hero: React.FC = () => {
             </FadeTransition>
 
             {/* Right column - Visual */}
-            <FadeTransition>
+            <FadeTransition show={isVisible}>
               <div className="relative">
                 <TiltCard className="relative z-10">
                   <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 p-8 space-y-6">
@@ -189,7 +190,7 @@ const Hero: React.FC = () => {
           </div>
 
           {/* Statistics */}
-          <FadeTransition>
+          <FadeTransition show={isVisible}>
             <div className="mt-20 pt-12 border-t border-gray-200/50">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {statistics.map((stat, index) => (
@@ -206,7 +207,7 @@ const Hero: React.FC = () => {
           </FadeTransition>
 
           {/* Features Preview */}
-          <FadeTransition>
+          <FadeTransition show={isVisible}>
             <div className="mt-20">
               <div className="text-center mb-12">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose PitchPerfect AI?</h2>

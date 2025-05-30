@@ -517,9 +517,9 @@ const Practice = () => {
 
       {/* Premium Modal */}
       <PremiumModal 
-        open={showPremiumModal} 
-        onOpenChange={setShowPremiumModal} 
-        featureName="voice practice"
+        isOpen={showPremiumModal} 
+        onClose={() => setShowPremiumModal(false)} 
+        feature="voice practice"
       />
       
       {/* Progress Summary Dialog */}

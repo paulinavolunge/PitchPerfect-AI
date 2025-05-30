@@ -211,7 +211,9 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       });
     }, options);
 
-    observer.observe(sandboxRef.current);
+    if (sandboxRef.current) {
+      observer.observe(sandboxRef.current);
+    }
 
     return () => {
       if (sandboxRef.current) {

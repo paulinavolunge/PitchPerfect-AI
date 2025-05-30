@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckIcon, XIcon, Diamond } from 'lucide-react'; // Changed Clock to Diamond
+import { CheckIcon, XIcon, Diamond } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { User } from '@supabase/supabase-js'; // Import User type
+import { User } from '@supabase/supabase-js';
 
 interface FeatureItem {
   name: string;
@@ -39,7 +40,7 @@ interface EnterpriseProps {
 }
 
 interface PricingPlanCardProps {
-  type: "free" | "starter" | "professional" | "team" | "enterprise"; // Updated types
+  type: "free" | "starter" | "professional" | "team" | "enterprise";
   title: string;
   description: string;
   price: React.ReactNode;
@@ -51,11 +52,11 @@ interface PricingPlanCardProps {
   isCurrentPlan?: boolean;
   isPopular?: boolean;
   disabled?: boolean;
-  // New props for user status
   user: User | null;
   isPremium: boolean;
   creditsRemaining: number;
   trialUsed: boolean;
+  enterpriseProps?: EnterpriseProps;
 }
 
 const PricingPlanCard: React.FC<PricingPlanCardProps> = ({ 
@@ -71,16 +72,17 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
   isCurrentPlan,
   isPopular,
   disabled,
-  user, // Use user prop
-  isPremium, // Use isPremium prop
-  creditsRemaining, // Use creditsRemaining prop
-  trialUsed // Use trialUsed prop
+  user,
+  isPremium,
+  creditsRemaining,
+  trialUsed,
+  enterpriseProps
 }) => {
   const [expanded, setExpanded] = useState(false);
 
   const renderFeatureItem = (item: FeatureItem, index: number) => (
     <li key={index} className={`flex items-center gap-2 py-1 ${item.highlight ? 'font-medium' : ''}`}>
-      {item.included !== false ? ( // Explicitly check if included is false
+      {item.included !== false ? (
         <CheckIcon className={`h-5 w-5 ${item.highlight ? 'text-brand-blue' : 'text-green-500'}`} />
       ) : (
         <XIcon className="h-5 w-5 text-gray-400" />
@@ -89,7 +91,6 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
     </li>
   );
 
-  // Enterprise size selection (already existed)
   const renderEnterpriseSizeSelector = () => {
     if (!enterpriseProps) return null;
 
@@ -131,7 +132,6 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
     );
   };
 
-  // Enterprise features based on selected size (already existed)
   const renderEnterpriseFeatures = () => {
     if (!enterpriseProps) return null;
 
@@ -219,7 +219,7 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
         <Button 
           onClick={buttonAction}
           variant={buttonVariant} 
-          disabled={disabled || (isCurrentPlan && !showFreePitchAnalysisBadge())} // Disable if it's the current plan AND not the special free pitch analysis badge
+          disabled={disabled || (isCurrentPlan && !showFreePitchAnalysisBadge())}
           className={`w-full ${isPopular && buttonVariant === 'default' ? 'bg-brand-blue hover:bg-brand-blue/90' : ''}`}
         >
           {buttonText}
