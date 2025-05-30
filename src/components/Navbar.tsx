@@ -177,4 +177,4 @@ const Navbar: React.FC = () => {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="sm:max-
+          <SheetContent side="left" className="sm:max-w-md" />
