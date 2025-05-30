@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Clock, RefreshCw } from 'lucide-react';
+import { Play, Clock, RefreshCw, UserPlus } from 'lucide-react'; // Added UserPlus for signup CTA
 import DemoTranscript from './DemoTranscript';
 import DemoScorecard from './DemoScorecard';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import AudioWaveform from '@/components/animations/AudioWaveform';
 import ConfettiEffect from '@/components/animations/ConfettiEffect';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext'; // Import useAuth
+import { useGuestMode } from '@/context/GuestModeContext'; // Import useGuestMode
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import PremiumModal from '@/components/PremiumModal'; // Import PremiumModal
 
 // Import the speech recognition types from the global window augmentations
 declare global {
@@ -63,19 +67,24 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [lowConfidence, setLowConfidence] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false); // For showing premium modal
+
   const { toast } = useToast();
-  
+  const { user, creditsRemaining, trialUsed, startFreeTrial, deductUserCredits } = useAuth(); // Destructure new auth values
+  const { isGuestMode } = useGuestMode(); // Access guest mode
+  const navigate = useNavigate(); // For navigation
+
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sandboxRef = useRef<HTMLDivElement>(null);
-  
+
   // Initialize speech recognition
   useEffect(() => {
     if (typeof window !== 'undefined' && 
         ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognitionConstructor = window.SpeechRecognition || 
                                           window.webkitSpeechRecognition;
-                                          
+
       if (SpeechRecognitionConstructor) {
         recognitionRef.current = new SpeechRecognitionConstructor();
         recognitionRef.current.continuous = true;
@@ -87,19 +96,19 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             .map(result => result[0])
             .map(result => result.confidence)
             .reduce((acc, val) => acc + val, 0) / event.results.length;
-          
+
           // Check if confidence is low
           if (checkTranscriptionConfidence(confidence)) {
             setLowConfidence(true);
           } else {
             setLowConfidence(false);
           }
-            
+
           const transcript = Array.from(event.results)
             .map(result => result[0])
             .map(result => result.transcript)
             .join('');
-            
+
           setTranscript(transcript);
         };
 
@@ -111,7 +120,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           }
           toast({
             title: "Voice recognition error",
-            description: `Error: ${event.error}. Please try again.`,
+            description: `Error: ${event.error}. Please allow microphone access.`,
             variant: "destructive",
           });
         };
@@ -121,6 +130,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     // Set up event listener for button-triggered demo start
     const handleAutoDemoStart = () => {
       if (demoState === DemoState.INTRO) {
+        // Note: Auto-start will now go through the credit check logic too
         startDemo('auto');
       }
     };
@@ -141,7 +151,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, [toast, demoState]);
+  }, [toast, demoState, isListening]); // Added isListening to dependencies
 
   // Load a sample scenario
   useEffect(() => {
@@ -149,7 +159,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       const sampleScenario = await getSampleScenario();
       setScenario(sampleScenario);
     };
-    
+
     loadScenario();
   }, []);
 
@@ -168,7 +178,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         });
       }, 1000);
     }
-    
+
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -205,12 +215,13 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
     return () => {
       if (sandboxRef.current) {
-        observer.unobserve(sandboxRef.current);
+        observer.unobserve(sandbox.current);
       }
     };
-  }, [demoState]);
+  }, [demoState, user, creditsRemaining, trialUsed]); // Added AuthContext dependencies
 
-  const startDemo = (activationType: 'auto' | 'button' | 'scroll' = 'button') => {
+
+  const startDemo = async (activationType: 'auto' | 'button' | 'scroll' = 'button') => {
     if (!recognitionRef.current) {
       toast({
         title: "Voice recognition not supported",
@@ -219,10 +230,55 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       });
       return;
     }
-    
+
+    // --- Credit System Logic ---
+    if (!isGuestMode) { // Credits apply only to authenticated users
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in or sign up to try PitchPerfect AI. New users get 1 Free Pitch Analysis!",
+          action: {
+            label: "Sign Up",
+            onClick: () => navigate('/signup')
+          },
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!trialUsed) {
+        // New user, grant 1 free analysis (logic handled in AuthContext's handle_new_user trigger)
+        // If the trigger grants 1 credit on signup, user will have 1 credit here.
+        // We ensure they have at least 1 for the demo.
+        if (creditsRemaining < 1) {
+          const startedTrial = await startFreeTrial(); // This function attempts to grant 1 credit
+          if (!startedTrial) {
+            toast({
+              title: "Action required",
+              description: "Could not start free analysis. Please contact support.",
+              variant: "destructive"
+            });
+            return;
+          }
+        }
+        // If they have 1 credit (either initial or granted by startFreeTrial), proceed to deduct
+      } else if (creditsRemaining <= 0) {
+        setShowPremiumModal(true); // Show modal if no credits
+        return;
+      }
+
+      // Deduct 1 credit for the demo pitch analysis
+      const deducted = await deductUserCredits('demo_pitch_analysis', 1);
+      if (!deducted) {
+        // deductUserCredits already shows a toast on failure
+        return;
+      }
+    }
+    // --- End Credit System Logic ---
+
     // Track demo activation
     trackDemoActivation(activationType);
-    
+
     try {
       setPermissionDenied(false);
       setLowConfidence(false);
@@ -238,9 +294,11 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       console.error('Speech recognition error:', error);
       toast({
         title: "Voice recognition error",
-        description: "Could not start voice recognition. Please try again.",
+        description: "Could not start voice recognition. Please allow microphone access and try again.",
         variant: "destructive",
       });
+      // If error after credit deduction, consider rolling back credit or logging for review
+      // For now, we proceed to next step.
     }
   };
 
@@ -250,14 +308,14 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       recognitionRef.current.stop();
       setIsListening(false);
     }
-    
+
     // Generate score
     const score = generateScore(transcript);
     setScoreData(score);
-    
+
     // Update state
     setDemoState(DemoState.SCORING);
-    
+
     toast({
       title: "Demo complete",
       description: "Your pitch has been scored. See your results below.",
@@ -289,16 +347,16 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const generateScore = (transcript: string) => {
     // This is a simplified version of scoring
     const wordCount = transcript.split(/\s+/).length;
-    
+
     // Score categories
     const clarity = Math.min(Math.floor(wordCount / 15) + 3, 10);
     const confidence = Math.min(Math.floor(Math.random() * 3) + 7, 10);
     const handling = Math.min(Math.floor(Math.random() * 4) + 6, 10);
     const vocabulary = Math.min(Math.floor(Math.random() * 3) + 6, 10);
-    
+
     // Overall score (weighted average)
     const overallScore = Math.floor((clarity * 0.3) + (confidence * 0.3) + (handling * 0.2) + (vocabulary * 0.2));
-    
+
     return {
       overallScore,
       categories: {
@@ -322,12 +380,12 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
   const handleViewScore = () => {
     setDemoState(DemoState.COMPLETE);
-    
+
     // Trigger confetti if score is good
     if (scoreData.overallScore >= 7) {
       setShowConfetti(true);
     }
-    
+
     setTimeout(() => {
       onComplete?.({
         ...scoreData,
@@ -339,13 +397,13 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return `<span class="math-inline">\{mins\}\:</span>{secs < 10 ? '0' : ''}${secs}`;
   };
 
   return (
     <div className="space-y-6" ref={sandboxRef}>
       <ConfettiEffect active={showConfetti} duration={3000} onComplete={() => setShowConfetti(false)} />
-      
+
       {/* Alerts */}
       <AnimatePresence>
         {permissionDenied && demoState === DemoState.RECORDING && (
@@ -371,7 +429,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             </Alert>
           </motion.div>
         )}
-        
+
         {lowConfidence && demoState === DemoState.RECORDING && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -396,7 +454,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {demoState === DemoState.INTRO && (
         <motion.div 
           className="text-center space-y-6"
@@ -409,7 +467,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             When you click "Start Demo", you'll have 60 seconds to practice handling pricing objections.
             Speak clearly into your microphone, and we'll transcribe and score your pitch.
           </p>
-          
+
           <Button 
             onClick={() => startDemo('button')}
             className="bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-md hover:shadow-lg"
@@ -417,6 +475,15 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           >
             <Play size={18} /> Start Demo
           </Button>
+          {!user && ( // Only show signup CTA if not logged in
+              <Button
+                variant="outline"
+                onClick={() => navigate('/signup')}
+                className="flex items-center gap-2 mt-4 ml-2"
+              >
+                <UserPlus className="h-4 w-4" /> Sign Up for Free
+              </Button>
+            )}
         </motion.div>
       )}
 
@@ -438,7 +505,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
               {formatTime(timeRemaining)}
             </motion.div>
           </div>
-          
+
           <motion.div 
             className="bg-gradient-to-br from-brand-blue/10 to-[#008D95]/10 rounded-lg p-4"
             initial={{ y: 10 }}
@@ -448,14 +515,14 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             <h3 className="font-medium mb-2">Scenario: Pricing Objection</h3>
             <p>"Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less."</p>
           </motion.div>
-          
+
           {/* Voice waveform visualization */}
           <div className="py-4">
             <AudioWaveform isActive={isListening} isUser={true} color="#008D95" className="mb-2" />
           </div>
-          
+
           <DemoTranscript text={transcript} isRecording={isListening} />
-          
+
           <Button 
             onClick={endDemo}
             className="w-full bg-brand-blue hover:bg-brand-blue/90 text-white hover:scale-105 transition-transform"
@@ -474,7 +541,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         >
           <h2 className="text-xl font-semibold text-brand-dark">Your Results</h2>
           <DemoScorecard scoreData={scoreData} />
-          
+
           <Button 
             onClick={handleViewScore}
             className="w-full bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-transform shadow-md hover:shadow-lg"
@@ -495,6 +562,12 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           <p>Sign up for PitchPerfect AI to get detailed feedback and continuous improvement.</p>
         </motion.div>
       )}
+
+      <PremiumModal 
+        open={showPremiumModal} 
+        onOpenChange={setShowPremiumModal}
+        featureName="1 free pitch analysis"
+      />
     </div>
   );
 };
