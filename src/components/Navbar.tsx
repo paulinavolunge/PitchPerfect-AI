@@ -151,18 +151,39 @@ const Navbar: React.FC = () => {
                   </Link>
                 </NavigationMenuItem>
                 {mainNavItems.map(item => (
-               {mainNavItems.map(item => (
-                            <NavigationMenuItem key={item.name}>
-                              {/* This is the corrected Link usage within NavigationMenuItem */}
-                              <Link 
-                                to={item.href}
-                                className={`group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${
-                                  location.pathname === item.href 
-                                    ? 'bg-accent/50 text-accent-foreground' 
-                                    : 'text-foreground'
-                                }`}
-                              >
-                                {item.name}
-                              </Link>
-                            </NavigationMenuItem>
-                          ))}
+             {/* Main Navigation Menu for authenticated users */}
+                          {showAuthenticatedUI && (
+                            <div className="hidden md:flex items-center">
+                              <NavigationMenu>
+                                <NavigationMenuList>
+                                  <NavigationMenuItem>
+                                    <Link 
+                                      to="/"
+                                      className={`group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${
+                                        location.pathname === '/' 
+                                          ? 'bg-accent/50 text-accent-foreground' 
+                                          : 'text-foreground'
+                                      }`}
+                                    >
+                                      <Home className="h-4 w-4 mr-2" />
+                                      Home
+                                    </Link>
+                                  </NavigationMenuItem>
+                                  {mainNavItems.map(item => ( // This line should be unique and properly wrapped
+                                    <NavigationMenuItem key={item.name}>
+                                      <Link 
+                                        to={item.href}
+                                        className={`group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${
+                                          location.pathname === item.href 
+                                            ? 'bg-accent/50 text-accent-foreground' 
+                                            : 'text-foreground'
+                                        }`}
+                                      >
+                                        {item.name}
+                                      </Link>
+                                    </NavigationMenuItem>
+                                  ))}
+                                </NavigationMenuList>
+                              </NavigationMenu>
+                            </div>
+                          )}
