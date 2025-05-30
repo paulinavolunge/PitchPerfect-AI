@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Rocket, UserPlus, Clock } from 'lucide-react';
+import { ArrowRight, Rocket, UserPlus, Diamond } from 'lucide-react'; // Changed Clock to Diamond
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -16,11 +16,12 @@ const Hero = () => {
   const [sessionStarted, setSessionStarted] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { user, isPremium, startFreeTrial, trialActive, trialEndsAt } = useAuth();
+  // Destructure new auth values
+  const { user, isPremium, creditsRemaining, trialUsed, startFreeTrial } = useAuth();
   const { startGuestMode } = useGuestMode();
   const { toast } = useToast();
-  
-  // Determine if we're in development mode
+
+  // Determine if we're in development mode (already existed)
   const isDevelopment = import.meta.env.DEV === true;
 
   useEffect(() => {
@@ -37,21 +38,21 @@ const Hero = () => {
     };
 
     window.addEventListener('start-demo-auto', handleDemoStart);
-    
+
     return () => {
       window.removeEventListener('start-demo-auto', handleDemoStart);
     };
   }, []);
 
-  // Add debug logging
+  // Add debug logging (already existed)
   useEffect(() => {
     console.log('Hero component auth state:', { 
       user_exists: Boolean(user), 
       isPremium, 
-      trialActive, 
-      trialEndsAt 
+      creditsRemaining, 
+      trialUsed 
     });
-  }, [user, isPremium, trialActive, trialEndsAt]);
+  }, [user, isPremium, creditsRemaining, trialUsed]);
 
   const handleScrollToDemo = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,33 +69,26 @@ const Hero = () => {
     setSessionStarted(true);
   };
 
-  // Calculate days remaining in trial
-  const calculateDaysRemaining = () => {
-    if (!trialEndsAt) return 0;
-    
-    const now = new Date();
-    const diffTime = trialEndsAt.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  };
-
-  const handleStartFreeTrial = async () => {
-    try {
-      if (user) {
-        // If user is already logged in, start the free trial
+  const handlePrimaryCtaClick = async () => {
+    if (!user) {
+      // If user is not logged in, redirect to signup to get 1 free pitch analysis
+      navigate('/signup');
+    } else if (!isPremium) {
+      // User is logged in but not premium
+      if (!trialUsed) {
+        // If they haven't used their free analysis, attempt to grant it (handled by AuthContext)
         await startFreeTrial();
-        navigate('/dashboard');
+        navigate('/demo'); // Direct to demo to use the free analysis
+      } else if (creditsRemaining > 0) {
+        // If they have credits, go to demo/practice
+        navigate('/demo');
       } else {
-        // If user is not logged in, redirect to signup
-        navigate('/signup');
+        // No credits, trial used, not premium - prompt to upgrade
+        navigate('/pricing');
       }
-    } catch (error) {
-      console.error('Error starting free trial:', error);
-      toast({
-        title: "Error",
-        description: "There was a problem starting your free trial. Please try again.",
-        variant: "destructive",
-      });
+    } else {
+      // User is premium, go to dashboard
+      navigate('/dashboard');
     }
   };
 
@@ -109,47 +103,57 @@ const Hero = () => {
 
   // Render appropriate button based on user status with extra safety checks
   const renderActionButton = () => {
-    // Additional safety check to ensure user is truly null when it should be
     if (!user || user === null) {
-      // Case 1: User is not logged in
+      // Case 1: User is not logged in - offer free analysis via signup
       return (
         <Button 
           className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={handleStartFreeTrial}
-          aria-label="Try Free Now"
+          onClick={handlePrimaryCtaClick}
+          aria-label="Begin a Practice Call"
         >
           Begin a Practice Call <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
         </Button>
       );
-    } else if (trialActive) {
-      // Case 2: User is on a free trial
-      return (
-        <Button 
-          className="bg-amber-500 hover:bg-amber-600 text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={() => navigate('/dashboard')}
-          aria-label="Your Trial Status"
-        >
-          <Clock className="mr-1" size={isMobile ? 20 : 18} />
-          Trial - {calculateDaysRemaining()} days left
-        </Button>
-      );
     } else if (isPremium) {
-      // Case 3: User has premium subscription
+      // Case 2: User has premium subscription
       return (
         <Button 
           className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={() => navigate('/dashboard')}
+          onClick={handlePrimaryCtaClick}
           aria-label="Go to Dashboard"
         >
           Go to Dashboard <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
         </Button>
       );
-    } else {
-      // Case 4: User is logged in but trial has ended and not premium
+    } else if (!trialUsed) {
+      // Case 3: User is logged in, but hasn't used their free pitch analysis yet
+      return (
+        <Button 
+          className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
+          onClick={handlePrimaryCtaClick}
+          aria-label="Get 1 Free Pitch Analysis"
+        >
+          <Diamond className="mr-1" size={isMobile ? 20 : 18} />
+          Get 1 Free Pitch Analysis
+        </Button>
+      );
+    } else if (creditsRemaining > 0) {
+      // Case 4: User is logged in, used trial, has credits
       return (
         <Button 
           className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={() => navigate('/subscription')}
+          onClick={handlePrimaryCtaClick}
+          aria-label="Start New Practice"
+        >
+          Start New Practice ({creditsRemaining} credits) <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+        </Button>
+      );
+    } else {
+      // Case 5: User is logged in, used trial, no credits, not premium
+      return (
+        <Button 
+          className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
+          onClick={handlePrimaryCtaClick}
           aria-label="Upgrade to Premium"
         >
           Upgrade to Premium <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
@@ -163,7 +167,7 @@ const Hero = () => {
       <div className="absolute inset-0 -z-10 opacity-50">
         <WaveAnimation color="#008D95" amplitude={15} opacity={0.2} />
       </div>
-      
+
       <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -184,7 +188,7 @@ const Hero = () => {
             className="flex flex-wrap gap-4"
           >
             {renderActionButton()}
-            
+
             <Button 
               variant="outline" 
               className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
@@ -194,9 +198,9 @@ const Hero = () => {
               Start Demo
               <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
             </Button>
-            
-            {/* Only show the Try as Guest button if user is not authenticated */}
-            {!user && (
+
+            {/* Only show the Try as Guest button if user is not authenticated and not in guest mode already */}
+            {!user && !isGuestMode && (
               <Button 
                 variant="ghost" 
                 className="bg-white text-brand-dark hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
@@ -227,7 +231,7 @@ const Hero = () => {
             onStartClick={handleStartDemo}
             showStartButton={!sessionStarted}
           />
-          
+
           {/* Enhanced background effect */}
           <div className="absolute inset-0 bg-gradient-to-tr from-brand-blue/20 to-[#008D95]/30 rounded-lg -z-10 transform translate-x-4 translate-y-4 blur-lg"></div>
         </motion.div>
