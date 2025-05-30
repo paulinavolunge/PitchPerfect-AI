@@ -555,10 +555,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
       {/* Premium Modal - Updated to be credit-aware */}
       <PremiumModal 
-        open={showPremiumModal} 
-        onOpenChange={setShowPremiumModal}
-        featureName={
-          user && creditsRemaining === 0 && !isPremium ?
+        isOpen={showPremiumModal} 
+        onClose={() => setShowPremiumModal(false)}
+        feature={
+          user && creditsRemaining === 0 ?
           "voice roleplay (no credits remaining)" :
           "voice roleplay"
         }

@@ -67,12 +67,12 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [lowConfidence, setLowConfidence] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false); // For showing premium modal
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const { toast } = useToast();
-  const { user, creditsRemaining, trialUsed, startFreeTrial, deductUserCredits } = useAuth(); // Destructure new auth values
-  const { isGuestMode } = useGuestMode(); // Access guest mode
-  const navigate = useNavigate(); // For navigation
+  const { user, creditsRemaining, trialUsed, startFreeTrial, deductUserCredits } = useAuth();
+  const { isGuestMode } = useGuestMode();
+  const navigate = useNavigate();
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -151,7 +151,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, [toast, demoState, isListening]); // Added isListening to dependencies
+  }, [toast, demoState, isListening]);
 
   // Load a sample scenario
   useEffect(() => {
@@ -215,11 +215,10 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
     return () => {
       if (sandboxRef.current) {
-        observer.unobserve(sandbox.current);
+        observer.unobserve(sandboxRef.current);
       }
     };
-  }, [demoState, user, creditsRemaining, trialUsed]); // Added AuthContext dependencies
-
+  }, [demoState, user, creditsRemaining, trialUsed]);
 
   const startDemo = async (activationType: 'auto' | 'button' | 'scroll' = 'button') => {
     if (!recognitionRef.current) {
@@ -232,26 +231,19 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     }
 
     // --- Credit System Logic ---
-    if (!isGuestMode) { // Credits apply only to authenticated users
+    if (!isGuestMode) {
       if (!user) {
         toast({
           title: "Authentication Required",
           description: "Please log in or sign up to try PitchPerfect AI. New users get 1 Free Pitch Analysis!",
-          action: {
-            label: "Sign Up",
-            onClick: () => navigate('/signup')
-          },
           variant: "destructive",
         });
         return;
       }
 
       if (!trialUsed) {
-        // New user, grant 1 free analysis (logic handled in AuthContext's handle_new_user trigger)
-        // If the trigger grants 1 credit on signup, user will have 1 credit here.
-        // We ensure they have at least 1 for the demo.
         if (creditsRemaining < 1) {
-          const startedTrial = await startFreeTrial(); // This function attempts to grant 1 credit
+          const startedTrial = await startFreeTrial();
           if (!startedTrial) {
             toast({
               title: "Action required",
@@ -261,22 +253,18 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             return;
           }
         }
-        // If they have 1 credit (either initial or granted by startFreeTrial), proceed to deduct
       } else if (creditsRemaining <= 0) {
-        setShowPremiumModal(true); // Show modal if no credits
+        setShowPremiumModal(true);
         return;
       }
 
-      // Deduct 1 credit for the demo pitch analysis
       const deducted = await deductUserCredits('demo_pitch_analysis', 1);
       if (!deducted) {
-        // deductUserCredits already shows a toast on failure
         return;
       }
     }
     // --- End Credit System Logic ---
 
-    // Track demo activation
     trackDemoActivation(activationType);
 
     try {
@@ -297,8 +285,6 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         description: "Could not start voice recognition. Please allow microphone access and try again.",
         variant: "destructive",
       });
-      // If error after credit deduction, consider rolling back credit or logging for review
-      // For now, we proceed to next step.
     }
   };
 
@@ -475,7 +461,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           >
             <Play size={18} /> Start Demo
           </Button>
-          {!user && ( // Only show signup CTA if not logged in
+          {!user && (
               <Button
                 variant="outline"
                 onClick={() => navigate('/signup')}
@@ -564,9 +550,9 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       )}
 
       <PremiumModal 
-        open={showPremiumModal} 
-        onOpenChange={setShowPremiumModal}
-        featureName="1 free pitch analysis"
+        isOpen={showPremiumModal} 
+        onClose={() => setShowPremiumModal(false)}
+        feature="1 free pitch analysis"
       />
     </div>
   );

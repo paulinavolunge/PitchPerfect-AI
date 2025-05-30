@@ -13,7 +13,7 @@ interface PremiumModalProps {
 }
 
 const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose, feature }) => {
-  const { user, isPremium, creditsRemaining, trialUsed } = useAuth();
+  const { user, creditsRemaining, trialUsed } = useAuth();
   const navigate = useNavigate();
 
   const handleUpgrade = () => {
