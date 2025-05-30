@@ -246,15 +246,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       if (!trialUsed) {
         if (creditsRemaining < 1) {
           try {
-            const startedTrial = await startFreeTrial();
-            if (!startedTrial) {
-              toast({
-                title: "Action required",
-                description: "Could not start free analysis. Please contact support.",
-                variant: "destructive"
-              });
-              return;
-            }
+            await startFreeTrial();
           } catch (error) {
             toast({
               title: "Error starting trial",
