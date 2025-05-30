@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckIcon, XIcon, Clock } from 'lucide-react';
+import { CheckIcon, XIcon, Diamond } from 'lucide-react'; // Changed Clock to Diamond
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { User } from '@supabase/supabase-js'; // Import User type
 
 interface FeatureItem {
   name: string;
@@ -39,7 +39,7 @@ interface EnterpriseProps {
 }
 
 interface PricingPlanCardProps {
-  type: "free" | "micro" | "solo" | "professional" | "team" | "enterprise";
+  type: "free" | "starter" | "professional" | "team" | "enterprise"; // Updated types
   title: string;
   description: string;
   price: React.ReactNode;
@@ -51,8 +51,11 @@ interface PricingPlanCardProps {
   isCurrentPlan?: boolean;
   isPopular?: boolean;
   disabled?: boolean;
-  trialBadge?: boolean;
-  enterpriseProps?: EnterpriseProps;
+  // New props for user status
+  user: User | null;
+  isPremium: boolean;
+  creditsRemaining: number;
+  trialUsed: boolean;
 }
 
 const PricingPlanCard: React.FC<PricingPlanCardProps> = ({ 
@@ -68,14 +71,16 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
   isCurrentPlan,
   isPopular,
   disabled,
-  trialBadge,
-  enterpriseProps
+  user, // Use user prop
+  isPremium, // Use isPremium prop
+  creditsRemaining, // Use creditsRemaining prop
+  trialUsed // Use trialUsed prop
 }) => {
   const [expanded, setExpanded] = useState(false);
-  
+
   const renderFeatureItem = (item: FeatureItem, index: number) => (
     <li key={index} className={`flex items-center gap-2 py-1 ${item.highlight ? 'font-medium' : ''}`}>
-      {item.included !== false ? (
+      {item.included !== false ? ( // Explicitly check if included is false
         <CheckIcon className={`h-5 w-5 ${item.highlight ? 'text-brand-blue' : 'text-green-500'}`} />
       ) : (
         <XIcon className="h-5 w-5 text-gray-400" />
@@ -83,13 +88,13 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
       <span>{item.name}</span>
     </li>
   );
-  
-  // Enterprise size selection
+
+  // Enterprise size selection (already existed)
   const renderEnterpriseSizeSelector = () => {
     if (!enterpriseProps) return null;
-    
+
     const { sizes, enterpriseSize, setEnterpriseSize } = enterpriseProps;
-    
+
     return (
       <div className="mb-6 mt-4 border-t border-b py-4">
         <RadioGroup value={enterpriseSize} onValueChange={(value) => setEnterpriseSize(value as any)}>
@@ -102,7 +107,7 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
               </Label>
               <span className="font-medium">{sizes.small.price}</span>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="medium" id="enterprise-medium" />
               <Label htmlFor="enterprise-medium" className="flex-1">
@@ -111,7 +116,7 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
               </Label>
               <span className="font-medium">{sizes.medium.price}</span>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="large" id="enterprise-large" />
               <Label htmlFor="enterprise-large" className="flex-1">
@@ -125,14 +130,14 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
       </div>
     );
   };
-  
-  // Enterprise features based on selected size
+
+  // Enterprise features based on selected size (already existed)
   const renderEnterpriseFeatures = () => {
     if (!enterpriseProps) return null;
-    
+
     const { sizes, enterpriseSize } = enterpriseProps;
     const selectedSize = sizes[enterpriseSize];
-    
+
     return (
       <ul className="space-y-2 mb-6">
         {selectedSize.features.map((feature, index) => (
@@ -144,7 +149,26 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
       </ul>
     );
   };
-  
+
+  // Determine if this is the "current plan" badge
+  const showCurrentPlanBadge = () => {
+    if (!user) return false; // Not logged in
+    if (isPremium && (type === 'starter' || type === 'professional' || type === 'team')) {
+      // If the user is premium and on a specific plan, show badge for that plan
+      // This requires subscriptionTier to be passed down or matched
+      return false; // Assuming current Premium Plan is passed via isCurrentPlan prop from PricingPlans
+    }
+    if (type === 'free' && !isPremium && (trialUsed || creditsRemaining === 0)) {
+      return true; // Logged in, not premium, and either used free analysis or has no credits
+    }
+    return false;
+  };
+
+  // Determine if this is the "Free Pitch Analysis" badge
+  const showFreePitchAnalysisBadge = () => {
+    return type === 'free' && user && !isPremium && !trialUsed && creditsRemaining === 0;
+  };
+
   return (
     <div 
       className={`rounded-xl border bg-card text-card-foreground shadow transition-all duration-300 ease-in-out overflow-hidden relative flex flex-col
@@ -157,23 +181,23 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
           Most Popular
         </div>
       )}
-      
-      {isCurrentPlan && !trialBadge && (
+
+      {showCurrentPlanBadge() && (
         <div className="bg-brand-green py-1 px-4 absolute top-0 left-0 rounded-br-xl text-white text-xs font-medium">
           Current Plan
         </div>
       )}
 
-      {trialBadge && (
-        <div className="bg-amber-500 py-1 px-4 absolute top-0 left-0 rounded-br-xl text-white text-xs font-medium flex items-center">
-          <Clock className="h-3 w-3 mr-1" /> Trial Active
+      {showFreePitchAnalysisBadge() && (
+        <div className="bg-yellow-500 py-1 px-4 absolute top-0 left-0 rounded-br-xl text-white text-xs font-medium flex items-center">
+          <Diamond className="h-3 w-3 mr-1" /> 1 Free Analysis
         </div>
       )}
-      
+
       <div className="p-6 flex-1">
         <h3 className="text-2xl font-semibold">{title}</h3>
         <p className="text-sm text-gray-500 mb-4">{description}</p>
-        
+
         <div className="mb-6">
           <div className="flex items-end">
             {price}
@@ -182,7 +206,7 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
             <p className="text-sm text-gray-500">{priceDescription}</p>
           )}
         </div>
-        
+
         {type === 'enterprise' ? renderEnterpriseSizeSelector() : null}
         {type === 'enterprise' ? renderEnterpriseFeatures() : (
           <ul className="space-y-2 mb-6">
@@ -190,12 +214,12 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
           </ul>
         )}
       </div>
-      
+
       <div className="p-6 pt-0">
         <Button 
           onClick={buttonAction}
           variant={buttonVariant} 
-          disabled={disabled}
+          disabled={disabled || (isCurrentPlan && !showFreePitchAnalysisBadge())} // Disable if it's the current plan AND not the special free pitch analysis badge
           className={`w-full ${isPopular && buttonVariant === 'default' ? 'bg-brand-blue hover:bg-brand-blue/90' : ''}`}
         >
           {buttonText}
