@@ -1,4 +1,3 @@
-
 // stripe-webhook/index.ts
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
@@ -7,14 +6,24 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 // Helper logging function for debugging
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
+  console.log(`[STRIPE-WEBHOOK] <span class="math-inline">\{step\}</span>{detailsStr}`);
+};
+
+// Credit mappings for plans (adjust these based on your Stripe Price IDs and desired credits)
+const PLAN_CREDITS: { [priceId: string]: number } = {
+  // Replace with your actual Stripe Price IDs and corresponding credits
+  [Deno.env.get("STRIPE_STARTER_PRICE_ID") || "price_starter_monthly"]: 30,
+  [Deno.env.get("STRIPE_PROFESSIONAL_PRICE_ID") || "price_professional_monthly"]: 100,
+  // Add yearly plan IDs if applicable
+  [Deno.env.get("VITE_STRIPE_STARTER_PRICE_ID") || "price_starter_monthly_vite"]: 30, // For local dev
+  [Deno.env.get("VITE_STRIPE_PROFESSIONAL_PRICE_ID") || "price_professional_monthly_vite"]: 100, // For local dev
 };
 
 // This function handles Stripe webhook events
 serve(async (req) => {
   try {
     logStep("Function started");
-    
+
     // Get the stripe signature from the request headers
     const signature = req.headers.get("stripe-signature");
     if (!signature) {
@@ -25,14 +34,14 @@ serve(async (req) => {
     const body = await req.text();
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
-    
+
     if (!webhookSecret) {
       logStep("WARNING", { message: "STRIPE_WEBHOOK_SECRET not set, webhook signature validation will be skipped" });
     }
-    
+
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    
+
     // Verify the event
     let event;
     try {
@@ -55,7 +64,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") || "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     );
-    
+
     logStep(`Processing webhook event: ${event.type}`);
 
     // Handle the event
@@ -65,7 +74,7 @@ serve(async (req) => {
         const customerId = session.customer;
         const userId = session.metadata?.user_id;
         const email = session.metadata?.email;
-        
+
         if (!userId || !email) {
           logStep('ERROR', { message: 'No user data found in session metadata' });
           return new Response('No user data found', { status: 400 });
@@ -76,20 +85,22 @@ serve(async (req) => {
         // Get subscription details
         const subscription = await stripe.subscriptions.retrieve(session.subscription);
         const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
-        
+
         // Get plan details
         const planId = subscription.items.data[0].price.id;
         const price = await stripe.prices.retrieve(planId);
         const planName = price.nickname || (price.recurring?.interval === 'month' ? 'Monthly' : 'Yearly');
-        
+        const creditsToGrant = PLAN_CREDITS[planId] || 0; // Get credits from mapping
+
         logStep('Subscription details retrieved', { 
           subscriptionId: subscription.id, 
           planName, 
-          currentPeriodEnd 
+          currentPeriodEnd,
+          creditsToGrant
         });
-        
+
         // Update the subscribers table
-        const { error } = await supabaseAdmin.from('subscribers').upsert({
+        const { error: subError } = await supabaseAdmin.from('subscribers').upsert({
           user_id: userId,
           email: email,
           stripe_customer_id: customerId,
@@ -98,29 +109,40 @@ serve(async (req) => {
           subscription_end: currentPeriodEnd,
           updated_at: new Date().toISOString()
         }, { onConflict: 'email' });
-        
-        if (error) {
-          logStep('ERROR updating subscriber', { message: error.message });
-          return new Response(`Error updating subscriber: ${error.message}`, { status: 500 });
+
+        if (subError) {
+          logStep('ERROR updating subscriber', { message: subError.message });
+          return new Response(`Error updating subscriber: ${subError.message}`, { status: 500 });
         }
-        
-        logStep(`Successfully processed subscription for user ${userId}`);
+
+        // Update user_profiles to add credits
+        const { error: profileUpdateError } = await supabaseAdmin
+          .from('user_profiles')
+          .update({ credits_remaining: creditsToGrant, trial_used: true }) // Set trial_used to true on first subscription
+          .eq('id', userId);
+
+        if (profileUpdateError) {
+            logStep('ERROR updating user profile with credits', { message: profileUpdateError.message });
+            return new Response(`Error updating user profile with credits: ${profileUpdateError.message}`, { status: 500 });
+        }
+
+        logStep(`Successfully processed subscription and granted ${creditsToGrant} credits for user ${userId}`);
         break;
       }
-      
+
       case 'customer.subscription.updated': {
         const subscription = event.data.object;
         const customerId = subscription.customer;
-        
+
         logStep('Subscription updated', { subscriptionId: subscription.id, customerId });
-        
+
         // Get customer data
         const customer = await stripe.customers.retrieve(customerId.toString());
         if (!customer || customer.deleted) {
           logStep('ERROR', { message: 'Customer not found or deleted' });
           return new Response('Customer not found or deleted', { status: 400 });
         }
-        
+
         const email = customer.email;
         if (!email) {
           logStep('ERROR', { message: 'No email found for customer' });
@@ -130,32 +152,36 @@ serve(async (req) => {
         // Get subscriber from Supabase
         const { data: subscribers, error: fetchError } = await supabaseAdmin
           .from('subscribers')
-          .select('*')
+          .select('user_id')
           .eq('email', email)
           .limit(1);
-        
+
         if (fetchError || subscribers.length === 0) {
-          logStep('ERROR fetching subscriber', { message: fetchError?.message || 'Not found' });
-          return new Response(`Error fetching subscriber: ${fetchError?.message || 'Not found'}`, { status: 500 });
+          logStep('ERROR fetching subscriber user_id', { message: fetchError?.message || 'Not found' });
+          // If subscriber not found, this might be a new customer. Try to create or upsert.
+          // For simplicity, we'll assume a user_id must exist in subscribers from checkout.session.completed
+          return new Response(`Error fetching subscriber user_id: ${fetchError?.message || 'Not found'}`, { status: 500 });
         }
-        
+
         const userId = subscribers[0].user_id;
         const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
         const status = subscription.status === 'active' || subscription.status === 'trialing';
-        
+
         // Get plan details
         const planId = subscription.items.data[0].price.id;
         const price = await stripe.prices.retrieve(planId);
         const planName = price.nickname || (price.recurring?.interval === 'month' ? 'Monthly' : 'Yearly');
-        
+        const creditsToGrant = PLAN_CREDITS[planId] || 0; // Get credits from mapping
+
         logStep('Updating subscription in database', { 
           userId, 
           email, 
           status, 
           planName, 
-          currentPeriodEnd 
+          currentPeriodEnd,
+          creditsToGrant
         });
-        
+
         // Update subscription in Supabase
         const { error: updateError } = await supabaseAdmin.from('subscribers').upsert({
           user_id: userId,
@@ -166,29 +192,43 @@ serve(async (req) => {
           subscription_end: currentPeriodEnd,
           updated_at: new Date().toISOString()
         }, { onConflict: 'email' });
-        
+
         if (updateError) {
           logStep('ERROR updating subscriber', { message: updateError.message });
           return new Response(`Error updating subscriber: ${updateError.message}`, { status: 500 });
         }
-        
+
+        // If subscription is active, top up credits
+        if (status) {
+            const { error: profileUpdateError } = await supabaseAdmin
+                .from('user_profiles')
+                .update({ credits_remaining: creditsToGrant, trial_used: true }) // Set trial used true if they subscribe
+                .eq('id', userId);
+
+            if (profileUpdateError) {
+                logStep('ERROR topping up credits for user profile', { message: profileUpdateError.message });
+                return new Response(`Error topping up credits: ${profileUpdateError.message}`, { status: 500 });
+            }
+            logStep(`Successfully topped up ${creditsToGrant} credits for user ${userId}`);
+        }
+
         logStep(`Successfully updated subscription for user ${userId}`);
         break;
       }
-      
+
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
         const customerId = subscription.customer;
-        
+
         logStep('Subscription deleted', { subscriptionId: subscription.id, customerId });
-        
+
         // Get customer data
         const customer = await stripe.customers.retrieve(customerId.toString());
         if (!customer || customer.deleted) {
           logStep('ERROR', { message: 'Customer not found or deleted' });
           return new Response('Customer not found or deleted', { status: 400 });
         }
-        
+
         const email = customer.email;
         if (!email) {
           logStep('ERROR', { message: 'No email found for customer' });
@@ -204,16 +244,16 @@ serve(async (req) => {
           subscription_end: null,
           updated_at: new Date().toISOString()
         }).eq('email', email);
-        
+
         if (error) {
           logStep('ERROR updating subscriber', { message: error.message });
           return new Response(`Error updating subscriber: ${error.message}`, { status: 500 });
         }
-        
+
         logStep(`Successfully marked subscription as inactive for customer ${customerId}`);
         break;
       }
-      
+
       default:
         logStep(`Unhandled event type: ${event.type}`);
     }
