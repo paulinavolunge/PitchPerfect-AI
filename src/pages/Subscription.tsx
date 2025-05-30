@@ -1,284 +1,223 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import PlanComparison from '@/components/subscription/PlanComparison';
-import SubscriptionManagement from '@/components/subscription/SubscriptionManagement';
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Crown, Calendar, CreditCard, User, Mail, Package } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { Navigate, useSearchParams } from 'react-router-dom';
-import { CheckIcon, XIcon, Gift, Clock, Loader2 } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { loadStripe } from '@stripe/stripe-js';
+import { useToast } from '@/hooks/use-toast';
 
-// Initialize Stripe with your publishable key
-const stripePromise = loadStripe('pk_test_your_stripe_publishable_key_here');
-
-const Subscription = () => {
+const Subscription: React.FC = () => {
+  const { user, isPremium, creditsRemaining, trialUsed } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isPremium, subscriptionTier, subscriptionEnd, trialActive, trialEndsAt, refreshSubscription } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [planType, setPlanType] = useState<"monthly" | "yearly">("monthly");
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [referralApplied, setReferralApplied] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    // Check for referral parameter
-    const refCode = searchParams.get('ref');
-    if (refCode) {
-      setReferralApplied(true);
-      // In a real implementation, we would validate the referral code here
-      toast({
-        title: "Referral Applied!",
-        description: "You'll get 1 free month when you subscribe to a plan.",
-      });
-      
-      // Remove from URL after processing
-      searchParams.delete('ref');
-      setSearchParams(searchParams);
-    }
-    
-    // Set plan type from URL if present
-    const urlPlan = searchParams.get('plan');
-    if (urlPlan === 'yearly' || urlPlan === 'monthly') {
-      setPlanType(urlPlan);
-    }
-    
-    if (user) {
-      refreshSubscription();
-    }
-  }, [user, refreshSubscription, searchParams, setSearchParams, toast]);
-
-  // Calculate days remaining in trial
-  const calculateDaysRemaining = () => {
-    if (!trialEndsAt) return 0;
-    
-    const now = new Date();
-    const diffTime = trialEndsAt.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  };
-
-  const handleUpgradeClick = async () => {
     if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to upgrade your subscription.",
-      });
+      navigate('/login');
       return;
     }
-
-    setIsLoading(true);
-    try {
-      // Determine which price to use based on the selected plan type
-      const priceId = planType === "monthly" 
-        ? process.env.STRIPE_MONTHLY_PRICE_ID || process.env.VITE_STRIPE_MONTHLY_PRICE_ID
-        : process.env.STRIPE_YEARLY_PRICE_ID || process.env.VITE_STRIPE_YEARLY_PRICE_ID;
-      
-      // Call create-checkout edge function with priceId
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          priceId,
-          successUrl: `${window.location.origin}/subscription?success=true`,
-          cancelUrl: `${window.location.origin}/subscription?canceled=true`,
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (data?.sessionId) {
-        // Load Stripe and redirect to checkout
-        const stripe = await stripePromise;
-        if (!stripe) {
-          throw new Error("Failed to load Stripe");
-        }
-        
-        const { error: stripeError } = await stripe.redirectToCheckout({
-          sessionId: data.sessionId
-        });
-        
-        if (stripeError) {
-          console.error('Stripe redirect error:', stripeError);
-          throw new Error(stripeError.message);
-        }
-      } else if (data?.url) {
-        // Fallback to URL redirect if sessionId not available
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create checkout session. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [user, navigate]);
 
   const handleManageSubscription = async () => {
     if (!user) return;
 
-    setIsLoading(true);
+    setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: { returnUrl: `${window.location.origin}/subscription` }
+        body: { returnUrl: window.location.href }
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw error;
 
       if (data?.url) {
         window.location.href = data.url;
+      } else {
+        throw new Error('No portal URL returned');
       }
-    } catch (error) {
-      console.error('Error creating customer portal session:', error);
+    } catch (error: any) {
+      console.error('Error accessing customer portal:', error);
       toast({
-        title: "Error",
-        description: "Failed to open subscription management. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Unable to access subscription management. Please try again.',
+        variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleTrialClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    // Use the same checkout flow but indicate it's for a trial
-    await handleUpgradeClick();
+  const handleUpgrade = () => {
+    navigate('/pricing');
   };
-
-  // Handle URL query parameters for success/cancel
-  useEffect(() => {
-    if (searchParams.get('success')) {
-      toast({
-        title: "Subscription successful!",
-        description: "Thank you for subscribing to PitchPerfect AI Premium.",
-      });
-      refreshSubscription();
-      // Clean up the URL
-      searchParams.delete('success');
-      setSearchParams(searchParams);
-    } else if (searchParams.get('canceled')) {
-      toast({
-        title: "Subscription canceled",
-        description: "Your subscription process was canceled.",
-      });
-      // Clean up the URL
-      searchParams.delete('canceled');
-      setSearchParams(searchParams);
-    }
-  }, [toast, refreshSubscription, searchParams, setSearchParams]);
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: '/subscription' }} />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-4">Please log in to view your subscription details.</p>
+          <Button onClick={() => navigate('/login')}>Log In</Button>
+        </div>
+      </div>
+    );
   }
-
-  const getPageTitle = () => {
-    if (isPremium) {
-      return "Your Subscription";
-    } else if (trialActive) {
-      return "Upgrade Your Trial";
-    } else {
-      return "Choose Your Plan";
-    }
-  };
-
-  const getPageSubtitle = () => {
-    if (isPremium) {
-      return "Manage your premium features and subscription settings.";
-    } else if (trialActive) {
-      return `You're currently on a free trial with ${calculateDaysRemaining()} days remaining. Upgrade to keep access to premium features.`;
-    } else {
-      return "Unlock premium features to elevate your sales conversations and close more deals with confidence.";
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Subscription Management | PitchPerfect AI</title>
+        <meta name="description" content="Manage your PitchPerfect AI subscription and billing details." />
+      </Helmet>
+
       <Navbar />
-      
+
       <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-brand-dark mb-4">{getPageTitle()}</h1>
-            <p className="text-lg text-brand-dark/70 max-w-2xl mx-auto">
-              {getPageSubtitle()}
-            </p>
-            
-            {isPremium && (
-              <div className="mt-4 inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
-                <CheckIcon className="w-4 h-4 mr-2" />
-                You're on the {subscriptionTier} plan
-              </div>
-            )}
-
-            {trialActive && !isPremium && (
-              <div className="mt-4 inline-flex items-center px-4 py-2 bg-amber-100 text-amber-800 rounded-full">
-                <Clock className="w-4 h-4 mr-2" />
-                Trial - {calculateDaysRemaining()} days remaining
-              </div>
-            )}
-            
-            {referralApplied && (
-              <div className="mt-4 max-w-md mx-auto">
-                <Alert className="bg-purple-50 border-purple-200">
-                  <Gift className="h-4 w-4 text-purple-500" />
-                  <AlertDescription className="text-sm">
-                    Referral discount applied. You'll receive 1 month free with your subscription.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
-
-            {!isPremium && (
-              <div className="mt-8 max-w-xs mx-auto">
-                <Tabs value={planType} onValueChange={(v) => setPlanType(v as "monthly" | "yearly")}>
-                  <TabsList className="grid grid-cols-2">
-                    <TabsTrigger value="monthly" className="text-sm">Monthly ($29/mo)</TabsTrigger>
-                    <TabsTrigger value="yearly" className="text-sm">Yearly ($290/yr)</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            )}
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-brand-dark mb-4">Subscription Management</h1>
+            <p className="text-lg text-brand-dark/70">Manage your plan, billing, and account preferences</p>
           </div>
-          
-          <PlanComparison 
-            isPremium={isPremium} 
-            onUpgradeClick={handleUpgradeClick} 
-            isLoading={isLoading}
-            planType={planType}
-            trialActive={trialActive}
-          />
-          
-          {isPremium && subscriptionEnd && (
-            <div className="mt-8 max-w-4xl mx-auto text-center">
-              <p className="text-sm text-brand-dark/70">
-                Your subscription renews on {new Date(subscriptionEnd).toLocaleDateString()}
-              </p>
-              <Button 
-                variant="outline" 
-                onClick={handleManageSubscription} 
-                className="mt-2"
-                disabled={isLoading}
-                aria-label="Manage subscription"
-              >
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Manage Subscription
-              </Button>
-            </div>
-          )}
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Account Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  Account Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Email</span>
+                  <span className="text-sm text-gray-600">{user.email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Account Status</span>
+                  <Badge variant={isPremium ? "default" : "secondary"}>
+                    {isPremium ? "Premium" : "Free"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Credits Remaining</span>
+                  <span className="text-sm text-gray-600">{creditsRemaining}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Free Analysis Used</span>
+                  <span className="text-sm text-gray-600">{trialUsed ? "Yes" : "No"}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Subscription Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Package className="h-5 w-5 mr-2" />
+                  Subscription Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isPremium ? (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <Crown className="h-5 w-5 text-amber-500" />
+                      <span className="font-medium text-amber-700">Premium Plan Active</span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      You have unlimited access to all premium features.
+                    </p>
+                    <Button 
+                      onClick={handleManageSubscription}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      {loading ? 'Loading...' : 'Manage Billing'}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center py-4">
+                      <p className="text-sm text-gray-600 mb-4">
+                        You're currently on the free plan. Upgrade to Premium for unlimited access to all features.
+                      </p>
+                      <Button onClick={handleUpgrade} className="w-full">
+                        <Crown className="h-4 w-4 mr-2" />
+                        Upgrade to Premium
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Usage Summary */}
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>Usage Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">{trialUsed ? "1" : "0"}</div>
+                    <div className="text-sm text-gray-600">Free Analysis Used</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{creditsRemaining}</div>
+                    <div className="text-sm text-gray-600">Credits Remaining</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{isPremium ? "∞" : "Limited"}</div>
+                    <div className="text-sm text-gray-600">Practice Sessions</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Help Section */}
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Mail className="h-5 w-5 mr-2" />
+                Need Help?
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  If you have any questions about your subscription or need assistance, our support team is here to help.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.location.href = "mailto:support@pitchperfectai.com"}
+                    className="flex-1"
+                  >
+                    Contact Support
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/pricing')}
+                    className="flex-1"
+                  >
+                    View All Plans
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

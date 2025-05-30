@@ -1,242 +1,238 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Rocket, UserPlus, Diamond } from 'lucide-react'; // Changed Clock to Diamond
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import VideoPlayer from '@/components/VideoPlayer';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/context/AuthContext';
 import { useGuestMode } from '@/context/GuestModeContext';
-import { useToast } from '@/hooks/use-toast';
-import WaveAnimation from '@/components/animations/WaveAnimation';
+import { useNavigate } from 'react-router-dom';
+import { Play, Users, TrendingUp, Star, ArrowRight, Zap, Target, BarChart3 } from 'lucide-react';
+import { trackEvent } from '@/utils/analytics';
 import ParallaxSection from '@/components/animations/ParallaxSection';
+import TiltCard from '@/components/animations/TiltCard';
+import FadeTransition from '@/components/animations/FadeTransition';
 
-const Hero = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const isMobile = useIsMobile();
+const Hero: React.FC = () => {
+  const { user } = useAuth();
+  const { isGuestMode, startGuestMode } = useGuestMode();
   const navigate = useNavigate();
-  // Destructure new auth values
-  const { user, isPremium, creditsRemaining, trialUsed, startFreeTrial } = useAuth();
-  const { startGuestMode } = useGuestMode();
-  const { toast } = useToast();
-
-  // Determine if we're in development mode (already existed)
-  const isDevelopment = import.meta.env.DEV === true;
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Ensure the video plays automatically when loaded
-    if (videoRef.current) {
-      videoRef.current.play().catch(error => {
-        console.log('Auto-play was prevented:', error);
-      });
-    }
-
-    // Listen for the custom event that signals a demo has started
-    const handleDemoStart = () => {
-      setSessionStarted(true);
-    };
-
-    window.addEventListener('start-demo-auto', handleDemoStart);
-
-    return () => {
-      window.removeEventListener('start-demo-auto', handleDemoStart);
-    };
+    setIsVisible(true);
   }, []);
 
-  // Add debug logging (already existed)
-  useEffect(() => {
-    console.log('Hero component auth state:', { 
-      user_exists: Boolean(user), 
-      isPremium, 
-      creditsRemaining, 
-      trialUsed 
-    });
-  }, [user, isPremium, creditsRemaining, trialUsed]);
-
-  const handleScrollToDemo = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const demoSection = document.getElementById('demo-sandbox');
-    if (demoSection) {
-      demoSection.scrollIntoView({ behavior: 'smooth' });
-      // We're removing the auto-start behavior - don't trigger the demo start event
-    }
-  };
-
-  const handleStartDemo = () => {
-    const startDemoEvent = new CustomEvent('start-demo-auto');
-    window.dispatchEvent(startDemoEvent);
-    setSessionStarted(true);
-  };
-
-  const handlePrimaryCtaClick = async () => {
-    if (!user) {
-      // If user is not logged in, redirect to signup to get 1 free pitch analysis
-      navigate('/signup');
-    } else if (!isPremium) {
-      // User is logged in but not premium
-      if (!trialUsed) {
-        // If they haven't used their free analysis, attempt to grant it (handled by AuthContext)
-        await startFreeTrial();
-        navigate('/demo'); // Direct to demo to use the free analysis
-      } else if (creditsRemaining > 0) {
-        // If they have credits, go to demo/practice
-        navigate('/demo');
-      } else {
-        // No credits, trial used, not premium - prompt to upgrade
-        navigate('/pricing');
-      }
-    } else {
-      // User is premium, go to dashboard
+  const handleGetStarted = () => {
+    if (user && !isGuestMode) {
+      trackEvent('cta_get_started_authenticated');
       navigate('/dashboard');
-    }
-  };
-
-  const handleTryAsGuest = () => {
-    startGuestMode();
-    toast({
-      title: "Guest Mode Activated",
-      description: "Try PitchPerfect AI without creating an account. Your data won't be saved.",
-    });
-    navigate('/roleplay');
-  };
-
-  // Render appropriate button based on user status with extra safety checks
-  const renderActionButton = () => {
-    if (!user || user === null) {
-      // Case 1: User is not logged in - offer free analysis via signup
-      return (
-        <Button 
-          className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={handlePrimaryCtaClick}
-          aria-label="Begin a Practice Call"
-        >
-          Begin a Practice Call <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
-        </Button>
-      );
-    } else if (isPremium) {
-      // Case 2: User has premium subscription
-      return (
-        <Button 
-          className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={handlePrimaryCtaClick}
-          aria-label="Go to Dashboard"
-        >
-          Go to Dashboard <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
-        </Button>
-      );
-    } else if (!trialUsed) {
-      // Case 3: User is logged in, but hasn't used their free pitch analysis yet
-      return (
-        <Button 
-          className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={handlePrimaryCtaClick}
-          aria-label="Get 1 Free Pitch Analysis"
-        >
-          <Diamond className="mr-1" size={isMobile ? 20 : 18} />
-          Get 1 Free Pitch Analysis
-        </Button>
-      );
-    } else if (creditsRemaining > 0) {
-      // Case 4: User is logged in, used trial, has credits
-      return (
-        <Button 
-          className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={handlePrimaryCtaClick}
-          aria-label="Start New Practice"
-        >
-          Start New Practice ({creditsRemaining} credits) <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
-        </Button>
-      );
     } else {
-      // Case 5: User is logged in, used trial, no credits, not premium
-      return (
-        <Button 
-          className="bg-[#008D95] hover:bg-[#007A80] text-white font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-          onClick={handlePrimaryCtaClick}
-          aria-label="Upgrade to Premium"
-        >
-          Upgrade to Premium <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
-        </Button>
-      );
+      trackEvent('cta_get_started_unauthenticated');
+      navigate('/signup');
     }
   };
+
+  const handleTryDemo = () => {
+    trackEvent('cta_try_demo');
+    if (!user) {
+      startGuestMode();
+    }
+    navigate('/demo');
+  };
+
+  const statistics = [
+    { icon: Users, value: "10,000+", label: "Sales Professionals Trained" },
+    { icon: TrendingUp, value: "85%", label: "Average Improvement Rate" },
+    { icon: Star, value: "4.9/5", label: "User Satisfaction Rating" }
+  ];
+
+  const features = [
+    {
+      icon: Zap,
+      title: "AI-Powered Feedback",
+      description: "Get instant, personalized feedback on your sales pitches using advanced AI analysis"
+    },
+    {
+      icon: Target,
+      title: "Role-Play Scenarios",
+      description: "Practice with realistic customer scenarios tailored to your industry and experience level"
+    },
+    {
+      icon: BarChart3,
+      title: "Performance Analytics",
+      description: "Track your progress with detailed analytics and personalized improvement recommendations"
+    }
+  ];
 
   return (
-    <ParallaxSection className="pt-20 md:pt-24 pb-16 md:pb-20 overflow-hidden relative">
-      <div className="absolute inset-0 -z-10 opacity-50">
-        <WaveAnimation color="#008D95" amplitude={15} opacity={0.2} />
+    <div className="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-green-50/30">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] -z-10" />
+      <div className="absolute top-0 right-0 -translate-y-12 translate-x-12">
+        <div className="w-72 h-72 bg-gradient-to-br from-brand-blue/20 to-brand-green/20 rounded-full blur-3xl" />
+      </div>
+      <div className="absolute bottom-0 left-0 translate-y-12 -translate-x-12">
+        <div className="w-72 h-72 bg-gradient-to-tr from-brand-green/20 to-brand-blue/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="lg:w-1/2 space-y-5 md:space-y-6 mb-8 lg:mb-0"
-        >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-brand-dark leading-tight">
-            Beat Every Objection <span className="text-[#008D95]">with AI-Powered Practice</span>
-          </h1>
-          <p className="text-lg md:text-xl text-brand-dark/80 max-w-xl">
-            Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching.
-          </p>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="flex flex-wrap gap-4"
-          >
-            {renderActionButton()}
+      <ParallaxSection className="relative z-10">
+        <div className="container mx-auto px-4 py-20 lg:py-32">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left column - Content */}
+            <FadeTransition delay={0}>
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-200/50 shadow-sm">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-sm font-medium text-gray-700">AI-Powered Sales Training</span>
+                  </div>
+                  
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                    Perfect Your{' '}
+                    <span className="bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">
+                      Sales Pitch
+                    </span>{' '}
+                    with AI
+                  </h1>
+                  
+                  <p className="text-xl text-gray-600 leading-relaxed max-w-xl">
+                    Train your sales team with AI-powered role-play scenarios. Get instant feedback, 
+                    improve conversion rates, and close more deals with personalized coaching.
+                  </p>
+                </div>
 
-            <Button 
-              variant="outline" 
-              className="bg-white text-brand-dark border-[#E2E8F0] hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-              onClick={handleScrollToDemo}
-              aria-label="Start Demo"
-            >
-              Start Demo
-              <ArrowRight className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
-            </Button>
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    onClick={handleGetStarted}
+                    size="lg"
+                    className="bg-gradient-to-r from-brand-blue to-brand-green hover:from-brand-blue/90 hover:to-brand-green/90 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+                  >
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleTryDemo}
+                    variant="outline" 
+                    size="lg"
+                    className="border-2 border-gray-300 hover:border-brand-blue text-gray-700 hover:text-brand-blue font-semibold px-8 py-4 rounded-xl transition-all duration-300 group bg-white/50 backdrop-blur-sm"
+                  >
+                    <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                    Try Demo
+                  </Button>
+                </div>
 
-            {/* Only show the Try as Guest button if user is not authenticated and not in guest mode already */}
-            {!user && !isGuestMode && (
-              <Button 
-                variant="ghost" 
-                className="bg-white text-brand-dark hover:bg-gray-50 transition-colors flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg hover:scale-105"
-                onClick={handleTryAsGuest}
-                aria-label="Try as Guest"
-              >
-                <UserPlus className="group-hover:scale-110 transition-transform" size={isMobile ? 20 : 18} />
-                Try as Guest
-              </Button>
-            )}
-          </motion.div>
-          <p className="text-sm text-brand-dark/60">
-            Trusted by 10,000+ sales professionals from leading companies
-          </p>
-        </motion.div>
+                {/* Trust indicators */}
+                <div className="flex items-center space-x-6 text-sm text-gray-600">
+                  <div className="flex items-center space-x-1">
+                    <div className="flex -space-x-1">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-blue to-brand-green border-2 border-white" />
+                      ))}
+                    </div>
+                    <span className="ml-2">Trusted by 10,000+ professionals</span>
+                  </div>
+                  <div className="hidden sm:block w-px h-4 bg-gray-300" />
+                  <div className="hidden sm:flex items-center space-x-1">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span>4.9/5 rating</span>
+                  </div>
+                </div>
+              </div>
+            </FadeTransition>
 
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="lg:w-1/2 relative lg:pt-0 pt-8"
-        >
-          <VideoPlayer 
-            posterSrc="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
-            videoSrc="/demo-video.mp4"
-            fallbackSrc="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
-            className="max-w-lg mx-auto shadow-lg rounded-lg overflow-hidden relative z-10"
-            onStartClick={handleStartDemo}
-            showStartButton={!sessionStarted}
-          />
+            {/* Right column - Visual */}
+            <FadeTransition delay={200}>
+              <div className="relative">
+                <TiltCard className="relative z-10">
+                  <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 p-8 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Live Practice Session</h3>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        <span className="text-sm text-gray-600">Recording</span>
+                      </div>
+                    </div>
+                    
+                    {/* Mock conversation */}
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-700">"Tell me about your product's main benefits..."</p>
+                        <span className="text-xs text-gray-500 mt-1 block">AI Customer</span>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3 ml-8">
+                        <p className="text-sm text-gray-700">"Our solution increases efficiency by 40% while reducing costs..."</p>
+                        <span className="text-xs text-gray-500 mt-1 block">You</span>
+                      </div>
+                    </div>
 
-          {/* Enhanced background effect */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-brand-blue/20 to-[#008D95]/30 rounded-lg -z-10 transform translate-x-4 translate-y-4 blur-lg"></div>
-        </motion.div>
-      </div>
-    </ParallaxSection>
+                    {/* Mock feedback */}
+                    <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 border border-blue-200/50">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">AI Feedback</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full" />
+                          <span className="text-xs text-gray-600">Great use of specific metrics</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                          <span className="text-xs text-gray-600">Consider addressing objections earlier</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TiltCard>
+
+                {/* Floating elements */}
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-brand-blue to-brand-green rounded-full opacity-20 animate-pulse" />
+                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-brand-green to-brand-blue rounded-full opacity-20 animate-pulse delay-1000" />
+              </div>
+            </FadeTransition>
+          </div>
+
+          {/* Statistics */}
+          <FadeTransition delay={400}>
+            <div className="mt-20 pt-12 border-t border-gray-200/50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {statistics.map((stat, index) => (
+                  <div key={index} className="text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-brand-blue to-brand-green rounded-lg mb-4">
+                      <stat.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
+                    <div className="text-gray-600">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </FadeTransition>
+
+          {/* Features Preview */}
+          <FadeTransition delay={600}>
+            <div className="mt-20">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose PitchPerfect AI?</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                  Our AI-powered platform provides everything you need to master your sales skills
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-8">
+                {features.map((feature, index) => (
+                  <TiltCard key={index}>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 hover:border-brand-blue/30 transition-all duration-300 group">
+                      <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-brand-blue to-brand-green rounded-lg mb-4 group-hover:scale-110 transition-transform">
+                        <feature.icon className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                      <p className="text-gray-600">{feature.description}</p>
+                    </div>
+                  </TiltCard>
+                ))}
+              </div>
+            </div>
+          </FadeTransition>
+        </div>
+      </ParallaxSection>
+    </div>
   );
 };
 
