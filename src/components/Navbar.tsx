@@ -12,7 +12,9 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuL
 const Navbar: React.FC = () => {
   // Access new creditsRemaining and trialUsed from useAuth
   const { user, signOut, isPremium, creditsRemaining, trialUsed } = useAuth();
-  const { isGuestMode, endGuestMode } = useGuestMode();
+ const isGuestMode = false;
+const endGuestMode = () => {};
+
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
