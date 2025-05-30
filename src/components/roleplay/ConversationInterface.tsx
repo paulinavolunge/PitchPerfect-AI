@@ -13,6 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Flag, CheckCircle } from 'lucide-react';
 import LoadingIndicator from '@/components/ui/loading-indicator';
 import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
+import { useGuestMode } from "@/context/GuestModeContext"; // Import useGuestMode
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+
 
 interface Message {
   id: string;
@@ -58,7 +61,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [firstAIReplyTriggered, setFirstAIReplyTriggered] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { isPremium, trialActive } = useAuth();
+  // Destructure new auth values
+  const { user, isPremium, creditsRemaining, trialUsed, startFreeTrial, deductUserCredits } = useAuth();
+  const { isGuestMode } = useGuestMode(); // Access guest mode
+  const navigate = useNavigate(); // For navigation
+
+
   const voiceSynthRef = useRef<VoiceSynthesis | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [sessionStats, setSessionStats] = useState({
@@ -80,7 +88,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       "What timeline would work better for your organization?",
       "The implementation can be phased to accommodate your schedule."
     ],
-    'Competitor': [
+    'Competition': [
       "I'd like to understand what you appreciate about their solution.",
       "Our differentiator is actually in how we handle...",
       "What specific features are most important to your team?"
@@ -110,13 +118,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       voiceSynthRef.current = VoiceSynthesis.getInstance();
     }
-    
+
     return () => {
       // Stop speaking when component unmounts
       if (voiceSynthRef.current) {
         voiceSynthRef.current.stop();
       }
-      
+
       // Clear idle timer
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
@@ -125,20 +133,20 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   }, []);
 
   useEffect(() => {
-    // Check if trying to use voice features without premium or trial
-    if (mode !== 'text' && !isPremium && !trialActive) {
-      setActualMode('text');
+    // Voice features (voice/hybrid modes) now require premium or credits
+    if (mode !== 'text' && !isPremium && creditsRemaining <= 0) {
+      setActualMode('text'); // Fallback to text mode if not premium/no credits for voice features
       if (mode === 'voice' || mode === 'hybrid') {
-        setShowPremiumModal(true);
+        setShowPremiumModal(true); // Prompt upgrade
       }
     } else {
       setActualMode(mode);
-      // Default voice to enabled when premium user or trial user selects voice/hybrid mode
-      if ((isPremium || trialActive) && (mode === 'voice' || mode === 'hybrid')) {
+      // Default voice to enabled when premium user or user with credits selects voice/hybrid mode
+      if ((isPremium || creditsRemaining > 0) && (mode === 'voice' || mode === 'hybrid')) {
         setVoiceEnabled(true);
       }
     }
-  }, [mode, isPremium, trialActive]);
+  }, [mode, isPremium, creditsRemaining]); // Added creditsRemaining to dependencies
 
   useEffect(() => {
     // Initialize with AI greeting
@@ -149,25 +157,25 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       sender: 'ai',
       timestamp: new Date(),
     };
-    
+
     setMessages([initialMessage]);
     setSessionComplete(false);
     setShowFeedback(false);
     setFirstAIReplyTriggered(false);
-    
-    // Speak the initial greeting if voice is enabled
-    if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
+
+    // Speak the initial greeting if voice is enabled and mode allows
+    if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
       speakMessage(initialMessage.text);
     }
-    
+
     // Scroll to bottom when messages change
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-    
+
     // Reset idle timer
     resetIdleTimer();
-  }, [scenario]);
+  }, [scenario]); // Removed voiceEnabled, isPremium, actualMode, volume, voiceSynthRef to prevent re-runs on unrelated state changes
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -175,7 +183,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
-  
+
   // Update parent component with processing state
   useEffect(() => {
     if (onProcessingStateChange) {
@@ -195,13 +203,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   const speakMessage = async (text: string) => {
     if (!voiceSynthRef.current) return;
-    
+
     setIsAISpeaking(true);
-    
+
     try {
       const voiceVolume = volume / 100;
       const persona = voiceStyle || 'friendly';
-      
+
       await voiceSynthRef.current.speak({
         text: text,
         volume: voiceVolume,
@@ -221,10 +229,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
     }
-    
+
     setUserIdleTime(0);
     setShowSuggestions(false);
-    
+
     // Set new timer - check every 5 seconds
     idleTimerRef.current = setInterval(() => {
       setUserIdleTime(prev => {
@@ -238,60 +246,83 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     }, 5000);
   };
 
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => { // Made async to await credit deduction
     // Reset idle timer when user sends a message
     resetIdleTimer();
     setShowSuggestions(false);
-    
-    // Add user message
+
+    // Add user message immediately for responsiveness
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       text: text,
       sender: 'user',
       timestamp: new Date(),
     };
-    
     setMessages((prev) => [...prev, userMessage]);
-    
+
     // Stop any ongoing AI speech when user speaks
     if (voiceSynthRef.current && isAISpeaking) {
       voiceSynthRef.current.stop();
       setIsAISpeaking(false);
     }
-    
-    // Check if session should complete after this message
-    const shouldCompleteSession = messages.length >= 8; // Complete after 4 exchanges
-    
-    // Show processing state
+
+    // --- Credit Deduction Logic ---
+    let creditsToDeduct = 0;
+    let featureType = '';
+
+    if (!isGuestMode) { // Credits only apply to authenticated users
+      if (actualMode === 'text') {
+        creditsToDeduct = 1;
+        featureType = 'roleplay_text_analysis';
+      } else if (actualMode === 'voice' || actualMode === 'hybrid') {
+        creditsToDeduct = 5; // Placeholder for 3-10 credits, adjust as needed
+        featureType = `roleplay_voice_analysis_${scenario.difficulty.toLowerCase()}`;
+      }
+
+      if (creditsToDeduct > 0) {
+        const deducted = await deductUserCredits(featureType, creditsToDeduct);
+        if (!deducted) {
+          // deductUserCredits already shows a toast on failure
+          setIsProcessing(false); // Stop processing state if deduction failed
+          return; // Stop execution if credits couldn't be deducted
+        }
+      }
+    }
+    // --- End Credit Deduction Logic ---
+
+    // Show processing state after successful deduction
     setIsProcessing(true);
-    
+
     // Simulate thinking delay
     setTimeout(() => {
       // Generate AI response
       const aiResponse = generateAIResponse(text, scenario, userScript || null, getAIPersona);
-      
+
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
         text: aiResponse,
         sender: 'ai',
         timestamp: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, aiMessage]);
       setIsProcessing(false);
-      
+
       // Trigger first AI reply callback for guest mode prompts
       if (!firstAIReplyTriggered && onFirstAIReply) {
         setFirstAIReplyTriggered(true);
         onFirstAIReply();
       }
-      
+
       // Speak the AI response if voice is enabled
-      if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
+      if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
         speakMessage(aiResponse);
       }
-      
-      // Set session complete if reached threshold
+
+      // Set session complete after a certain number of exchanges (e.g., 4 AI responses)
+      const aiMessagesCount = messages.filter(msg => msg.sender === 'ai').length + 1; // +1 for the current AI response
+      const shouldCompleteSession = aiMessagesCount >= 4; // Complete after 4 AI responses (5 total messages including intro)
+
       if (shouldCompleteSession) {
         // Generate random stats for demo
         const stats = {
@@ -302,38 +333,39 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         };
         setSessionStats(stats);
         setSessionComplete(true);
-        
+
         toast({
           title: "Session Complete",
           description: "Great job! You've completed this practice session.",
           duration: 5000,
         });
       }
-      
+
     }, 1500);
   };
 
   const toggleVoice = () => {
-    if (!isPremium && !trialActive && !voiceEnabled) {
+    // If not premium and not enough credits, show modal
+    if (!isPremium && creditsRemaining <= 0 && !voiceEnabled) {
       setShowPremiumModal(true);
       return;
     }
-    
+
     setVoiceEnabled(!voiceEnabled);
-    
+
     // Stop speaking if turning off
     if (voiceEnabled && voiceSynthRef.current && isAISpeaking) {
       voiceSynthRef.current.stop();
       setIsAISpeaking(false);
     }
-    
+
     toast({
-      title: voiceEnabled ? "Voice responses disabled" : "Voice responses enabled",
+      title: voiceEnabled ? "AI Voice disabled" : "AI Voice enabled",
       description: voiceEnabled ? "AI will respond with text only." : "AI will respond with voice and text.",
       duration: 3000,
     });
   };
-  
+
   const handleFinishSession = () => {
     // Generate random stats for demo
     const stats = {
@@ -344,18 +376,18 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     };
     setSessionStats(stats);
     setSessionComplete(true);
-    
+
     toast({
       title: "Session Complete",
       description: "You've marked this session as complete.",
       duration: 3000,
     });
   };
-  
+
   const handleShowFeedback = () => {
     setShowFeedback(true);
   };
-  
+
   const handleCloseFeedback = () => {
     setShowFeedback(false);
     // Reset session
@@ -366,17 +398,17 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       sender: 'ai',
       timestamp: new Date(),
     };
-    
+
     setMessages([initialMessage]);
     setSessionComplete(false);
     setFirstAIReplyTriggered(false);
-    
+
     // Speak the initial greeting if voice is enabled
-    if (voiceEnabled && (isPremium || trialActive) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
+    if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
       speakMessage(initialMessage.text);
     }
   };
-  
+
   const handleUseSuggestion = (suggestion: string) => {
     handleSendMessage(suggestion);
   };
@@ -386,9 +418,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden relative">
         <div className="bg-white p-2 flex justify-between items-center border-b">
           <div className="flex items-center">
-            {trialActive && (
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full mr-2">
-                Trial
+            {!isGuestMode && user && (
+              <span className="text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mr-2">
+                Credits: {creditsRemaining}
               </span>
             )}
           </div>
@@ -410,20 +442,21 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 checked={voiceEnabled}
                 onCheckedChange={toggleVoice}
                 aria-label="Toggle voice responses"
-                disabled={!isPremium && !trialActive}
+                // Disable voice toggle if not premium and no credits
+                disabled={!isPremium && creditsRemaining <= 0}
               />
             </div>
           </div>
         </div>
-        
+
         <MessageList messages={messages} isAISpeaking={isAISpeaking} />
-        
+
         {isProcessing && (
           <div className="p-4 bg-white border-t" aria-live="polite">
             <LoadingIndicator size="small" />
           </div>
         )}
-        
+
         {showSuggestions && !sessionComplete && !isProcessing && (
           <div className="bg-blue-50 p-3 border-t">
             <p className="text-xs text-brand-dark/70 mb-2">Need help with your response? Try one of these:</p>
@@ -443,7 +476,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             </div>
           </div>
         )}
-        
+
         {sessionComplete && !showFeedback ? (
           <div className="bg-brand-green/10 p-4 flex flex-col items-center justify-center">
             <p className="text-brand-dark mb-2">Session complete! Ready to see your feedback?</p>
@@ -460,7 +493,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         ) : !showFeedback && !isProcessing && (
           <ChatInput mode={actualMode} onSendMessage={handleSendMessage} />
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -520,11 +553,15 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         </div>
       )}
 
-      {/* Premium Modal */}
+      {/* Premium Modal - Updated to be credit-aware */}
       <PremiumModal 
         open={showPremiumModal} 
         onOpenChange={setShowPremiumModal}
-        featureName="voice roleplay"
+        featureName={
+          user && creditsRemaining === 0 && !isPremium ?
+          "voice roleplay (no credits remaining)" :
+          "voice roleplay"
+        }
       />
     </>
   );
