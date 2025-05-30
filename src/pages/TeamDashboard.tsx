@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -45,10 +44,9 @@ const TeamDashboard = () => {
       {/* Premium Modal */}
       <PremiumModal 
         isOpen={showPremiumModal} 
-        onClose={(isOpen) => {
-          setShowPremiumModal(isOpen);
-          if (!isOpen && !isPremium) {
-            // Redirect to subscription page if they close the modal but aren't premium
+        onClose={() => {
+          setShowPremiumModal(false);
+          if (!isPremium) {
             navigate("/subscription");
           }
         }}

@@ -186,9 +186,9 @@ const CallRecordings = () => {
       {/* Premium Modal */}
       <PremiumModal 
         isOpen={showPremiumModal} 
-        onClose={(isOpen) => {
-          setShowPremiumModal(isOpen);
-          if (!isOpen && !isPremium) {
+        onClose={() => {
+          setShowPremiumModal(false);
+          if (!isPremium) {
             navigate("/subscription");
           }
         }}

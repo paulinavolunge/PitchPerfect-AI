@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
@@ -779,14 +778,14 @@ const RolePlay = () => {
         {/* Premium Modal - only show for registered users, not for guests */}
         {!isGuestMode && (
           <PremiumModal 
-            open={showPremiumModal} 
-            onOpenChange={(isOpen) => {
-              setShowPremiumModal(isOpen);
-              if (!isOpen && !isPremium && user) {
+            isOpen={showPremiumModal} 
+            onClose={() => {
+              setShowPremiumModal(false);
+              if (!isPremium && user) {
                 navigate("/subscription");
               }
             }}
-            featureName="AI roleplay practice"
+            feature="AI roleplay practice"
           />
         )}
       </div>

@@ -245,11 +245,20 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
       if (!trialUsed) {
         if (creditsRemaining < 1) {
-          const startedTrial = await startFreeTrial();
-          if (!startedTrial) {
+          try {
+            const startedTrial = await startFreeTrial();
+            if (!startedTrial) {
+              toast({
+                title: "Action required",
+                description: "Could not start free analysis. Please contact support.",
+                variant: "destructive"
+              });
+              return;
+            }
+          } catch (error) {
             toast({
-              title: "Action required",
-              description: "Could not start free analysis. Please contact support.",
+              title: "Error starting trial",
+              description: "Could not start free analysis. Please try again.",
               variant: "destructive"
             });
             return;
@@ -260,8 +269,17 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         return;
       }
 
-      const deducted = await deductUserCredits('demo_pitch_analysis', 1);
-      if (!deducted) {
+      try {
+        const deducted = await deductUserCredits('demo_pitch_analysis', 1);
+        if (!deducted) {
+          return;
+        }
+      } catch (error) {
+        toast({
+          title: "Error processing request",
+          description: "Could not process your request. Please try again.",
+          variant: "destructive"
+        });
         return;
       }
     }
