@@ -49,7 +49,7 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
   const [isSubmittingTrial, setIsSubmittingTrial] = useState(false);
   const [isSubmittingDemo, setIsSubmittingDemo] = useState(false);
   const [showDemoSuccess, setShowDemoSuccess] = useState(false);
-  const [showDemoDialog, setShowDemoDialog] = useState(false);
+ const [showDemoDialog, setShowDemoDialog] = useState(false);
 
   // Show demo dialog if activeSection is 'demo'
   useEffect(() => {
