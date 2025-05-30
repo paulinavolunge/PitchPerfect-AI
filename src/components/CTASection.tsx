@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader2 } from 'lucide-react';
@@ -11,8 +10,10 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useAuth } from '@/context/AuthContext'; // Import useAuth
 
 const features = [
+  "1 Free Pitch Analysis (for new users)", // Updated feature
   "Real-time voice analysis",
   "Personalized improvement tips", 
   "Progress tracking dashboard",
@@ -43,6 +44,8 @@ interface CTASectionProps {
 const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  // Access user and trialUsed from AuthContext
+  const { user, trialUsed } = useAuth();
   const [isSubmittingTrial, setIsSubmittingTrial] = useState(false);
   const [isSubmittingDemo, setIsSubmittingDemo] = useState(false);
   const [showDemoSuccess, setShowDemoSuccess] = useState(false);
@@ -85,36 +88,31 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
   const onTrialSubmit = async (data: TrialFormValues) => {
     setIsSubmittingTrial(true);
     try {
-      // Create a new user with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: generatePassword(), // Generate a random secure password
+      // This will now initiate a Google OAuth signup which will then trigger
+      // the handle_new_user function in Supabase to grant 1 free credit.
+      const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
         options: {
-          data: {
-            full_name: data.fullName,
-            company: data.company,
-            is_trial: true,
-            trial_start_date: new Date().toISOString(),
-          },
-        }
+          redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after signup
+        },
       });
 
       if (authError) {
         throw new Error(authError.message);
       }
 
-      // Success - redirect to dashboard
+      // Since it's an OAuth redirect, the page will reload.
+      // No direct navigation here, the redirect will handle it.
       toast({
-        title: "Trial Started!",
-        description: "Your free trial has been activated. Welcome!",
+        title: "Signing up with Google...",
+        description: "You will be redirected to Google to complete your signup.",
       });
-      
-      navigate('/dashboard');
+
     } catch (error) {
       console.error('Error starting trial:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to start trial. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to start free analysis. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -127,7 +125,6 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
     setIsSubmittingDemo(true);
     try {
       // Instead of using the database directly, store the request in localStorage
-      // This is a fallback solution when the demo_requests table hasn't been created yet
       const demoRequest = {
         full_name: data.fullName,
         email: data.email,
@@ -135,7 +132,7 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
         requested_at: new Date().toISOString(),
         status: 'pending'
       };
-      
+
       // Store the demo request in localStorage
       const existingRequests = JSON.parse(localStorage.getItem('demoRequests') || '[]');
       existingRequests.push(demoRequest);
@@ -145,7 +142,7 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
       setShowDemoDialog(false);
       setShowDemoSuccess(true);
       demoForm.reset();
-      
+
       toast({
         title: "Demo Requested",
         description: "Thank you! We'll reach out shortly to schedule your demo.",
@@ -162,20 +159,31 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
     }
   };
 
-  // Generate a secure random password
-  const generatePassword = (): string => {
-    const length = 16;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let password = "";
-    for (let i = 0; i < length; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
-    return password;
-  };
+  // Removed generatePassword as direct email/password signup is removed
 
   // Handle Book Demo button click
   const handleBookDemoClick = () => {
     setShowDemoDialog(true);
+  };
+
+  const getPrimaryCtaText = () => {
+    if (!user) {
+      return 'Get 1 Free Pitch Analysis'; // For new users
+    } else if (trialUsed) {
+      return 'Top Up Credits'; // If trial already used, go to pricing
+    } else {
+      return 'Start Your Free Analysis'; // Logged in, but trial not used
+    }
+  };
+
+  const handlePrimaryCtaAction = () => {
+    if (!user) {
+      navigate('/signup'); // Direct to signup for new users
+    } else if (!trialUsed) {
+      navigate('/demo'); // Direct to demo for users to use their free analysis
+    } else {
+      navigate('/pricing'); // Direct to pricing to top up credits
+    }
   };
 
   return (
@@ -189,7 +197,7 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
             <p className="text-xl text-white/80 mb-8">
               Join thousands of sales professionals who are closing more deals with PitchPerfect AI.
             </p>
-            
+
             <ul className="space-y-3 mb-10">
               {features.map((feature, index) => (
                 <li key={index} className="flex items-center gap-3">
@@ -198,21 +206,20 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
                 </li>
               ))}
             </ul>
-            
+
             <div className="flex flex-wrap gap-4">
               <Button 
                 className="btn-primary" 
-                form="trial-form" 
-                type="submit" 
+                onClick={handlePrimaryCtaAction}
                 disabled={isSubmittingTrial}
               >
                 {isSubmittingTrial ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Starting...
+                    Loading...
                   </>
                 ) : (
-                  'Start Free Trial'
+                  getPrimaryCtaText()
                 )}
               </Button>
               <Button 
@@ -231,7 +238,7 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
               </Button>
             </div>
           </div>
-          
+
           <div className="bg-brand-dark/50 rounded-2xl p-8 border border-white/10 backdrop-blur-sm">
             {showDemoSuccess ? (
               <div className="flex flex-col items-center justify-center py-8">
@@ -252,76 +259,19 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
               </div>
             ) : (
               <>
-                <h3 className="text-2xl font-medium mb-2 text-brand-blue">Try PitchPerfect AI Today</h3>
+                <h3 className="text-2xl font-medium mb-2 text-brand-blue">Start Your Free Analysis Today</h3> {/* Updated title */}
                 <p className="text-white/80 mb-6">
-                  Start your 14-day free trial. No credit card required.
+                  Sign up with Google to instantly get 1 Free Pitch Analysis.
                 </p>
-                
-                <Form {...trialForm}>
-                  <form id="trial-form" onSubmit={trialForm.handleSubmit(onTrialSubmit)} className="space-y-4">
-                    <FormField
-                      control={trialForm.control}
-                      name="fullName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input 
-                              id="trial-name-input"
-                              placeholder="Full Name" 
-                              {...field}
-                              className="w-full bg-white/10 rounded-lg border border-white/20 p-3 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-brand-green"
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-400 text-xs" />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={trialForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input 
-                              type="email" 
-                              placeholder="Work Email" 
-                              {...field}
-                              className="w-full bg-white/10 rounded-lg border border-white/20 p-3 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-brand-green"
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-400 text-xs" />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={trialForm.control}
-                      name="company"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input 
-                              placeholder="Company Name" 
-                              {...field}
-                              className="w-full bg-white/10 rounded-lg border border-white/20 p-3 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-brand-green"
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-400 text-xs" />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="btn-primary w-full">
-                      {isSubmittingTrial ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Starting...
-                        </>
-                      ) : (
-                        'Get Started'
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-                
+
+                {/* Removed the form fields, as sign-up is now via Google OAuth directly */}
+                <Button 
+                  onClick={handlePrimaryCtaAction}
+                  className="btn-primary w-full"
+                >
+                  {getPrimaryCtaText()}
+                </Button>
+
                 <p className="text-white/60 text-sm mt-4 text-center">
                   By signing up, you agree to our Terms and Privacy Policy
                 </p>
@@ -340,7 +290,7 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
               Fill out the form below and we'll contact you to schedule a personalized demo.
             </DialogDescription>
           </DialogHeader>
-          
+
           <Form {...demoForm}>
             <form onSubmit={demoForm.handleSubmit(onDemoSubmit)} className="space-y-4 mt-4">
               <FormField
