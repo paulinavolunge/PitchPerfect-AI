@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
 import { useGuestMode } from "@/context/GuestModeContext";
-import { Menu, UserPlus, LogIn, Home, UserRound, Crown } from 'lucide-react';
+import { Menu, UserPlus, LogIn, Home, UserRound, Crown, Diamond } from 'lucide-react'; // Added Diamond icon
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,12 +10,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
 
 const Navbar: React.FC = () => {
-  const { user, signOut, isPremium } = useAuth();
+  // Access new creditsRemaining and trialUsed from useAuth
+  const { user, signOut, isPremium, creditsRemaining, trialUsed } = useAuth();
   const { isGuestMode, endGuestMode } = useGuestMode();
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  
+
   // Handle scroll effect for sticky navbar
   useEffect(() => {
     const handleScroll = () => {
@@ -27,7 +27,7 @@ const Navbar: React.FC = () => {
         setScrolled(false);
       }
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -40,10 +40,11 @@ const Navbar: React.FC = () => {
       user, 
       isGuestMode, 
       user_is_null: user === null,
-      user_type: typeof user,
       showAuthenticatedUI: Boolean(user) && !isGuestMode,
+      creditsRemaining, // Debugging credits
+      trialUsed, // Debugging trialUsed
     });
-  }, [user, isGuestMode]);
+  }, [user, isGuestMode, creditsRemaining, trialUsed]);
 
   const handleSignup = () => {
     if (isGuestMode) {
@@ -73,9 +74,9 @@ const Navbar: React.FC = () => {
   // Get user initials for avatar
   const getUserInitials = () => {
     if (!user) return '';
-    
+
     if (user.user_metadata?.first_name && user.user_metadata?.last_name) {
-      return `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name.charAt(0)}`;
+      return `<span class="math-inline">\{user\.user\_metadata\.first\_name\.charAt\(0\)\}</span>{user.user_metadata.last_name.charAt(0)}`;
     } else if (user.user_metadata?.name) {
       return user.user_metadata.name.charAt(0);
     } else if (user.email) {
@@ -84,7 +85,7 @@ const Navbar: React.FC = () => {
     return '';
   };
 
-  // Navigation items
+  // Navigation items (mostly unchanged)
   const userNavigationItems = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Practice', href: '/practice' },
@@ -93,7 +94,7 @@ const Navbar: React.FC = () => {
     { name: 'Call Recordings', href: '/call-recordings' },
     { name: 'Tips', href: '/tips' }
   ];
-  
+
   const guestNavigationItems = [
     { name: 'About', href: '/about' },
     { name: 'Compare', href: '/compare' },
@@ -117,7 +118,7 @@ const Navbar: React.FC = () => {
   // Determine if we should show the authenticated UI elements
   // Extra strict check to ensure user is truly authenticated
   const showAuthenticatedUI = Boolean(user) && user !== null && !isGuestMode;
-  
+
   return (
     <nav 
       className={`bg-background border-b w-full z-50 transition-all duration-300 ${
@@ -130,7 +131,7 @@ const Navbar: React.FC = () => {
             PitchPerfect AI
           </span>
         </Link>
-        
+
         {/* Main Navigation Menu for authenticated users */}
         {showAuthenticatedUI && (
           <div className="hidden md:flex items-center">
@@ -151,232 +152,4 @@ const Navbar: React.FC = () => {
                 </NavigationMenuItem>
                 {mainNavItems.map(item => (
                   <NavigationMenuItem key={item.name}>
-                    <Link 
-                      to={item.href}
-                      className={`group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${
-                        location.pathname === item.href 
-                          ? 'bg-accent/50 text-accent-foreground' 
-                          : 'text-foreground'
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
-        )}
-        
-        <div className="flex items-center md:order-3">
-          {/* Mobile Menu Button */}
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="sm" className="p-2">
-                <Menu className="h-6 w-6 text-brand-dark" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-sm">
-              <SheetHeader>
-                <SheetTitle>Navigation</SheetTitle>
-                <SheetDescription>
-                  Explore PitchPerfect AI
-                </SheetDescription>
-              </SheetHeader>
-              <div className="grid gap-4 py-4">
-                {showAuthenticatedUI ? (
-                  <>
-                    <Link 
-                      to="/"
-                      className={`flex items-center py-2 px-3 rounded-md ${
-                        location.pathname === '/' 
-                          ? 'bg-brand-blue/10 text-brand-blue font-medium' 
-                          : 'text-brand-dark hover:bg-gray-100'
-                      }`}
-                    >
-                      <Home className="h-4 w-4 mr-2" /> Home
-                    </Link>
-                    {userNavigationItems.map(item => (
-                      <Link 
-                        key={item.name} 
-                        to={item.href} 
-                        className={`block py-2 px-3 rounded-md ${
-                          location.pathname === item.href 
-                            ? 'bg-brand-blue/10 text-brand-blue font-medium' 
-                            : 'text-brand-dark hover:bg-gray-100'
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                    {!isPremium && (
-                      <Link 
-                        to="/pricing"
-                        className="block py-2 px-3 rounded-md bg-gradient-to-r from-brand-blue to-brand-green text-white hover:from-brand-blue/90 hover:to-brand-green/90 transition-all duration-300 text-center font-medium"
-                      >
-                        <Crown className="h-4 w-4 mr-2 inline" />
-                        Upgrade
-                      </Link>
-                    )}
-                    <Button variant="destructive" size="sm" onClick={handleSignOut} className="w-full mt-4">Sign Out</Button>
-                  </>
-                ) : isGuestMode ? (
-                  <>
-                    {guestModeItems.map(item => (
-                      <Link 
-                        key={item.name} 
-                        to={item.href} 
-                        className={`block py-2 px-3 rounded-md ${
-                          location.pathname === item.href 
-                            ? 'bg-brand-blue/10 text-brand-blue font-medium' 
-                            : 'text-brand-dark hover:bg-gray-100'
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                    <div className="pt-4 border-t mt-4">
-                      <p className="text-sm text-brand-dark/70 mb-2">Want to save your progress?</p>
-                      <Button onClick={handleSignup} className="w-full mb-2 bg-brand-blue hover:bg-brand-blue/90">
-                        <UserPlus className="h-4 w-4 mr-2" /> Sign Up Free
-                      </Button>
-                      <Button variant="outline" onClick={handleLogin} className="w-full">
-                        <LogIn className="h-4 w-4 mr-2" /> Log In
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {guestNavigationItems.map(item => (
-                      <Link 
-                        key={item.name} 
-                        to={item.href} 
-                        className={`block py-2 px-3 rounded-md ${
-                          location.pathname === item.href 
-                            ? 'bg-brand-blue/10 text-brand-blue font-medium' 
-                            : 'text-brand-dark hover:bg-gray-100'
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                    <div className="pt-4 border-t mt-4">
-                      <Button onClick={handleLogin} className="w-full mb-2" variant="outline">
-                        <LogIn className="h-4 w-4 mr-2" /> Log In
-                      </Button>
-                      <Button onClick={handleSignup} className="w-full bg-brand-blue hover:bg-brand-blue/90">
-                        <UserPlus className="h-4 w-4 mr-2" /> Sign Up Free
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        <div className="hidden md:flex items-center space-x-4 md:order-2">
-          {showAuthenticatedUI ? (
-            <>
-              {/* Upgrade Button for Non-Premium Users */}
-              {!isPremium && (
-                <Link to="/pricing">
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center gap-2 border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white transition-all duration-300"
-                  >
-                    <Crown size={16} />
-                    Upgrade
-                  </Button>
-                </Link>
-              )}
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-10 w-10 p-0 rounded-full">
-                    <Avatar className="h-9 w-9 border">
-                      <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || "User"} />
-                      <AvatarFallback className="bg-brand-blue text-white">
-                        {getUserInitials() || <UserRound className="h-5 w-5" />}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/')}>
-                    <Home className="h-4 w-4 mr-2" />
-                    Home
-                  </DropdownMenuItem>
-                  {userNavigationItems.map(item => (
-                    <DropdownMenuItem key={item.name} onClick={() => navigate(item.href)}>
-                      {item.name}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : (
-            <>
-              {isGuestMode ? (
-                // Guest mode navigation for desktop
-                guestModeItems.map(item => (
-                  <Link 
-                    key={item.name} 
-                    to={item.href} 
-                    className={`font-medium text-sm ${
-                      location.pathname === item.href 
-                        ? 'text-brand-blue' 
-                        : 'text-brand-dark hover:text-brand-blue'
-                    } hover:underline py-2 px-3 transition duration-300 ease-in-out`}
-                  >
-                    {item.name}
-                  </Link>
-                ))
-              ) : (
-                // Standard unauthenticated navigation for desktop
-                guestNavigationItems.map(item => (
-                  <Link 
-                    key={item.name} 
-                    to={item.href} 
-                    className={`font-medium text-sm ${
-                      location.pathname === item.href 
-                        ? 'text-brand-blue' 
-                        : 'text-brand-dark hover:text-brand-blue'
-                    } hover:underline py-2 px-3 transition duration-300 ease-in-out`}
-                  >
-                    {item.name}
-                  </Link>
-                ))
-              )}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleLogin}
-                className="ml-2"
-              >
-                <LogIn className="h-4 w-4 mr-1" />
-                Log In
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleSignup}
-                className="bg-brand-blue hover:bg-brand-blue/90"
-              >
-                <UserPlus className="h-4 w-4 mr-1" />
-                Sign Up
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-};
-
-export default Navbar;
+                    <Link
