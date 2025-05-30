@@ -9,6 +9,108 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      auth_rate_limits: {
+        Row: {
+          blocked_until: string | null
+          created_at: string | null
+          email: string
+          failed_attempts: number | null
+          id: string
+          ip_address: unknown
+          last_attempt: string | null
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string | null
+          email: string
+          failed_attempts?: number | null
+          id?: string
+          ip_address: unknown
+          last_attempt?: string | null
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string | null
+          email?: string
+          failed_attempts?: number | null
+          id?: string
+          ip_address?: unknown
+          last_attempt?: string | null
+        }
+        Relationships: []
+      }
+      data_access_logs: {
+        Row: {
+          accessed_at: string
+          client_info: string | null
+          id: string
+          ip_address: unknown | null
+          operation: string
+          record_id: string | null
+          success: boolean | null
+          table_accessed: string
+          user_id: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          client_info?: string | null
+          id?: string
+          ip_address?: unknown | null
+          operation: string
+          record_id?: string | null
+          success?: boolean | null
+          table_accessed: string
+          user_id?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          client_info?: string | null
+          id?: string
+          ip_address?: unknown | null
+          operation?: string
+          record_id?: string | null
+          success?: boolean | null
+          table_accessed?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      role_change_log: {
+        Row: {
+          action: string
+          changed_by: string
+          id: string
+          ip_address: unknown | null
+          new_role: string
+          old_role: string | null
+          target_user_id: string
+          timestamp: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          changed_by: string
+          id?: string
+          ip_address?: unknown | null
+          new_role: string
+          old_role?: string | null
+          target_user_id: string
+          timestamp?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          changed_by?: string
+          id?: string
+          ip_address?: unknown | null
+          new_role?: string
+          old_role?: string | null
+          target_user_id?: string
+          timestamp?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -43,15 +145,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "subscribers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       usage_log: {
         Row: {
@@ -75,47 +169,55 @@ export type Database = {
           timestamp?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "usage_log_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_profiles: {
         Row: {
-          created_at: string
+          created_at: string | null
           credits_remaining: number
           id: string
           trial_used: boolean
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           credits_remaining?: number
           id: string
           trial_used?: boolean
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           credits_remaining?: number
           id?: string
           trial_used?: boolean
-          updated_at?: string
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -130,13 +232,17 @@ export type Database = {
         }
         Returns: boolean
       }
-      handle_new_user: {
+      is_admin: {
         Args: Record<PropertyKey, never>
-        Returns: Record<string, unknown>
+        Returns: boolean
       }
-      update_timestamp: {
+      is_authenticated_user: {
         Args: Record<PropertyKey, never>
-        Returns: Record<string, unknown>
+        Returns: boolean
+      }
+      is_verified_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
@@ -148,35 +254,113 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  TableName extends keyof PublicSchema["Tables"] | keyof PublicSchema["Views"]
-> = PublicSchema["Tables"][TableName] extends {
-  Row: infer R
-}
-  ? R
-  : PublicSchema["Views"][TableName] extends {
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof Database },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-
-export type Enums<TableName extends keyof PublicSchema["Enums"]> =
-  PublicSchema["Enums"][TableName]
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
-  TableName extends keyof PublicSchema["Tables"]
-> = PublicSchema["Tables"][TableName] extends {
-  Insert: infer I
-}
-  ? I
-  : never
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
-  TableName extends keyof PublicSchema["Tables"]
-> = PublicSchema["Tables"][TableName] extends {
-  Update: infer U
-}
-  ? U
-  : never
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof Database },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
