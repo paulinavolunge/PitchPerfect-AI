@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3, Crown } from 'lucide-react';
+import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3, Crown, Diamond } // Added Diamond icon
+from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
@@ -29,25 +30,27 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import EmptyState from '@/components/dashboard/EmptyState';
-import { trackEvent } from '@/utils/analytics';
+import { useGuestMode } from '@/context/GuestModeContext'; // Import useGuestMode
 
 const TOUR_STORAGE_KEY = 'pitchperfect_tour_completed';
 const TOUR_COOLDOWN_KEY = 'pitchperfect_tour_cooldown';
 const TOUR_COOLDOWN_HOURS = 24; // 24 hours between tour resets
 
 const Dashboard = () => {
-  const { user, refreshSubscription, isPremium, trialActive, loading } = useAuth();
+  // Access new creditsRemaining and trialUsed from useAuth
+  const { user, refreshSubscription, isPremium, creditsRemaining, trialUsed, loading } = useAuth();
+  const { isGuestMode } = useGuestMode(); // Access guest mode
   const navigate = useNavigate();
-  
-  // Redirect to login if not authenticated
+
+  // Redirect to login if not authenticated and not in guest mode
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isGuestMode) {
       navigate('/login', { replace: true });
       return;
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, isGuestMode, navigate]);
 
-  // Show loading state while checking auth
+  // Show loading state while auth context loads - AFTER all hooks
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -59,8 +62,8 @@ const Dashboard = () => {
     );
   }
 
-  // Don't render anything if no user (will redirect)
-  if (!user) {
+  // Don't render anything if no user and not guest mode (will redirect)
+  if (!user && !isGuestMode) {
     return null;
   }
 
@@ -68,7 +71,7 @@ const Dashboard = () => {
   const [showMicTest, setShowMicTest] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
-  
+
   // Use our updated hook for dashboard data and settings
   const {
     isLoading,
@@ -79,25 +82,25 @@ const Dashboard = () => {
     updateSettings,
     refreshDashboardData
   } = useDashboardData();
-  
+
   // Check if mic test is required
   const micCheckRequired = () => {
     const lastMicCheck = localStorage.getItem('lastMicCheck');
     if (!lastMicCheck) return true;
-    
+
     const daysSinceCheck = (Date.now() - parseInt(lastMicCheck)) / (1000 * 60 * 60 * 24);
     return daysSinceCheck > 7; // Require check every 7 days
   };
-  
+
   // Check tour cooldown
   const canShowTour = () => {
     const cooldownTime = localStorage.getItem(TOUR_COOLDOWN_KEY);
     if (!cooldownTime) return true;
-    
+
     const hoursSinceCooldown = (Date.now() - parseInt(cooldownTime)) / (1000 * 60 * 60);
     return hoursSinceCooldown > TOUR_COOLDOWN_HOURS;
   };
-  
+
   // Define tour steps with better accessibility
   const tourSteps: Step[] = [
     {
@@ -132,7 +135,7 @@ const Dashboard = () => {
               localStorage.setItem(TOUR_COOLDOWN_KEY, Date.now().toString());
               setTourCompleted(true);
               setShowTour(false);
-              trackEvent('tour_completed');
+              // trackEvent('tour_completed'); // Analytics event (uncomment if needed)
               toast.success('Tour completed! You\'re ready to start practicing.');
             }} 
             className="bg-brand-green hover:bg-brand-green/90"
@@ -148,112 +151,127 @@ const Dashboard = () => {
       disableBeacon: true,
     }
   ];
-  
+
   // Track dashboard load
   useEffect(() => {
     if (user && !isLoading) {
-      trackEvent('dashboard_loaded', {
-        user_id: user.id,
-        has_data: dashboardData.hasData,
-        streak_count: streakCount
-      });
+      // trackEvent('dashboard_loaded', { // Analytics event (uncomment if needed)
+      //   user_id: user.id,
+      //   has_data: dashboardData.hasData,
+      //   streak_count: streakCount
+      // });
     }
   }, [user, isLoading, dashboardData.hasData, streakCount]);
-  
+
   useEffect(() => {
     // Check if user has completed the tour and cooldown
     const hasTourBeenCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
     const isNewSession = sessionStorage.getItem('newSessionLogin') === 'true';
-    
+
     if (user && (!hasTourBeenCompleted || isNewSession) && canShowTour()) {
       setShowTour(true);
       sessionStorage.removeItem('newSessionLogin');
     } else {
       setTourCompleted(!!hasTourBeenCompleted);
     }
-    
+
+    // Always refresh subscription and profile data on dashboard load for logged-in users
     if (user) {
       refreshSubscription();
     }
-  }, [user, refreshSubscription]);
-  
+  }, [user, refreshSubscription]); // Added refreshSubscription to dependencies
+
   const handleTourComplete = () => {
     localStorage.setItem(TOUR_STORAGE_KEY, 'true');
     localStorage.setItem(TOUR_COOLDOWN_KEY, Date.now().toString());
     setTourCompleted(true);
     setShowTour(false);
-    trackEvent('tour_completed');
+    // trackEvent('tour_completed'); // Analytics event (uncomment if needed)
     toast.success('Tour completed! You\'re ready to start practicing.');
   };
-  
+
   const handleRestartTour = () => {
     if (!canShowTour()) {
       toast.info('Tour can be restarted once every 24 hours to prevent spam.');
       return;
     }
-    
+
     localStorage.removeItem(TOUR_STORAGE_KEY);
     localStorage.removeItem(TOUR_COOLDOWN_KEY);
     setShowTour(true);
     setTourCompleted(false);
   };
-  
+
   const handleStartPractice = () => {
-    trackEvent('practice_start_clicked', { source: 'dashboard' });
+    // trackEvent('practice_start_clicked', { source: 'dashboard' }); // Analytics event (uncomment if needed)
     sessionStorage.setItem('startingPractice', 'true');
-    
+
     if (micCheckRequired()) {
-      trackEvent('mic_test_started');
+      // trackEvent('mic_test_started'); // Analytics event (uncomment if needed)
       setShowMicTest(true);
     } else {
       navigate('/practice');
     }
   };
-  
+
   const handleMicTestComplete = () => {
     localStorage.setItem('lastMicCheck', Date.now().toString());
     setShowMicTest(false);
     navigate('/practice');
   };
-  
+
   const handleTabChange = (value: string) => {
     updateSettings({ activeTab: value });
   };
-  
-  // Get context-aware CTA
+
+  // Get context-aware CTA based on credits/trial status
   const getContextualCTA = () => {
-    const lastSession = sessionStorage.getItem('lastPracticeSession');
-    if (lastSession && dashboardData.hasData) {
+    if (isGuestMode) {
       return {
-        label: "Resume Last Session",
+        label: "Start Demo (Guest)",
+        route: "/demo"
+      };
+    }
+
+    if (!user) { // Should be caught by redirect, but for safety
+      return {
+        label: "Sign Up for Free",
+        route: "/signup"
+      };
+    }
+
+    if (!trialUsed) {
+      return {
+        label: "Get 1 Free Pitch Analysis",
+        route: "/demo" // Direct to demo, which will trigger the free analysis
+      };
+    }
+
+    if (creditsRemaining > 0) {
+      return {
+        label: `Start New Practice (${creditsRemaining} credits)`,
         route: "/practice"
       };
     }
-    
-    if (!dashboardData.hasData) {
-      return {
-        label: "Start Your First Practice",
-        route: "/practice"
-      };
-    }
-    
+
+    // No credits, trial used
     return {
-      label: "Start New Practice",
-      route: "/practice"
+      label: "Top Up Credits / Upgrade Plan",
+      route: "/pricing"
     };
   };
-  
+
   const contextualCTA = getContextualCTA();
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
         <title>Dashboard | PitchPerfect AI</title>
         <meta name="description" content="Track your pitch practice progress and improve your sales skills with AI-powered feedback." />
       </Helmet>
-      
+
       <Navbar />
-      
+
       {user && (
         <GuidedTour
           steps={tourSteps}
@@ -264,14 +282,14 @@ const Dashboard = () => {
           spotlightClicks={true}
         />
       )}
-      
+
       {/* Microphone Test Modal */}
       <MicrophoneTestModal
         open={showMicTest}
         onOpenChange={setShowMicTest}
         onComplete={handleMicTestComplete}
       />
-      
+
       <ParallaxSection className="flex-grow pt-24 pb-12" depth={0.1}>
         <div className="container mx-auto px-4 overflow-x-hidden">
           <motion.div 
@@ -295,7 +313,7 @@ const Dashboard = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="flex flex-wrap gap-3">
               <div className="group">
                 <Button 
@@ -307,7 +325,7 @@ const Dashboard = () => {
                   Call Recordings
                 </Button>
               </div>
-              
+
               <div className="group">
                 <Button 
                   variant="outline" 
@@ -318,7 +336,7 @@ const Dashboard = () => {
                   Practice Session
                 </Button>
               </div>
-              
+
               <div className="group">
                 <Button 
                   className="flex items-center gap-2 bg-gradient-to-r from-brand-blue to-[#6d8fca] hover:from-[#4580dc] hover:to-[#5c7eb9] text-white hover:scale-105 transition-transform shadow-sm group-hover:shadow-md"
@@ -328,7 +346,7 @@ const Dashboard = () => {
                   Role Play
                 </Button>
               </div>
-              
+
               <div className="group">
                 <Button 
                   variant="outline" 
@@ -343,7 +361,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Upgrade Plan Button for Non-Premium Users */}
-          {!isPremium && (
+          {user && !isPremium && ( // Ensure user is logged in
             <motion.div 
               className="flex justify-end mb-6"
               initial={{ opacity: 0, y: -10 }}
@@ -352,7 +370,7 @@ const Dashboard = () => {
             >
               <Button 
                 onClick={() => {
-                  trackEvent('upgrade_button_clicked', { source: 'dashboard' });
+                  // trackEvent('upgrade_button_clicked', { source: 'dashboard' }); // Analytics event (uncomment if needed)
                   navigate('/pricing');
                 }}
                 className="bg-gradient-to-r from-brand-blue to-brand-green text-white hover:from-brand-blue/90 hover:to-brand-green/90 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
@@ -362,7 +380,32 @@ const Dashboard = () => {
               </Button>
             </motion.div>
           )}
-          
+
+          {/* User Credits Display - prominent */}
+          {user && ( // Only show for logged in users
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mb-8"
+            >
+              <Card className="border-blue-300 bg-blue-50/50">
+                <CardContent className="pt-6 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Diamond className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-700">Available Credits</p>
+                      <p className="text-2xl font-bold text-blue-800">{creditsRemaining}</p>
+                    </div>
+                  </div>
+                  <Link to="/pricing">
+                    <Button variant="outline" size="sm">Top Up Credits</Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
           {/* View Tabs with keyboard navigation */}
           <Tabs 
             value={settings.activeTab}
@@ -374,7 +417,7 @@ const Dashboard = () => {
               <TabsTrigger value="history" role="tab" aria-selected={settings.activeTab === 'history'}>Session History</TabsTrigger>
               <TabsTrigger value="analysis" role="tab" aria-selected={settings.activeTab === 'analysis'}>Detailed Analysis</TabsTrigger>
             </TabsList>
-            
+
             <FadeTransition show={true} duration={300}>
               <div style={{ minHeight: isLoading ? '600px' : 'auto' }}>
                 {isLoading ? (
@@ -395,7 +438,7 @@ const Dashboard = () => {
                         >
                           <UserSubscriptionStatus />
                         </motion.div>
-                        
+
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -427,7 +470,7 @@ const Dashboard = () => {
                         </motion.div>
                       </motion.div>
                     </TabsContent>
-                    
+
                     <TabsContent value="history" className="mt-0" role="tabpanel">
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -488,7 +531,7 @@ const Dashboard = () => {
                         )}
                       </motion.div>
                     </TabsContent>
-                    
+
                     <TabsContent value="analysis" className="mt-0" role="tabpanel">
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -526,7 +569,7 @@ const Dashboard = () => {
               </div>
             </FadeTransition>
           </Tabs>
-          
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -538,7 +581,7 @@ const Dashboard = () => {
               className="mb-6"
             />
           </motion.div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             <motion.div 
               className="lg:col-span-2 space-y-8"
@@ -572,13 +615,13 @@ const Dashboard = () => {
                           <Button 
                             variant="ghost" 
                             className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform group-hover:shadow-sm"
-                            aria-label={`View feedback for ${i === 0 ? 'product demo pitch' : 'cold call introduction'}`}
+                            aria-label={`View feedback for session ${i === 0 ? 'product demo pitch' : 'cold call introduction'}`}
                           >
                             View Feedback
                           </Button>
                         </motion.div>
                       ))}
-                      
+
                       <div className="group">
                         <Button 
                           variant="outline" 
@@ -595,7 +638,7 @@ const Dashboard = () => {
                       <p className="text-gray-500 mb-4">No practice sessions yet. Start your first practice to see your progress here.</p>
                       <div className="group">
                         <Button 
-                          onClick={handleStartPractice}
+                          onClick={() => navigate(contextualCTA.route)} // Use contextual CTA route
                           className="bg-brand-green hover:bg-brand-green/90 group-hover:shadow-sm transition-all"
                           aria-label="Start your first practice session"
                         >
@@ -606,10 +649,10 @@ const Dashboard = () => {
                   )}
                 </CardContent>
               </Card>
-              
+
               <ReferralProgram />
             </motion.div>
-            
+
             <motion.div 
               className="space-y-6"
               initial={{ opacity: 0, x: 10 }}
@@ -626,7 +669,7 @@ const Dashboard = () => {
                     <div className="group">
                       <Button 
                         className="w-full mb-4 bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-all group-hover:shadow-md" 
-                        onClick={handleStartPractice}
+                        onClick={() => navigate(contextualCTA.route)} // Use contextual CTA route
                         aria-label="Start new practice session"
                       >
                         {contextualCTA.label}
@@ -646,10 +689,10 @@ const Dashboard = () => {
                   </div>
                 </div>
               </TiltCard>
-              
+
               <div className="space-y-4 tour-step-3">
                 <h3 className="font-medium text-xl text-brand-dark">AI Suggestions</h3>
-                
+
                 <TiltCard tiltFactor={2} className="bg-white rounded-lg shadow-sm border border-gray-100">
                   <AISuggestionCard
                     title="Use Benefit-Focused Language"
@@ -657,7 +700,7 @@ const Dashboard = () => {
                     type="tip"
                   />
                 </TiltCard>
-                
+
                 <TiltCard tiltFactor={2} className="bg-white rounded-lg shadow-sm border border-gray-100">
                   <AISuggestionCard
                     title="Elevator Pitch Template"
@@ -665,7 +708,7 @@ const Dashboard = () => {
                     type="script"
                   />
                 </TiltCard>
-                
+
                 <div className="group">
                   <Link to="/tips">
                     <Button 
@@ -683,9 +726,9 @@ const Dashboard = () => {
           </div>
         </div>
       </ParallaxSection>
-      
+
       <Footer />
-      
+
       <AISettingsModal
         open={showAISettings}
         onOpenChange={setShowAISettings}
