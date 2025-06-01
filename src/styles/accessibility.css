@@ -1,0 +1,56 @@
+
+/* Example: Add color contrast, focus outlines, ARIA improvements */
+
+button:focus, [tabindex]:focus {
+  outline: 2px solid #0070f3;
+  outline-offset: 2px;
+}
+
+[aria-label] {
+  cursor: pointer;
+}
+
+/* Ensure sufficient contrast for buttons */
+button {
+  background: #0070f3;
+  color: #fff;
+  border: none;
+}
+
+button[disabled] {
+  background: #bbb;
+  color: #eee;
+}
+
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Modal overlay styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Touch targets for mobile accessibility */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}

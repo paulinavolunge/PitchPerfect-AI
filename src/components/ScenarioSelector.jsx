@@ -1,54 +1,43 @@
+
 import React from "react";
+import scenarios from "../data/scenarios";
 
-const FeedbackModal = ({ open, onClose, feedback, scenario, userObjection }) => {
-  if (!open) return null;
-
-  const getPersonalizedMessage = () => {
-    if (!feedback || !scenario) return "Keep practicing!";
-    // Example: personalize feedback based on objection type
-    if (feedback.score > 80) {
-      return `Great job! Your response to "${scenario.title}" shows strong understanding.`;
-    }
-    if (feedback.score > 50) {
-      return `Solid effort! To improve, consider: ${feedback.tip}`;
-    }
-    return `Keep going! Focus on: ${feedback.tip}`;
-  };
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      tabIndex={-1}
-      className="modal"
+const ScenarioSelector = ({ selectedScenario, onSelect }) => (
+  <div style={{ marginBottom: 16 }}>
+    <h3 style={{ fontWeight: 600 }}>Choose a Scenario:</h3>
+    <ul
       style={{
-        background: "#fff",
-        borderRadius: 8,
-        padding: 24,
-        maxWidth: 480,
-        margin: "5% auto",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.2)"
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 12,
+        listStyle: "none",
+        padding: 0
       }}
     >
-      <button
-        aria-label="Close"
-        onClick={onClose}
-        style={{ float: "right", fontSize: 18, background: "none", border: "none" }}
-      >
-        ×
-      </button>
-      <h2 tabIndex={0} style={{ fontWeight: 700 }}>
-        Feedback
-      </h2>
-      <div style={{ margin: "12px 0" }}>{getPersonalizedMessage()}</div>
-      <div style={{ fontSize: 15, color: "#555" }}>
-        <strong>Your Objection:</strong> {userObjection}
-      </div>
-      <div style={{ marginTop: 10, fontStyle: "italic" }}>
-        <strong>AI Suggestion:</strong> {feedback?.suggestion}
-      </div>
-    </div>
-  );
-};
+      {scenarios.map((scenario) => (
+        <li key={scenario.id}>
+          <button
+            onClick={() => onSelect(scenario)}
+            aria-pressed={selectedScenario?.id === scenario.id}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 6,
+              border: selectedScenario?.id === scenario.id ? "2px solid #0070f3" : "1px solid #ccc",
+              background: selectedScenario?.id === scenario.id ? "#e6f0ff" : "#fff",
+              fontWeight: selectedScenario?.id === scenario.id ? 700 : 400,
+              cursor: "pointer",
+              minWidth: 120,
+              maxWidth: 200,
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}
+          >
+            <span title={scenario.title}>{scenario.title}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 
-export default FeedbackModal;
+export default ScenarioSelector;
