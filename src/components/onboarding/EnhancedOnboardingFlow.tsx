@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, ArrowRight, Skip, Star } from 'lucide-react';
+import { CheckCircle, ArrowRight, SkipForward, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -212,7 +211,7 @@ const EnhancedOnboardingFlow: React.FC = () => {
             <div className="flex gap-2 ml-auto">
               {currentStep.isOptional && (
                 <Button variant="ghost" onClick={skipStep}>
-                  <Skip className="w-4 h-4 mr-1" />
+                  <SkipForward className="w-4 h-4 mr-1" />
                   Skip
                 </Button>
               )}
