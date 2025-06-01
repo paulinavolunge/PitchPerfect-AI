@@ -18,7 +18,7 @@ export const Navigation: React.FC = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" aria-label="PitchPerfect AI Home">
-                <Logo width={150} height={40} />
+                <Logo size="sm" />
               </Link>
             </div>
             
