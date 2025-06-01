@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -11,6 +11,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { initGA, trackPageView } from '@/utils/analytics';
+import { IntegratedOnboarding } from '@/components/onboarding/IntegratedOnboarding';
 
 // Import all page components
 import Index from '@/pages/Index';
@@ -77,6 +78,8 @@ const RouteChangeTracker = () => {
 };
 
 function App() {
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   useEffect(() => {
     // Initialize Google Analytics as early as possible
     initGA();
@@ -84,6 +87,20 @@ function App() {
     // Track initial page view
     const currentPath = window.location.pathname + window.location.search;
     trackPageView(currentPath);
+
+    // Check if user needs onboarding
+    const checkOnboardingStatus = () => {
+      const onboardingComplete = localStorage.getItem('onboardingComplete');
+      // Simple check for authenticated user - in a real app you'd use your auth context
+      const hasUserSession = localStorage.getItem('supabase.auth.token') || 
+                            sessionStorage.getItem('supabase.auth.token');
+      
+      if (hasUserSession && !onboardingComplete) {
+        setShowOnboarding(true);
+      }
+    };
+
+    checkOnboardingStatus();
   }, []);
 
   return (
@@ -125,6 +142,9 @@ function App() {
                 </Routes>
                 <MobileNavBar />
                 <Toaster />
+                
+                {/* Integrated onboarding that appears for new users */}
+                {showOnboarding && <IntegratedOnboarding />}
               </TooltipProvider>
             </GuestModeProvider>
           </AuthProvider>
