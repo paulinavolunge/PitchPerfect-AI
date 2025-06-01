@@ -1,4 +1,6 @@
 
+import { salesMethodologies } from '../../data/salesMethodologies';
+
 interface Scenario {
   difficulty: string;
   objection: string;
@@ -104,6 +106,54 @@ export const generateAIResponse = (userInput: string, scenario: Scenario, userSc
   return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 };
 
+/**
+ * Generates enhanced feedback for objection handling responses
+ * @param transcription User's transcribed response to objection
+ * @param objectionType Type of objection being handled
+ * @param industryContext User's industry context
+ * @returns Structured feedback with positive reinforcement and specific guidance
+ */
+export const generateEnhancedFeedback = (
+  transcription: string,
+  objectionType: string,
+  industryContext: string = 'general'
+) => {
+  // Analysis logic here (simplified for example)
+  const strengths = analyzeStrengths(transcription, objectionType);
+  const improvements = analyzeImprovements(transcription, objectionType);
+  const industrySpecificTips = getIndustrySpecificTips(objectionType, industryContext);
+  const relevantMethodology = getSuggestedMethodology(objectionType);
+  
+  // Structure feedback using the "sandwich method"
+  return {
+    positiveOpening: {
+      title: "What You Did Well",
+      points: strengths.slice(0, 2),
+      encouragement: getEncouragementPhrase()
+    },
+    improvementSuggestions: {
+      title: "Opportunities to Enhance",
+      points: improvements.slice(0, 2),
+      methodology: {
+        name: relevantMethodology.name,
+        technique: relevantMethodology.techniques[objectionType],
+        example: relevantMethodology.examples[objectionType]
+      },
+      industryContext: industrySpecificTips
+    },
+    positiveClosing: {
+      title: "Your Strengths to Build On",
+      points: strengths.slice(2, 3),
+      nextStepSuggestion: getNextStepSuggestion(improvements)
+    },
+    progressMetrics: {
+      improvement: calculateImprovementPercentage(),
+      consistentStrengths: identifyConsistentStrengths(),
+      focusAreas: identifyFocusAreas()
+    }
+  };
+};
+
 const generateObjection = (scriptLine: string): string => {
   const objections = [
     "That sounds good in theory, but how does it work in practice? Can you give me a specific example?",
@@ -114,4 +164,105 @@ const generateObjection = (scriptLine: string): string => {
   ];
   
   return objections[Math.floor(Math.random() * objections.length)];
+};
+
+// Helper functions for enhanced feedback generation
+const analyzeStrengths = (transcription: string, objectionType: string): string[] => {
+  // Simplified analysis - in a real implementation, this would use NLP/AI
+  const strengths = [];
+  
+  if (transcription.includes('understand') || transcription.includes('hear')) {
+    strengths.push('Good use of empathy and acknowledgment');
+  }
+  
+  if (transcription.includes('example') || transcription.includes('specifically')) {
+    strengths.push('Provided concrete examples');
+  }
+  
+  if (transcription.includes('value') || transcription.includes('benefit')) {
+    strengths.push('Focused on value proposition');
+  }
+  
+  if (transcription.includes('question') || transcription.includes('?')) {
+    strengths.push('Used discovery questions effectively');
+  }
+  
+  return strengths.length > 0 ? strengths : ['Showed persistence in addressing the objection'];
+};
+
+const analyzeImprovements = (transcription: string, objectionType: string): string[] => {
+  const improvements = [];
+  
+  if (!transcription.includes('understand') && !transcription.includes('hear')) {
+    improvements.push('Consider acknowledging the customer\'s concern first');
+  }
+  
+  if (!transcription.includes('example') && !transcription.includes('specifically')) {
+    improvements.push('Add specific examples or case studies');
+  }
+  
+  if (transcription.length < 50) {
+    improvements.push('Provide more detailed explanations');
+  }
+  
+  if (!transcription.includes('?')) {
+    improvements.push('Ask discovery questions to understand the root concern');
+  }
+  
+  return improvements.length > 0 ? improvements : ['Continue building confidence in your delivery'];
+};
+
+const getIndustrySpecificTips = (objectionType: string, industryContext: string): string[] => {
+  const tips = {
+    'SaaS': ['Focus on ROI and implementation timeline', 'Highlight security and compliance features'],
+    'Healthcare': ['Emphasize patient care improvements', 'Address regulatory compliance'],
+    'Finance': ['Stress security and risk mitigation', 'Provide clear compliance documentation'],
+    'Retail': ['Focus on customer experience impact', 'Highlight inventory and sales benefits']
+  };
+  
+  return tips[industryContext] || ['Tailor your response to their specific industry needs'];
+};
+
+const getSuggestedMethodology = (objectionType: string) => {
+  // This would reference the actual salesMethodologies data
+  return {
+    name: 'SPIN Selling',
+    techniques: {
+      [objectionType]: 'Use situation and problem questions to uncover the root cause'
+    },
+    examples: {
+      [objectionType]: 'What specific challenges is this creating for your team right now?'
+    }
+  };
+};
+
+const getEncouragementPhrase = (): string => {
+  const phrases = [
+    'Great foundation to build upon!',
+    'Strong approach - let\'s refine it further',
+    'You\'re on the right track!',
+    'Solid effort - here\'s how to make it even better'
+  ];
+  
+  return phrases[Math.floor(Math.random() * phrases.length)];
+};
+
+const getNextStepSuggestion = (improvements: string[]): string => {
+  if (improvements.length > 0) {
+    return `Focus on: ${improvements[0]}`;
+  }
+  return 'Continue practicing to build consistency';
+};
+
+const calculateImprovementPercentage = (): number => {
+  // Simplified calculation - would track actual progress over time
+  return Math.floor(Math.random() * 20) + 75; // 75-95%
+};
+
+const identifyConsistentStrengths = (): string[] => {
+  return ['Active listening', 'Professional communication'];
+};
+
+const identifyFocusAreas = (): string[] => {
+  return ['Objection handling', 'Value articulation'];
 };
