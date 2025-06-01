@@ -1,5 +1,45 @@
+
 @import url('./styles/accessibility.css');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Enhanced headline styling with improved contrast */
+.hero-headline {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 4rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+/* Dark text for "Perfect Your" and "with AI" */
+.hero-headline .dark-text {
+  color: #1A202C; /* Dark gray, almost black */
+}
+
+/* Enhanced blue for "Sales" with much better contrast */
+.hero-headline .primary-highlight {
+  color: #2563EB; /* Vibrant blue with good contrast */
+  position: relative;
+}
+
+/* Darker blue for "Pitch" with good contrast */
+.hero-headline .secondary-highlight {
+  color: #1E40AF; /* Darker blue */
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .hero-headline {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-headline {
+    font-size: 2rem;
+  }
+}

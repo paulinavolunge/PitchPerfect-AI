@@ -85,12 +85,12 @@ const Hero: React.FC = () => {
                     <span className="text-sm font-medium text-gray-700">AI-Powered Sales Training</span>
                   </div>
                   
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                    Perfect Your{' '}
-                    <span className="bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">
-                      Sales Pitch
-                    </span>{' '}
-                    with AI
+                  <h1 className="hero-headline">
+                    <span className="dark-text">Perfect Your </span>
+                    <span className="secondary-highlight">Pitch</span>
+                    <br />
+                    <span className="primary-highlight">Sales </span>
+                    <span className="dark-text">with AI</span>
                   </h1>
                   
                   <p className="text-xl text-gray-600 leading-relaxed max-w-xl">
