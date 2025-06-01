@@ -100,10 +100,10 @@ export class PerformanceMetrics {
     // In production, send metrics to analytics service
     console.log('Performance Metrics:', metrics);
     
-    // Optional: Send to analytics
-    if (typeof gtag !== 'undefined') {
+    // Optional: Send to analytics - check if gtag exists in window
+    if (typeof window !== 'undefined' && 'gtag' in window && typeof window.gtag === 'function') {
       Object.entries(metrics).forEach(([name, value]) => {
-        gtag('event', 'performance_metric', {
+        window.gtag('event', 'performance_metric', {
           metric_name: name,
           metric_value: value
         });
