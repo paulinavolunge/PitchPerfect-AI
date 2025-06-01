@@ -82,14 +82,14 @@ export const mockSpeechSynthesis = {
 // Setup global mocks
 export const setupMocks = () => {
   // Mock Speech Recognition
-  global.SpeechRecognition = jest.fn(() => mockSpeechRecognition);
-  global.webkitSpeechRecognition = jest.fn(() => mockSpeechRecognition);
+  (global as any).SpeechRecognition = jest.fn(() => mockSpeechRecognition);
+  (global as any).webkitSpeechRecognition = jest.fn(() => mockSpeechRecognition);
 
   // Mock Speech Synthesis
-  global.speechSynthesis = mockSpeechSynthesis;
+  (global as any).speechSynthesis = mockSpeechSynthesis;
 
   // Mock Performance API
-  global.performance = {
+  (global as any).performance = {
     ...global.performance,
     ...mockPerformanceAPI,
   };
