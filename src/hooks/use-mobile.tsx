@@ -45,6 +45,14 @@ export function useIsIOS() {
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     setIsIOS(isIOSDevice)
+    
+    // Add viewport meta tag optimization for iOS
+    if (isIOSDevice) {
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+      }
+    }
   }, [])
 
   return isIOS
