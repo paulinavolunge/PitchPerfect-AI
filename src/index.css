@@ -1,35 +1,95 @@
 
+
 @import url('./styles/accessibility.css');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Enhanced headline styling with improved contrast */
+/* Enhanced headline styling with improved contrast and visual effects */
 .hero-headline {
   font-family: 'Inter', sans-serif;
   font-weight: 800;
-  font-size: 4rem;
+  font-size: clamp(2.5rem, 5vw, 4rem);
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
-/* Dark text for "Perfect Your" and "with AI" */
+/* Dark text with subtle shadow for "Perfect Your" and "with AI" */
 .hero-headline .dark-text {
   color: #1A202C; /* Dark gray, almost black */
+  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Enhanced blue for "Sales" with much better contrast */
+/* Enhanced gradient for "Sales" with better contrast */
 .hero-headline .primary-highlight {
-  color: #2563EB; /* Vibrant blue with good contrast */
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  text-shadow: none;
   position: relative;
 }
 
-/* Darker blue for "Pitch" with good contrast */
+/* Enhanced gradient for "Pitch" with better contrast */
 .hero-headline .secondary-highlight {
-  color: #1E40AF; /* Darker blue */
+  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  text-shadow: none;
   position: relative;
+}
+
+/* Alternative gradient options for different visual preferences */
+.hero-headline .gradient-primary {
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+.hero-headline .gradient-secondary {
+  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Text shadow options for enhanced readability */
+.hero-headline .with-shadow {
+  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hero-headline .with-stronger-shadow {
+  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced hero section background */
+.hero-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Optional decorative background element */
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
 }
 
 @media (max-width: 768px) {
@@ -43,3 +103,4 @@
     font-size: 2rem;
   }
 }
+
