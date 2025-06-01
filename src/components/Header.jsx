@@ -1,10 +1,11 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
 import Logo from "./Logo";
 
 /**
  * Header component for the Pitch Perfect AI app.
- * Integrates the new logo and ensures accessibility.
+ * Uses only the logo image for consistent branding.
  */
 const Header = () => (
   <header
@@ -17,10 +18,9 @@ const Header = () => (
       zIndex: 10,
     }}
   >
-    <Logo />
-    <h1 style={{ marginLeft: 16, fontWeight: 700, fontSize: "1.5rem", color: "#222" }}>
-      Pitch Perfect AI
-    </h1>
+    <Link to="/" aria-label="PitchPerfect AI Home">
+      <Logo />
+    </Link>
   </header>
 );
 
