@@ -2,12 +2,20 @@
 import React, { useState } from "react";
 import ScenarioSelector from "./ScenarioSelector";
 import FeedbackModal from "./FeedbackModal";
+import VoiceInput from "./voice/VoiceInput";
 import useObjectionPractice from "../hooks/useObjectionPractice";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 const ObjectionPractice = () => {
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [userObjection, setUserObjection] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
+  const [useVoiceInput, setUseVoiceInput] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
 
   const {
     loading,
@@ -20,57 +28,114 @@ const ObjectionPractice = () => {
   const handleScenarioSelect = (scenario) => {
     setSelectedScenario(scenario);
     setUserObjection("");
+    setVoiceTranscript("");
     setShowFeedback(false);
     resetError();
   };
 
+  const handleVoiceTranscript = (text, isFinal) => {
+    setVoiceTranscript(text);
+    if (isFinal) {
+      setUserObjection(text);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (userObjection.trim().length < 5) {
+    const objectionText = useVoiceInput ? voiceTranscript : userObjection;
+    
+    if (objectionText.trim().length < 5) {
       alert("Please enter a more detailed objection (min. 5 characters).");
       return;
     }
-    await submitObjection(selectedScenario, userObjection);
+    
+    await submitObjection(selectedScenario, objectionText);
     setShowFeedback(true);
   };
 
+  const inputValue = useVoiceInput ? voiceTranscript : userObjection;
+
   return (
-    <div>
-      <ScenarioSelector
-        selectedScenario={selectedScenario}
-        onSelect={handleScenarioSelect}
-      />
-      {selectedScenario && (
-        <form onSubmit={handleSubmit} aria-label="Objection submission form">
-          <label htmlFor="userObjection" className="sr-only">
-            Your Objection
-          </label>
-          <textarea
-            id="userObjection"
-            value={userObjection}
-            onChange={(e) => setUserObjection(e.target.value)}
-            required
-            minLength={5}
-            aria-required="true"
-            aria-label={`Submit your objection for ${selectedScenario.title}`}
-            placeholder="Type your objection here..."
-            style={{ width: "100%", minHeight: 80 }}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Objection Handling Practice</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScenarioSelector
+            selectedScenario={selectedScenario}
+            onSelect={handleScenarioSelect}
           />
-          <button
-            type="submit"
-            disabled={loading}
-            aria-busy={loading}
-            style={{ marginTop: 12 }}
-          >
-            {loading ? "Evaluating..." : "Submit"}
-          </button>
-        </form>
+        </CardContent>
+      </Card>
+
+      {selectedScenario && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Practice Scenario: {selectedScenario.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="voice-input"
+                  checked={useVoiceInput}
+                  onCheckedChange={setUseVoiceInput}
+                />
+                <Label htmlFor="voice-input">Use voice input</Label>
+              </div>
+
+              {useVoiceInput ? (
+                <VoiceInput
+                  onTranscript={handleVoiceTranscript}
+                  placeholder="Click the microphone and speak your objection response..."
+                  className="w-full"
+                />
+              ) : (
+                <div>
+                  <Label htmlFor="userObjection" className="sr-only">
+                    Your Objection Response
+                  </Label>
+                  <Textarea
+                    id="userObjection"
+                    value={userObjection}
+                    onChange={(e) => setUserObjection(e.target.value)}
+                    required
+                    minLength={5}
+                    placeholder="Type your objection response here..."
+                    className="min-h-[120px]"
+                  />
+                </div>
+              )}
+
+              {inputValue && (
+                <div className="p-3 bg-gray-50 rounded-md">
+                  <Label className="text-sm font-medium text-gray-700">Your Response:</Label>
+                  <p className="text-sm text-gray-600 mt-1">"{inputValue}"</p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading || !inputValue.trim()}
+                className="w-full"
+                size="lg"
+              >
+                {loading ? "Evaluating..." : "Submit Response"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       {error && (
-        <div role="alert" style={{ color: "red" }}>
-          {error}
-        </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="text-red-600" role="alert">
+              {error}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <FeedbackModal
@@ -78,7 +143,7 @@ const ObjectionPractice = () => {
         onClose={() => setShowFeedback(false)}
         feedback={feedback}
         scenario={selectedScenario}
-        userObjection={userObjection}
+        userObjection={inputValue}
       />
     </div>
   );

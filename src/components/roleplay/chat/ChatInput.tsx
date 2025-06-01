@@ -3,6 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Send } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import VoiceInput from '@/components/voice/VoiceInput';
 
 interface ChatInputProps {
   mode: 'voice' | 'text' | 'hybrid';
@@ -18,98 +21,45 @@ const ChatInput: React.FC<ChatInputProps> = ({
   placeholder = "Type your response..."
 }) => {
   const [message, setMessage] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
-  const [recognitionActive, setRecognitionActive] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const [useVoice, setUseVoice] = useState(mode === 'voice');
+  const [voiceTranscript, setVoiceTranscript] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Initialize speech recognition
+  // Update voice mode when prop changes
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (SpeechRecognition) {
-      setIsVoiceSupported(true);
-      
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      
-      recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0])
-          .map((result: any) => result.transcript)
-          .join('');
-          
-        setMessage(transcript);
-      };
-      
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event);
-        setIsRecording(false);
-        setRecognitionActive(false);
-      };
-      
-      recognition.onend = () => {
-        setRecognitionActive(false);
-        if (isRecording) {
-          // If recording is still active, restart recognition
-          // (triggered by auto-timeout rather than user clicking stop)
-          recognition.start();
-          setRecognitionActive(true);
-        }
-      };
-      
-      recognitionRef.current = recognition;
+    if (mode === 'voice') {
+      setUseVoice(true);
+    } else if (mode === 'text') {
+      setUseVoice(false);
     }
-    
-    return () => {
-      if (recognitionRef.current && recognitionActive) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
-  
+  }, [mode]);
+
   // Auto-resize textarea
   useEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && !useVoice) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [message]);
+  }, [message, useVoice]);
 
-  const toggleRecording = () => {
-    if (!isVoiceSupported || !recognitionRef.current) return;
-    
-    if (isRecording) {
-      recognitionRef.current.stop();
-      setRecognitionActive(false);
-    } else {
-      setMessage(''); // Clear any existing message
-      try {
-        recognitionRef.current.start();
-        setRecognitionActive(true);
-      } catch (err) {
-        console.error('Could not start recording', err);
-      }
+  const handleVoiceTranscript = (text: string, isFinal: boolean) => {
+    setVoiceTranscript(text);
+    if (isFinal && text.trim()) {
+      handleSend(text);
     }
-    
-    setIsRecording(!isRecording);
   };
 
-  const handleSend = () => {
-    if (!message.trim()) return;
+  const handleSend = (textToSend?: string) => {
+    const finalMessage = textToSend || (useVoice ? voiceTranscript : message);
     
-    onSendMessage(message.trim());
+    if (!finalMessage.trim()) return;
+    
+    onSendMessage(finalMessage.trim());
     setMessage('');
+    setVoiceTranscript('');
     
-    // Stop recording if active
-    if (isRecording) {
-      toggleRecording();
-    }
-    
-    // Focus textarea after sending
-    if (textareaRef.current) {
+    // Focus textarea after sending (for text mode)
+    if (!useVoice && textareaRef.current) {
       setTimeout(() => {
         textareaRef.current?.focus();
       }, 10);
@@ -123,13 +73,36 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
   
-  const showVoiceButton = mode === 'voice' || mode === 'hybrid';
-  const showTextInput = mode === 'text' || mode === 'hybrid';
+  const showVoiceToggle = mode === 'hybrid';
+  const currentMessage = useVoice ? voiceTranscript : message;
 
   return (
-    <div className="border-t p-3 bg-white">
+    <div className="border-t p-3 bg-white space-y-3">
+      {showVoiceToggle && (
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="voice-toggle"
+            checked={useVoice}
+            onCheckedChange={setUseVoice}
+            disabled={disabled}
+          />
+          <Label htmlFor="voice-toggle" className="text-sm">
+            Voice input
+          </Label>
+        </div>
+      )}
+
       <div className="flex items-end gap-2">
-        {showTextInput && (
+        {useVoice ? (
+          <div className="flex-grow">
+            <VoiceInput
+              onTranscript={handleVoiceTranscript}
+              disabled={disabled}
+              placeholder="Click the microphone to speak your response..."
+              showSpeechOutput={false}
+            />
+          </div>
+        ) : (
           <div className="flex-grow relative">
             <Textarea
               ref={textareaRef}
@@ -145,37 +118,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
           </div>
         )}
         
-        <div className="flex items-center gap-2">
-          {showVoiceButton && (
-            <Button
-              type="button"
-              size="icon"
-              variant={isRecording ? "destructive" : "outline"}
-              onClick={toggleRecording}
-              disabled={!isVoiceSupported || disabled}
-              className="h-10 w-10 rounded-full"
-              aria-label={isRecording ? "Stop recording" : "Start recording"}
-            >
-              {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
-            </Button>
-          )}
-          
-          <Button
-            type="button"
-            size="icon"
-            onClick={handleSend}
-            disabled={!message.trim() || disabled}
-            className="h-10 w-10 bg-[#3A66DB] hover:bg-[#3A66DB]/90 text-white"
-            aria-label="Send message"
-          >
-            <Send size={18} />
-          </Button>
-        </div>
+        <Button
+          type="button"
+          size="icon"
+          onClick={() => handleSend()}
+          disabled={!currentMessage.trim() || disabled}
+          className="h-10 w-10 bg-[#3A66DB] hover:bg-[#3A66DB]/90 text-white"
+          aria-label="Send message"
+        >
+          <Send size={18} />
+        </Button>
       </div>
       
-      {isRecording && (
-        <div className="text-xs text-red-500 mt-1 animate-pulse">
-          Recording... Speak clearly into your microphone
+      {currentMessage && (
+        <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
+          Preview: "{currentMessage}"
         </div>
       )}
     </div>
