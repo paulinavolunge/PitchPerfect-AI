@@ -1,5 +1,5 @@
-
 import { salesMethodologies } from '../../data/salesMethodologies';
+import { objectionDetectionService, ObjectionType } from '../../../services/ObjectionDetectionService';
 
 interface Scenario {
   difficulty: string;
@@ -38,8 +38,38 @@ export const getScenarioIntro = (scenario: Scenario, getAIPersona: () => string)
 };
 
 export const generateAIResponse = (userInput: string, scenario: Scenario, userScript: string | null, getAIPersona: () => string): string => {
-  const lowerInput = userInput.toLowerCase();
   const persona = getAIPersona();
+  
+  console.log("Analyzing user input for objections:", userInput);
+  
+  // First, detect if there's an objection in the user input
+  const objectionDetection = objectionDetectionService.detectObjection(userInput);
+  
+  console.log("Objection detection result:", objectionDetection);
+  
+  // If we detected a clear objection, handle it
+  if (objectionDetection.type !== 'none' && objectionDetection.confidence > 0.3) {
+    console.log(`Detected ${objectionDetection.type} objection with ${objectionDetection.confidence} confidence`);
+    
+    const objectionResponse = objectionDetectionService.generateObjectionResponse(
+      objectionDetection.type, 
+      scenario.industry
+    );
+    
+    const formattedResponse = objectionDetectionService.formatResponse(objectionResponse);
+    return `${persona}: ${formattedResponse}`;
+  }
+  
+  // If confidence is low but we detected something, use fallback
+  if (objectionDetection.confidence > 0.1 && objectionDetection.confidence <= 0.3) {
+    console.log("Low confidence objection detected, using fallback response");
+    return `${persona}: That's helpful to know. Would you mind sharing a bit more about your concerns so I can better help?`;
+  }
+  
+  console.log("No objection detected, using regular conversation flow");
+  
+  // Continue with existing conversation logic
+  const lowerInput = userInput.toLowerCase();
   
   // If we have a user script, check it for relevant content
   if (userScript) {
