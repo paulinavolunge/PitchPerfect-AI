@@ -42,7 +42,7 @@ const StickyCTA: React.FC<StickyCTAProps> = ({
             disabled={isLoading}
             size="lg"
             aria-label={`${text} - Sticky call to action button`}
-            className="rounded-full px-6 py-6 h-auto shadow-lg hover:shadow-xl bg-brand-blue hover:bg-brand-blue/90 text-white font-medium transition-all duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 animate-pulse"
+            className="rounded-full px-6 py-6 h-auto shadow-lg hover:shadow-xl bg-brand-blue hover:bg-brand-blue/90 text-white font-medium transition-all duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 animate-pulse-gentle"
           >
             {isLoading ? (
               <>
