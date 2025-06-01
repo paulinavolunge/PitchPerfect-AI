@@ -74,7 +74,9 @@ export class VoiceService {
         }
       });
 
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      // Fix TypeScript error by properly typing AudioContext
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      this.audioContext = new AudioContextClass();
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 256;
       
