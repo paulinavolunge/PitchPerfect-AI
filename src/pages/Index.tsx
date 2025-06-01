@@ -19,6 +19,7 @@ const Testimonials = lazy(() => import('@/components/Testimonials'));
 const CTASection = lazy(() => import('@/components/CTASection'));
 const Footer = lazy(() => import('@/components/Footer'));
 const NewsletterSignup = lazy(() => import('@/components/NewsletterSignup'));
+const EnhancedOnboardingFlow = lazy(() => import('@/components/onboarding/EnhancedOnboardingFlow'));
 
 const Index = () => {
   const { user, isPremium } = useAuth();
@@ -257,6 +258,11 @@ const Index = () => {
       
       <Suspense fallback={<div className="py-6 text-center">Loading footer...</div>}>
         <Footer />
+      </Suspense>
+
+      {/* Enhanced Onboarding Flow */}
+      <Suspense fallback={null}>
+        <EnhancedOnboardingFlow />
       </Suspense>
 
       {/* Sticky CTA for better mobile conversion */}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -14,6 +13,7 @@ import MicrophoneGuard from '@/components/MicrophoneGuard';
 import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useNavigate } from 'react-router-dom';
+import DemoNavigation from '@/components/demo/DemoNavigation';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
@@ -60,6 +60,12 @@ const Demo = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <DemoNavigation 
+        currentStep={1}
+        totalSteps={3}
+        showProgress={true}
+        onHelp={() => console.log('Help requested')}
+      />
       {isGuestMode && <GuestBanner />}
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
