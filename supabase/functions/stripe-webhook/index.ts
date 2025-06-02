@@ -1,3 +1,4 @@
+
 // stripe-webhook/index.ts
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
@@ -6,7 +7,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 // Helper logging function for debugging
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[STRIPE-WEBHOOK] <span class="math-inline">\{step\}</span>{detailsStr}`);
+  console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
+};
+
+// Input sanitization function
+const sanitizeInput = (input: string): string => {
+  if (!input || typeof input !== 'string') return '';
+  // Remove potentially dangerous characters and limit length
+  return input.replace(/[<>'"&]/g, '').trim().substring(0, 255);
 };
 
 // Credit mappings for plans (adjust these based on your Stripe Price IDs and desired credits)
@@ -72,8 +80,8 @@ serve(async (req) => {
       case 'checkout.session.completed': {
         const session = event.data.object;
         const customerId = session.customer;
-        const userId = session.metadata?.user_id;
-        const email = session.metadata?.email;
+        const userId = sanitizeInput(session.metadata?.user_id || '');
+        const email = sanitizeInput(session.metadata?.email || '');
 
         if (!userId || !email) {
           logStep('ERROR', { message: 'No user data found in session metadata' });
@@ -89,7 +97,7 @@ serve(async (req) => {
         // Get plan details
         const planId = subscription.items.data[0].price.id;
         const price = await stripe.prices.retrieve(planId);
-        const planName = price.nickname || (price.recurring?.interval === 'month' ? 'Monthly' : 'Yearly');
+        const planName = sanitizeInput(price.nickname || (price.recurring?.interval === 'month' ? 'Monthly' : 'Yearly'));
         const creditsToGrant = PLAN_CREDITS[planId] || 0; // Get credits from mapping
 
         logStep('Subscription details retrieved', { 
@@ -115,15 +123,16 @@ serve(async (req) => {
           return new Response(`Error updating subscriber: ${subError.message}`, { status: 500 });
         }
 
-        // Update user_profiles to add credits
-        const { error: profileUpdateError } = await supabaseAdmin
-          .from('user_profiles')
-          .update({ credits_remaining: creditsToGrant, trial_used: true }) // Set trial_used to true on first subscription
-          .eq('id', userId);
+        // Update user_profiles to add credits using the secure function
+        const { data: creditResult, error: creditError } = await supabaseAdmin.rpc('secure_deduct_credits_and_log_usage', {
+          p_user_id: userId,
+          p_feature_used: `subscription_${planName.toLowerCase()}`,
+          p_credits_to_deduct: -creditsToGrant // Negative to add credits
+        });
 
-        if (profileUpdateError) {
-            logStep('ERROR updating user profile with credits', { message: profileUpdateError.message });
-            return new Response(`Error updating user profile with credits: ${profileUpdateError.message}`, { status: 500 });
+        if (creditError) {
+          logStep('ERROR updating user credits', { message: creditError.message });
+          return new Response(`Error updating user credits: ${creditError.message}`, { status: 500 });
         }
 
         logStep(`Successfully processed subscription and granted ${creditsToGrant} credits for user ${userId}`);
@@ -143,7 +152,7 @@ serve(async (req) => {
           return new Response('Customer not found or deleted', { status: 400 });
         }
 
-        const email = customer.email;
+        const email = sanitizeInput(customer.email || '');
         if (!email) {
           logStep('ERROR', { message: 'No email found for customer' });
           return new Response('No email found for customer', { status: 400 });
@@ -158,8 +167,6 @@ serve(async (req) => {
 
         if (fetchError || subscribers.length === 0) {
           logStep('ERROR fetching subscriber user_id', { message: fetchError?.message || 'Not found' });
-          // If subscriber not found, this might be a new customer. Try to create or upsert.
-          // For simplicity, we'll assume a user_id must exist in subscribers from checkout.session.completed
           return new Response(`Error fetching subscriber user_id: ${fetchError?.message || 'Not found'}`, { status: 500 });
         }
 
@@ -170,8 +177,8 @@ serve(async (req) => {
         // Get plan details
         const planId = subscription.items.data[0].price.id;
         const price = await stripe.prices.retrieve(planId);
-        const planName = price.nickname || (price.recurring?.interval === 'month' ? 'Monthly' : 'Yearly');
-        const creditsToGrant = PLAN_CREDITS[planId] || 0; // Get credits from mapping
+        const planName = sanitizeInput(price.nickname || (price.recurring?.interval === 'month' ? 'Monthly' : 'Yearly'));
+        const creditsToGrant = PLAN_CREDITS[planId] || 0;
 
         logStep('Updating subscription in database', { 
           userId, 
@@ -198,18 +205,19 @@ serve(async (req) => {
           return new Response(`Error updating subscriber: ${updateError.message}`, { status: 500 });
         }
 
-        // If subscription is active, top up credits
+        // If subscription is active, top up credits using secure function
         if (status) {
-            const { error: profileUpdateError } = await supabaseAdmin
-                .from('user_profiles')
-                .update({ credits_remaining: creditsToGrant, trial_used: true }) // Set trial used true if they subscribe
-                .eq('id', userId);
+          const { error: creditError } = await supabaseAdmin.rpc('secure_deduct_credits_and_log_usage', {
+            p_user_id: userId,
+            p_feature_used: `subscription_renewal_${planName.toLowerCase()}`,
+            p_credits_to_deduct: -creditsToGrant // Negative to add credits
+          });
 
-            if (profileUpdateError) {
-                logStep('ERROR topping up credits for user profile', { message: profileUpdateError.message });
-                return new Response(`Error topping up credits: ${profileUpdateError.message}`, { status: 500 });
-            }
-            logStep(`Successfully topped up ${creditsToGrant} credits for user ${userId}`);
+          if (creditError) {
+            logStep('ERROR topping up credits', { message: creditError.message });
+            return new Response(`Error topping up credits: ${creditError.message}`, { status: 500 });
+          }
+          logStep(`Successfully topped up ${creditsToGrant} credits for user ${userId}`);
         }
 
         logStep(`Successfully updated subscription for user ${userId}`);
@@ -229,7 +237,7 @@ serve(async (req) => {
           return new Response('Customer not found or deleted', { status: 400 });
         }
 
-        const email = customer.email;
+        const email = sanitizeInput(customer.email || '');
         if (!email) {
           logStep('ERROR', { message: 'No email found for customer' });
           return new Response('No email found for customer', { status: 400 });

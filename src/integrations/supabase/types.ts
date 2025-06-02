@@ -75,6 +75,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pitch_recordings: {
+        Row: {
+          audio_content: string | null
+          audio_url: string | null
+          created_at: string
+          duration: number | null
+          feedback: string | null
+          id: string
+          is_public: boolean | null
+          score: number | null
+          title: string | null
+          transcript: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_content?: string | null
+          audio_url?: string | null
+          created_at?: string
+          duration?: number | null
+          feedback?: string | null
+          id?: string
+          is_public?: boolean | null
+          score?: number | null
+          title?: string | null
+          transcript?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_content?: string | null
+          audio_url?: string | null
+          created_at?: string
+          duration?: number | null
+          feedback?: string | null
+          id?: string
+          is_public?: boolean | null
+          score?: number | null
+          title?: string | null
+          transcript?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       role_change_log: {
         Row: {
           action: string
@@ -108,6 +153,39 @@ export type Database = {
           target_user_id?: string
           timestamp?: string | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      sales_scripts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_public: boolean | null
+          private_notes: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          private_notes?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          private_notes?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -168,6 +246,42 @@ export type Database = {
           id?: string
           timestamp?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_performance: {
+        Row: {
+          created_at: string
+          feedback_details: string | null
+          id: string
+          metrics: Json | null
+          notes: string | null
+          score: number | null
+          session_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_details?: string | null
+          id?: string
+          metrics?: Json | null
+          notes?: string | null
+          score?: number | null
+          session_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback_details?: string | null
+          id?: string
+          metrics?: Json | null
+          notes?: string | null
+          score?: number | null
+          session_date?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -243,6 +357,14 @@ export type Database = {
       is_verified_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      secure_deduct_credits_and_log_usage: {
+        Args: {
+          p_user_id: string
+          p_feature_used: string
+          p_credits_to_deduct: number
+        }
+        Returns: Json
       }
     }
     Enums: {
