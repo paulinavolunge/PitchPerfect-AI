@@ -65,14 +65,14 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose, feature })
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg bg-white border shadow-xl">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
                 <Crown className="h-5 w-5 text-white" />
               </div>
-              <DialogTitle className="text-xl font-semibold">
+              <DialogTitle className="text-xl font-semibold text-gray-900">
                 {getTitle()}
               </DialogTitle>
             </div>
@@ -80,7 +80,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose, feature })
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -105,7 +105,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose, feature })
             ))}
           </div>
 
-          <div className="flex flex-col space-y-3 pt-4 border-t">
+          <div className="flex flex-col space-y-3 pt-4 border-t border-gray-200">
             {!user ? (
               <>
                 <Button
@@ -129,7 +129,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose, feature })
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="w-full"
+                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Maybe Later
                 </Button>
