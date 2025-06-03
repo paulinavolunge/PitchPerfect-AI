@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Clock, RefreshCw, UserPlus } from 'lucide-react'; // Added UserPlus for signup CTA
+import { Progress } from '@/components/ui/progress';
+import { Play, Clock, RefreshCw, UserPlus } from 'lucide-react';
 import DemoTranscript from './DemoTranscript';
 import DemoScorecard from './DemoScorecard';
 import { useToast } from '@/hooks/use-toast';
@@ -10,11 +12,12 @@ import { trackDemoActivation, checkTranscriptionConfidence } from '@/utils/analy
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AudioWaveform from '@/components/animations/AudioWaveform';
 import ConfettiEffect from '@/components/animations/ConfettiEffect';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/context/AuthContext'; // Import useAuth
-import { useGuestMode } from '@/context/GuestModeContext'; // Import useGuestMode
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import PremiumModal from '@/components/PremiumModal'; // Import PremiumModal
+import { useAuth } from '@/context/AuthContext';
+import { useGuestMode } from '@/context/GuestModeContext';
+import { useNavigate } from 'react-router-dom';
+import PremiumModal from '@/components/PremiumModal';
 
 // Import the speech recognition types from the global window augmentations
 declare global {
@@ -68,6 +71,8 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const [lowConfidence, setLowConfidence] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcriptError, setTranscriptError] = useState<string | null>(null);
 
   const { toast } = useToast();
   const { user, creditsRemaining, trialUsed, startFreeTrial, deductUserCredits } = useAuth();
@@ -77,6 +82,18 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sandboxRef = useRef<HTMLDivElement>(null);
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  // Calculate progress percentage (60 seconds total)
+  const getProgressPercentage = (): number => {
+    return ((60 - timeRemaining) / 60) * 100;
+  };
 
   // Initialize speech recognition
   useEffect(() => {
@@ -91,6 +108,9 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
         recognitionRef.current.interimResults = true;
 
         recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          setIsTranscribing(true);
+          setTranscriptError(null);
+
           // Get confidence from results
           const confidence = Array.from(event.results)
             .map(result => result[0])
@@ -110,14 +130,19 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             .join('');
 
           setTranscript(transcript);
+          setIsTranscribing(false);
         };
 
         recognitionRef.current.onerror = (event: SpeechRecognitionError) => {
           console.error('Speech recognition error', event.error);
           setIsListening(false);
+          setIsTranscribing(false);
+          setTranscriptError(`Voice recognition error: ${event.error}`);
+          
           if (event.error === 'not-allowed' || event.error === 'permission-denied') {
             setPermissionDenied(true);
           }
+          
           toast({
             title: "Voice recognition error",
             description: `Error: ${event.error}. Please allow microphone access.`,
@@ -130,7 +155,6 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     // Set up event listener for button-triggered demo start
     const handleAutoDemoStart = () => {
       if (demoState === DemoState.INTRO) {
-        // Note: Auto-start will now go through the credit check logic too
         startDemo('auto');
       }
     };
@@ -282,6 +306,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     try {
       setPermissionDenied(false);
       setLowConfidence(false);
+      setTranscriptError(null);
       recognitionRef.current.start();
       setIsListening(true);
       setDemoState(DemoState.RECORDING);
@@ -392,12 +417,6 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     }, 3000);
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `<span class="math-inline">\{mins\}\:</span>{secs < 10 ? '0' : ''}${secs}`;
-  };
-
   return (
     <div className="space-y-6" ref={sandboxRef}>
       <ConfettiEffect active={showConfetti} duration={3000} onComplete={() => setShowConfetti(false)} />
@@ -420,6 +439,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
                   size="sm" 
                   onClick={retryMicrophoneAccess}
                   className="flex items-center gap-1 hover:scale-105 transition-transform"
+                  aria-label="Retry microphone access"
                 >
                   <RefreshCw className="h-4 w-4" /> Retry
                 </Button>
@@ -444,6 +464,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
                   size="sm" 
                   onClick={handleSlowSpeechRetry}
                   className="flex items-center gap-1 hover:scale-105 transition-transform"
+                  aria-label="Retry with slower speech"
                 >
                   <RefreshCw className="h-4 w-4" /> Retry
                 </Button>
@@ -470,6 +491,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             onClick={() => startDemo('button')}
             className="bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-md hover:shadow-lg"
             size="lg"
+            aria-label="Start demo recording session"
           >
             <Play size={18} /> Start Demo
           </Button>
@@ -478,6 +500,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
                 variant="outline"
                 onClick={() => navigate('/signup')}
                 className="flex items-center gap-2 mt-4 ml-2"
+                aria-label="Sign up for free account"
               >
                 <UserPlus className="h-4 w-4" /> Sign Up for Free
               </Button>
@@ -491,6 +514,8 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
+          role="region"
+          aria-label="Recording session"
         >
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-brand-dark">Recording...</h2>
@@ -498,10 +523,28 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
               className="flex items-center gap-2 text-brand-blue font-medium"
               animate={{ scale: timeRemaining <= 10 ? [1, 1.05, 1] : 1 }}
               transition={{ repeat: timeRemaining <= 10 ? Infinity : 0, duration: 0.5 }}
+              aria-live="polite"
+              aria-label={`Time remaining: ${formatTime(timeRemaining)}`}
             >
               <Clock size={20} />
               {formatTime(timeRemaining)}
             </motion.div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-brand-dark/70">
+              <span>Recording Progress</span>
+              <span>{Math.round(getProgressPercentage())}%</span>
+            </div>
+            <Progress 
+              value={getProgressPercentage()} 
+              className="w-full h-3"
+              aria-label={`Recording progress: ${Math.round(getProgressPercentage())} percent complete`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(getProgressPercentage())}
+            />
           </div>
 
           <motion.div 
@@ -509,6 +552,8 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             initial={{ y: 10 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5 }}
+            role="region"
+            aria-label="Demo scenario"
           >
             <h3 className="font-medium mb-2">Scenario: Pricing Objection</h3>
             <p>"Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less."</p>
@@ -519,11 +564,48 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             <AudioWaveform isActive={isListening} isUser={true} color="#008D95" className="mb-2" />
           </div>
 
-          <DemoTranscript text={transcript} isRecording={isListening} />
+          {/* Enhanced Transcript Area */}
+          <div 
+            className="border rounded-lg p-4 min-h-[150px] bg-white"
+            role="region"
+            aria-label="Transcript area"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium text-brand-dark">Your Pitch</h3>
+              {isListening && (
+                <div className="flex items-center">
+                  <span className="h-3 w-3 bg-red-500 rounded-full mr-2 animate-pulse" aria-hidden="true"></span>
+                  <span className="text-sm text-brand-dark/70">Recording</span>
+                </div>
+              )}
+            </div>
+            
+            {isTranscribing ? (
+              <div className="flex items-center gap-2 py-4">
+                <LoadingSpinner size="sm" />
+                <span className="text-brand-dark/70">Transcribing your speech...</span>
+              </div>
+            ) : transcriptError ? (
+              <div 
+                className="text-red-600 py-4"
+                role="alert"
+                aria-live="assertive"
+              >
+                {transcriptError}
+              </div>
+            ) : transcript ? (
+              <p className="text-brand-dark/80" aria-live="polite">{transcript}</p>
+            ) : (
+              <p className="text-brand-dark/50 italic">
+                {isListening ? "Start speaking..." : "Transcript will appear here when you start the demo"}
+              </p>
+            )}
+          </div>
 
           <Button 
             onClick={endDemo}
             className="w-full bg-brand-blue hover:bg-brand-blue/90 text-white hover:scale-105 transition-transform"
+            aria-label="End demo recording early"
           >
             End Demo Early
           </Button>
@@ -543,6 +625,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           <Button 
             onClick={handleViewScore}
             className="w-full bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-transform shadow-md hover:shadow-lg"
+            aria-label="View full analysis results"
           >
             View Full Analysis
           </Button>
