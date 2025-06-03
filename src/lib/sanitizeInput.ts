@@ -24,3 +24,18 @@ export const sanitizeFilename = (filename: string): string => {
 export const sanitizeAudioMetadata = (metadata: string): string => {
   return sanitizeUserInput(metadata);
 };
+
+// Strict sanitization for security-sensitive contexts
+export const sanitizeStrictly = (input: string): string => {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  
+  // More aggressive sanitization for security contexts
+  return input
+    .replace(/[<>:"/\\|?*&%$#@!`~]/g, '_') // Remove more special characters
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/[^\w\s.-]/g, '_') // Keep only word characters, spaces, dots, and hyphens
+    .trim()
+    .slice(0, 500); // Longer limit for general content but still bounded
+};
