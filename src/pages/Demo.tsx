@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DemoSandbox from '@/components/demo/DemoSandbox';
+import PracticeObjection from '@/components/demo/PracticeObjection';
 import WaitlistModal from '@/components/demo/WaitlistModal';
 import GuestBanner from '@/components/GuestBanner';
 import WebhookSettings from '@/components/WebhookSettings';
@@ -53,6 +55,29 @@ const Demo = () => {
     }
   };
 
+  const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
+    // Handle both voice and text submissions
+    console.log('Objection practice submission:', input);
+    
+    // Process the submission and generate feedback
+    const feedbackData = {
+      type: input.type,
+      response: input.type === 'text' ? input.data : 'Voice response processed',
+      timestamp: new Date().toISOString(),
+      feedback: "Good handling of the objection. Consider emphasizing value over cost.",
+      score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
+    };
+    
+    // Complete the demo with the feedback data
+    handleDemoComplete(feedbackData);
+    
+    toast({
+      title: "Response Submitted",
+      description: `Your ${input.type} response has been analyzed.`,
+      variant: "default",
+    });
+  };
+
   const handleTryMoreFeatures = () => {
     navigate('/roleplay');
   };
@@ -91,11 +116,14 @@ const Demo = () => {
               </div>
               <p className="text-brand-dark/80 mb-6">
                 Experience how PitchPerfect AI helps you improve your sales pitch. 
-                Talk about overcoming pricing objections for 60 seconds, and get instant feedback.
+                Practice handling pricing objections using either voice or text input, and get instant feedback.
               </p>
               
               <MicrophoneGuard>
-                <DemoSandbox onComplete={handleDemoComplete} />
+                <PracticeObjection
+                  scenario="Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less."
+                  onSubmit={handleObjectionSubmit}
+                />
               </MicrophoneGuard>
             </div>
             
