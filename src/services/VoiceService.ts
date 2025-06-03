@@ -1,3 +1,4 @@
+
 interface VoiceServiceConfig {
   language?: string;
   continuous?: boolean;
@@ -38,17 +39,8 @@ interface VoiceServiceError extends Error {
   originalError?: Event | Error;
 }
 
-declare global {
-  interface Window {
-    SpeechRecognition?: typeof SpeechRecognition;
-    webkitSpeechRecognition?: typeof SpeechRecognition;
-    AudioContext?: typeof AudioContext;
-    webkitAudioContext?: typeof AudioContext;
-  }
-}
-
 export class VoiceService {
-  private recognition: SpeechRecognition | null = null;
+  private recognition: any = null;
   private synthesis: SpeechSynthesis | null = null;
   private isRecording = false;
   private isSupported = false;
@@ -73,9 +65,9 @@ export class VoiceService {
   private initializeSpeechRecognition(): void {
     if (typeof window === 'undefined') return;
     
-    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognitionClass) {
-      this.recognition = new SpeechRecognitionClass();
+    const SpeechRecognitionConstructor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognitionConstructor) {
+      this.recognition = new SpeechRecognitionConstructor();
     }
   }
 
@@ -107,7 +99,7 @@ export class VoiceService {
         }
       });
 
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) {
         throw new Error('AudioContext not supported');
       }
@@ -162,7 +154,7 @@ export class VoiceService {
       this.recognition.lang = config.language ?? 'en-US';
       this.recognition.maxAlternatives = config.maxAlternatives ?? 1;
 
-      this.recognition.onresult = (event: SpeechRecognitionEvent) => {
+      this.recognition.onresult = (event: any) => {
         let finalTranscript = '';
         let interimTranscript = '';
 
@@ -186,7 +178,7 @@ export class VoiceService {
         });
       };
 
-      this.recognition.onerror = (event: SpeechRecognitionError) => {
+      this.recognition.onerror = (event: any) => {
         let errorCode: VoiceServiceError['code'] = 'UNKNOWN';
         let errorMessage = 'Speech recognition error';
         
@@ -273,6 +265,7 @@ export class VoiceService {
     if (!this.synthesis) {
       const error = new Error('Speech synthesis not supported') as VoiceServiceError;
       error.code = 'NOT_SUPPORTED';
+      error.name = 'VoiceServiceError';
       throw error;
     }
 
@@ -309,6 +302,7 @@ export class VoiceService {
         this.currentUtterance = null;
         const error = new Error(`Speech synthesis error: ${event.error}`) as VoiceServiceError;
         error.code = 'UNKNOWN';
+        error.name = 'VoiceServiceError';
         error.originalError = event;
         callbacks.onError?.(error);
         reject(error);
