@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mic, MicOff, Pause, Play, Square, Trash2 } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import AudioVisualizer from './AudioVisualizer';
+import FileDownload from './FileDownload';
 
 interface AudioRecorderProps {
   maxDuration?: number;
@@ -52,36 +53,39 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mic className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+          <Mic className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
           Audio Recorder
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" role="alert">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        {/* Main controls - responsive layout */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant={isRecording ? "destructive" : "default"}
-              size="sm"
+              size="default"
               onClick={isRecording ? handleStopRecording : startRecording}
               disabled={!!error}
+              className="gap-2 min-w-[100px]"
               aria-label={isRecording ? "Stop recording" : "Start recording"}
+              aria-pressed={isRecording}
             >
               {isRecording ? (
                 <>
-                  <Square className="h-4 w-4" />
-                  Stop
+                  <Square className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden xs:inline">Stop</span>
                 </>
               ) : (
                 <>
-                  <Mic className="h-4 w-4" />
-                  Record
+                  <Mic className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden xs:inline">Record</span>
                 </>
               )}
             </Button>
@@ -89,19 +93,21 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             {isRecording && (
               <Button
                 variant="secondary"
-                size="sm"
+                size="default"
                 onClick={isPaused ? resumeRecording : pauseRecording}
+                className="gap-2 min-w-[100px]"
                 aria-label={isPaused ? "Resume recording" : "Pause recording"}
+                aria-pressed={isPaused}
               >
                 {isPaused ? (
                   <>
-                    <Play className="h-4 w-4" />
-                    Resume
+                    <Play className="h-4 w-4" aria-hidden="true" />
+                    <span className="hidden xs:inline">Resume</span>
                   </>
                 ) : (
                   <>
-                    <Pause className="h-4 w-4" />
-                    Pause
+                    <Pause className="h-4 w-4" aria-hidden="true" />
+                    <span className="hidden xs:inline">Pause</span>
                   </>
                 )}
               </Button>
@@ -110,27 +116,42 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             {(audioBlob || audioUrl) && !isRecording && (
               <Button
                 variant="outline"
-                size="sm"
+                size="default"
                 onClick={clearRecording}
+                className="gap-2"
                 aria-label="Clear recording"
               >
-                <Trash2 className="h-4 w-4" />
-                Clear
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden xs:inline">Clear</span>
               </Button>
             )}
           </div>
 
-          <div className="text-sm font-mono">
+          {/* Duration display */}
+          <div 
+            className="text-sm font-mono text-muted-foreground"
+            aria-live="polite"
+            aria-label={`Recording duration: ${formatDuration(duration)} of ${formatDuration(maxDuration)}`}
+          >
             {formatDuration(duration)} / {formatDuration(maxDuration)}
           </div>
         </div>
 
+        {/* Progress bar */}
         <div className="space-y-2">
-          <Progress value={progressPercentage} className="w-full" />
+          <Progress 
+            value={progressPercentage} 
+            className="w-full" 
+            aria-label={`Recording progress: ${Math.round(progressPercentage)}%`}
+          />
           
+          {/* Recording status and visualizer */}
           {(isRecording || isPaused) && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span 
+                className={`text-sm font-medium ${isPaused ? 'text-yellow-600' : 'text-red-600'}`}
+                aria-live="polite"
+              >
                 {isPaused ? 'Paused' : 'Recording'}
               </span>
               <AudioVisualizer
@@ -144,13 +165,24 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
           )}
         </div>
 
+        {/* Playback section */}
         {audioUrl && !isRecording && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Playback:</label>
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <label className="text-sm font-medium">Playback:</label>
+              {audioBlob && (
+                <FileDownload
+                  blob={audioBlob}
+                  filename={`recording-${Date.now()}.webm`}
+                  variant="outline"
+                  size="sm"
+                />
+              )}
+            </div>
             <audio
               controls
               src={audioUrl}
-              className="w-full"
+              className="w-full h-12 rounded-md border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label="Recorded audio playback"
             />
           </div>
