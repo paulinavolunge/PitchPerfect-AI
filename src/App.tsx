@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
@@ -12,6 +11,8 @@ import {
 } from '@tanstack/react-query'
 import { initGA, trackPageView } from '@/utils/analytics';
 import { IntegratedOnboarding } from '@/components/onboarding/IntegratedOnboarding';
+import { ConsentBanner } from '@/components/consent/ConsentBanner';
+import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
 
 // Import all page components
 import Index from '@/pages/Index';
@@ -81,12 +82,14 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    // Initialize Google Analytics as early as possible
-    initGA();
+    // Initialize Google Analytics only if consent given - moved to PrivacyCompliantAnalytics
     
-    // Track initial page view
-    const currentPath = window.location.pathname + window.location.search;
-    trackPageView(currentPath);
+    // Track initial page view only if consent given
+    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
+    if (hasConsent) {
+      const currentPath = window.location.pathname + window.location.search;
+      trackPageView(currentPath);
+    }
 
     // Check if user needs onboarding
     const checkOnboardingStatus = () => {
@@ -110,6 +113,7 @@ function App() {
           <AuthProvider>
             <GuestModeProvider>
               <TooltipProvider>
+                <PrivacyCompliantAnalytics />
                 <RouteChangeTracker />
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -142,6 +146,9 @@ function App() {
                 </Routes>
                 <MobileNavBar />
                 <Toaster />
+                
+                {/* Privacy consent banner */}
+                <ConsentBanner />
                 
                 {/* Integrated onboarding that appears for new users */}
                 {showOnboarding && <IntegratedOnboarding />}

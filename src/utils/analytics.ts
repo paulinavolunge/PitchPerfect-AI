@@ -1,12 +1,18 @@
+// Privacy-compliant Google Analytics implementation
 
-// Google Analytics 4 and Meta Pixel Implementation with Google Tag Manager support
-
-// Initialize Google Analytics and Meta Pixel with debug mode
+// Initialize Google Analytics with debug mode
 export const initGA = () => {
   try {
+    // Only initialize if consent is given
+    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
+    if (!hasConsent) {
+      console.log('Analytics consent not given, skipping initialization');
+      return;
+    }
+
     // Check if already initialized to prevent duplicate initialization
-    if (window.dataLayer) {
-      console.log('Google Tag Manager already initialized');
+    if (window.dataLayer && window.gtag) {
+      console.log('Google Analytics already initialized');
       return;
     }
 
@@ -19,104 +25,94 @@ export const initGA = () => {
       window.dataLayer.push(arguments); 
     };
     
-    // Enable debug mode in Google Analytics
+    // Configure GA4 with privacy settings
     window.gtag('config', 'G-HVCRJT504Y', { 
-      debug_mode: import.meta.env.DEV === true, // Enable debug mode in development
-      send_page_view: false // We'll handle pageviews manually for better control
+      debug_mode: import.meta.env.DEV === true,
+      send_page_view: false,
+      anonymize_ip: true,
+      allow_google_signals: false, // Disable Google Signals for privacy
+      allow_ad_personalization_signals: false // Disable ad personalization
     });
     
-    console.log('Analytics initialized with GTM and debug mode enabled');
+    console.log('Privacy-compliant Analytics initialized');
   } catch (error) {
     console.error('Error initializing Analytics:', error);
   }
 };
 
-// Page view tracking with enhanced debugging
+// Page view tracking with consent check
 export const trackPageView = (path: string) => {
   try {
-    if (!window.dataLayer) {
-      console.warn('dataLayer not initialized, cannot track page view');
+    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
+    if (!hasConsent) {
+      console.log('Analytics consent not given, skipping page view tracking');
+      return;
+    }
+
+    if (!window.dataLayer || !window.gtag) {
+      console.warn('Analytics not initialized, cannot track page view');
       return;
     }
     
     const pageData = {
-      event: 'page_view',
       page_path: path,
       page_title: document.title,
       page_location: window.location.href,
-      send_to: 'G-HVCRJT504Y' // Explicitly specify measurement ID
+      send_to: 'G-HVCRJT504Y'
     };
     
-    // Push pageview event to dataLayer for GTM
-    window.dataLayer.push(pageData);
-    
-    // Also send directly to GA4 for redundancy
+    // Send pageview to GA4
     window.gtag('event', 'page_view', pageData);
     
-    // Track pageview with Meta Pixel
-    if (window.fbq) {
-      window.fbq('track', 'PageView');
-    }
-    
-    console.log(`Page view tracked via GTM: ${path}`, pageData);
+    console.log(`Privacy-compliant page view tracked: ${path}`);
   } catch (error) {
     console.error('Error tracking page view:', error);
   }
 };
 
-// Event tracking with enhanced debugging
+// Event tracking with consent check
 export const trackEvent = (
   eventName: string, 
   eventParams: Record<string, any> = {}
 ) => {
   try {
-    if (!window.dataLayer) {
-      console.warn('dataLayer not initialized, cannot track event');
+    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
+    if (!hasConsent) {
+      console.log('Analytics consent not given, skipping event tracking');
+      return;
+    }
+
+    if (!window.dataLayer || !window.gtag) {
+      console.warn('Analytics not initialized, cannot track event');
       return;
     }
     
-    // Add send_to parameter to ensure proper routing
     const enhancedParams = {
       ...eventParams,
-      send_to: 'G-HVCRJT504Y' // Explicitly specify measurement ID
+      send_to: 'G-HVCRJT504Y'
     };
     
-    // Push custom event to dataLayer for GTM
-    window.dataLayer.push({
-      event: eventName,
-      ...enhancedParams
-    });
-    
-    // Also send directly to GA4
+    // Send to GA4
     window.gtag('event', eventName, enhancedParams);
     
-    // Track event with Meta Pixel for specific conversion events
-    if (window.fbq) {
-      // Map common events to Meta Pixel standard events
-      const metaPixelEvents: Record<string, string> = {
-        'signup': 'CompleteRegistration',
-        'login': 'Lead',
-        'purchase': 'Purchase',
-        'start_trial': 'StartTrial',
-        'demo_started': 'Lead',
-        'subscription': 'Subscribe'
-      };
-      
-      if (metaPixelEvents[eventName]) {
-        window.fbq('track', metaPixelEvents[eventName], eventParams);
-      } else {
-        // Track custom event
-        window.fbq('trackCustom', eventName, eventParams);
-      }
-    }
-    
-    console.log(`Event tracked via GTM: ${eventName}`, enhancedParams);
+    console.log(`Privacy-compliant event tracked: ${eventName}`, enhancedParams);
   } catch (error) {
     console.error(`Error tracking event ${eventName}:`, error);
   }
 };
 
-// Helper function to check if analytics is working
+// Helper function to check consent status
+export const hasAnalyticsConsent = (): boolean => {
+  return localStorage.getItem('analytics-consent') === 'true';
+};
+
+// Helper function to revoke consent
+export const revokeAnalyticsConsent = () => {
+  localStorage.setItem('analytics-consent', 'false');
+  console.log('Analytics consent revoked');
+};
+
+// Helper function to check analytics connection
 export const checkAnalyticsConnection = () => {
   try {
     // Log debug information

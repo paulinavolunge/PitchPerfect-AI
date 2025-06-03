@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mic, MicOff, Volume2, VolumeX, AlertTriangle } from 'lucide-react';
 import { voiceService } from '@/services/VoiceService';
 import { cn } from '@/lib/utils';
+import { MicrophonePermissionHandler } from '@/components/permissions/MicrophonePermissionHandler';
 
 interface VoiceInputProps {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -26,7 +26,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [permissionStatus, setPermissionStatus] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  const [hasPermission, setHasPermission] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [isSupported, setIsSupported] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
@@ -37,9 +37,6 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
   useEffect(() => {
     setIsSupported(voiceService.isVoiceSupported());
     
-    // Check initial permission status
-    checkPermissionStatus();
-    
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -47,15 +44,6 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
       voiceService.dispose();
     };
   }, []);
-
-  const checkPermissionStatus = async () => {
-    try {
-      const hasPermission = await voiceService.checkMicrophonePermission();
-      setPermissionStatus(hasPermission ? 'granted' : 'denied');
-    } catch (error) {
-      setPermissionStatus('denied');
-    }
-  };
 
   const updateAudioLevel = useCallback(() => {
     if (isRecording) {
@@ -102,13 +90,13 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
       );
       
       setIsRecording(true);
-      setPermissionStatus('granted');
+      setHasPermission(true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to start voice recording';
       setError(errorMessage);
       
       if (errorMessage.includes('permission') || errorMessage.includes('denied')) {
-        setPermissionStatus('denied');
+        setHasPermission(false);
       }
     }
   };
@@ -145,6 +133,16 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     setIsSpeaking(false);
   };
 
+  const handlePermissionGranted = () => {
+    setHasPermission(true);
+    setError(null);
+  };
+
+  const handlePermissionDenied = () => {
+    setHasPermission(false);
+    setError('Microphone access is required for voice features');
+  };
+
   if (!isSupported) {
     return (
       <Alert variant="destructive" className={className}>
@@ -156,102 +154,88 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     );
   }
 
-  if (permissionStatus === 'denied') {
-    return (
-      <Alert variant="destructive" className={className}>
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription className="space-y-2">
-          <p>Microphone access is required for voice input.</p>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={checkPermissionStatus}
-            className="text-sm"
-          >
-            Check Permissions Again
-          </Button>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
   return (
-    <div className={cn("space-y-4", className)}>
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <Button
-            type="button"
-            size="icon"
-            variant={isRecording ? "destructive" : "outline"}
-            onClick={isRecording ? handleStopRecording : handleStartRecording}
-            disabled={disabled}
-            className={cn(
-              "h-12 w-12 rounded-full transition-all duration-200",
-              isRecording && "animate-pulse shadow-lg shadow-red-300"
-            )}
-            aria-label={isRecording ? "Stop recording" : "Start recording"}
-          >
-            {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
-          </Button>
-          
-          {isRecording && (
-            <div 
-              className="absolute inset-0 rounded-full border-4 border-red-400 animate-ping"
-              style={{
-                transform: `scale(${1 + audioLevel * 0.5})`,
-                opacity: 0.3 + audioLevel * 0.7
-              }}
-            />
-          )}
-        </div>
-        
-        {showSpeechOutput && onSpeakText && (
-          <Button
-            type="button"
-            size="icon"
-            variant={isSpeaking ? "default" : "outline"}
-            onClick={isSpeaking ? handleStopSpeaking : () => handleSpeakText(currentTranscript)}
-            disabled={disabled || !currentTranscript.trim()}
-            className="h-12 w-12 rounded-full"
-            aria-label={isSpeaking ? "Stop speaking" : "Speak text"}
-          >
-            {isSpeaking ? <VolumeX size={20} /> : <Volume2 size={20} />}
-          </Button>
+    <MicrophonePermissionHandler
+      onPermissionGranted={handlePermissionGranted}
+      onPermissionDenied={handlePermissionDenied}
+    >
+      <div className={cn("space-y-4", className)}>
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
         
-        <div className="flex-1">
-          {isRecording ? (
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-sm font-medium text-red-600">Recording...</span>
-              </div>
-              
-              {/* Audio level indicator */}
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-red-500 h-2 rounded-full transition-all duration-100"
-                  style={{ width: `${audioLevel * 100}%` }}
-                />
-              </div>
-              
-              {currentTranscript && (
-                <p className="text-sm text-gray-600 italic">"{currentTranscript}"</p>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Button
+              type="button"
+              size="icon"
+              variant={isRecording ? "destructive" : "outline"}
+              onClick={isRecording ? handleStopRecording : handleStartRecording}
+              disabled={disabled}
+              className={cn(
+                "h-12 w-12 rounded-full transition-all duration-200",
+                isRecording && "animate-pulse shadow-lg shadow-red-300"
               )}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500">{placeholder}</p>
+              aria-label={isRecording ? "Stop recording" : "Start recording"}
+            >
+              {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
+            </Button>
+            
+            {isRecording && (
+              <div 
+                className="absolute inset-0 rounded-full border-4 border-red-400 animate-ping"
+                style={{
+                  transform: `scale(${1 + audioLevel * 0.5})`,
+                  opacity: 0.3 + audioLevel * 0.7
+                }}
+              />
+            )}
+          </div>
+          
+          {showSpeechOutput && onSpeakText && (
+            <Button
+              type="button"
+              size="icon"
+              variant={isSpeaking ? "default" : "outline"}
+              onClick={isSpeaking ? handleStopSpeaking : () => handleSpeakText(currentTranscript)}
+              disabled={disabled || !currentTranscript.trim()}
+              className="h-12 w-12 rounded-full"
+              aria-label={isSpeaking ? "Stop speaking" : "Speak text"}
+            >
+              {isSpeaking ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </Button>
           )}
+          
+          <div className="flex-1">
+            {isRecording ? (
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-red-600">Recording...</span>
+                </div>
+                
+                {/* Audio level indicator */}
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-red-500 h-2 rounded-full transition-all duration-100"
+                    style={{ width: `${audioLevel * 100}%` }}
+                  />
+                </div>
+                
+                {currentTranscript && (
+                  <p className="text-sm text-gray-600 italic">"{currentTranscript}"</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">{placeholder}</p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </MicrophonePermissionHandler>
   );
 };
 
