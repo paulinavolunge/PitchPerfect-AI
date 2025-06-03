@@ -1,6 +1,13 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { PitchAnalysisResult, PitchDataPoint, AudioAnalysisConfig, PitchAnalysisError } from '@/types/analysis';
+import type { 
+  PitchAnalysisResult, 
+  PitchDataPoint, 
+  AudioAnalysisConfig, 
+  PitchAnalysisError,
+  WorkerMessage,
+  WorkerResponse
+} from '@/types/analysis';
 
 interface UsePitchAnalysisOptions {
   config?: Partial<AudioAnalysisConfig>;
@@ -8,16 +15,28 @@ interface UsePitchAnalysisOptions {
   throttleMs?: number;
 }
 
-export const usePitchAnalysis = (options: UsePitchAnalysisOptions = {}) => {
+interface UsePitchAnalysisReturn {
+  analysisResult: PitchAnalysisResult;
+  isAnalyzing: boolean;
+  error: PitchAnalysisError | null;
+  analyzeAudioChunk: (audioData: Float32Array, sampleRate: number) => void;
+  startAnalysis: () => void;
+  finalizeAnalysis: () => void;
+  resetAnalysis: () => void;
+  getLatestPitch: () => PitchDataPoint | null;
+  getAveragePitch: (timeWindow?: number) => number;
+  isWorkerReady: boolean;
+}
+
+export const usePitchAnalysis = (options: UsePitchAnalysisOptions = {}): UsePitchAnalysisReturn => {
   const [analysisResult, setAnalysisResult] = useState<PitchAnalysisResult>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [error, setError] = useState<PitchAnalysisError | null>(null);
   
   const workerRef = useRef<Worker | null>(null);
-  const lastAnalysisTime = useRef(0);
-  const throttleMs = options.throttleMs ?? 50; // Default 50ms throttling
+  const lastAnalysisTime = useRef<number>(0);
+  const throttleMs = options.throttleMs ?? 50;
   
-  // Initialize worker
   useEffect(() => {
     try {
       workerRef.current = new Worker(
@@ -25,20 +44,22 @@ export const usePitchAnalysis = (options: UsePitchAnalysisOptions = {}) => {
         { type: 'module' }
       );
 
-      // Configure worker with provided options
       if (options.config) {
-        workerRef.current.postMessage({
+        const message: WorkerMessage = {
           type: 'configure',
-          payload: options.config
-        });
+          payload: { config: options.config }
+        };
+        workerRef.current.postMessage(message);
       }
 
-      workerRef.current.onmessage = (event) => {
+      workerRef.current.onmessage = (event: MessageEvent<WorkerResponse>) => {
         const { type, payload } = event.data;
         
         switch (type) {
           case 'analysisResult':
-            setAnalysisResult(prev => [...prev, ...payload]);
+            if (Array.isArray(payload)) {
+              setAnalysisResult(prev => [...prev, ...payload]);
+            }
             break;
             
           case 'analysisComplete':
@@ -46,27 +67,29 @@ export const usePitchAnalysis = (options: UsePitchAnalysisOptions = {}) => {
             break;
             
           case 'error':
-            const pitchError: PitchAnalysisError = new Error(payload.message) as PitchAnalysisError;
-            pitchError.code = payload.code;
-            pitchError.details = payload.details;
-            setError(pitchError);
-            setIsAnalyzing(false);
-            options.onError?.(pitchError);
+            if (payload && typeof payload === 'object' && 'message' in payload) {
+              const pitchError = new Error(payload.message) as PitchAnalysisError;
+              pitchError.code = payload.code;
+              pitchError.details = payload.details;
+              setError(pitchError);
+              setIsAnalyzing(false);
+              options.onError?.(pitchError);
+            }
             break;
         }
       };
 
-      workerRef.current.onerror = (error) => {
-        const pitchError: PitchAnalysisError = new Error('Pitch analysis worker failed') as PitchAnalysisError;
+      workerRef.current.onerror = (errorEvent: ErrorEvent) => {
+        const pitchError = new Error('Pitch analysis worker failed') as PitchAnalysisError;
         pitchError.code = 'WORKER_ERROR';
-        pitchError.details = error;
+        pitchError.details = errorEvent;
         setError(pitchError);
         setIsAnalyzing(false);
         options.onError?.(pitchError);
       };
 
     } catch (err) {
-      const pitchError: PitchAnalysisError = new Error('Failed to initialize pitch analysis worker') as PitchAnalysisError;
+      const pitchError = new Error('Failed to initialize pitch analysis worker') as PitchAnalysisError;
       pitchError.code = 'WORKER_ERROR';
       pitchError.details = err;
       setError(pitchError);
@@ -78,12 +101,11 @@ export const usePitchAnalysis = (options: UsePitchAnalysisOptions = {}) => {
     };
   }, [options.config, options.onError]);
 
-  const analyzeAudioChunk = useCallback((audioData: Float32Array, sampleRate: number) => {
+  const analyzeAudioChunk = useCallback((audioData: Float32Array, sampleRate: number): void => {
     if (!workerRef.current || !audioData || audioData.length === 0) {
       return;
     }
 
-    // Throttle analysis calls to prevent excessive processing
     const now = performance.now();
     if (now - lastAnalysisTime.current < throttleMs) {
       return;
@@ -91,7 +113,6 @@ export const usePitchAnalysis = (options: UsePitchAnalysisOptions = {}) => {
     lastAnalysisTime.current = now;
 
     try {
-      // Validate audio data
       if (!(audioData instanceof Float32Array)) {
         throw new Error('Invalid audio data type. Expected Float32Array.');
       }
@@ -100,17 +121,19 @@ export const usePitchAnalysis = (options: UsePitchAnalysisOptions = {}) => {
         throw new Error('Invalid sample rate.');
       }
 
-      workerRef.current.postMessage({
+      const message: WorkerMessage = {
         type: 'analyzeChunk',
         payload: {
           audioData: audioData,
           sampleRate: sampleRate,
           timestamp: now
         }
-      });
+      };
+
+      workerRef.current.postMessage(message);
 
     } catch (err) {
-      const pitchError: PitchAnalysisError = new Error('Failed to analyze audio chunk') as PitchAnalysisError;
+      const pitchError = new Error('Failed to analyze audio chunk') as PitchAnalysisError;
       pitchError.code = 'INVALID_AUDIO';
       pitchError.details = err;
       setError(pitchError);
@@ -118,19 +141,20 @@ export const usePitchAnalysis = (options: UsePitchAnalysisOptions = {}) => {
     }
   }, [throttleMs, options.onError]);
 
-  const startAnalysis = useCallback(() => {
+  const startAnalysis = useCallback((): void => {
     setIsAnalyzing(true);
     setError(null);
     setAnalysisResult([]);
   }, []);
 
-  const finalizeAnalysis = useCallback(() => {
+  const finalizeAnalysis = useCallback((): void => {
     if (workerRef.current && isAnalyzing) {
-      workerRef.current.postMessage({ type: 'finalizeAnalysis' });
+      const message: WorkerMessage = { type: 'finalizeAnalysis' };
+      workerRef.current.postMessage(message);
     }
   }, [isAnalyzing]);
 
-  const resetAnalysis = useCallback(() => {
+  const resetAnalysis = useCallback((): void => {
     setAnalysisResult([]);
     setError(null);
     setIsAnalyzing(false);

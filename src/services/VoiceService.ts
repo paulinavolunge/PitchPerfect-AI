@@ -14,8 +14,42 @@ interface SpeechSynthesisConfig {
   voice?: string;
 }
 
+interface VoiceRecognitionResult {
+  transcript: string;
+  confidence: number;
+  isFinal: boolean;
+}
+
+interface VoiceRecognitionCallbacks {
+  onResult: (result: VoiceRecognitionResult) => void;
+  onError: (error: VoiceServiceError) => void;
+  onStart?: () => void;
+  onEnd?: () => void;
+}
+
+interface SpeechSynthesisCallbacks {
+  onStart?: () => void;
+  onEnd?: () => void;
+  onError?: (error: VoiceServiceError) => void;
+}
+
+interface VoiceServiceError {
+  code: 'NOT_SUPPORTED' | 'PERMISSION_DENIED' | 'NO_SPEECH' | 'AUDIO_CAPTURE' | 'NETWORK' | 'UNKNOWN';
+  message: string;
+  originalError?: Event | Error;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: typeof SpeechRecognition;
+    webkitSpeechRecognition?: typeof SpeechRecognition;
+    AudioContext?: typeof AudioContext;
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 export class VoiceService {
-  private recognition: any = null;
+  private recognition: SpeechRecognition | null = null;
   private synthesis: SpeechSynthesis | null = null;
   private isRecording = false;
   private isSupported = false;
@@ -74,8 +108,11 @@ export class VoiceService {
         }
       });
 
-      // Fix TypeScript error by properly typing AudioContext
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) {
+        throw new Error('AudioContext not supported');
+      }
+      
       this.audioContext = new AudioContextClass();
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 256;
@@ -105,11 +142,13 @@ export class VoiceService {
 
   async startRecording(
     config: VoiceServiceConfig = {},
-    onResult: (text: string, isFinal: boolean) => void,
-    onError: (error: string) => void
+    callbacks: VoiceRecognitionCallbacks
   ): Promise<void> {
     if (!this.isSupported || !this.recognition) {
-      throw new Error('Speech recognition not supported');
+      throw new VoiceServiceError({
+        code: 'NOT_SUPPORTED',
+        message: 'Speech recognition not supported'
+      });
     }
 
     if (this.isRecording) {
@@ -124,14 +163,16 @@ export class VoiceService {
       this.recognition.lang = config.language ?? 'en-US';
       this.recognition.maxAlternatives = config.maxAlternatives ?? 1;
 
-      this.recognition.onresult = (event: any) => {
+      this.recognition.onresult = (event: SpeechRecognitionEvent) => {
         let finalTranscript = '';
         let interimTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
+          const result = event.results[i];
+          const transcript = result[0].transcript;
+          const confidence = result[0].confidence;
           
-          if (event.results[i].isFinal) {
+          if (result.isFinal) {
             finalTranscript += transcript;
           } else {
             interimTranscript += transcript;
@@ -139,43 +180,65 @@ export class VoiceService {
         }
 
         const fullTranscript = finalTranscript || interimTranscript;
-        onResult(fullTranscript, !!finalTranscript);
+        callbacks.onResult({
+          transcript: fullTranscript,
+          confidence: event.results[0]?.[0]?.confidence ?? 0,
+          isFinal: !!finalTranscript
+        });
       };
 
-      this.recognition.onerror = (event: any) => {
+      this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        let errorCode: VoiceServiceError['code'] = 'UNKNOWN';
         let errorMessage = 'Speech recognition error';
         
         switch (event.error) {
           case 'not-allowed':
           case 'permission-denied':
+            errorCode = 'PERMISSION_DENIED';
             errorMessage = 'Microphone access denied. Please allow microphone permissions.';
             break;
           case 'no-speech':
+            errorCode = 'NO_SPEECH';
             errorMessage = 'No speech detected. Please try speaking again.';
             break;
           case 'audio-capture':
+            errorCode = 'AUDIO_CAPTURE';
             errorMessage = 'Audio capture failed. Please check your microphone.';
             break;
           case 'network':
+            errorCode = 'NETWORK';
             errorMessage = 'Network error occurred. Please check your connection.';
             break;
           default:
             errorMessage = `Speech recognition error: ${event.error}`;
         }
         
-        onError(errorMessage);
+        callbacks.onError({
+          code: errorCode,
+          message: errorMessage,
+          originalError: event
+        });
         this.isRecording = false;
+      };
+
+      this.recognition.onstart = () => {
+        callbacks.onStart?.();
       };
 
       this.recognition.onend = () => {
         this.isRecording = false;
         this.cleanup();
+        callbacks.onEnd?.();
       };
 
       this.recognition.start();
       this.isRecording = true;
     } catch (error) {
-      throw new Error(`Failed to start recording: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new VoiceServiceError({
+        code: 'UNKNOWN',
+        message: `Failed to start recording: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        originalError: error instanceof Error ? error : undefined
+      });
     }
   }
 
@@ -205,15 +268,15 @@ export class VoiceService {
   async speak(
     text: string, 
     config: SpeechSynthesisConfig = {},
-    onStart?: () => void,
-    onEnd?: () => void,
-    onError?: (error: string) => void
+    callbacks: SpeechSynthesisCallbacks = {}
   ): Promise<void> {
     if (!this.synthesis) {
-      throw new Error('Speech synthesis not supported');
+      throw new VoiceServiceError({
+        code: 'NOT_SUPPORTED',
+        message: 'Speech synthesis not supported'
+      });
     }
 
-    // Stop any ongoing speech
     this.stopSpeaking();
 
     return new Promise((resolve, reject) => {
@@ -234,20 +297,24 @@ export class VoiceService {
       }
 
       utterance.onstart = () => {
-        onStart?.();
+        callbacks.onStart?.();
       };
 
       utterance.onend = () => {
         this.currentUtterance = null;
-        onEnd?.();
+        callbacks.onEnd?.();
         resolve();
       };
 
       utterance.onerror = (event) => {
         this.currentUtterance = null;
-        const errorMessage = `Speech synthesis error: ${event.error}`;
-        onError?.(errorMessage);
-        reject(new Error(errorMessage));
+        const error: VoiceServiceError = {
+          code: 'UNKNOWN',
+          message: `Speech synthesis error: ${event.error}`,
+          originalError: event
+        };
+        callbacks.onError?.(error);
+        reject(error);
       };
 
       this.currentUtterance = utterance;
@@ -282,6 +349,22 @@ export class VoiceService {
     this.stopRecording();
     this.stopSpeaking();
     this.cleanup();
+  }
+}
+
+class VoiceServiceError extends Error {
+  code: VoiceServiceError['code'];
+  originalError?: Event | Error;
+
+  constructor({ code, message, originalError }: {
+    code: VoiceServiceError['code'];
+    message: string;
+    originalError?: Event | Error;
+  }) {
+    super(message);
+    this.name = 'VoiceServiceError';
+    this.code = code;
+    this.originalError = originalError;
   }
 }
 

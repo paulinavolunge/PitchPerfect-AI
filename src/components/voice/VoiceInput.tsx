@@ -26,18 +26,17 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
   className,
   showSpeechOutput = true
 }) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasPermission, setHasPermission] = useState(false);
-  const [audioLevel, setAudioLevel] = useState(0);
-  const [isSupported, setIsSupported] = useState(false);
-  const [currentTranscript, setCurrentTranscript] = useState('');
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
+  const [audioLevel, setAudioLevel] = useState<number>(0);
+  const [isSupported, setIsSupported] = useState<boolean>(false);
+  const [currentTranscript, setCurrentTranscript] = useState<string>('');
   
   const audioLevelRef = useRef<number>(0);
   const animationFrameRef = useRef<number>();
   
-  // Generate unique IDs for accessibility
   const micButtonId = useRef(generateUniqueId('mic-button')).current;
   const speakButtonId = useRef(generateUniqueId('speak-button')).current;
   const transcriptId = useRef(generateUniqueId('transcript')).current;
@@ -54,7 +53,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     };
   }, []);
 
-  const updateAudioLevel = useCallback(() => {
+  const updateAudioLevel = useCallback((): void => {
     if (isRecording) {
       const level = voiceService.getAudioLevel();
       setAudioLevel(level);
@@ -73,7 +72,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     }
   }, [isRecording, updateAudioLevel]);
 
-  const handleStartRecording = async () => {
+  const handleStartRecording = async (): Promise<void> => {
     if (!isSupported) {
       const errorMsg = 'Voice input is not supported in this browser. Please use Chrome, Edge, or Safari.';
       setError(errorMsg);
@@ -91,17 +90,19 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
           interimResults: true,
           language: 'en-US'
         },
-        (text, isFinal) => {
-          setCurrentTranscript(text);
-          onTranscript(text, isFinal);
-          if (isFinal) {
-            announceToScreenReader(`Recorded: ${text}`);
+        {
+          onResult: (result) => {
+            setCurrentTranscript(result.transcript);
+            onTranscript(result.transcript, result.isFinal);
+            if (result.isFinal) {
+              announceToScreenReader(`Recorded: ${result.transcript}`);
+            }
+          },
+          onError: (error) => {
+            setError(error.message);
+            setIsRecording(false);
+            announceToScreenReader(`Recording error: ${error.message}`, 'assertive');
           }
-        },
-        (errorMessage) => {
-          setError(errorMessage);
-          setIsRecording(false);
-          announceToScreenReader(`Recording error: ${errorMessage}`, 'assertive');
         }
       );
       
@@ -119,14 +120,14 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     }
   };
 
-  const handleStopRecording = () => {
+  const handleStopRecording = (): void => {
     voiceService.stopRecording();
     setIsRecording(false);
     setCurrentTranscript('');
     announceToScreenReader('Recording stopped.');
   };
 
-  const handleSpeakText = async (text: string) => {
+  const handleSpeakText = async (text: string): Promise<void> => {
     if (!onSpeakText || !text.trim()) return;
     
     try {
@@ -136,16 +137,18 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
       await voiceService.speak(
         text,
         { rate: 1, pitch: 1, volume: 0.8 },
-        () => setIsSpeaking(true),
-        () => {
-          setIsSpeaking(false);
-          announceToScreenReader('Text-to-speech completed.');
-        },
-        (error) => {
-          const errorMsg = `Speech output error: ${error}`;
-          setError(errorMsg);
-          setIsSpeaking(false);
-          announceToScreenReader(errorMsg, 'assertive');
+        {
+          onStart: () => setIsSpeaking(true),
+          onEnd: () => {
+            setIsSpeaking(false);
+            announceToScreenReader('Text-to-speech completed.');
+          },
+          onError: (error) => {
+            const errorMsg = `Speech output error: ${error.message}`;
+            setError(errorMsg);
+            setIsSpeaking(false);
+            announceToScreenReader(errorMsg, 'assertive');
+          }
         }
       );
     } catch (error) {
@@ -156,19 +159,19 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     }
   };
 
-  const handleStopSpeaking = () => {
+  const handleStopSpeaking = (): void => {
     voiceService.stopSpeaking();
     setIsSpeaking(false);
     announceToScreenReader('Text-to-speech stopped.');
   };
 
-  const handlePermissionGranted = () => {
+  const handlePermissionGranted = (): void => {
     setHasPermission(true);
     setError(null);
     announceToScreenReader('Microphone permission granted.');
   };
 
-  const handlePermissionDenied = () => {
+  const handlePermissionDenied = (): void => {
     setHasPermission(false);
     const errorMsg = 'Microphone access is required for voice features';
     setError(errorMsg);
@@ -256,7 +259,6 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
                   <span className="text-sm font-medium text-red-600">Recording...</span>
                 </div>
                 
-                {/* Audio level indicator */}
                 <div className="w-full bg-gray-200 rounded-full h-2" role="progressbar" aria-label="Audio level">
                   <div 
                     className="bg-red-500 h-2 rounded-full transition-all duration-100"

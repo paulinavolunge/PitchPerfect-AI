@@ -1,16 +1,10 @@
 
-// Web Worker for pitch analysis to offload computation from main thread
-import type { PitchDataPoint, AudioAnalysisConfig } from '../types/analysis';
-
-interface WorkerMessage {
-  type: 'analyzeChunk' | 'finalizeAnalysis' | 'configure';
-  payload?: any;
-}
-
-interface WorkerResponse {
-  type: 'analysisResult' | 'analysisComplete' | 'error';
-  payload?: any;
-}
+import type { 
+  PitchDataPoint, 
+  AudioAnalysisConfig, 
+  WorkerMessage, 
+  WorkerResponse 
+} from '../types/analysis';
 
 class PitchAnalyzer {
   private config: AudioAnalysisConfig = {
@@ -24,11 +18,10 @@ class PitchAnalyzer {
   private startTime = 0;
   private lastTimestamp = 0;
 
-  configure(newConfig: Partial<AudioAnalysisConfig>) {
+  configure(newConfig: Partial<AudioAnalysisConfig>): void {
     this.config = { ...this.config, ...newConfig };
   }
 
-  // Autocorrelation-based pitch detection algorithm
   private detectPitch(audioData: Float32Array, sampleRate: number): { pitch: number; confidence: number } {
     const bufferSize = audioData.length;
     const minPeriod = Math.floor(sampleRate / this.config.pitchRange.max);
@@ -38,7 +31,6 @@ class PitchAnalyzer {
       return { pitch: 0, confidence: 0 };
     }
 
-    // Calculate autocorrelation
     let bestPeriod = 0;
     let bestCorrelation = 0;
     
@@ -84,13 +76,12 @@ class PitchAnalyzer {
       const { pitch, confidence } = this.detectPitch(audioData, sampleRate);
       const volume = this.calculateVolume(audioData);
       
-      // Apply confidence threshold
       if (confidence < this.config.minConfidence) {
         return null;
       }
 
       return {
-        timestamp: timestamp / 1000, // Convert to seconds
+        timestamp: timestamp / 1000,
         pitch,
         confidence,
         volume
@@ -101,7 +92,7 @@ class PitchAnalyzer {
     }
   }
 
-  reset() {
+  reset(): void {
     this.startTime = performance.now();
     this.lastTimestamp = 0;
   }
@@ -115,19 +106,22 @@ self.onmessage = (event: MessageEvent<WorkerMessage>) => {
   try {
     switch (type) {
       case 'configure':
-        analyzer.configure(payload);
+        if (payload?.config) {
+          analyzer.configure(payload.config);
+        }
         break;
         
       case 'analyzeChunk': {
-        const { audioData, sampleRate, timestamp } = payload;
-        const result = analyzer.analyzeChunk(audioData, sampleRate, timestamp);
-        
-        if (result) {
-          const response: WorkerResponse = {
-            type: 'analysisResult',
-            payload: [result]
-          };
-          self.postMessage(response);
+        if (payload?.audioData && payload?.sampleRate && payload?.timestamp) {
+          const result = analyzer.analyzeChunk(payload.audioData, payload.sampleRate, payload.timestamp);
+          
+          if (result) {
+            const response: WorkerResponse = {
+              type: 'analysisResult',
+              payload: [result]
+            };
+            self.postMessage(response);
+          }
         }
         break;
       }

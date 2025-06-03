@@ -23,7 +23,7 @@ export const ScreenReaderOnly: React.FC<ScreenReaderOnlyProps> = ({
     return React.cloneElement(children, {
       ...children.props,
       className: cn(children.props.className, srOnlyClass)
-    } as any)
+    })
   }
   
   return <span className={srOnlyClass}>{children}</span>
