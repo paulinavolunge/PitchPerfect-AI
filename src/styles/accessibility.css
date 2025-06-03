@@ -1,33 +1,69 @@
 
-/* Example: Add color contrast, focus outlines, ARIA improvements */
-
-button:focus, [tabindex]:focus {
-  outline: 2px solid #0070f3;
-  outline-offset: 2px;
-}
-
-[aria-label] {
-  cursor: pointer;
-}
-
-/* Ensure sufficient contrast for buttons */
-button {
-  background: #0070f3;
-  color: #fff;
-  border: none;
-}
-
-button[disabled] {
-  background: #bbb;
-  color: #eee;
-}
-
-/* Screen reader only class */
+/* Screen reader only content */
 .sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.sr-only:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+}
+
+/* Focus visible styles for better keyboard navigation */
+.focus-visible:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .button {
+    border: 2px solid;
+  }
+  
+  .card {
+    border: 1px solid;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus trap utilities */
+.focus-trap {
+  position: relative;
+}
+
+.focus-trap::before,
+.focus-trap::after {
+  content: '';
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
@@ -35,22 +71,124 @@ button[disabled] {
   border: 0;
 }
 
-/* Modal overlay styles */
-.modal {
+/* Skip link styles */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Improved button focus states */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Better form field accessibility */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Custom properties for accessibility */
+:root {
+  --focus-ring: 2px solid hsl(var(--ring));
+  --focus-offset: 2px;
+}
+
+/* Ensure minimum touch target size for mobile */
+@media (max-width: 768px) {
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Loading states for screen readers */
+[aria-busy="true"] {
+  cursor: progress;
+}
+
+/* Error states */
+[aria-invalid="true"] {
+  border-color: hsl(var(--destructive));
+}
+
+/* Live region styles */
+[aria-live] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+[aria-live]:not(:empty) {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* Ensure sufficient color contrast */
+.text-muted {
+  color: #6b7280; /* Meets WCAG AA contrast ratio */
+}
+
+.text-subtle {
+  color: #9ca3af; /* Use sparingly, check contrast in context */
+}
+
+/* Custom clip-path utility for screen reader content */
+.clip-path-inset-50 {
+  clip-path: inset(50%);
+}
+
+/* Enhanced focus indicators for complex components */
+.tab[aria-selected="true"] {
+  background-color: hsl(var(--accent));
+  border-bottom: 2px solid hsl(var(--primary));
+}
+
+.modal[aria-modal="true"] {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  height: 100%;
   z-index: 1000;
 }
 
-/* Touch targets for mobile accessibility */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
+/* Progress bar accessibility */
+[role="progressbar"] {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+[role="progressbar"]::after {
+  content: attr(aria-valuenow) "%";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  color: hsl(var(--primary-foreground));
 }

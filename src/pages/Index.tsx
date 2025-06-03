@@ -11,6 +11,8 @@ import TimeOffer from '@/components/promotion/TimeOffer';
 import StickyCTA from '@/components/pricing/StickyCTA';
 import ParallaxSection from '@/components/animations/ParallaxSection';
 import { motion } from 'framer-motion';
+import { SkipLink } from '@/components/accessibility/SkipLink';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 // Lazy load below-the-fold components for better performance
 const Features = lazy(() => import('@/components/Features'));
@@ -69,6 +71,9 @@ const Index = () => {
   
   return (
     <div className="min-h-screen flex flex-col overflow-hidden">
+      <SkipLink href="#main-content">Skip to main content</SkipLink>
+      <SkipLink href="#navigation">Skip to navigation</SkipLink>
+      
       <Helmet>
         <title>PitchPerfect AI – Real-Time Objection Handling Practice for Sales Pros</title>
         <meta name="description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching. Master objection handling and close more deals." />
@@ -79,191 +84,224 @@ const Index = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="PitchPerfect AI – Sales Practice Platform" />
         <meta name="twitter:description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#8B5CF6" />
       </Helmet>
       
       {showPromotion && (
-        <TimeOffer
-          expiryDate={promoExpiryDate}
-          discount="1 Month Free"
-          description="Get 1 month free with annual Team Plan purchase"
-          variant="banner"
-          ctaText="Claim Offer"
-          ctaLink="/pricing"
-          onClose={handleClosePromotion}
-        />
+        <ErrorBoundary fallbackMessage="Failed to load promotional banner">
+          <TimeOffer
+            expiryDate={promoExpiryDate}
+            discount="1 Month Free"
+            description="Get 1 month free with annual Team Plan purchase"
+            variant="banner"
+            ctaText="Claim Offer"
+            ctaLink="/pricing"
+            onClose={handleClosePromotion}
+          />
+        </ErrorBoundary>
       )}
       
-      <Navbar />
-      <main className="flex-grow">
-        <Hero />
+      <nav id="navigation" role="navigation" aria-label="Main navigation">
+        <ErrorBoundary fallbackMessage="Failed to load navigation">
+          <Navbar />
+        </ErrorBoundary>
+      </nav>
+      
+      <main id="main-content" className="flex-grow" role="main">
+        <ErrorBoundary fallbackMessage="Failed to load hero section">
+          <Hero />
+        </ErrorBoundary>
         
-        <ParallaxSection className="py-12" direction="down" depth={0.1}>
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto">
-              <motion.h2 
-                className="text-3xl font-bold mb-6 text-brand-dark"
+        <ErrorBoundary fallbackMessage="Failed to load AI roleplay section">
+          <ParallaxSection className="py-12" direction="down" depth={0.1}>
+            <div className="container mx-auto px-4">
+              <div className="text-center max-w-3xl mx-auto">
+                <motion.h2 
+                  className="text-3xl font-bold mb-6 text-brand-dark"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                >
+                  AI Roleplay Practice
+                </motion.h2>
+                <motion.p 
+                  className="text-lg mb-8 text-brand-dark/70"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  Practice your pitch in real-time with our advanced AI roleplay system. 
+                  Choose between voice or text interaction and get instant feedback.
+                </motion.p>
+                <motion.div 
+                  className="flex flex-col sm:flex-row gap-4 justify-center"
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  {user ? (
+                    <>
+                      {isPremium ? (
+                        <Button className="btn-primary flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/roleplay')}>
+                          Try Roleplay Now <ArrowRight size={18} />
+                        </Button>
+                      ) : (
+                        <Button className="btn-primary flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/pricing')}>
+                          Upgrade to Access <ArrowRight size={18} />
+                        </Button>
+                      )}
+                      <Button variant="outline" className="flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/practice')}>
+                        Basic Practice
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        className="bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] hover:from-[#7c4aea] hover:to-[#6b2ee0] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 px-6 py-3 hover:scale-105" 
+                        onClick={() => navigate('/signup')}
+                      >
+                        Start Free Trial <ArrowRight size={18} />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2 border hover:bg-gray-50 transition-transform hover:scale-105 duration-300" 
+                        onClick={() => navigate('/compare')}
+                      >
+                        See How We Compare
+                      </Button>
+                    </>
+                  )}
+                </motion.div>
+              </div>
+            </div>
+          </ParallaxSection>
+        </ErrorBoundary>
+        
+        <ErrorBoundary fallbackMessage="Failed to load demo sandbox">
+          <section id="demo-sandbox" className="py-16 bg-white">
+            <div className="container mx-auto px-4">
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
               >
-                AI Roleplay Practice
-              </motion.h2>
-              <motion.p 
-                className="text-lg mb-8 text-brand-dark/70"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
+                <h2 className="text-2xl font-bold text-brand-dark text-center mb-2">Try PitchPerfect AI</h2>
+                <p className="text-center text-brand-dark/70 mb-8 max-w-2xl mx-auto">
+                  Experience our AI-powered sales coaching platform with a quick demo
+                </p>
+              </motion.div>
+              <motion.div
+                className="max-w-3xl mx-auto bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-lg p-6 border border-gray-100"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                Practice your pitch in real-time with our advanced AI roleplay system. 
-                Choose between voice or text interaction and get instant feedback.
-              </motion.p>
-              <motion.div 
-                className="flex flex-col sm:flex-row gap-4 justify-center"
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                {user ? (
-                  <>
-                    {isPremium ? (
-                      <Button className="btn-primary flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/roleplay')}>
-                        Try Roleplay Now <ArrowRight size={18} />
-                      </Button>
-                    ) : (
-                      <Button className="btn-primary flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/pricing')}>
-                        Upgrade to Access <ArrowRight size={18} />
-                      </Button>
-                    )}
-                    <Button variant="outline" className="flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/practice')}>
-                      Basic Practice
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button 
-                      className="bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] hover:from-[#7c4aea] hover:to-[#6b2ee0] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 px-6 py-3 hover:scale-105" 
-                      onClick={() => navigate('/signup')}
-                    >
-                      Start Free Trial <ArrowRight size={18} />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex items-center gap-2 border hover:bg-gray-50 transition-transform hover:scale-105 duration-300" 
-                      onClick={() => navigate('/compare')}
-                    >
-                      See How We Compare
-                    </Button>
-                  </>
-                )}
+                <DemoSandbox />
               </motion.div>
             </div>
-          </div>
-        </ParallaxSection>
+          </section>
+        </ErrorBoundary>
         
-        <section id="demo-sandbox" className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <h2 className="text-2xl font-bold text-brand-dark text-center mb-2">Try PitchPerfect AI</h2>
-              <p className="text-center text-brand-dark/70 mb-8 max-w-2xl mx-auto">
-                Experience our AI-powered sales coaching platform with a quick demo
-              </p>
-            </motion.div>
-            <motion.div
-              className="max-w-3xl mx-auto bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-lg p-6 border border-gray-100"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <DemoSandbox />
-            </motion.div>
-          </div>
-        </section>
-        
-        <Suspense fallback={
-          <div className="py-12 text-center">
-            <div className="animate-pulse flex flex-col items-center">
-              <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </div>
-        }>
-          <Features />
-        </Suspense>
-        
-        <Suspense fallback={
-          <div className="py-12 text-center">
-            <div className="animate-pulse flex flex-col items-center">
-              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </div>
-        }>
-          <HowItWorks />
-        </Suspense>
-        
-        <ParallaxSection className="py-12 bg-gray-50" direction="right" depth={0.15}>
-          <div className="container mx-auto px-4">
-            <motion.div 
-              className="max-w-3xl mx-auto bg-white backdrop-blur-lg bg-white/90 p-6 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center gap-6"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="hidden sm:flex items-center justify-center bg-green-50 p-3 rounded-full">
-                <Shield className="w-10 h-10 text-green-500" />
+        <ErrorBoundary fallbackMessage="Failed to load features section">
+          <Suspense fallback={
+            <div className="py-12 text-center" role="status" aria-label="Loading features">
+              <div className="animate-pulse flex flex-col items-center">
+                <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
               </div>
-              <div>
-                <h3 className="font-medium text-xl mb-2 text-center sm:text-left">Data Security & Privacy</h3>
-                <p className="text-gray-600 mb-4 text-center sm:text-left">
-                  Your data is encrypted and protected using advanced security protocols. We value your privacy.
-                </p>
-                <div className="flex justify-center sm:justify-start">
-                  <Button 
-                    variant="link" 
-                    className="p-0 h-auto text-brand-green hover:scale-105 transition-transform" 
-                    onClick={() => navigate('/privacy')}
-                  >
-                    Read our Privacy Policy
-                  </Button>
+            </div>
+          }>
+            <Features />
+          </Suspense>
+        </ErrorBoundary>
+        
+        <ErrorBoundary fallbackMessage="Failed to load how it works section">
+          <Suspense fallback={
+            <div className="py-12 text-center" role="status" aria-label="Loading how it works">
+              <div className="animate-pulse flex flex-col items-center">
+                <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          }>
+            <HowItWorks />
+          </Suspense>
+        </ErrorBoundary>
+        
+        <ErrorBoundary fallbackMessage="Failed to load data security section">
+          <ParallaxSection className="py-12 bg-gray-50" direction="right" depth={0.15}>
+            <div className="container mx-auto px-4">
+              <motion.div 
+                className="max-w-3xl mx-auto bg-white backdrop-blur-lg bg-white/90 p-6 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center gap-6"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="hidden sm:flex items-center justify-center bg-green-50 p-3 rounded-full">
+                  <Shield className="w-10 h-10 text-green-500" />
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        </ParallaxSection>
+                <div>
+                  <h3 className="font-medium text-xl mb-2 text-center sm:text-left">Data Security & Privacy</h3>
+                  <p className="text-gray-600 mb-4 text-center sm:text-left">
+                    Your data is encrypted and protected using advanced security protocols. We value your privacy.
+                  </p>
+                  <div className="flex justify-center sm:justify-start">
+                    <Button 
+                      variant="link" 
+                      className="p-0 h-auto text-brand-green hover:scale-105 transition-transform" 
+                      onClick={() => navigate('/privacy')}
+                    >
+                      Read our Privacy Policy
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </ParallaxSection>
+        </ErrorBoundary>
         
-        <Suspense fallback={<div className="py-12 text-center">Loading newsletter signup...</div>}>
-          <NewsletterSignup />
-        </Suspense>
+        <ErrorBoundary fallbackMessage="Failed to load newsletter signup">
+          <Suspense fallback={<div className="py-12 text-center">Loading newsletter signup...</div>}>
+            <NewsletterSignup />
+          </Suspense>
+        </ErrorBoundary>
         
-        <Suspense fallback={<div className="py-12 text-center">Loading testimonials...</div>}>
-          <Testimonials />
-        </Suspense>
+        <ErrorBoundary fallbackMessage="Failed to load testimonials">
+          <Suspense fallback={<div className="py-12 text-center">Loading testimonials...</div>}>
+            <Testimonials />
+          </Suspense>
+        </ErrorBoundary>
         
         <div id="cta-section">
-          <Suspense fallback={<div className="py-12 text-center">Loading CTA section...</div>}>
-            <CTASection activeSection={activeSection} />
-          </Suspense>
+          <ErrorBoundary fallbackMessage="Failed to load call-to-action section">
+            <Suspense fallback={<div className="py-12 text-center" role="status">Loading CTA section...</div>}>
+              <CTASection activeSection={activeSection} />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </main>
       
-      <Suspense fallback={<div className="py-6 text-center">Loading footer...</div>}>
-        <Footer />
-      </Suspense>
+      <footer role="contentinfo">
+        <ErrorBoundary fallbackMessage="Failed to load footer">
+          <Suspense fallback={<div className="py-6 text-center" role="status">Loading footer...</div>}>
+            <Footer />
+          </Suspense>
+        </ErrorBoundary>
+      </footer>
 
       {/* Enhanced Onboarding Flow */}
-      <Suspense fallback={null}>
-        <EnhancedOnboardingFlow />
-      </Suspense>
+      <ErrorBoundary fallbackMessage="Failed to load onboarding">
+        <Suspense fallback={null}>
+          <EnhancedOnboardingFlow />
+        </Suspense>
+      </ErrorBoundary>
 
       {/* Sticky CTA for better mobile conversion */}
       <StickyCTA show={showStickyCTA} onClick={handleStickyCTAClick} />
