@@ -146,6 +146,7 @@ export class VoiceService {
     if (!this.isSupported || !this.recognition) {
       const error = new Error('Speech recognition not supported') as VoiceServiceError;
       error.code = 'NOT_SUPPORTED';
+      error.name = 'VoiceServiceError';
       throw error;
     }
 
@@ -213,6 +214,7 @@ export class VoiceService {
         
         const error = new Error(errorMessage) as VoiceServiceError;
         error.code = errorCode;
+        error.name = 'VoiceServiceError';
         error.originalError = event;
         
         callbacks.onError(error);
@@ -234,6 +236,7 @@ export class VoiceService {
     } catch (error) {
       const serviceError = new Error(`Failed to start recording: ${error instanceof Error ? error.message : 'Unknown error'}`) as VoiceServiceError;
       serviceError.code = 'UNKNOWN';
+      serviceError.name = 'VoiceServiceError';
       serviceError.originalError = error instanceof Error ? error : undefined;
       throw serviceError;
     }
