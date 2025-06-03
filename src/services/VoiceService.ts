@@ -1,4 +1,3 @@
-
 interface VoiceServiceConfig {
   language?: string;
   continuous?: boolean;
@@ -74,7 +73,7 @@ export class VoiceService {
   private initializeSpeechRecognition(): void {
     if (typeof window === 'undefined') return;
     
-    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognitionClass) {
       this.recognition = new SpeechRecognitionClass();
     }
