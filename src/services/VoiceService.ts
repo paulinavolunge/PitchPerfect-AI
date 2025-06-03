@@ -33,7 +33,7 @@ interface SpeechSynthesisCallbacks {
   onError?: (error: VoiceServiceError) => void;
 }
 
-interface VoiceServiceError {
+interface VoiceServiceError extends Error {
   code: 'NOT_SUPPORTED' | 'PERMISSION_DENIED' | 'NO_SPEECH' | 'AUDIO_CAPTURE' | 'NETWORK' | 'UNKNOWN';
   message: string;
   originalError?: Event | Error;
@@ -74,9 +74,9 @@ export class VoiceService {
   private initializeSpeechRecognition(): void {
     if (typeof window === 'undefined') return;
     
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      this.recognition = new SpeechRecognition();
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognitionClass) {
+      this.recognition = new SpeechRecognitionClass();
     }
   }
 
@@ -145,10 +145,9 @@ export class VoiceService {
     callbacks: VoiceRecognitionCallbacks
   ): Promise<void> {
     if (!this.isSupported || !this.recognition) {
-      throw new VoiceServiceError({
-        code: 'NOT_SUPPORTED',
-        message: 'Speech recognition not supported'
-      });
+      const error = new Error('Speech recognition not supported') as VoiceServiceError;
+      error.code = 'NOT_SUPPORTED';
+      throw error;
     }
 
     if (this.isRecording) {
@@ -187,7 +186,7 @@ export class VoiceService {
         });
       };
 
-      this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      this.recognition.onerror = (event: SpeechRecognitionError) => {
         let errorCode: VoiceServiceError['code'] = 'UNKNOWN';
         let errorMessage = 'Speech recognition error';
         
@@ -213,11 +212,11 @@ export class VoiceService {
             errorMessage = `Speech recognition error: ${event.error}`;
         }
         
-        callbacks.onError({
-          code: errorCode,
-          message: errorMessage,
-          originalError: event
-        });
+        const error = new Error(errorMessage) as VoiceServiceError;
+        error.code = errorCode;
+        error.originalError = event;
+        
+        callbacks.onError(error);
         this.isRecording = false;
       };
 
@@ -234,11 +233,10 @@ export class VoiceService {
       this.recognition.start();
       this.isRecording = true;
     } catch (error) {
-      throw new VoiceServiceError({
-        code: 'UNKNOWN',
-        message: `Failed to start recording: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        originalError: error instanceof Error ? error : undefined
-      });
+      const serviceError = new Error(`Failed to start recording: ${error instanceof Error ? error.message : 'Unknown error'}`) as VoiceServiceError;
+      serviceError.code = 'UNKNOWN';
+      serviceError.originalError = error instanceof Error ? error : undefined;
+      throw serviceError;
     }
   }
 
@@ -271,10 +269,9 @@ export class VoiceService {
     callbacks: SpeechSynthesisCallbacks = {}
   ): Promise<void> {
     if (!this.synthesis) {
-      throw new VoiceServiceError({
-        code: 'NOT_SUPPORTED',
-        message: 'Speech synthesis not supported'
-      });
+      const error = new Error('Speech synthesis not supported') as VoiceServiceError;
+      error.code = 'NOT_SUPPORTED';
+      throw error;
     }
 
     this.stopSpeaking();
@@ -308,11 +305,9 @@ export class VoiceService {
 
       utterance.onerror = (event) => {
         this.currentUtterance = null;
-        const error: VoiceServiceError = {
-          code: 'UNKNOWN',
-          message: `Speech synthesis error: ${event.error}`,
-          originalError: event
-        };
+        const error = new Error(`Speech synthesis error: ${event.error}`) as VoiceServiceError;
+        error.code = 'UNKNOWN';
+        error.originalError = event;
         callbacks.onError?.(error);
         reject(error);
       };
@@ -349,22 +344,6 @@ export class VoiceService {
     this.stopRecording();
     this.stopSpeaking();
     this.cleanup();
-  }
-}
-
-class VoiceServiceError extends Error {
-  code: VoiceServiceError['code'];
-  originalError?: Event | Error;
-
-  constructor({ code, message, originalError }: {
-    code: VoiceServiceError['code'];
-    message: string;
-    originalError?: Event | Error;
-  }) {
-    super(message);
-    this.name = 'VoiceServiceError';
-    this.code = code;
-    this.originalError = originalError;
   }
 }
 
