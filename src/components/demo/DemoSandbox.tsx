@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Play, Clock, RefreshCw, UserPlus } from 'lucide-react';
-import DemoTranscript from './DemoTranscript';
 import DemoScorecard from './DemoScorecard';
+import { DemoRecorder } from './DemoRecorder';
+import { TranscriptArea } from './TranscriptArea';
 import { useToast } from '@/hooks/use-toast';
 import { getSampleScenario } from '@/utils/demoUtils';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -18,6 +18,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useNavigate } from 'react-router-dom';
 import PremiumModal from '@/components/PremiumModal';
+import { OnboardingTooltip } from '@/components/onboarding/OnboardingTooltip';
 
 // Import the speech recognition types from the global window augmentations
 declare global {
@@ -367,6 +368,23 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     }
   };
 
+  const handleTranscriptRetry = () => {
+    setTranscriptError(null);
+    if (recognitionRef.current && !isListening) {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        toast({
+          title: "Retrying...",
+          description: "Speech recognition restarted.",
+        });
+      } catch (error) {
+        console.error('Retry failed:', error);
+        setTranscriptError('Failed to restart speech recognition');
+      }
+    }
+  };
+
   const generateScore = (transcript: string) => {
     // This is a simplified version of scoring
     const wordCount = transcript.split(/\s+/).length;
@@ -421,7 +439,6 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     <div className="space-y-6" ref={sandboxRef}>
       <ConfettiEffect active={showConfetti} duration={3000} onComplete={() => setShowConfetti(false)} />
 
-      {/* Alerts */}
       <AnimatePresence>
         {permissionDenied && demoState === DemoState.RECORDING && (
           <motion.div
@@ -487,25 +504,44 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
             Speak clearly into your microphone, and we'll transcribe and score your pitch.
           </p>
 
-          <Button 
-            onClick={() => startDemo('button')}
-            className="bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-md hover:shadow-lg"
-            size="lg"
-            aria-label="Start demo recording session"
+          <OnboardingTooltip
+            content="Click here to start your 60-second pitch practice session. Make sure your microphone is ready!"
+            side="top"
+            showOnFirstVisit={true}
+            storageKey="demo-start-tooltip-seen"
           >
-            <Play size={18} /> Start Demo
-          </Button>
+            <Button 
+              onClick={() => startDemo('button')}
+              className="bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-md hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              size="lg"
+              aria-label="Start demo recording session"
+            >
+              <Play size={18} /> Start Demo
+            </Button>
+          </OnboardingTooltip>
+          
           {!user && (
-              <Button
-                variant="outline"
-                onClick={() => navigate('/signup')}
-                className="flex items-center gap-2 mt-4 ml-2"
-                aria-label="Sign up for free account"
-              >
-                <UserPlus className="h-4 w-4" /> Sign Up for Free
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              onClick={() => navigate('/signup')}
+              className="flex items-center gap-2 mt-4 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label="Sign up for free account"
+            >
+              <UserPlus className="h-4 w-4" /> Sign Up for Free
+            </Button>
+          )}
         </motion.div>
+      )}
+
+      {demoState === DemoState.RECORDING && (
+        <DemoRecorder
+          maxDuration={60}
+          onEnd={endDemo}
+          onTranscript={setTranscript}
+          error={transcriptError}
+          loadingTranscript={isTranscribing}
+          transcript={transcript}
+        />
       )}
 
       {demoState === DemoState.RECORDING && (
@@ -515,38 +551,8 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
           role="region"
-          aria-label="Recording session"
+          aria-label="Recording session details"
         >
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-brand-dark">Recording...</h2>
-            <motion.div 
-              className="flex items-center gap-2 text-brand-blue font-medium"
-              animate={{ scale: timeRemaining <= 10 ? [1, 1.05, 1] : 1 }}
-              transition={{ repeat: timeRemaining <= 10 ? Infinity : 0, duration: 0.5 }}
-              aria-live="polite"
-              aria-label={`Time remaining: ${formatTime(timeRemaining)}`}
-            >
-              <Clock size={20} />
-              {formatTime(timeRemaining)}
-            </motion.div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-brand-dark/70">
-              <span>Recording Progress</span>
-              <span>{Math.round(getProgressPercentage())}%</span>
-            </div>
-            <Progress 
-              value={getProgressPercentage()} 
-              className="w-full h-3"
-              aria-label={`Recording progress: ${Math.round(getProgressPercentage())} percent complete`}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(getProgressPercentage())}
-            />
-          </div>
-
           <motion.div 
             className="bg-gradient-to-br from-brand-blue/10 to-[#008D95]/10 rounded-lg p-4"
             initial={{ y: 10 }}
@@ -565,50 +571,12 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
           </div>
 
           {/* Enhanced Transcript Area */}
-          <div 
-            className="border rounded-lg p-4 min-h-[150px] bg-white"
-            role="region"
-            aria-label="Transcript area"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium text-brand-dark">Your Pitch</h3>
-              {isListening && (
-                <div className="flex items-center">
-                  <span className="h-3 w-3 bg-red-500 rounded-full mr-2 animate-pulse" aria-hidden="true"></span>
-                  <span className="text-sm text-brand-dark/70">Recording</span>
-                </div>
-              )}
-            </div>
-            
-            {isTranscribing ? (
-              <div className="flex items-center gap-2 py-4">
-                <LoadingSpinner size="sm" />
-                <span className="text-brand-dark/70">Transcribing your speech...</span>
-              </div>
-            ) : transcriptError ? (
-              <div 
-                className="text-red-600 py-4"
-                role="alert"
-                aria-live="assertive"
-              >
-                {transcriptError}
-              </div>
-            ) : transcript ? (
-              <p className="text-brand-dark/80" aria-live="polite">{transcript}</p>
-            ) : (
-              <p className="text-brand-dark/50 italic">
-                {isListening ? "Start speaking..." : "Transcript will appear here when you start the demo"}
-              </p>
-            )}
-          </div>
-
-          <Button 
-            onClick={endDemo}
-            className="w-full bg-brand-blue hover:bg-brand-blue/90 text-white hover:scale-105 transition-transform"
-            aria-label="End demo recording early"
-          >
-            End Demo Early
-          </Button>
+          <TranscriptArea
+            transcript={transcript}
+            loading={isTranscribing}
+            error={transcriptError}
+            onRetry={handleTranscriptRetry}
+          />
         </motion.div>
       )}
 
