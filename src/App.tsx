@@ -13,6 +13,7 @@ import { initGA, trackPageView } from '@/utils/analytics';
 import { IntegratedOnboarding } from '@/components/onboarding/IntegratedOnboarding';
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 // Import all page components
 import Index from '@/pages/Index';
@@ -113,45 +114,47 @@ function App() {
           <AuthProvider>
             <GuestModeProvider>
               <TooltipProvider>
-                <PrivacyCompliantAnalytics />
-                <RouteChangeTracker />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/password-reset" element={<PasswordReset />} />
-                  <Route path="/update-password" element={<UpdatePassword />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/practice" element={<Practice />} />
-                  <Route path="/roleplay" element={<RolePlay />} />
-                  <Route path="/progress" element={<Progress />} />
-                  <Route path="/recordings" element={<CallRecordings />} />
-                  <Route path="/call-recordings" element={<CallRecordings />} />
-                  <Route path="/team-dashboard" element={<TeamDashboard />} />
-                  <Route path="/tips" element={<Tips />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  {/* Redirect /subscription to /pricing */}
-                  <Route path="/subscription" element={<Navigate to="/pricing" replace />} />
-                  <Route path="/success" element={<Success />} />
-                  <Route path="/cancel" element={<Cancel />} />
-                  <Route path="/compare" element={<Compare />} />
-                  <Route path="/demo" element={<Demo />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/data-safety" element={<DataSafety />} />
-                  <Route path="/account-delete" element={<AccountDelete />} />
-                  <Route path="/email-confirmed" element={<EmailConfirmed />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <MobileNavBar />
-                <Toaster />
-                
-                {/* Privacy consent banner */}
-                <ConsentBanner />
-                
-                {/* Integrated onboarding that appears for new users */}
-                {showOnboarding && <IntegratedOnboarding />}
+                <ErrorBoundary fallbackMessage="The application encountered an error. Please refresh the page.">
+                  <PrivacyCompliantAnalytics />
+                  <RouteChangeTracker />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/password-reset" element={<PasswordReset />} />
+                    <Route path="/update-password" element={<UpdatePassword />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/practice" element={<Practice />} />
+                    <Route path="/roleplay" element={<RolePlay />} />
+                    <Route path="/progress" element={<Progress />} />
+                    <Route path="/recordings" element={<CallRecordings />} />
+                    <Route path="/call-recordings" element={<CallRecordings />} />
+                    <Route path="/team-dashboard" element={<TeamDashboard />} />
+                    <Route path="/tips" element={<Tips />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    {/* Redirect /subscription to /pricing */}
+                    <Route path="/subscription" element={<Navigate to="/pricing" replace />} />
+                    <Route path="/success" element={<Success />} />
+                    <Route path="/cancel" element={<Cancel />} />
+                    <Route path="/compare" element={<Compare />} />
+                    <Route path="/demo" element={<Demo />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/data-safety" element={<DataSafety />} />
+                    <Route path="/account-delete" element={<AccountDelete />} />
+                    <Route path="/email-confirmed" element={<EmailConfirmed />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <MobileNavBar />
+                  <Toaster />
+                  
+                  {/* Privacy consent banner */}
+                  <ConsentBanner />
+                  
+                  {/* Integrated onboarding that appears for new users */}
+                  {showOnboarding && <IntegratedOnboarding />}
+                </ErrorBoundary>
               </TooltipProvider>
             </GuestModeProvider>
           </AuthProvider>

@@ -1,31 +1,26 @@
 
-import DOMPurify from 'dompurify';
-
 export const sanitizeUserInput = (dirty: string): string => {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u'], 
-    ALLOWED_ATTR: [],
-    RETURN_TRUSTED_TYPE: false, // Fixed: return string instead of TrustedHTML
-    RETURN_DOM: false,
-    RETURN_DOM_FRAGMENT: false,
-    RETURN_DOM_IMPORT: false
-  });
+  // Remove potentially dangerous characters and normalize
+  return dirty
+    .replace(/[<>:"/\\|?*]/g, '_') // Replace invalid filename characters
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim()
+    .slice(0, 255); // Limit length
 };
 
-// Enhanced sanitization for rich text content
-export const sanitizeRichText = (dirty: string): string => {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li'],
-    ALLOWED_ATTR: [],
-    RETURN_TRUSTED_TYPE: false
-  });
+// Enhanced sanitization for filenames
+export const sanitizeFilename = (filename: string): string => {
+  const sanitized = sanitizeUserInput(filename);
+  
+  // Ensure filename has valid extension
+  if (!sanitized.includes('.')) {
+    return sanitized + '.txt';
+  }
+  
+  return sanitized;
 };
 
-// Strict sanitization for sensitive data (removes all HTML)
-export const sanitizeStrictly = (dirty: string): string => {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-    RETURN_TRUSTED_TYPE: false
-  });
+// Sanitization for audio content
+export const sanitizeAudioMetadata = (metadata: string): string => {
+  return sanitizeUserInput(metadata);
 };

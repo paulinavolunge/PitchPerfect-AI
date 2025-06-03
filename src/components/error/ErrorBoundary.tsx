@@ -1,9 +1,8 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AccessibleButton } from '@/components/ui/accessible-button';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { announceToScreenReader } from '@/utils/accessibility';
 
 interface Props {
   children: ReactNode;
@@ -37,10 +36,6 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo
     });
 
-    // Announce error to screen readers
-    announceToScreenReader('An error has occurred in this section of the application', 'assertive');
-
-    // Log error for debugging
     console.error('Error caught by boundary:', error, errorInfo);
     
     // In production, you would send this to an error tracking service
@@ -55,11 +50,9 @@ class ErrorBoundary extends Component<Props, State> {
       error: undefined, 
       errorInfo: undefined 
     });
-    announceToScreenReader('Attempting to retry...');
   };
 
   handleRefresh = () => {
-    announceToScreenReader('Refreshing page...');
     window.location.reload();
   };
 
@@ -85,22 +78,22 @@ class ErrorBoundary extends Component<Props, State> {
             
             <div className="mt-4 flex gap-2" role="group" aria-labelledby="error-actions">
               <span id="error-actions" className="sr-only">Error recovery actions</span>
-              <AccessibleButton 
+              <Button 
                 onClick={this.handleRetry} 
                 className="flex items-center gap-2"
-                ariaDescribedBy={this.state.errorId}
-                ariaLabel="Try to recover from the error"
+                aria-describedby={this.state.errorId}
+                aria-label="Try to recover from the error"
               >
                 <RefreshCw className="h-4 w-4" />
                 Try Again
-              </AccessibleButton>
-              <AccessibleButton 
+              </Button>
+              <Button 
                 variant="outline" 
                 onClick={this.handleRefresh}
-                ariaLabel="Refresh the entire page"
+                aria-label="Refresh the entire page"
               >
                 Refresh Page
-              </AccessibleButton>
+              </Button>
             </div>
             
             {process.env.NODE_ENV === 'development' && this.state.error && (

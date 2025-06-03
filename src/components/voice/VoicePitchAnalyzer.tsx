@@ -7,6 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, Activity } from 'lucide-react';
 import { usePitchAnalysis } from '@/hooks/usePitchAnalysis';
 import type { PitchDataPoint } from '@/types/analysis';
+import LoadingSpinner from '@/components/ui/loading-spinner';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 interface VoicePitchAnalyzerProps {
   audioStream?: MediaStream;
@@ -135,62 +137,68 @@ const VoicePitchAnalyzer: React.FC<VoicePitchAnalyzerProps> = ({
   }
 
   return (
-    <Card className={className}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <Activity className="h-4 w-4" />
-          Voice Pitch Analysis
-          {isAnalyzing && <Badge variant="default" className="text-xs">Live</Badge>}
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {latestPitch ? (
-          <>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Current Pitch:</span>
-                <div className="font-mono text-lg">{latestPitch.pitch.toFixed(1)} Hz</div>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Confidence:</span>
-                <div className="flex items-center gap-2">
-                  <Progress value={latestPitch.confidence * 100} className="flex-1" />
-                  <span className="font-mono text-sm">
-                    {(latestPitch.confidence * 100).toFixed(0)}%
-                  </span>
+    <ErrorBoundary fallbackMessage="Pitch analyzer encountered an error">
+      <Card className={className}>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Activity className="h-4 w-4" />
+            Voice Pitch Analysis
+            {isAnalyzing && <Badge variant="default" className="text-xs">Live</Badge>}
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {!isInitialized && isRecording && (
+            <LoadingSpinner size="sm" text="Initializing pitch analysis..." />
+          )}
+          
+          {latestPitch ? (
+            <>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Current Pitch:</span>
+                  <div className="font-mono text-lg">{latestPitch.pitch.toFixed(1)} Hz</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Confidence:</span>
+                  <div className="flex items-center gap-2">
+                    <Progress value={latestPitch.confidence * 100} className="flex-1" />
+                    <span className="font-mono text-sm">
+                      {(latestPitch.confidence * 100).toFixed(0)}%
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Average Pitch:</span>
-                <div className="font-mono">{averagePitch.toFixed(1)} Hz</div>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Stability:</span>
-                <div className="flex items-center gap-2">
-                  <Progress value={pitchStability * 100} className="flex-1" />
-                  <span className="font-mono text-sm">
-                    {(pitchStability * 100).toFixed(0)}%
-                  </span>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Average Pitch:</span>
+                  <div className="font-mono">{averagePitch.toFixed(1)} Hz</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Stability:</span>
+                  <div className="flex items-center gap-2">
+                    <Progress value={pitchStability * 100} className="flex-1" />
+                    <span className="font-mono text-sm">
+                      {(pitchStability * 100).toFixed(0)}%
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="text-xs text-muted-foreground">
-              Data points: {analysisResult.length} | 
-              Duration: {latestPitch.timestamp.toFixed(1)}s
+              <div className="text-xs text-muted-foreground">
+                Data points: {analysisResult.length} | 
+                Duration: {latestPitch.timestamp.toFixed(1)}s
+              </div>
+            </>
+          ) : (
+            <div className="text-center text-muted-foreground py-4">
+              {isRecording ? 'Analyzing voice...' : 'Start recording to see pitch analysis'}
             </div>
-          </>
-        ) : (
-          <div className="text-center text-muted-foreground py-4">
-            {isRecording ? 'Analyzing voice...' : 'Start recording to see pitch analysis'}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+    </ErrorBoundary>
   );
 };
 

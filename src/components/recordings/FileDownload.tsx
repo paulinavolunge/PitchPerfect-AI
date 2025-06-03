@@ -1,8 +1,10 @@
 
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, FileAudio } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { sanitizeFilename } from '@/lib/sanitizeInput';
+import { ResourceManager } from '@/utils/resourceCleanup';
 
 interface FileDownloadProps {
   blob: Blob | null;
@@ -25,13 +27,7 @@ export const FileDownload: React.FC<FileDownloadProps> = ({
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const sanitizeFilename = useCallback((name: string): string => {
-    // Remove or replace invalid characters for filenames
-    return name.replace(/[<>:"/\\|?*]/g, '_').trim();
-  }, []);
-
   const getContentType = useCallback((blob: Blob): string => {
-    // Ensure proper content-type based on blob type or filename extension
     if (blob.type) {
       return blob.type;
     }
@@ -61,8 +57,9 @@ export const FileDownload: React.FC<FileDownloadProps> = ({
       const downloadBlob = blob.type ? blob : new Blob([blob], { type: contentType });
       
       const url = URL.createObjectURL(downloadBlob);
-      const link = document.createElement('a');
+      ResourceManager.registerObjectUrl(url);
       
+      const link = document.createElement('a');
       link.href = url;
       link.download = sanitizedFilename;
       link.style.display = 'none';
@@ -72,9 +69,9 @@ export const FileDownload: React.FC<FileDownloadProps> = ({
       link.click();
       document.body.removeChild(link);
       
-      // Clean up the blob URL after a short delay to ensure download starts
+      // Clean up the blob URL after download
       setTimeout(() => {
-        URL.revokeObjectURL(url);
+        ResourceManager.revokeObjectUrl(url);
       }, 1000);
       
       // Add a small delay for better UX
@@ -85,7 +82,7 @@ export const FileDownload: React.FC<FileDownloadProps> = ({
     } finally {
       setIsDownloading(false);
     }
-  }, [blob, filename, sanitizeFilename, getContentType]);
+  }, [blob, filename, getContentType]);
 
   const formatFileSize = useCallback((size: number): string => {
     if (size === 0) return '0 Bytes';

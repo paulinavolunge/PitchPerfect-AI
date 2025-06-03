@@ -1,5 +1,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { ResourceManager } from '@/utils/resourceCleanup';
+import { sanitizeFilename } from '@/lib/sanitizeInput';
+import { ErrorHandler } from '@/utils/errorHandler';
 
 interface AudioRecorderConfig {
   maxDuration?: number; // seconds
@@ -57,12 +60,12 @@ export const useAudioRecorder = (
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      audioContextRef.current.close();
+    if (audioContextRef.current) {
+      ResourceManager.closeAudioContext(audioContextRef.current);
       audioContextRef.current = null;
     }
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      ResourceManager.stopMediaStream(streamRef.current);
       streamRef.current = null;
     }
     analyserRef.current = null;
@@ -103,6 +106,7 @@ export const useAudioRecorder = (
         }
       });
       streamRef.current = stream;
+      ResourceManager.registerMediaStream(stream);
 
       // Set up AudioContext for visualization
       const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -111,6 +115,8 @@ export const useAudioRecorder = (
       }
       
       audioContextRef.current = new AudioContextClass();
+      ResourceManager.registerAudioContext(audioContextRef.current);
+      
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
@@ -137,12 +143,18 @@ export const useAudioRecorder = (
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: supportedMimeType });
         setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
+        
+        const url = URL.createObjectURL(blob);
+        ResourceManager.registerObjectUrl(url);
+        setAudioUrl(url);
+        
         cleanup();
       };
 
       mediaRecorder.onerror = (event) => {
-        setError(`Recording failed: ${(event as any).error?.message || 'Unknown error'}`);
+        const errorMessage = `Recording failed: ${(event as any).error?.message || 'Unknown error'}`;
+        setError(errorMessage);
+        ErrorHandler.logError(new Error(errorMessage), 'AudioRecorder');
         cleanup();
       };
 
@@ -179,6 +191,7 @@ export const useAudioRecorder = (
         setError(`Recording failed: ${errorMessage}`);
       }
       
+      ErrorHandler.logError(err, 'AudioRecorder.startRecording');
       cleanup();
     }
   }, [cleanup, maxDuration, mimeType, audioBitsPerSecond, monitorAudioLevel]);
@@ -208,7 +221,7 @@ export const useAudioRecorder = (
 
   const clearRecording = useCallback(() => {
     if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
+      ResourceManager.revokeObjectUrl(audioUrl);
     }
     setAudioBlob(null);
     setAudioUrl(null);
@@ -222,7 +235,7 @@ export const useAudioRecorder = (
     return () => {
       cleanup();
       if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
+        ResourceManager.revokeObjectUrl(audioUrl);
       }
     };
   }, [cleanup, audioUrl]);

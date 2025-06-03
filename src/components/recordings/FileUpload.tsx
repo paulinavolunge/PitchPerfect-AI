@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, FileAudio, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { sanitizeFilename } from '@/lib/sanitizeInput';
 
 interface FileUploadProps {
   onFileAccepted: (file: File) => void;
