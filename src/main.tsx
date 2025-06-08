@@ -1,9 +1,8 @@
+
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
-import { AuthProvider } from '@/context/AuthContext';
-import { GuestModeProvider } from '@/context/GuestModeContext'; // ✅ Added
 import { initGA, checkAnalyticsConnection } from './utils/analytics';
 
 // Initialize dataLayer for Google Tag Manager
@@ -46,13 +45,8 @@ declare global {
   }
 }
 
-// ✅ Wrap App with GuestModeProvider inside AuthProvider
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
-    <AuthProvider>
-      <GuestModeProvider>
-        <App />
-      </GuestModeProvider>
-    </AuthProvider>
+    <App />
   </BrowserRouter>
 );
