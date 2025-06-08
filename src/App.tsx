@@ -15,7 +15,7 @@ import { IntegratedOnboarding } from '@/components/onboarding/IntegratedOnboardi
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { useOnboarding } from '@/hooks/useOnboarding';
@@ -58,7 +58,10 @@ const queryClient = new QueryClient({
         return failureCount < 2;
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
+      gcTime: 10 * 60 * 1000, // 10 minutes
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });
@@ -66,7 +69,7 @@ const queryClient = new QueryClient({
 // Enhanced loading fallback component
 const PageLoading = () => (
   <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-green"></div>
   </div>
 );
 
@@ -121,15 +124,11 @@ function AppContent() {
           <Route path="/practice" element={<Practice />} />
           <Route path="/roleplay" element={<RolePlay />} />
           <Route path="/progress" element={<Progress />} />
-          {/* Consolidate recordings routes to avoid confusion */}
           <Route path="/recordings" element={<CallRecordings />} />
-          <Route path="/call-recordings" element={<Navigate to="/recordings" replace />} />
           <Route path="/team-dashboard" element={<TeamDashboard />} />
           <Route path="/tips" element={<Tips />} />
           <Route path="/about" element={<About />} />
           <Route path="/pricing" element={<Pricing />} />
-          {/* Redirect /subscription to /pricing */}
-          <Route path="/subscription" element={<Navigate to="/pricing" replace />} />
           <Route path="/success" element={<Success />} />
           <Route path="/cancel" element={<Cancel />} />
           <Route path="/compare" element={<Compare />} />
@@ -145,10 +144,7 @@ function AppContent() {
       <MobileNavBar />
       <Toaster />
       
-      {/* Privacy consent banner */}
       <ConsentBanner />
-      
-      {/* Secure onboarding that uses AuthContext */}
       <OnboardingChecker />
     </>
   );
@@ -156,7 +152,6 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
-    // Track initial page view only if consent given and valid
     if (hasValidConsent()) {
       const currentPath = window.location.pathname + window.location.search;
       trackPageView(currentPath);

@@ -1,311 +1,181 @@
-import React, { useState, lazy, Suspense, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
-import Navbar from '@/components/Navbar';
-import Hero from '@/components/Hero';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import DemoSandbox from '@/components/demo/DemoSandbox';
-import TimeOffer from '@/components/promotion/TimeOffer';
-import StickyCTA from '@/components/pricing/StickyCTA';
-import ParallaxSection from '@/components/animations/ParallaxSection';
-import { motion } from 'framer-motion';
-import { SkipLink } from '@/components/accessibility/SkipLink';
-import ErrorBoundary from '@/components/error/ErrorBoundary';
 
-// Lazy load below-the-fold components for better performance
-const Features = lazy(() => import('@/components/Features'));
-const HowItWorks = lazy(() => import('@/components/HowItWorks'));
-const Testimonials = lazy(() => import('@/components/Testimonials'));
-const CTASection = lazy(() => import('@/components/CTASection'));
-const Footer = lazy(() => import('@/components/Footer'));
-const NewsletterSignup = lazy(() => import('@/components/NewsletterSignup'));
-const EnhancedOnboardingFlow = lazy(() => import('@/components/onboarding/EnhancedOnboardingFlow'));
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import PricingCTA from '@/components/PricingCTA';
+import { Helmet } from 'react-helmet-async';
 
 const Index = () => {
-  const { user, isPremium } = useAuth();
-  const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [showPromotion, setShowPromotion] = useState(true);
-  const [showStickyCTA, setShowStickyCTA] = useState(false);
-  
-  // Create a promotion expiry date (30 days from now)
-  const promoExpiryDate = new Date();
-  promoExpiryDate.setDate(promoExpiryDate.getDate() + 30);
-  
-  // Check localStorage to see if user has dismissed the promo
-  useEffect(() => {
-    const hasClosedPromo = localStorage.getItem('promoAnnualDismissed');
-    if (hasClosedPromo) {
-      setShowPromotion(false);
+  const features = [
+    {
+      icon: <Zap className="h-8 w-8 text-brand-green" />,
+      title: "AI-Powered Practice",
+      description: "Practice with intelligent AI that adapts to your industry and responds like real prospects."
+    },
+    {
+      icon: <BarChart className="h-8 w-8 text-brand-blue" />,
+      title: "Instant Feedback",
+      description: "Get detailed analysis of your pitch delivery, pacing, and effectiveness immediately after each session."
+    },
+    {
+      icon: <Users className="h-8 w-8 text-brand-green" />,
+      title: "Real Scenarios",
+      description: "Train with realistic objection handling scenarios based on actual sales situations."
     }
-    
-    // Control sticky CTA visibility on scroll
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setShowStickyCTA(scrollTop > 1000 && !user);
-    };
+  ];
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [user]);
-  
-  const handleClosePromotion = () => {
-    setShowPromotion(false);
-    localStorage.setItem('promoAnnualDismissed', 'true');
-  };
-  
-  // Scroll to CTA section when Book Demo is clicked
-  const scrollToCTA = (section: string) => {
-    setActiveSection(section);
-    const ctaSection = document.getElementById('cta-section');
-    if (ctaSection) {
-      ctaSection.scrollIntoView({ behavior: 'smooth' });
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Sales Manager",
+      content: "PitchPerfect AI helped me improve my closing rate by 35% in just 2 months. The feedback is incredibly detailed.",
+      rating: 5
+    },
+    {
+      name: "Mike Chen",
+      role: "Account Executive",
+      content: "Finally, a way to practice objection handling without bothering my colleagues. The AI responses are amazingly realistic.",
+      rating: 5
     }
-  };
-  
-  const handleStickyCTAClick = () => {
-    navigate('/signup');
-  };
-  
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col overflow-hidden">
-      <SkipLink href="#main-content">Skip to main content</SkipLink>
-      <SkipLink href="#navigation">Skip to navigation</SkipLink>
-      
+    <>
       <Helmet>
-        <title>PitchPerfect AI – Real-Time Objection Handling Practice for Sales Pros</title>
-        <meta name="description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching. Master objection handling and close more deals." />
-        <meta property="og:title" content="PitchPerfect AI – Real-Time Objection Handling Practice for Sales Pros" />
-        <meta property="og:description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://pitchperfectai.ai" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="PitchPerfect AI – Sales Practice Platform" />
-        <meta name="twitter:description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching." />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#8B5CF6" />
+        <title>PitchPerfect AI - Master Your Sales Pitch with AI Practice</title>
+        <meta name="description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills." />
+        <meta name="keywords" content="sales training, pitch practice, AI roleplay, objection handling, sales skills" />
+        <meta property="og:title" content="PitchPerfect AI - Master Your Sales Pitch" />
+        <meta property="og:description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios." />
       </Helmet>
-      
-      {showPromotion && (
-        <ErrorBoundary fallbackMessage="Failed to load promotional banner">
-          <TimeOffer
-            expiryDate={promoExpiryDate}
-            discount="1 Month Free"
-            description="Get 1 month free with annual Team Plan purchase"
-            variant="banner"
-            ctaText="Claim Offer"
-            ctaLink="/pricing"
-            onClose={handleClosePromotion}
-          />
-        </ErrorBoundary>
-      )}
-      
-      <nav id="navigation" role="navigation" aria-label="Main navigation">
-        <ErrorBoundary fallbackMessage="Failed to load navigation">
-          <Navbar />
-        </ErrorBoundary>
-      </nav>
-      
-      <main id="main-content" className="flex-grow" role="main">
-        <ErrorBoundary fallbackMessage="Failed to load hero section">
-          <Hero />
-        </ErrorBoundary>
+
+      <div className="min-h-screen">
+        <Navbar />
         
-        <ErrorBoundary fallbackMessage="Failed to load AI roleplay section">
-          <ParallaxSection className="py-12" direction="down" depth={0.1}>
-            <div className="container mx-auto px-4">
-              <div className="text-center max-w-3xl mx-auto">
-                <motion.h2 
-                  className="text-3xl font-bold mb-6 text-brand-dark"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                >
-                  AI Roleplay Practice
-                </motion.h2>
-                <motion.p 
-                  className="text-lg mb-8 text-brand-dark/70"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  Practice your pitch in real-time with our advanced AI roleplay system. 
-                  Choose between voice or text interaction and get instant feedback.
-                </motion.p>
-                <motion.div 
-                  className="flex flex-col sm:flex-row gap-4 justify-center"
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                >
-                  {user ? (
-                    <>
-                      {isPremium ? (
-                        <Button className="btn-primary flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/roleplay')}>
-                          Try Roleplay Now <ArrowRight size={18} />
-                        </Button>
-                      ) : (
-                        <Button className="btn-primary flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/pricing')}>
-                          Upgrade to Access <ArrowRight size={18} />
-                        </Button>
-                      )}
-                      <Button variant="outline" className="flex items-center gap-2 hover:scale-105 transition-transform" onClick={() => navigate('/practice')}>
-                        Basic Practice
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button 
-                        className="bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] hover:from-[#7c4aea] hover:to-[#6b2ee0] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 px-6 py-3 hover:scale-105" 
-                        onClick={() => navigate('/signup')}
-                      >
-                        Start Free Trial <ArrowRight size={18} />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center gap-2 border hover:bg-gray-50 transition-transform hover:scale-105 duration-300" 
-                        onClick={() => navigate('/compare')}
-                      >
-                        See How We Compare
-                      </Button>
-                    </>
-                  )}
-                </motion.div>
+        {/* Hero Section */}
+        <section className="pt-24 pb-16 bg-gradient-to-b from-gray-50 to-white">
+          <div className="container mx-auto px-4 text-center">
+            <Badge className="mb-4 bg-brand-green/10 text-brand-green border-brand-green/20">
+              🚀 AI-Powered Sales Training
+            </Badge>
+            
+            <h1 className="text-4xl md:text-6xl font-bold text-brand-dark mb-6">
+              Master Your Sales Pitch<br />
+              <span className="text-brand-green">with AI Practice</span>
+            </h1>
+            
+            <p className="text-xl text-brand-dark/70 mb-8 max-w-2xl mx-auto">
+              Practice objection handling and perfect your pitch with intelligent AI that responds like real prospects. 
+              Get instant feedback and watch your closing rate soar.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Button asChild size="lg" className="bg-brand-green hover:bg-brand-green/90">
+                <Link to="/signup">
+                  <Play className="h-4 w-4 mr-2" />
+                  Start Free Practice
+                </Link>
+              </Button>
+              
+              <Button asChild variant="outline" size="lg">
+                <Link to="/demo">
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Watch Demo
+                </Link>
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-center gap-6 text-sm text-brand-dark/60">
+              <div className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                No credit card required
+              </div>
+              <div className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                Instant setup
+              </div>
+              <div className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                Free trial included
               </div>
             </div>
-          </ParallaxSection>
-        </ErrorBoundary>
-        
-        <ErrorBoundary fallbackMessage="Failed to load demo sandbox">
-          <section id="demo-sandbox" className="py-16 bg-white">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-2xl font-bold text-brand-dark text-center mb-2">Try PitchPerfect AI</h2>
-                <p className="text-center text-brand-dark/70 mb-8 max-w-2xl mx-auto">
-                  Experience our AI-powered sales coaching platform with a quick demo
-                </p>
-              </motion.div>
-              <motion.div
-                className="max-w-3xl mx-auto bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-lg p-6 border border-gray-100"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <DemoSandbox />
-              </motion.div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-brand-dark mb-4">
+                Why Sales Professionals Choose PitchPerfect AI
+              </h2>
+              <p className="text-brand-dark/70 max-w-2xl mx-auto">
+                Our AI understands sales conversations and provides the realistic practice you need to excel.
+              </p>
             </div>
-          </section>
-        </ErrorBoundary>
-        
-        <ErrorBoundary fallbackMessage="Failed to load features section">
-          <Suspense fallback={
-            <div className="py-12 text-center" role="status" aria-label="Loading features">
-              <div className="animate-pulse flex flex-col items-center">
-                <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </div>
-          }>
-            <Features />
-          </Suspense>
-        </ErrorBoundary>
-        
-        <ErrorBoundary fallbackMessage="Failed to load how it works section">
-          <Suspense fallback={
-            <div className="py-12 text-center" role="status" aria-label="Loading how it works">
-              <div className="animate-pulse flex flex-col items-center">
-                <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </div>
-          }>
-            <HowItWorks />
-          </Suspense>
-        </ErrorBoundary>
-        
-        <ErrorBoundary fallbackMessage="Failed to load data security section">
-          <ParallaxSection className="py-12 bg-gray-50" direction="right" depth={0.15}>
-            <div className="container mx-auto px-4">
-              <motion.div 
-                className="max-w-3xl mx-auto bg-white backdrop-blur-lg bg-white/90 p-6 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center gap-6"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <div className="hidden sm:flex items-center justify-center bg-green-50 p-3 rounded-full">
-                  <Shield className="w-10 h-10 text-green-500" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-xl mb-2 text-center sm:text-left">Data Security & Privacy</h3>
-                  <p className="text-gray-600 mb-4 text-center sm:text-left">
-                    Your data is encrypted and protected using advanced security protocols. We value your privacy.
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {features.map((feature, index) => (
+                <div key={index} className="text-center p-6">
+                  <div className="flex justify-center mb-4">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-brand-dark mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-brand-dark/70">
+                    {feature.description}
                   </p>
-                  <div className="flex justify-center sm:justify-start">
-                    <Button 
-                      variant="link" 
-                      className="p-0 h-auto text-brand-green hover:scale-105 transition-transform" 
-                      onClick={() => navigate('/privacy')}
-                    >
-                      Read our Privacy Policy
-                    </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-brand-dark mb-4">
+                Trusted by Sales Professionals
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
+                  <div className="flex items-center mb-3">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-brand-dark/80 mb-4 italic">
+                    "{testimonial.content}"
+                  </p>
+                  <div>
+                    <p className="font-semibold text-brand-dark">{testimonial.name}</p>
+                    <p className="text-sm text-brand-dark/60">{testimonial.role}</p>
                   </div>
                 </div>
-              </motion.div>
+              ))}
             </div>
-          </ParallaxSection>
-        </ErrorBoundary>
-        
-        <ErrorBoundary fallbackMessage="Failed to load newsletter signup">
-          <Suspense fallback={<div className="py-12 text-center">Loading newsletter signup...</div>}>
-            <NewsletterSignup />
-          </Suspense>
-        </ErrorBoundary>
-        
-        <ErrorBoundary fallbackMessage="Failed to load testimonials">
-          <Suspense fallback={<div className="py-12 text-center">Loading testimonials...</div>}>
-            <Testimonials />
-          </Suspense>
-        </ErrorBoundary>
-        
-        <div id="cta-section">
-          <ErrorBoundary fallbackMessage="Failed to load call-to-action section">
-            <Suspense fallback={<div className="py-12 text-center" role="status">Loading CTA section...</div>}>
-              <CTASection activeSection={activeSection} />
-            </Suspense>
-          </ErrorBoundary>
-        </div>
-      </main>
-      
-      <footer role="contentinfo">
-        <ErrorBoundary fallbackMessage="Failed to load footer">
-          <Suspense fallback={<div className="py-6 text-center" role="status">Loading footer...</div>}>
-            <Footer />
-          </Suspense>
-        </ErrorBoundary>
-      </footer>
+          </div>
+        </section>
 
-      {/* Enhanced Onboarding Flow */}
-      <ErrorBoundary fallbackMessage="Failed to load onboarding">
-        <Suspense fallback={null}>
-          <EnhancedOnboardingFlow />
-        </Suspense>
-      </ErrorBoundary>
+        {/* CTA Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <PricingCTA />
+          </div>
+        </section>
 
-      {/* Sticky CTA for better mobile conversion */}
-      <StickyCTA show={showStickyCTA} onClick={handleStickyCTAClick} />
-    </div>
+        <Footer />
+      </div>
+    </>
   );
 };
 
