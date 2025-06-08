@@ -6,7 +6,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
+  fallback?: (props: { error: Error; retry: () => void }) => ReactNode;
   fallbackMessage?: string;
 }
 
@@ -58,8 +58,11 @@ class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback;
+      if (this.props.fallback && this.state.error) {
+        return this.props.fallback({ 
+          error: this.state.error, 
+          retry: this.handleRetry 
+        });
       }
 
       const errorMessage = this.props.fallbackMessage || 

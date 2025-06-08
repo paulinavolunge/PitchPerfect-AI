@@ -48,21 +48,25 @@ import Signup from '@/pages/Signup';
 import PasswordReset from '@/pages/PasswordReset';
 import UpdatePassword from '@/pages/UpdatePassword';
 
-// Create a client for React Query
+// Optimized React Query client configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 60000,
+      retry: (failureCount, error: any) => {
+        if (error?.status === 404 || error?.status === 403) return false;
+        return failureCount < 2;
+      },
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
     },
   },
 });
 
-// Loading fallback component
+// Enhanced loading fallback component
 const PageLoading = () => (
   <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
   </div>
 );
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Mic, BarChart, FileText, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -9,10 +9,18 @@ const MobileNavBar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
   
-  // Don't show on login, signup, or other auth pages
+  useEffect(() => {
+    const checkIsMobile = () => setIsMobile(window.innerWidth < 768);
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+  
+  // Don't show on desktop or on login, signup, or other auth pages
   const authPages = ['/login', '/signup', '/password-reset', '/update-password'];
-  if (authPages.includes(location.pathname) || !user) {
+  if (!isMobile || authPages.includes(location.pathname) || !user) {
     return null;
   }
   
@@ -50,7 +58,7 @@ const MobileNavBar: React.FC = () => {
   ];
   
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-inset-bottom">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-inset-bottom">
       <div className="flex justify-around items-center h-16 px-2">
         {navItems.map((item) => (
           <button
