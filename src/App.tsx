@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import React, { useEffect, lazy, Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -17,32 +17,36 @@ import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliant
 import ErrorBoundary from '@/components/error/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
+import { usePageTracking } from '@/hooks/usePageTracking';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
-// Import all page components
+// Lazy load pages for better performance
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Practice = lazy(() => import('@/pages/Practice'));
+const RolePlay = lazy(() => import('@/pages/RolePlay'));
+const Progress = lazy(() => import('@/pages/Progress'));
+const CallRecordings = lazy(() => import('@/pages/CallRecordings'));
+const TeamDashboard = lazy(() => import('@/pages/TeamDashboard'));
+const Tips = lazy(() => import('@/pages/Tips'));
+const About = lazy(() => import('@/pages/About'));
+const Pricing = lazy(() => import('@/pages/Pricing'));
+const Success = lazy(() => import('@/pages/Success'));
+const Cancel = lazy(() => import('@/pages/Cancel'));
+const Compare = lazy(() => import('@/pages/Compare'));
+const Demo = lazy(() => import('@/pages/Demo'));
+const Privacy = lazy(() => import('@/pages/Privacy'));
+const Terms = lazy(() => import('@/pages/Terms'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const AccountDelete = lazy(() => import('@/pages/AccountDelete'));
+const DataSafety = lazy(() => import('@/pages/DataSafety'));
+const EmailConfirmed = lazy(() => import('@/pages/EmailConfirmed'));
+
+// Import non-lazy pages that should load immediately
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import PasswordReset from '@/pages/PasswordReset';
 import UpdatePassword from '@/pages/UpdatePassword';
-import Dashboard from '@/pages/Dashboard';
-import Practice from '@/pages/Practice';
-import RolePlay from '@/pages/RolePlay';
-import Progress from '@/pages/Progress';
-import CallRecordings from '@/pages/CallRecordings';
-import TeamDashboard from '@/pages/TeamDashboard';
-import Tips from '@/pages/Tips';
-import About from '@/pages/About';
-import Pricing from '@/pages/Pricing';
-import Success from '@/pages/Success';
-import Cancel from '@/pages/Cancel';
-import Compare from '@/pages/Compare';
-import Demo from '@/pages/Demo';
-import Privacy from '@/pages/Privacy';
-import Terms from '@/pages/Terms';
-import NotFound from '@/pages/NotFound';
-import AccountDelete from '@/pages/AccountDelete';
-import DataSafety from '@/pages/DataSafety';
-import EmailConfirmed from '@/pages/EmailConfirmed';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -55,45 +59,16 @@ const queryClient = new QueryClient({
   },
 });
 
-// Analytics tracking component
-const RouteChangeTracker = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    // Track page views
-    const currentPath = location.pathname + location.search;
-    trackPageView(currentPath);
-    
-    // Error tracking for detecting navigation issues
-    const handleError = (error: ErrorEvent) => {
-      console.error('Navigation error:', error);
-      // You can send this to your error tracking service
-    };
-
-    window.addEventListener('error', handleError);
-    
-    return () => {
-      window.removeEventListener('error', handleError);
-    };
-  }, [location]);
-
-  return null;
-};
+// Loading fallback component
+const PageLoading = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 // Secure onboarding check component
 const OnboardingChecker = () => {
-  const { user, loading } = useAuth();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    // Only check onboarding status when we have user data and auth is not loading
-    if (!loading && user) {
-      const onboardingComplete = localStorage.getItem('onboardingComplete');
-      if (!onboardingComplete) {
-        setShowOnboarding(true);
-      }
-    }
-  }, [user, loading]);
+  const { showOnboarding } = useOnboarding();
 
   if (showOnboarding) {
     return <IntegratedOnboarding />;
@@ -103,39 +78,42 @@ const OnboardingChecker = () => {
 };
 
 function AppContent() {
+  usePageTracking();
+
   return (
     <>
       <PrivacyCompliantAnalytics />
-      <RouteChangeTracker />
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/password-reset" element={<PasswordReset />} />
-        <Route path="/update-password" element={<UpdatePassword />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/practice" element={<Practice />} />
-        <Route path="/roleplay" element={<RolePlay />} />
-        <Route path="/progress" element={<Progress />} />
-        <Route path="/recordings" element={<CallRecordings />} />
-        <Route path="/call-recordings" element={<CallRecordings />} />
-        <Route path="/team-dashboard" element={<TeamDashboard />} />
-        <Route path="/tips" element={<Tips />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/pricing" element={<Pricing />} />
-        {/* Redirect /subscription to /pricing */}
-        <Route path="/subscription" element={<Navigate to="/pricing" replace />} />
-        <Route path="/success" element={<Success />} />
-        <Route path="/cancel" element={<Cancel />} />
-        <Route path="/compare" element={<Compare />} />
-        <Route path="/demo" element={<Demo />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/data-safety" element={<DataSafety />} />
-        <Route path="/account-delete" element={<AccountDelete />} />
-        <Route path="/email-confirmed" element={<EmailConfirmed />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/password-reset" element={<PasswordReset />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/practice" element={<Practice />} />
+          <Route path="/roleplay" element={<RolePlay />} />
+          <Route path="/progress" element={<Progress />} />
+          <Route path="/recordings" element={<CallRecordings />} />
+          <Route path="/call-recordings" element={<CallRecordings />} />
+          <Route path="/team-dashboard" element={<TeamDashboard />} />
+          <Route path="/tips" element={<Tips />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/pricing" element={<Pricing />} />
+          {/* Redirect /subscription to /pricing */}
+          <Route path="/subscription" element={<Navigate to="/pricing" replace />} />
+          <Route path="/success" element={<Success />} />
+          <Route path="/cancel" element={<Cancel />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/demo" element={<Demo />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/data-safety" element={<DataSafety />} />
+          <Route path="/account-delete" element={<AccountDelete />} />
+          <Route path="/email-confirmed" element={<EmailConfirmed />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
       <MobileNavBar />
       <Toaster />
       
