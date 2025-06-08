@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
@@ -14,6 +15,8 @@ import { IntegratedOnboarding } from '@/components/onboarding/IntegratedOnboardi
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { GuestModeProvider } from '@/context/GuestModeContext';
 
 // Import all page components
 import Index from '@/pages/Index';
@@ -40,8 +43,6 @@ import NotFound from '@/pages/NotFound';
 import AccountDelete from '@/pages/AccountDelete';
 import DataSafety from '@/pages/DataSafety';
 import EmailConfirmed from '@/pages/EmailConfirmed';
-import { AuthProvider } from '@/context/AuthContext';
-import { GuestModeProvider } from '@/context/GuestModeContext';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -79,32 +80,82 @@ const RouteChangeTracker = () => {
   return null;
 };
 
-function App() {
+// Secure onboarding check component
+const OnboardingChecker = () => {
+  const { user, loading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    // Initialize Google Analytics only if consent given - moved to PrivacyCompliantAnalytics
-    
+    // Only check onboarding status when we have user data and auth is not loading
+    if (!loading && user) {
+      const onboardingComplete = localStorage.getItem('onboardingComplete');
+      if (!onboardingComplete) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [user, loading]);
+
+  if (showOnboarding) {
+    return <IntegratedOnboarding />;
+  }
+
+  return null;
+};
+
+function AppContent() {
+  return (
+    <>
+      <PrivacyCompliantAnalytics />
+      <RouteChangeTracker />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/password-reset" element={<PasswordReset />} />
+        <Route path="/update-password" element={<UpdatePassword />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/practice" element={<Practice />} />
+        <Route path="/roleplay" element={<RolePlay />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/recordings" element={<CallRecordings />} />
+        <Route path="/call-recordings" element={<CallRecordings />} />
+        <Route path="/team-dashboard" element={<TeamDashboard />} />
+        <Route path="/tips" element={<Tips />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/pricing" element={<Pricing />} />
+        {/* Redirect /subscription to /pricing */}
+        <Route path="/subscription" element={<Navigate to="/pricing" replace />} />
+        <Route path="/success" element={<Success />} />
+        <Route path="/cancel" element={<Cancel />} />
+        <Route path="/compare" element={<Compare />} />
+        <Route path="/demo" element={<Demo />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/data-safety" element={<DataSafety />} />
+        <Route path="/account-delete" element={<AccountDelete />} />
+        <Route path="/email-confirmed" element={<EmailConfirmed />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <MobileNavBar />
+      <Toaster />
+      
+      {/* Privacy consent banner */}
+      <ConsentBanner />
+      
+      {/* Secure onboarding that uses AuthContext */}
+      <OnboardingChecker />
+    </>
+  );
+}
+
+function App() {
+  useEffect(() => {
     // Track initial page view only if consent given
     const hasConsent = localStorage.getItem('analytics-consent') === 'true';
     if (hasConsent) {
       const currentPath = window.location.pathname + window.location.search;
       trackPageView(currentPath);
     }
-
-    // Check if user needs onboarding
-    const checkOnboardingStatus = () => {
-      const onboardingComplete = localStorage.getItem('onboardingComplete');
-      // Simple check for authenticated user - in a real app you'd use your auth context
-      const hasUserSession = localStorage.getItem('supabase.auth.token') || 
-                            sessionStorage.getItem('supabase.auth.token');
-      
-      if (hasUserSession && !onboardingComplete) {
-        setShowOnboarding(true);
-      }
-    };
-
-    checkOnboardingStatus();
   }, []);
 
   return (
@@ -115,45 +166,7 @@ function App() {
             <GuestModeProvider>
               <TooltipProvider>
                 <ErrorBoundary fallbackMessage="The application encountered an error. Please refresh the page.">
-                  <PrivacyCompliantAnalytics />
-                  <RouteChangeTracker />
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/password-reset" element={<PasswordReset />} />
-                    <Route path="/update-password" element={<UpdatePassword />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/practice" element={<Practice />} />
-                    <Route path="/roleplay" element={<RolePlay />} />
-                    <Route path="/progress" element={<Progress />} />
-                    <Route path="/recordings" element={<CallRecordings />} />
-                    <Route path="/call-recordings" element={<CallRecordings />} />
-                    <Route path="/team-dashboard" element={<TeamDashboard />} />
-                    <Route path="/tips" element={<Tips />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/pricing" element={<Pricing />} />
-                    {/* Redirect /subscription to /pricing */}
-                    <Route path="/subscription" element={<Navigate to="/pricing" replace />} />
-                    <Route path="/success" element={<Success />} />
-                    <Route path="/cancel" element={<Cancel />} />
-                    <Route path="/compare" element={<Compare />} />
-                    <Route path="/demo" element={<Demo />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/data-safety" element={<DataSafety />} />
-                    <Route path="/account-delete" element={<AccountDelete />} />
-                    <Route path="/email-confirmed" element={<EmailConfirmed />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <MobileNavBar />
-                  <Toaster />
-                  
-                  {/* Privacy consent banner */}
-                  <ConsentBanner />
-                  
-                  {/* Integrated onboarding that appears for new users */}
-                  {showOnboarding && <IntegratedOnboarding />}
+                  <AppContent />
                 </ErrorBoundary>
               </TooltipProvider>
             </GuestModeProvider>
