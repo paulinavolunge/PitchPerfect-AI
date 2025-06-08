@@ -5,6 +5,26 @@ import App from './App.tsx';
 import './index.css';
 import { initGA, checkAnalyticsConnection } from './utils/analytics';
 
+// Environment variable validation
+const requiredEnvVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+const missingVars = requiredEnvVars.filter(varName => !import.meta.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('Missing required environment variables:', missingVars);
+  // In production, you might want to show an error screen
+  if (import.meta.env.PROD) {
+    document.body.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
+        <div style="text-align: center; padding: 2rem;">
+          <h1 style="color: #dc2626; margin-bottom: 1rem;">Configuration Error</h1>
+          <p>The application is missing required configuration. Please contact support.</p>
+        </div>
+      </div>
+    `;
+    throw new Error('Missing required environment variables');
+  }
+}
+
 // Initialize dataLayer for Google Tag Manager
 window.dataLayer = window.dataLayer || [];
 

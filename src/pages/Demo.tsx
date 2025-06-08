@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DemoSandbox from '@/components/demo/DemoSandbox';
@@ -83,90 +84,102 @@ const Demo = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <DemoNavigation 
-        currentStep={1}
-        totalSteps={3}
-        showProgress={true}
-        onHelp={() => console.log('Help requested')}
-      />
-      {isGuestMode && <GuestBanner />}
-      <main className="flex-grow pt-24 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <AIDisclosure 
-              title="AI-Powered Demo"
-              description="This demo features AI-generated feedback based on your speech. The analysis and suggestions are created by artificial intelligence and should be considered illustrative."
-              className="mb-6"
-            />
-            
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold text-brand-dark">Try PitchPerfect AI</h1>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowWebhookSettings(true)}
-                  className="flex items-center gap-1"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>CRM Settings</span>
-                </Button>
-              </div>
-              <p className="text-brand-dark/80 mb-6">
-                Experience how PitchPerfect AI helps you improve your sales pitch. 
-                Practice handling pricing objections using either voice or text input, and get instant feedback.
-              </p>
+    <>
+      <Helmet>
+        <title>Try PitchPerfect AI Demo | Free Sales Practice Session</title>
+        <meta name="description" content="Experience PitchPerfect AI with our free interactive demo. Practice handling sales objections and get instant AI-powered feedback on your pitch delivery." />
+        <meta name="keywords" content="sales demo, AI pitch practice, free trial, objection handling, sales training demo" />
+        <meta property="og:title" content="Free PitchPerfect AI Demo - Try AI Sales Training" />
+        <meta property="og:description" content="Test drive our AI-powered sales training platform. Practice objection handling and get instant feedback." />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href={`${window.location.origin}/demo`} />
+      </Helmet>
+      
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <DemoNavigation 
+          currentStep={1}
+          totalSteps={3}
+          showProgress={true}
+          onHelp={() => console.log('Help requested')}
+        />
+        {isGuestMode && <GuestBanner />}
+        <main className="flex-grow pt-24 pb-12">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <AIDisclosure 
+                title="AI-Powered Demo"
+                description="This demo features AI-generated feedback based on your speech. The analysis and suggestions are created by artificial intelligence and should be considered illustrative."
+                className="mb-6"
+              />
               
-              <MicrophoneGuard>
-                <PracticeObjection
-                  scenario="Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less."
-                  onSubmit={handleObjectionSubmit}
-                />
-              </MicrophoneGuard>
-            </div>
-            
-            {isGuestMode && sessionData && (
-              <div className="bg-brand-blue/10 rounded-lg p-6 text-center mb-8">
-                <h3 className="text-xl font-medium mb-2 text-brand-dark">Want to try more features?</h3>
-                <p className="text-brand-dark/70 mb-4">
-                  You're using PitchPerfect AI in guest mode. Try our role-playing feature or sign up to save your progress.
-                </p>
-                <div className="flex justify-center gap-3">
+              <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h1 className="text-2xl font-bold text-brand-dark">Try PitchPerfect AI</h1>
                   <Button 
-                    onClick={handleTryMoreFeatures}
-                    className="bg-brand-blue hover:bg-brand-blue/90"
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowWebhookSettings(true)}
+                    className="flex items-center gap-1"
                   >
-                    Try Role-Playing
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate('/signup')}
-                    className="flex items-center gap-2"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Sign Up Free
+                    <Settings className="h-4 w-4" />
+                    <span>CRM Settings</span>
                   </Button>
                 </div>
+                <p className="text-brand-dark/80 mb-6">
+                  Experience how PitchPerfect AI helps you improve your sales pitch. 
+                  Practice handling pricing objections using either voice or text input, and get instant feedback.
+                </p>
+                
+                <MicrophoneGuard>
+                  <PracticeObjection
+                    scenario="Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less."
+                    onSubmit={handleObjectionSubmit}
+                  />
+                </MicrophoneGuard>
               </div>
-            )}
+              
+              {isGuestMode && sessionData && (
+                <div className="bg-brand-blue/10 rounded-lg p-6 text-center mb-8">
+                  <h3 className="text-xl font-medium mb-2 text-brand-dark">Want to try more features?</h3>
+                  <p className="text-brand-dark/70 mb-4">
+                    You're using PitchPerfect AI in guest mode. Try our role-playing feature or sign up to save your progress.
+                  </p>
+                  <div className="flex justify-center gap-3">
+                    <Button 
+                      onClick={handleTryMoreFeatures}
+                      className="bg-brand-blue hover:bg-brand-blue/90"
+                    >
+                      Try Role-Playing
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/signup')}
+                      className="flex items-center gap-2"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Sign Up Free
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </main>
-      <Footer />
+        </main>
+        <Footer />
 
-      <WaitlistModal 
-        open={showWaitlistModal} 
-        onOpenChange={setShowWaitlistModal}
-        sessionData={sessionData}
-      />
-      
-      <WebhookSettings
-        open={showWebhookSettings}
-        onOpenChange={setShowWebhookSettings}
-      />
-    </div>
+        <WaitlistModal 
+          open={showWaitlistModal} 
+          onOpenChange={setShowWaitlistModal}
+          sessionData={sessionData}
+        />
+        
+        <WebhookSettings
+          open={showWebhookSettings}
+          onOpenChange={setShowWebhookSettings}
+        />
+      </div>
+    </>
   );
 };
 
