@@ -47,7 +47,7 @@ const MobileNavBar: React.FC = () => {
       label: 'History',
       icon: FileText,
       path: '/recordings',
-      active: location.pathname === '/recordings' || location.pathname === '/call-recordings'
+      active: location.pathname === '/recordings'
     },
     {
       label: 'Profile',

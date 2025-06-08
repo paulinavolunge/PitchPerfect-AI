@@ -1,13 +1,11 @@
 
 import { useEffect } from 'react';
-import { initGA, trackPageView } from '@/utils/analytics';
+import { initGA, trackPageView, hasValidConsent } from '@/utils/analytics';
 
 export const PrivacyCompliantAnalytics = () => {
   useEffect(() => {
-    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
-    
-    if (hasConsent) {
-      // Initialize analytics with privacy settings
+    // Initialize analytics if valid consent exists
+    if (hasValidConsent()) {
       initGA();
       
       // Track initial page view
@@ -17,7 +15,7 @@ export const PrivacyCompliantAnalytics = () => {
     
     // Set up global function for consent banner
     window.loadAnalytics = () => {
-      if (localStorage.getItem('analytics-consent') === 'true') {
+      if (hasValidConsent()) {
         initGA();
         const currentPath = window.location.pathname + window.location.search;
         trackPageView(currentPath);

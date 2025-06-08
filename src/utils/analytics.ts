@@ -1,12 +1,12 @@
+
 // Privacy-compliant Google Analytics implementation
 
-// Initialize Google Analytics with debug mode
+// Initialize Google Analytics with debug mode and consent validation
 export const initGA = () => {
   try {
-    // Only initialize if consent is given
-    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
-    if (!hasConsent) {
-      console.log('Analytics consent not given, skipping initialization');
+    // Check if consent is valid (not expired)
+    if (!hasValidConsent()) {
+      console.log('Analytics consent expired or not given, skipping initialization');
       return;
     }
 
@@ -40,12 +40,46 @@ export const initGA = () => {
   }
 };
 
+// Enhanced consent validation with expiry
+export const hasValidConsent = (): boolean => {
+  const consent = localStorage.getItem('analytics-consent');
+  const consentDate = localStorage.getItem('analytics-consent-date');
+  
+  if (consent !== 'true') return false;
+  
+  // Require fresh consent every 365 days
+  const oneYear = 365 * 24 * 60 * 60 * 1000;
+  const needsFreshConsent = !consentDate || 
+    Date.now() - parseInt(consentDate) > oneYear;
+  
+  if (needsFreshConsent) {
+    // Clear expired consent
+    localStorage.removeItem('analytics-consent');
+    localStorage.removeItem('analytics-consent-date');
+    return false;
+  }
+  
+  return true;
+};
+
+// Set consent with timestamp
+export const setAnalyticsConsent = (granted: boolean) => {
+  if (granted) {
+    localStorage.setItem('analytics-consent', 'true');
+    localStorage.setItem('analytics-consent-date', Date.now().toString());
+    console.log('Analytics consent granted and timestamped');
+  } else {
+    localStorage.removeItem('analytics-consent');
+    localStorage.removeItem('analytics-consent-date');
+    console.log('Analytics consent revoked');
+  }
+};
+
 // Page view tracking with consent check
 export const trackPageView = (path: string) => {
   try {
-    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
-    if (!hasConsent) {
-      console.log('Analytics consent not given, skipping page view tracking');
+    if (!hasValidConsent()) {
+      console.log('Analytics consent not valid, skipping page view tracking');
       return;
     }
 
@@ -76,9 +110,8 @@ export const trackEvent = (
   eventParams: Record<string, any> = {}
 ) => {
   try {
-    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
-    if (!hasConsent) {
-      console.log('Analytics consent not given, skipping event tracking');
+    if (!hasValidConsent()) {
+      console.log('Analytics consent not valid, skipping event tracking');
       return;
     }
 
@@ -101,14 +134,15 @@ export const trackEvent = (
   }
 };
 
-// Helper function to check consent status
+// Helper function to check consent status (backwards compatibility)
 export const hasAnalyticsConsent = (): boolean => {
-  return localStorage.getItem('analytics-consent') === 'true';
+  return hasValidConsent();
 };
 
 // Helper function to revoke consent
 export const revokeAnalyticsConsent = () => {
-  localStorage.setItem('analytics-consent', 'false');
+  localStorage.removeItem('analytics-consent');
+  localStorage.removeItem('analytics-consent-date');
   console.log('Analytics consent revoked');
 };
 
@@ -120,6 +154,7 @@ export const checkAnalyticsConnection = () => {
     console.log('- GTM Loaded:', typeof window.dataLayer !== 'undefined');
     console.log('- GA4 Loaded:', typeof window.gtag === 'function');
     console.log('- Meta Pixel Loaded:', typeof window.fbq === 'function');
+    console.log('- Consent Valid:', hasValidConsent());
     
     // Send test event
     trackEvent('analytics_debug', {
@@ -131,7 +166,8 @@ export const checkAnalyticsConnection = () => {
     return {
       gtmLoaded: typeof window.dataLayer !== 'undefined',
       ga4Loaded: typeof window.gtag === 'function',
-      metaPixelLoaded: typeof window.fbq === 'function'
+      metaPixelLoaded: typeof window.fbq === 'function',
+      consentValid: hasValidConsent()
     };
   } catch (error) {
     console.error('Error checking analytics connection:', error);
@@ -139,6 +175,7 @@ export const checkAnalyticsConnection = () => {
       gtmLoaded: false,
       ga4Loaded: false,
       metaPixelLoaded: false,
+      consentValid: false,
       error: error
     };
   }

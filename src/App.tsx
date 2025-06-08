@@ -10,7 +10,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
-import { initGA, trackPageView } from '@/utils/analytics';
+import { initGA, trackPageView, hasValidConsent } from '@/utils/analytics';
 import { IntegratedOnboarding } from '@/components/onboarding/IntegratedOnboarding';
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
@@ -70,6 +70,28 @@ const PageLoading = () => (
   </div>
 );
 
+// Mobile viewport optimization hook
+const useMobileOptimizations = () => {
+  useEffect(() => {
+    // Add viewport meta tag if missing
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.head.appendChild(meta);
+    }
+
+    // Check for iOS devices and optimize viewport
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    if (isIOSDevice && viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    }
+  }, []);
+};
+
 // Secure onboarding check component
 const OnboardingChecker = () => {
   const { showOnboarding } = useOnboarding();
@@ -83,6 +105,7 @@ const OnboardingChecker = () => {
 
 function AppContent() {
   usePageTracking();
+  useMobileOptimizations();
 
   return (
     <>
@@ -98,8 +121,9 @@ function AppContent() {
           <Route path="/practice" element={<Practice />} />
           <Route path="/roleplay" element={<RolePlay />} />
           <Route path="/progress" element={<Progress />} />
+          {/* Consolidate recordings routes to avoid confusion */}
           <Route path="/recordings" element={<CallRecordings />} />
-          <Route path="/call-recordings" element={<CallRecordings />} />
+          <Route path="/call-recordings" element={<Navigate to="/recordings" replace />} />
           <Route path="/team-dashboard" element={<TeamDashboard />} />
           <Route path="/tips" element={<Tips />} />
           <Route path="/about" element={<About />} />
@@ -132,9 +156,8 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
-    // Track initial page view only if consent given
-    const hasConsent = localStorage.getItem('analytics-consent') === 'true';
-    if (hasConsent) {
+    // Track initial page view only if consent given and valid
+    if (hasValidConsent()) {
       const currentPath = window.location.pathname + window.location.search;
       trackPageView(currentPath);
     }
