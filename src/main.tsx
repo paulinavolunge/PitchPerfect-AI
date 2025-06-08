@@ -5,14 +5,14 @@ import App from './App.tsx';
 import './index.css';
 import { initGA, checkAnalyticsConnection } from './utils/analytics';
 
-// Environment variable validation
-const requiredEnvVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
-const missingVars = requiredEnvVars.filter(varName => !import.meta.env[varName]);
+// Supabase configuration for Lovable integration
+const SUPABASE_URL = 'https://ggpodadyycvmmxifqwlp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
 
-if (missingVars.length > 0) {
-  console.error('Missing required environment variables:', missingVars);
-  // In production, you might want to show an error screen
-  if (import.meta.env.PROD) {
+// Validate Supabase configuration
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('Missing Supabase configuration');
+  if (typeof window !== 'undefined') {
     document.body.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
         <div style="text-align: center; padding: 2rem;">
@@ -21,8 +21,8 @@ if (missingVars.length > 0) {
         </div>
       </div>
     `;
-    throw new Error('Missing required environment variables');
   }
+  throw new Error('Missing Supabase configuration');
 }
 
 // Initialize dataLayer for Google Tag Manager
