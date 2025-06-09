@@ -40,7 +40,7 @@ interface EnterpriseProps {
 }
 
 interface PricingPlanCardProps {
-  type: "free" | "starter" | "professional" | "team" | "enterprise";
+  type: "free" | "basic" | "professional" | "enterprise";
   title: string;
   description: string;
   price: React.ReactNode;
@@ -153,7 +153,7 @@ const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
   // Determine if this is the "current plan" badge
   const showCurrentPlanBadge = () => {
     if (!user) return false; // Not logged in
-    if (isPremium && (type === 'starter' || type === 'professional' || type === 'team')) {
+    if (isPremium && (type === 'basic' || type === 'professional' || type === 'enterprise')) {
       // If the user is premium and on a specific plan, show badge for that plan
       // This requires subscriptionTier to be passed down or matched
       return false; // Assuming current Premium Plan is passed via isCurrentPlan prop from PricingPlans
