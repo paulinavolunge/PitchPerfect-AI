@@ -2,19 +2,19 @@
 import React from 'react';
 import PricingPlanCard from './PricingPlanCard';
 import TimeOffer from '@/components/promotion/TimeOffer';
-import { useAuth } from '@/context/AuthContext'; // Keep useAuth for internal logic
+import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
-import { User } from '@supabase/supabase-js'; // Import User type
+import { User } from '@supabase/supabase-js';
 
 interface PriceIds {
-  starter: { monthly: string; yearly: string; credits: number }; // Added credits
-  professional: { monthly: string; yearly: string; credits: number }; // Added credits
+  starter: { monthly: string; yearly: string; credits: number };
+  professional: { monthly: string; yearly: string; credits: number };
   team: {
-    small: { monthly: string; yearly: string; credits: number }; // Added credits
-    medium: { monthly: string; yearly: string; credits: number }; // Added credits
-    large: { monthly: string; yearly: string; credits: number }; // Added credits
+    small: { monthly: string; yearly: string; credits: number };
+    medium: { monthly: string; yearly: string; credits: number };
+    large: { monthly: string; yearly: string; credits: number };
   };
 }
 
@@ -26,10 +26,10 @@ interface PricingPlansProps {
   onCheckout: (priceId: string, planName: string) => void;
   priceIds: PriceIds;
   isLoading: boolean;
-  user: User | null; // Pass user from parent (Pricing.tsx)
-  isPremium: boolean; // Pass isPremium from parent
-  creditsRemaining: number; // Pass creditsRemaining from parent
-  trialUsed: boolean; // Pass trialUsed from parent
+  user: User | null;
+  isPremium: boolean;
+  creditsRemaining: number;
+  trialUsed: boolean;
 }
 
 const PricingPlans: React.FC<PricingPlansProps> = ({
@@ -40,10 +40,10 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
   onCheckout,
   priceIds,
   isLoading,
-  user, // Received as prop
-  isPremium, // Received as prop
-  creditsRemaining, // Received as prop
-  trialUsed, // Received as prop
+  user,
+  isPremium,
+  creditsRemaining,
+  trialUsed,
 }) => {
   const navigate = useNavigate();
 
@@ -54,16 +54,12 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
 
   const handleFreeClick = () => {
     trackEvent('free_plan_signup_clicked');
-    // If user is not logged in, direct to signup (which gives 1 free analysis)
     if (!user) {
       navigate('/signup');
     } else if (!trialUsed && creditsRemaining === 0) {
-      // If logged in but hasn't used free analysis, navigate to demo to trigger it
       navigate('/demo');
     } else {
-      // Logged in, trial used, no credits, not premium - current plan is free plan
-      // Or if premium, current plan is premium - do nothing
-      navigate('/dashboard'); // Direct to dashboard if already a user
+      navigate('/dashboard');
     }
   };
 
@@ -72,40 +68,37 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     window.location.href = 'mailto:sales@pitchperfectai.com?subject=Enterprise Pricing Inquiry';
   };
 
-  // Determine the button text for the "Free" plan dynamically
   const getFreePlanButtonText = () => {
     if (!user) {
-      return 'Get Started Free'; // New visitor
+      return 'Get Started Free';
     } else if (isPremium) {
-      return 'Current Plan (Premium)'; // Already premium
+      return 'Current Plan (Premium)';
     } else if (!trialUsed && creditsRemaining === 0) {
-      return 'Get 1 Free Pitch Analysis'; // Logged in, hasn't used free analysis
+      return 'Get 1 Free Pitch Analysis';
     } else {
-      return 'Current Plan (Free)'; // Logged in, used free analysis, no credits
+      return 'Current Plan (Free)';
     }
   };
 
-  // Determine if the "Free" plan button should be disabled
   const isFreePlanButtonDisabled = () => {
-    if (!user) return false; // Always allow new visitors to click
-    if (isPremium) return true; // Already premium, free plan is irrelevant
-    if (trialUsed && creditsRemaining === 0) return true; // Logged in, used free analysis, no credits. Can't "get started free" again.
+    if (!user) return false;
+    if (isPremium) return true;
+    if (trialUsed && creditsRemaining === 0) return true;
     return false;
   };
 
-  // Updated price IDs to use the new Stripe prices
   const actualPriceIds = {
     basic: {
-      monthly: "price_1RY7IeRv5Z8vxUAiVn18tSaO", // $29/month
+      monthly: "price_1RY7IeRv5Z8vxUAiVn18tSaO",
       credits: 50
     },
     professional: {
-      monthly: "price_1RY7J9Rv5Z8vxUAimaSyVGQg", // $79/month
+      monthly: "price_1RY7J9Rv5Z8vxUAimaSyVGQg",
       credits: 200
     },
     enterprise: {
-      monthly: "price_1RY7JQRv5Z8vxUAiXFltiMqU", // $199/month
-      credits: -1 // unlimited
+      monthly: "price_1RY7JQRv5Z8vxUAiXFltiMqU",
+      credits: -1
     }
   };
 
@@ -118,11 +111,11 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           description="Switch to annual billing and save on all paid plans"
           variant="card"
           ctaText="View Annual Pricing"
-          ctaLink="/pricing?plan=yearly" // Ensure it links to yearly
+          ctaLink="/pricing?plan=yearly"
         />
       </div>
 
-      {user && !isPremium && !trialUsed && ( // Alert for logged-in users who haven't used free analysis
+      {user && !isPremium && !trialUsed && (
         <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-md mx-auto text-center">
           <div className="flex items-center justify-center mb-2">
             <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
@@ -133,7 +126,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           </p>
         </div>
       )}
-      {user && !isPremium && trialUsed && creditsRemaining === 0 && ( // Alert for logged-in users with no credits
+      {user && !isPremium && trialUsed && creditsRemaining === 0 && (
         <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg max-w-md mx-auto text-center">
           <div className="flex items-center justify-center mb-2">
             <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
@@ -146,7 +139,6 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
       )}
 
       <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
-        {/* Free Plan */}
         <PricingPlanCard
           type="free"
           title="Free"
@@ -154,7 +146,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           price={<span className="text-4xl font-bold">$0</span>}
           priceDescription="forever"
           features={[
-            { name: '1 Free Pitch Analysis' }, // Changed
+            { name: '1 Free Pitch Analysis' },
             { name: 'Basic AI Feedback' },
             { name: 'Limited Scenarios' },
             { name: 'Community access' },
@@ -162,15 +154,14 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           buttonText={getFreePlanButtonText()}
           buttonVariant="outline"
           buttonAction={handleFreeClick}
-          isCurrentPlan={user && !isPremium && (trialUsed || creditsRemaining === 0)} // Current if logged in, not premium, and either trial used or no credits
+          isCurrentPlan={user && !isPremium && (trialUsed || creditsRemaining === 0)}
           disabled={isFreePlanButtonDisabled() || isLoading}
-          user={user} // Pass user status
-          isPremium={isPremium} // Pass premium status
-          creditsRemaining={creditsRemaining} // Pass credits
-          trialUsed={trialUsed} // Pass trial status
+          user={user}
+          isPremium={isPremium}
+          creditsRemaining={creditsRemaining}
+          trialUsed={trialUsed}
         />
 
-        {/* Basic Plan */}
         <PricingPlanCard
           type="basic"
           title="Basic Practice Pack"
@@ -194,7 +185,6 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           trialUsed={trialUsed}
         />
 
-        {/* Professional Plan */}
         <PricingPlanCard
           type="professional"
           title="Professional Pack"
@@ -212,14 +202,13 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           buttonText={isPremium ? 'Current Plan' : 'Go Professional'}
           buttonAction={() => handlePlanClick('professional', actualPriceIds.professional.monthly)}
           disabled={isPremium || isLoading}
-          isPopular={true} // Marked as popular
+          isPopular={true}
           user={user}
           isPremium={isPremium}
           creditsRemaining={creditsRemaining}
           trialUsed={trialUsed}
         />
 
-        {/* Enterprise Plan */}
         <PricingPlanCard
           type="enterprise"
           title="Enterprise Pack"
@@ -244,7 +233,6 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
         />
       </div>
 
-      {/* Enterprise Plan CTA - Adjusted */}
       <div className="mt-16 text-center">
         <h3 className="text-2xl font-bold text-brand-dark mb-2">Need more customization?</h3>
         <p className="text-brand-dark/70 mb-4">We support enterprise needs and custom deployments</p>
