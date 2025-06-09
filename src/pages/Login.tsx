@@ -1,16 +1,28 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, X } from 'lucide-react';
-import { trackEvent } from '@/utils/analytics'; // Assuming trackEvent is for analytics, keep it.
+import { AlertCircle, CheckCircle2, X, Mail } from 'lucide-react';
+import { trackEvent } from '@/utils/analytics';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,6 +30,11 @@ const Login = () => {
   const { user, loading } = useAuth();
   const [loginError, setLoginError] = useState<string | null>(null);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema)
+  });
 
   // All hooks must be called before any conditional returns
   useEffect(() => {
@@ -88,18 +105,66 @@ const Login = () => {
     );
   }
 
-  const authAppearance = {
-    theme: ThemeSupa,
-    style: {
-      button: {
-        borderRadius: '0.375rem',
-        backgroundColor: 'rgb(22 163 74)',
-        color: 'white',
-      },
-      anchor: {
-        color: 'rgb(22 163 74)',
-      },
-    },
+  const handleEmailLogin = async (data: LoginForm) => {
+    setIsSubmitting(true);
+    setLoginError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Success will be handled by the auth state change listener
+      toast.success("Successfully logged in!");
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setLoginError(error.message || 'Failed to log in');
+      
+      trackEvent('login_error', {
+        error_type: error.message || 'unknown_error',
+        method: 'email',
+        timestamp: new Date().toISOString()
+      });
+
+      toast.error("Login failed", {
+        description: error.message || 'Please check your credentials and try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsSubmitting(true);
+    setLoginError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      setLoginError(error.message || 'Failed to sign in with Google');
+      
+      toast.error("Google login failed", {
+        description: error.message || 'Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -146,16 +211,69 @@ const Login = () => {
 
           <Card>
             <CardContent className="pt-6">
-              {/* Removed standard email/password login and only kept third-party OAuth */}
-              <Auth
-                supabaseClient={supabase}
-                appearance={authAppearance}
-                providers={['google']} // Only Google/Gmail login
-                view="sign_in"
-                showLinks={true}
-                onlyThirdPartyProviders={true} // Only show Google
-                redirectTo={`${window.location.origin}/dashboard`}
-              />
+              {/* Google OAuth Button */}
+              <Button 
+                onClick={handleGoogleLogin}
+                disabled={isSubmitting}
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-md shadow-md transition-all duration-150 flex items-center justify-center gap-2 mb-4"
+              >
+                {isSubmitting ? 'Signing In...' : 'Sign In with Google'}
+                <img 
+                  src="https://www.google.com/favicon.ico" 
+                  alt="Google icon" 
+                  className="w-5 h-5"
+                />
+              </Button>
+
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-white px-3 text-gray-500">or</span>
+                </div>
+              </div>
+
+              {/* Email/Password Form */}
+              <form onSubmit={handleSubmit(handleEmailLogin)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    {...register('email')}
+                    className={errors.email ? 'border-red-500' : ''}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-red-600">{errors.email.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    {...register('password')}
+                    className={errors.password ? 'border-red-500' : ''}
+                  />
+                  {errors.password && (
+                    <p className="text-sm text-red-600">{errors.password.message}</p>
+                  )}
+                </div>
+
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-3 px-4 rounded-md shadow-md transition-all duration-150 flex items-center justify-center gap-2"
+                >
+                  <Mail className="h-4 w-4" />
+                  {isSubmitting ? 'Signing In...' : 'Sign In with Email'}
+                </Button>
+              </form>
 
               <div className="text-center mt-4">
                 <Button 
