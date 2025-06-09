@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
@@ -14,6 +15,7 @@ import { Settings, UserPlus } from 'lucide-react';
 import MicrophoneGuard from '@/components/MicrophoneGuard';
 import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
+import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import DemoNavigation from '@/components/demo/DemoNavigation';
 
@@ -23,6 +25,7 @@ const Demo = () => {
   const [sessionData, setSessionData] = useState<any>(null);
   const [crmProvider, setCrmProvider] = useState<CRMProvider>("zapier");
   const { isGuestMode } = useGuestMode();
+  const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
   
   const handleDemoComplete = (data?: any) => {
@@ -61,7 +64,6 @@ const Demo = () => {
     
     // For demo purposes, we'll deduct credits if user is authenticated
     if (!isGuestMode && user) {
-      const { deductUserCredits } = useAuth();
       const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
       const featureType = `demo_objection_${input.type}`;
       

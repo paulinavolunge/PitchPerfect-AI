@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +12,8 @@ interface AuthContextType {
   isPremium: boolean;
   creditsRemaining: number;
   trialUsed: boolean;
+  signOut: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
   fetchUserProfile: () => Promise<void>;
   checkCreditsAndWarn: (creditsNeeded: number, featureName: string) => boolean;
   startFreeTrial: () => Promise<boolean>;
@@ -61,8 +64,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('is_premium, credits, trial_used')
+        .from('user_profiles')
+        .select('credits_remaining, trial_used')
         .eq('id', user.id)
         .single();
 
@@ -71,12 +74,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      setIsPremium(data?.is_premium || false);
-      setCreditsRemaining(data?.credits || 0);
+      setIsPremium(false); // We'll determine this from subscription data later
+      setCreditsRemaining(data?.credits_remaining || 0);
       setTrialUsed(data?.trial_used || false);
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
     }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
+  };
+
+  const refreshSubscription = async () => {
+    await fetchUserProfile();
   };
 
   const deductUserCredits = async (featureUsed: string, creditsToDeduct: number): Promise<boolean> => {
@@ -163,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({ trial_used: true })
         .eq('id', user.id)
         .select('trial_used')
@@ -197,10 +214,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isPremium,
     creditsRemaining,
     trialUsed,
+    signOut,
+    refreshSubscription,
     fetchUserProfile,
     checkCreditsAndWarn,
     startFreeTrial,
-    deductUserCredits, // Add the new function
+    deductUserCredits,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
