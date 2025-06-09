@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -158,7 +157,6 @@ const Pricing = () => {
               </p>
             </div>
 
-            {/* Subscription Plans */}
             <div className="mb-16">
               <h2 className="text-2xl font-bold text-center mb-8">Monthly Subscription Plans</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -215,7 +213,6 @@ const Pricing = () => {
               </div>
             </div>
 
-            {/* Pay-As-You-Go Credit Packs */}
             <div className="mb-12">
               <h2 className="text-2xl font-bold text-center mb-4">Pay-As-You-Go Credit Packs</h2>
               <div className="flex items-center justify-center gap-2 mb-8">
@@ -260,7 +257,6 @@ const Pricing = () => {
               </div>
             </div>
 
-            {/* Credit System FAQ */}
             <div className="max-w-2xl mx-auto mb-12">
               <Card className="border border-brand-green/20 bg-brand-green/5">
                 <CardContent className="p-6">
