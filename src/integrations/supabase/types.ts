@@ -189,6 +189,36 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          created_at: string
+          event_details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -333,6 +363,39 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_rate_limits: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          id: string
+          ip_address: unknown
+          request_count: number | null
+          updated_at: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          ip_address: unknown
+          request_count?: number | null
+          updated_at?: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          request_count?: number | null
+          updated_at?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -357,6 +420,14 @@ export type Database = {
       is_verified_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          p_event_type: string
+          p_event_details?: Json
+          p_user_id?: string
+        }
+        Returns: undefined
       }
       secure_deduct_credits_and_log_usage: {
         Args: {
