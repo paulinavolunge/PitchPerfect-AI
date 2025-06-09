@@ -246,7 +246,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     }, 5000);
   };
 
-  const handleSendMessage = async (text: string) => { // Made async to await credit deduction
+  const handleSendMessage = async (text: string) => {
     // Reset idle timer when user sends a message
     resetIdleTimer();
     setShowSuggestions(false);
@@ -336,7 +336,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
         toast({
           title: "Session Complete",
-          description: "Great job! You've completed this practice session.",
+          description: "Great job! You've completed this practice session and can now view your detailed feedback.",
           duration: 5000,
         });
       }

@@ -1,231 +1,137 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Check, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CheckIcon, XIcon, Diamond } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { User } from '@supabase/supabase-js';
-
-interface FeatureItem {
-  name: string;
-  highlight?: boolean;
-  included?: boolean;
-}
-
-interface EnterpriseSizes {
-  small: {
-    name: string;
-    price: string;
-    users: string;
-    features: string[];
-  };
-  medium: {
-    name: string;
-    price: string;
-    users: string;
-    features: string[];
-  };
-  large: {
-    name: string;
-    price: string;
-    users: string;
-    features: string[];
-  };
-}
-
-interface EnterpriseProps {
-  sizes: EnterpriseSizes;
-  enterpriseSize: "small" | "medium" | "large";
-  setEnterpriseSize: (size: "small" | "medium" | "large") => void;
-}
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 interface PricingPlanCardProps {
-  type: "free" | "basic" | "professional" | "enterprise";
   title: string;
-  description: string;
-  price: React.ReactNode;
-  priceDescription?: string;
-  features: FeatureItem[];
+  price: string;
+  period: string;
+  features: string[];
+  popular?: boolean;
+  credits?: number;
   buttonText: string;
-  buttonVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-  buttonAction: () => void;
-  isCurrentPlan?: boolean;
-  isPopular?: boolean;
-  disabled?: boolean;
-  user: User | null;
-  isPremium: boolean;
-  creditsRemaining: number;
-  trialUsed: boolean;
-  enterpriseProps?: EnterpriseProps;
+  buttonVariant?: 'default' | 'outline';
+  priceId?: string;
+  isSubscription?: boolean;
 }
 
-const PricingPlanCard: React.FC<PricingPlanCardProps> = ({ 
-  type,
-  title, 
-  description, 
-  price, 
-  priceDescription, 
-  features, 
-  buttonText, 
-  buttonVariant = "default", 
-  buttonAction,
-  isCurrentPlan,
-  isPopular,
-  disabled,
-  user,
-  isPremium,
-  creditsRemaining,
-  trialUsed,
-  enterpriseProps
+const PricingPlanCard: React.FC<PricingPlanCardProps> = ({
+  title,
+  price,
+  period,
+  features,
+  popular = false,
+  credits,
+  buttonText,
+  buttonVariant = 'default',
+  priceId,
+  isSubscription = false,
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const { user } = useAuth();
 
-  const renderFeatureItem = (item: FeatureItem, index: number) => (
-    <li key={index} className={`flex items-center gap-2 py-1 ${item.highlight ? 'font-medium' : ''}`}>
-      {item.included !== false ? (
-        <CheckIcon className={`h-5 w-5 ${item.highlight ? 'text-brand-blue' : 'text-green-500'}`} />
-      ) : (
-        <XIcon className="h-5 w-5 text-gray-400" />
-      )}
-      <span>{item.name}</span>
-    </li>
-  );
-
-  const renderEnterpriseSizeSelector = () => {
-    if (!enterpriseProps) return null;
-
-    const { sizes, enterpriseSize, setEnterpriseSize } = enterpriseProps;
-
-    return (
-      <div className="mb-6 mt-4 border-t border-b py-4">
-        <RadioGroup value={enterpriseSize} onValueChange={(value) => setEnterpriseSize(value as any)}>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="small" id="enterprise-small" />
-              <Label htmlFor="enterprise-small" className="flex-1">
-                <span className="font-medium">{sizes.small.name}</span>
-                <p className="text-sm text-gray-500">({sizes.small.users} users)</p>
-              </Label>
-              <span className="font-medium">{sizes.small.price}</span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="medium" id="enterprise-medium" />
-              <Label htmlFor="enterprise-medium" className="flex-1">
-                <span className="font-medium">{sizes.medium.name}</span>
-                <p className="text-sm text-gray-500">({sizes.medium.users} users)</p>
-              </Label>
-              <span className="font-medium">{sizes.medium.price}</span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="large" id="enterprise-large" />
-              <Label htmlFor="enterprise-large" className="flex-1">
-                <span className="font-medium">{sizes.large.name}</span>
-                <p className="text-sm text-gray-500">({sizes.large.users} users)</p>
-              </Label>
-              <span className="font-medium">{sizes.large.price}</span>
-            </div>
-          </div>
-        </RadioGroup>
-      </div>
-    );
-  };
-
-  const renderEnterpriseFeatures = () => {
-    if (!enterpriseProps) return null;
-
-    const { sizes, enterpriseSize } = enterpriseProps;
-    const selectedSize = sizes[enterpriseSize];
-
-    return (
-      <ul className="space-y-2 mb-6">
-        {selectedSize.features.map((feature, index) => (
-          <li key={index} className="flex items-center gap-2 py-1">
-            <CheckIcon className="h-5 w-5 text-green-500" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
-    );
-  };
-
-  // Determine if this is the "current plan" badge
-  const showCurrentPlanBadge = () => {
-    if (!user) return false; // Not logged in
-    if (isPremium && (type === 'basic' || type === 'professional' || type === 'enterprise')) {
-      // If the user is premium and on a specific plan, show badge for that plan
-      // This requires subscriptionTier to be passed down or matched
-      return false; // Assuming current Premium Plan is passed via isCurrentPlan prop from PricingPlans
+  const handlePurchase = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to make a purchase.",
+        variant: "destructive",
+      });
+      return;
     }
-    if (type === 'free' && !isPremium && (trialUsed || creditsRemaining === 0)) {
-      return true; // Logged in, not premium, and either used free analysis or has no credits
-    }
-    return false;
-  };
 
-  // Determine if this is the "Free Pitch Analysis" badge
-  const showFreePitchAnalysisBadge = () => {
-    return type === 'free' && user && !isPremium && !trialUsed && creditsRemaining === 0;
+    try {
+      const functionName = isSubscription ? 'create-checkout' : 'create-payment';
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: { 
+          priceId,
+          planName: title,
+          credits: credits,
+          returnUrl: `${window.location.origin}/success?type=${isSubscription ? 'subscription' : 'credits'}&plan=${encodeURIComponent(title)}&credits=${credits || 0}`
+        }
+      });
+
+      if (error) {
+        console.error('Purchase error:', error);
+        toast({
+          title: "Purchase Failed",
+          description: "There was an error processing your purchase. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.url) {
+        // Show loading toast
+        toast({
+          title: "Redirecting to Checkout",
+          description: `Processing your ${isSubscription ? 'subscription' : 'credit purchase'} request...`,
+          duration: 3000,
+        });
+        
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast({
+        title: "Purchase Failed",
+        description: "There was an error processing your purchase. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <div 
-      className={`rounded-xl border bg-card text-card-foreground shadow transition-all duration-300 ease-in-out overflow-hidden relative flex flex-col
-        ${isPopular ? 'scale-105 shadow-lg border-brand-blue/20 z-10' : 'hover:shadow-md'}
-        ${isCurrentPlan ? 'ring-2 ring-brand-green' : ''}
-      `}
-    >
-      {isPopular && (
-        <div className="bg-brand-blue py-1 px-4 absolute top-0 right-0 rounded-bl-xl text-white text-xs font-medium">
+    <Card className={`relative h-full flex flex-col ${popular ? 'border-brand-blue shadow-lg scale-105' : ''}`}>
+      {popular && (
+        <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-brand-blue text-white">
+          <Star className="w-3 h-3 mr-1" />
           Most Popular
-        </div>
+        </Badge>
       )}
-
-      {showCurrentPlanBadge() && (
-        <div className="bg-brand-green py-1 px-4 absolute top-0 left-0 rounded-br-xl text-white text-xs font-medium">
-          Current Plan
+      
+      <CardHeader className="text-center pb-4">
+        <CardTitle className="text-xl font-bold text-brand-dark">{title}</CardTitle>
+        <div className="mt-4">
+          <span className="text-4xl font-bold text-brand-dark">{price}</span>
+          <span className="text-brand-dark/60 ml-1">/{period}</span>
         </div>
-      )}
-
-      {showFreePitchAnalysisBadge() && (
-        <div className="bg-yellow-500 py-1 px-4 absolute top-0 left-0 rounded-br-xl text-white text-xs font-medium flex items-center">
-          <Diamond className="h-3 w-3 mr-1" /> 1 Free Analysis
-        </div>
-      )}
-
-      <div className="p-6 flex-1">
-        <h3 className="text-2xl font-semibold">{title}</h3>
-        <p className="text-sm text-gray-500 mb-4">{description}</p>
-
-        <div className="mb-6">
-          <div className="flex items-end">
-            {price}
-          </div>
-          {priceDescription && (
-            <p className="text-sm text-gray-500">{priceDescription}</p>
-          )}
-        </div>
-
-        {type === 'enterprise' ? renderEnterpriseSizeSelector() : null}
-        {type === 'enterprise' ? renderEnterpriseFeatures() : (
-          <ul className="space-y-2 mb-6">
-            {features.map((item, index) => renderFeatureItem(item, index))}
-          </ul>
+        {credits && (
+          <p className="text-sm text-brand-dark/70 mt-2">{credits} credits included</p>
         )}
-      </div>
-
-      <div className="p-6 pt-0">
-        <Button 
-          onClick={buttonAction}
-          variant={buttonVariant} 
-          disabled={disabled || (isCurrentPlan && !showFreePitchAnalysisBadge())}
-          className={`w-full ${isPopular && buttonVariant === 'default' ? 'bg-brand-blue hover:bg-brand-blue/90' : ''}`}
+      </CardHeader>
+      
+      <CardContent className="flex-grow flex flex-col">
+        <ul className="space-y-3 mb-8 flex-grow">
+          {features.map((feature, index) => (
+            <li key={index} className="flex items-start">
+              <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+              <span className="text-brand-dark/80 text-sm">{feature}</span>
+            </li>
+          ))}
+        </ul>
+        
+        <Button
+          onClick={handlePurchase}
+          variant={buttonVariant}
+          className={`w-full ${
+            popular
+              ? 'bg-brand-blue hover:bg-brand-blue/90 text-white'
+              : buttonVariant === 'outline'
+              ? 'border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white'
+              : 'bg-brand-blue hover:bg-brand-blue/90 text-white'
+          }`}
+          size="lg"
         >
           {buttonText}
         </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

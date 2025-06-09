@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,10 +112,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Update local state with new credit balance
         setCreditsRemaining(result.remaining_credits);
         
+        // Show success toast with credit usage info
+        const featureName = featureUsed.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         toast({
-          title: "Credits deducted",
-          description: `${creditsToDeduct} credits used for ${featureUsed}`,
-          duration: 3000,
+          title: `${creditsToDeduct} Credit${creditsToDeduct > 1 ? 's' : ''} Used`,
+          description: `Credits used for ${featureName}. You have ${result.remaining_credits} credits remaining.`,
+          duration: 4000,
         });
         
         return true;
@@ -124,16 +125,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Handle insufficient credits or other errors
         if (result.error?.includes('Insufficient credits')) {
           toast({
-            title: "Out of credits",
-            description: "You're out of credits. Please buy more to continue.",
+            title: "Out of Credits",
+            description: "You don't have enough credits to start this session. Please visit the Pricing page to top up.",
             variant: "destructive",
+            duration: 8000,
             action: (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => window.location.href = '/pricing'}
+                className="flex items-center gap-2"
               >
-                Buy Credits
+                <span>Buy Credits</span>
               </Button>
             ),
           });
@@ -162,11 +165,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (creditsRemaining < creditsNeeded) {
       toast({
         title: "Insufficient Credits",
-        description: `You need ${creditsNeeded} credits to use ${featureName}.`,
+        description: `You need ${creditsNeeded} credits to use ${featureName}. You have ${creditsRemaining} credits remaining.`,
         variant: "destructive",
+        duration: 8000,
         action: (
-          <Button variant="outline" size="sm" onClick={() => window.location.href = '/pricing'}>
-            Buy Credits
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.location.href = '/pricing'}
+            className="flex items-center gap-2"
+          >
+            <span>Buy Credits</span>
           </Button>
         ),
       });

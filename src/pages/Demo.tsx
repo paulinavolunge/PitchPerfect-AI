@@ -70,6 +70,7 @@ const Demo = () => {
       const deducted = await deductUserCredits(featureType, creditsToDeduct);
       if (!deducted) {
         // Credit deduction failed, don't process the demo
+        // The deductUserCredits function already shows appropriate toast
         return;
       }
     }
@@ -86,10 +87,12 @@ const Demo = () => {
     // Complete the demo with the feedback data
     handleDemoComplete(feedbackData);
     
+    // Show completion toast (separate from credit usage toast)
     toast({
-      title: "Response Submitted",
-      description: `Your ${input.type} response has been analyzed.`,
+      title: "Response Analyzed",
+      description: `Your ${input.type} response has been processed and feedback is ready.`,
       variant: "default",
+      duration: 4000,
     });
   };
 
