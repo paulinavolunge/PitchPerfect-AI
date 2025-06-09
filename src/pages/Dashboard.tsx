@@ -12,6 +12,7 @@ import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatu
 import StreakBadge from '@/components/dashboard/StreakBadge';
 import LeaderboardTable from '@/components/dashboard/LeaderboardTable';
 import ReferralProgram from '@/components/dashboard/ReferralProgram';
+import CreditBalanceTracker from '@/components/dashboard/CreditBalanceTracker'; // Import new component
 import { useAuth } from '@/context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Step } from 'react-joyride';
@@ -381,7 +382,7 @@ const Dashboard = () => {
             </motion.div>
           )}
 
-          {/* User Credits Display - prominent */}
+          {/* Enhanced Credit Balance Display - prominent and visible */}
           {user && ( // Only show for logged in users
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -389,20 +390,7 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="mb-8"
             >
-              <Card className="border-blue-300 bg-blue-50/50">
-                <CardContent className="pt-6 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Diamond className="h-6 w-6 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-gray-700">Available Credits</p>
-                      <p className="text-2xl font-bold text-blue-800">{creditsRemaining}</p>
-                    </div>
-                  </div>
-                  <Link to="/pricing">
-                    <Button variant="outline" size="sm">Top Up Credits</Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              <CreditBalanceTracker />
             </motion.div>
           )}
 
