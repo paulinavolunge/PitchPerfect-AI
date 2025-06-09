@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
@@ -59,6 +58,19 @@ const Demo = () => {
   const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
     // Handle both voice and text submissions
     console.log('Objection practice submission:', input);
+    
+    // For demo purposes, we'll deduct credits if user is authenticated
+    if (!isGuestMode && user) {
+      const { deductUserCredits } = useAuth();
+      const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
+      const featureType = `demo_objection_${input.type}`;
+      
+      const deducted = await deductUserCredits(featureType, creditsToDeduct);
+      if (!deducted) {
+        // Credit deduction failed, don't process the demo
+        return;
+      }
+    }
     
     // Process the submission and generate feedback
     const feedbackData = {
