@@ -38,29 +38,46 @@ serve(async (req) => {
     // Get product type from request
     const { productType } = await req.json();
 
-    // Define products
-    const products = {
+    // Define subscription products
+    const subscriptionProducts = {
       basic: {
         name: "PitchPerfect AI - Basic Practice Pack",
         amount: 2900, // $29.00
-        credits: 50
+        credits: 50,
+        interval: "month"
       },
       pro: {
         name: "PitchPerfect AI - Professional Pack",
         amount: 7900, // $79.00
-        credits: 200
+        credits: 200,
+        interval: "month"
       },
       enterprise: {
         name: "PitchPerfect AI - Enterprise Pack",
         amount: 19900, // $199.00
-        credits: -1 // unlimited
+        credits: -1, // unlimited
+        interval: "month"
       }
     };
 
-    const selectedProduct = products[productType as keyof typeof products];
-    if (!selectedProduct) {
-      throw new Error("Invalid product type");
-    }
+    // Define one-time credit pack products
+    const creditPackProducts = {
+      "credits-20": {
+        name: "20 Credits Pack",
+        amount: 499, // $4.99
+        credits: 20
+      },
+      "credits-100": {
+        name: "100 Credits Pack",
+        amount: 1499, // $14.99
+        credits: 100
+      },
+      "credits-500": {
+        name: "500 Credits Pack",
+        amount: 4999, // $49.99
+        credits: 500
+      }
+    };
 
     // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -69,32 +86,73 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: { 
-              name: selectedProduct.name,
-              description: `${selectedProduct.credits === -1 ? 'Unlimited' : selectedProduct.credits} practice credits for PitchPerfect AI`
+    let session;
+
+    // Handle subscription products
+    if (subscriptionProducts[productType as keyof typeof subscriptionProducts]) {
+      const selectedProduct = subscriptionProducts[productType as keyof typeof subscriptionProducts];
+      
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: { 
+                name: selectedProduct.name,
+                description: `${selectedProduct.credits === -1 ? 'Unlimited' : selectedProduct.credits} credits per month`
+              },
+              unit_amount: selectedProduct.amount,
+              recurring: { interval: selectedProduct.interval as "month" },
             },
-            unit_amount: selectedProduct.amount,
+            quantity: 1,
           },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/pricing`,
-      metadata: {
-        user_id: user.id,
-        product_type: productType,
-        credits: selectedProduct.credits.toString()
-      }
-    });
+        ],
+        mode: "subscription",
+        success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.headers.get("origin")}/pricing`,
+        metadata: {
+          user_id: user.id,
+          product_type: productType,
+          credits: selectedProduct.credits.toString(),
+          type: "subscription"
+        }
+      });
+    }
+    // Handle one-time credit pack products
+    else if (creditPackProducts[productType as keyof typeof creditPackProducts]) {
+      const selectedProduct = creditPackProducts[productType as keyof typeof creditPackProducts];
+      
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: { 
+                name: selectedProduct.name,
+                description: `${selectedProduct.credits} credits (never expire)`
+              },
+              unit_amount: selectedProduct.amount,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.headers.get("origin")}/pricing`,
+        metadata: {
+          user_id: user.id,
+          product_type: productType,
+          credits: selectedProduct.credits.toString(),
+          type: "credit_pack"
+        }
+      });
+    } else {
+      throw new Error("Invalid product type");
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
