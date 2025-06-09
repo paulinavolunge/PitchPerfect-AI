@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -107,9 +108,9 @@ const Pricing = () => {
       ],
       popular: false,
       buttonText: 'Go Enterprise',
-      color: 'border-red-500',
-      bgColor: 'bg-red-50',
-      emoji: '🟥'
+      color: 'border-purple-500',
+      bgColor: 'bg-purple-50',
+      emoji: '🟪'
     }
   ];
 

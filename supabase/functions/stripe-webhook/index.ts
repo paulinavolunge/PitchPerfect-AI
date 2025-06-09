@@ -17,14 +17,27 @@ const sanitizeInput = (input: string): string => {
   return input.replace(/[<>'"&]/g, '').trim().substring(0, 255);
 };
 
-// Credit mappings for plans (adjust these based on your Stripe Price IDs and desired credits)
+// Credit mappings for the new price IDs
 const PLAN_CREDITS: { [priceId: string]: number } = {
-  // Replace with your actual Stripe Price IDs and corresponding credits
-  [Deno.env.get("STRIPE_STARTER_PRICE_ID") || "price_starter_monthly"]: 30,
-  [Deno.env.get("STRIPE_PROFESSIONAL_PRICE_ID") || "price_professional_monthly"]: 100,
-  // Add yearly plan IDs if applicable
-  [Deno.env.get("VITE_STRIPE_STARTER_PRICE_ID") || "price_starter_monthly_vite"]: 30, // For local dev
-  [Deno.env.get("VITE_STRIPE_PROFESSIONAL_PRICE_ID") || "price_professional_monthly_vite"]: 100, // For local dev
+  // Subscription plans
+  "price_1RY7IeRv5Z8vxUAiVn18tSaO": 50,   // Basic - $29/month
+  "price_1RY7J9Rv5Z8vxUAimaSyVGQg": 200,  // Professional - $79/month  
+  "price_1RY7JQRv5Z8vxUAiXFltiMqU": -1,   // Enterprise - $199/month (unlimited)
+  
+  // One-time credit packs
+  "price_1RY7RFRv5Z8vxUAi8Iss2Ixa": 20,   // 20 credits - $4.99
+  "price_1RY7SeRv5Z8vxUAiUTh8whM1": 100,  // 100 credits - $14.99
+  "price_1RY7U9Rv5Z8vxUAi339QAKFu": 500,  // 500 credits - $49.99
+};
+
+// Plan name mappings
+const PLAN_NAMES: { [priceId: string]: string } = {
+  "price_1RY7IeRv5Z8vxUAiVn18tSaO": "Basic Practice Pack",
+  "price_1RY7J9Rv5Z8vxUAimaSyVGQg": "Professional Pack",
+  "price_1RY7JQRv5Z8vxUAiXFltiMqU": "Enterprise Pack",
+  "price_1RY7RFRv5Z8vxUAi8Iss2Ixa": "20 Credits Pack",
+  "price_1RY7SeRv5Z8vxUAiUTh8whM1": "100 Credits Pack", 
+  "price_1RY7U9Rv5Z8vxUAi339QAKFu": "500 Credits Pack",
 };
 
 // This function handles Stripe webhook events
@@ -81,61 +94,90 @@ serve(async (req) => {
         const session = event.data.object;
         const customerId = session.customer;
         const userId = sanitizeInput(session.metadata?.user_id || '');
-        const email = sanitizeInput(session.metadata?.email || '');
+        const productType = sanitizeInput(session.metadata?.product_type || '');
+        const type = sanitizeInput(session.metadata?.type || '');
 
-        if (!userId || !email) {
-          logStep('ERROR', { message: 'No user data found in session metadata' });
-          return new Response('No user data found', { status: 400 });
+        if (!userId) {
+          logStep('ERROR', { message: 'No user ID found in session metadata' });
+          return new Response('No user ID found', { status: 400 });
         }
 
-        logStep('Checkout session completed', { customerId, userId, email });
+        logStep('Checkout session completed', { customerId, userId, productType, type });
 
-        // Get subscription details
-        const subscription = await stripe.subscriptions.retrieve(session.subscription);
-        const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        if (type === 'subscription') {
+          // Handle subscription purchase
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+          const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
-        // Get plan details
-        const planId = subscription.items.data[0].price.id;
-        const price = await stripe.prices.retrieve(planId);
-        const planName = sanitizeInput(price.nickname || (price.recurring?.interval === 'month' ? 'Monthly' : 'Yearly'));
-        const creditsToGrant = PLAN_CREDITS[planId] || 0; // Get credits from mapping
+          // Get plan details from price ID
+          const priceId = subscription.items.data[0].price.id;
+          const planName = PLAN_NAMES[priceId] || 'Unknown Plan';
+          const creditsToGrant = PLAN_CREDITS[priceId] || 0;
 
-        logStep('Subscription details retrieved', { 
-          subscriptionId: subscription.id, 
-          planName, 
-          currentPeriodEnd,
-          creditsToGrant
-        });
+          logStep('Subscription details retrieved', { 
+            subscriptionId: subscription.id, 
+            priceId,
+            planName, 
+            currentPeriodEnd,
+            creditsToGrant
+          });
 
-        // Update the subscribers table
-        const { error: subError } = await supabaseAdmin.from('subscribers').upsert({
-          user_id: userId,
-          email: email,
-          stripe_customer_id: customerId,
-          subscribed: true,
-          subscription_tier: planName,
-          subscription_end: currentPeriodEnd,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'email' });
+          // Update the subscribers table
+          const { error: subError } = await supabaseAdmin.from('subscribers').upsert({
+            user_id: userId,
+            email: session.customer_details?.email || '',
+            stripe_customer_id: customerId,
+            subscribed: true,
+            subscription_tier: planName,
+            subscription_end: currentPeriodEnd,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
 
-        if (subError) {
-          logStep('ERROR updating subscriber', { message: subError.message });
-          return new Response(`Error updating subscriber: ${subError.message}`, { status: 500 });
+          if (subError) {
+            logStep('ERROR updating subscriber', { message: subError.message });
+            return new Response(`Error updating subscriber: ${subError.message}`, { status: 500 });
+          }
+
+          // Grant monthly credits using the secure function
+          if (creditsToGrant !== 0) {
+            const { data: creditResult, error: creditError } = await supabaseAdmin.rpc('secure_deduct_credits_and_log_usage', {
+              p_user_id: userId,
+              p_feature_used: `subscription_${planName.toLowerCase().replace(' ', '_')}`,
+              p_credits_to_deduct: -creditsToGrant // Negative to add credits
+            });
+
+            if (creditError) {
+              logStep('ERROR updating user credits', { message: creditError.message });
+              return new Response(`Error updating user credits: ${creditError.message}`, { status: 500 });
+            }
+
+            logStep(`Successfully processed subscription and granted ${creditsToGrant} credits for user ${userId}`);
+          }
+
+        } else if (type === 'credit_pack') {
+          // Handle one-time credit pack purchase
+          const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+          const priceId = lineItems.data[0].price?.id;
+          const creditsToGrant = PLAN_CREDITS[priceId || ''] || 0;
+          const packName = PLAN_NAMES[priceId || ''] || 'Unknown Pack';
+
+          logStep('Credit pack purchase', { priceId, packName, creditsToGrant });
+
+          // Add credits to user account
+          const { data: creditResult, error: creditError } = await supabaseAdmin.rpc('secure_deduct_credits_and_log_usage', {
+            p_user_id: userId,
+            p_feature_used: `credit_pack_${packName.toLowerCase().replace(' ', '_')}`,
+            p_credits_to_deduct: -creditsToGrant // Negative to add credits
+          });
+
+          if (creditError) {
+            logStep('ERROR adding credits for pack purchase', { message: creditError.message });
+            return new Response(`Error adding credits: ${creditError.message}`, { status: 500 });
+          }
+
+          logStep(`Successfully added ${creditsToGrant} credits for user ${userId} from ${packName}`);
         }
 
-        // Update user_profiles to add credits using the secure function
-        const { data: creditResult, error: creditError } = await supabaseAdmin.rpc('secure_deduct_credits_and_log_usage', {
-          p_user_id: userId,
-          p_feature_used: `subscription_${planName.toLowerCase()}`,
-          p_credits_to_deduct: -creditsToGrant // Negative to add credits
-        });
-
-        if (creditError) {
-          logStep('ERROR updating user credits', { message: creditError.message });
-          return new Response(`Error updating user credits: ${creditError.message}`, { status: 500 });
-        }
-
-        logStep(`Successfully processed subscription and granted ${creditsToGrant} credits for user ${userId}`);
         break;
       }
 
@@ -175,10 +217,9 @@ serve(async (req) => {
         const status = subscription.status === 'active' || subscription.status === 'trialing';
 
         // Get plan details
-        const planId = subscription.items.data[0].price.id;
-        const price = await stripe.prices.retrieve(planId);
-        const planName = sanitizeInput(price.nickname || (price.recurring?.interval === 'month' ? 'Monthly' : 'Yearly'));
-        const creditsToGrant = PLAN_CREDITS[planId] || 0;
+        const priceId = subscription.items.data[0].price.id;
+        const planName = PLAN_NAMES[priceId] || 'Unknown Plan';
+        const creditsToGrant = PLAN_CREDITS[priceId] || 0;
 
         logStep('Updating subscription in database', { 
           userId, 
@@ -206,10 +247,10 @@ serve(async (req) => {
         }
 
         // If subscription is active, top up credits using secure function
-        if (status) {
+        if (status && creditsToGrant !== 0) {
           const { error: creditError } = await supabaseAdmin.rpc('secure_deduct_credits_and_log_usage', {
             p_user_id: userId,
-            p_feature_used: `subscription_renewal_${planName.toLowerCase()}`,
+            p_feature_used: `subscription_renewal_${planName.toLowerCase().replace(' ', '_')}`,
             p_credits_to_deduct: -creditsToGrant // Negative to add credits
           });
 

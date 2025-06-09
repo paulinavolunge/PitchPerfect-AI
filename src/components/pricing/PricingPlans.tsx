@@ -1,3 +1,4 @@
+
 import React from 'react';
 import PricingPlanCard from './PricingPlanCard';
 import TimeOffer from '@/components/promotion/TimeOffer';
@@ -46,8 +47,6 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  // Removed calculateDaysRemaining as trial is now credit-based
-
   const handlePlanClick = (plan: string, priceId: string) => {
     trackEvent('plan_selected', { plan, billingCycle: planType });
     onCheckout(priceId, plan);
@@ -94,6 +93,21 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     return false;
   };
 
+  // Updated price IDs to use the new Stripe prices
+  const actualPriceIds = {
+    basic: {
+      monthly: "price_1RY7IeRv5Z8vxUAiVn18tSaO", // $29/month
+      credits: 50
+    },
+    professional: {
+      monthly: "price_1RY7J9Rv5Z8vxUAimaSyVGQg", // $79/month
+      credits: 200
+    },
+    enterprise: {
+      monthly: "price_1RY7JQRv5Z8vxUAiXFltiMqU", // $199/month
+      credits: -1 // unlimited
+    }
+  };
 
   return (
     <>
@@ -156,23 +170,22 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           trialUsed={trialUsed} // Pass trial status
         />
 
-        {/* Starter Plan - New Plan */}
+        {/* Basic Plan */}
         <PricingPlanCard
-          type="starter"
-          title="Starter"
-          description="For light users"
-          price={
-            planType === 'monthly' ? '$15/month' : '$150/year' // Adjusted price
-          }
-          priceDescription={planType === 'monthly' ? `${priceIds.starter.credits} credits` : `${priceIds.starter.credits * 12} credits/year`} // Show credits
+          type="basic"
+          title="Basic Practice Pack"
+          description="Perfect for getting started"
+          price="$29/month"
+          priceDescription={`${actualPriceIds.basic.credits} credits`}
           features={[
-            { name: `${priceIds.starter.credits} credits/month`, highlight: true }, // Show credits
-            { name: 'Access all features' },
-            { name: 'Basic analytics' },
-            { name: 'Email support' },
+            { name: `${actualPriceIds.basic.credits} credits/month`, highlight: true },
+            { name: 'Text & Voice Input' },
+            { name: 'AI Feedback Analysis' },
+            { name: 'Progress Tracking' },
+            { name: 'Email Support' },
           ]}
-          buttonText={isPremium ? 'Current Plan' : 'Buy Starter Plan'}
-          buttonAction={() => handlePlanClick('starter', priceIds.starter[planType])}
+          buttonText={isPremium ? 'Current Plan' : 'Get Basic Plan'}
+          buttonAction={() => handlePlanClick('basic', actualPriceIds.basic.monthly)}
           disabled={isPremium || isLoading}
           isPopular={false}
           user={user}
@@ -181,24 +194,23 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           trialUsed={trialUsed}
         />
 
-        {/* Professional Plan - Adjusted from Solo */}
+        {/* Professional Plan */}
         <PricingPlanCard
           type="professional"
-          title="Professional"
-          description="For sales reps"
-          price={
-            planType === 'monthly' ? '$39/month' : '$390/year' // Adjusted price
-          }
-          priceDescription={planType === 'monthly' ? `${priceIds.professional.credits} credits` : `${priceIds.professional.credits * 12} credits/year`} // Show credits
+          title="Professional Pack"
+          description="Most popular for sales pros"
+          price="$79/month"
+          priceDescription={`${actualPriceIds.professional.credits} credits`}
           features={[
-            { name: `${priceIds.professional.credits} credits/month`, highlight: true }, // Show credits
-            { name: 'Unlimited practice sessions' },
-            { name: 'Advanced AI Feedback' },
-            { name: 'Mobile access & CRM integration' },
-            { name: 'Priority support' },
+            { name: `${actualPriceIds.professional.credits} credits/month`, highlight: true },
+            { name: 'Advanced Voice Analysis' },
+            { name: 'Custom Scenarios' },
+            { name: 'Detailed Performance Reports' },
+            { name: 'Priority Support' },
+            { name: 'Team Sharing (up to 3 users)' },
           ]}
-          buttonText={isPremium ? 'Current Plan' : 'Buy Professional Plan'}
-          buttonAction={() => handlePlanClick('professional', priceIds.professional[planType])}
+          buttonText={isPremium ? 'Current Plan' : 'Go Professional'}
+          buttonAction={() => handlePlanClick('professional', actualPriceIds.professional.monthly)}
           disabled={isPremium || isLoading}
           isPopular={true} // Marked as popular
           user={user}
@@ -207,25 +219,24 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
           trialUsed={trialUsed}
         />
 
-        {/* Team Plan - Adjusted from Professional */}
+        {/* Enterprise Plan */}
         <PricingPlanCard
-          type="team"
-          title="Team"
-          description="For growing teams"
-          price={
-            planType === 'monthly' ? 'Custom Quote' : 'Custom Quote'
-          }
-          priceDescription="contact sales"
+          type="enterprise"
+          title="Enterprise Pack"
+          description="For teams and organizations"
+          price="$199/month"
+          priceDescription="unlimited credits"
           features={[
-            { name: 'Everything in Professional' },
-            { name: 'Team management & analytics' },
-            { name: 'Custom AI training' },
-            { name: 'Dedicated account manager' },
+            { name: 'Unlimited Credits', highlight: true },
+            { name: 'Custom Branding' },
+            { name: 'Team Analytics Dashboard' },
+            { name: 'Advanced Integrations' },
+            { name: 'Dedicated Success Manager' },
+            { name: 'Custom Training Materials' },
           ]}
-          buttonText="Contact Sales"
-          buttonVariant="outline"
-          buttonAction={handleContactSales} // Direct to sales contact
-          disabled={isLoading}
+          buttonText={isPremium ? 'Current Plan' : 'Go Enterprise'}
+          buttonAction={() => handlePlanClick('enterprise', actualPriceIds.enterprise.monthly)}
+          disabled={isPremium || isLoading}
           user={user}
           isPremium={isPremium}
           creditsRemaining={creditsRemaining}

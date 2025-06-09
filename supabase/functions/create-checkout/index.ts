@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -45,9 +46,16 @@ serve(async (req) => {
     }
 
     let trialPeriodDays: number | undefined = undefined;
-    // Only apply a trial period if the user hasn't used their trial and the priceId indicates a plan with trial eligibility
-    // For simplicity, we'll assume any *paid* plan can offer a trial if `trial_used` is false.
-    if (userProfile && !userProfile.trial_used) {
+    
+    // Define subscription price IDs
+    const subscriptionPrices = [
+      "price_1RY7IeRv5Z8vxUAiVn18tSaO", // Basic
+      "price_1RY7J9Rv5Z8vxUAimaSyVGQg", // Professional  
+      "price_1RY7JQRv5Z8vxUAiXFltiMqU"  // Enterprise
+    ];
+    
+    // Only apply trial for subscription plans if user hasn't used their trial
+    if (userProfile && !userProfile.trial_used && subscriptionPrices.includes(priceId)) {
         trialPeriodDays = 7; // Offer 7 days trial on first subscription attempt if not used
     }
 
@@ -57,19 +65,29 @@ serve(async (req) => {
       metadata: { user_id: user.id }
     })).id;
 
-    const session = await stripe.checkout.sessions.create({
+    // Determine session mode based on price ID
+    const isSubscription = subscriptionPrices.includes(priceId);
+    const mode = isSubscription ? "subscription" : "payment";
+
+    const sessionData: any = {
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      mode: "subscription",
-      success_url: successUrl || `${req.headers.get("origin")}/dashboard?success=true`,
+      mode: mode,
+      success_url: successUrl || `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl || `${req.headers.get("origin")}/pricing?canceled=true`,
       metadata: {
         user_id: user.id,
-        email: user.email
-      },
-      // Conditionally add trial_period_days
-      ...(trialPeriodDays !== undefined && { subscription_data: { trial_period_days: trialPeriodDays } })
-    });
+        email: user.email,
+        type: isSubscription ? 'subscription' : 'credit_pack'
+      }
+    };
+
+    // Add trial period for subscriptions if applicable
+    if (trialPeriodDays !== undefined && isSubscription) {
+      sessionData.subscription_data = { trial_period_days: trialPeriodDays };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionData);
 
     return new Response(JSON.stringify({ sessionId: session.id, url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
