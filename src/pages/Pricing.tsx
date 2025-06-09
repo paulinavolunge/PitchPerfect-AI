@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -222,7 +223,7 @@ const Pricing = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {creditPacks.map((pack) => (
-                  <Card key={pack.id} className="border border-gray-200 hover:border-brand-green transition-colors">
+                  <Card key={pack.id} className="border-2 border-gray-200 hover:border-brand-green transition-colors">
                     <CardHeader className="text-center">
                       <CardTitle className="text-xl font-bold flex items-center justify-center gap-2">
                         <span className="text-xl">{pack.emoji}</span>
@@ -236,7 +237,7 @@ const Pricing = () => {
                       <Button
                         onClick={() => handlePurchase(pack.id)}
                         disabled={loading === pack.id}
-                        className="w-full"
+                        className="w-full border-2 border-brand-green bg-white text-brand-green hover:bg-brand-green hover:text-white transition-all duration-300"
                         variant="outline"
                       >
                         {loading === pack.id ? (
