@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -193,8 +192,8 @@ const Pricing = () => {
                       <Button
                         onClick={() => handlePurchase(plan.id)}
                         disabled={loading === plan.id}
-                        className={`w-full ${plan.popular ? 'bg-brand-green hover:bg-brand-green/90' : ''}`}
-                        variant={plan.popular ? 'default' : 'outline'}
+                        className="w-full border-2 border-brand-green bg-white text-brand-green hover:bg-brand-green hover:text-white transition-all duration-300"
+                        variant="outline"
                       >
                         {loading === plan.id ? (
                           <div className="flex items-center">
