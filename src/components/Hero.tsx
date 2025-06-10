@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { useGuestMode } from '@/context/GuestMode';
+import { useGuestMode } from '@/context/GuestModeContext';
 import { useNavigate } from 'react-router-dom';
 import { Play, Users, TrendingUp, Star, ArrowRight, Zap, Target, BarChart3, CheckCircle } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
