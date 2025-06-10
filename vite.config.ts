@@ -12,17 +12,29 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // Only include the Lovable tagger in development mode or lovable mode, not in production builds
-    (mode === 'development' || mode === 'lovable') &&
-    componentTagger(),
+    // Only include the Lovable tagger in development mode, never in production
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Set the VITE_LOVABLE environment variable based on mode
+  // Ensure proper environment variables
   define: {
-    'import.meta.env.VITE_LOVABLE': mode === 'production' ? 'false' : 'true',
-  }
+    'import.meta.env.VITE_LOVABLE': JSON.stringify(mode === 'development' ? 'true' : 'false'),
+  },
+  build: {
+    // Optimize for production
+    minify: 'terser',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast'],
+        },
+      },
+    },
+  },
 }));

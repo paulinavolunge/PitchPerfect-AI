@@ -28,33 +28,39 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 // Initialize dataLayer for Google Tag Manager
 window.dataLayer = window.dataLayer || [];
 
-// Determine if we're in development mode or Lovable mode
-const isLovable = import.meta.env.VITE_LOVABLE === 'true';
-const isDevelopment = import.meta.env.DEV === true;
+// Determine if we're in production or development
+const isProduction = import.meta.env.PROD;
+const isDevelopment = import.meta.env.DEV;
+
+console.log('Environment:', { isProduction, isDevelopment });
 
 // Ensure GA is initialized as early as possible
 initGA();
 
-// Check analytics connection and log debug info
+// Check analytics connection and log debug info only in development
 if (isDevelopment) {
   setTimeout(() => {
     const status = checkAnalyticsConnection();
     console.log('Analytics Connection Status:', status);
-  }, 1000); // Check after 1 second to allow scripts to load
+  }, 1000);
 }
 
-// Load development tools only in development mode or Lovable mode
-if ((isDevelopment || isLovable) && window.document) {
-  console.log('Development or Lovable mode active - loading development tools');
+// Only load Lovable development tools in development mode
+if (isDevelopment && typeof window !== 'undefined') {
+  console.log('Development mode - Lovable tools available');
   
-  // Dynamically load the Lovable script in development mode
-  // This is a backup in case the script in index.html doesn't load
+  // Only load the Lovable script in development
   if (!window.gptEng) {
     const script = document.createElement('script');
     script.src = 'https://cdn.gpteng.co/gptengineer.js';
     script.type = 'module';
+    script.onerror = () => console.warn('Lovable script failed to load');
     document.body.appendChild(script);
   }
+} else if (isProduction) {
+  console.log('Production mode - Lovable tools disabled');
+  // Ensure no Lovable scripts are loaded in production
+  window.gptEng = undefined;
 }
 
 // Type declaration for window
