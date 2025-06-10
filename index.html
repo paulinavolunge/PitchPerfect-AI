@@ -24,33 +24,47 @@
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:domain" content="pitchperfectai.ai" />
     
-    <!-- Google Tag Manager -->
+    <!-- Environment Detection Script -->
     <script>
-      // Check if GTM is already loaded to prevent duplicates
-      if (!window.google_tag_manager) {
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-PLR4ZJ3F');
-        
-        console.log('GTM script injected with ID: GTM-PLR4ZJ3F');
+      // Detect environment early
+      window.__APP_ENV__ = {
+        isProduction: window.location.hostname === 'pitchperfectai.ai' || window.location.hostname.includes('vercel.app'),
+        isDevelopment: window.location.hostname === 'localhost' || window.location.hostname.includes('lovable.app')
+      };
+      
+      console.log('Environment detected in HTML:', window.__APP_ENV__);
+    </script>
+    
+    <!-- Google Tag Manager - Only load in production or when analytics consent is given -->
+    <script>
+      if (window.__APP_ENV__.isProduction || window.__APP_ENV__.isDevelopment) {
+        if (!window.google_tag_manager) {
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','GTM-PLR4ZJ3F');
+          
+          console.log('GTM script injected with ID: GTM-PLR4ZJ3F');
+        }
       }
     </script>
     <!-- End Google Tag Manager -->
     
     <!-- Meta Pixel Code - Script part only -->
     <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1234567890123456'); // Replace with your actual Meta Pixel ID
-      fbq('track', 'PageView');
+      if (window.__APP_ENV__.isProduction) {
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1234567890123456'); // Replace with your actual Meta Pixel ID
+        fbq('track', 'PageView');
+      }
     </script>
     <!-- End Meta Pixel Code (Script part) -->
     
@@ -76,13 +90,11 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      // Note: We're setting send_page_view to false because we'll handle page views manually
-      // This gives us more control and prevents duplicate pageviews
       gtag('config', 'G-HVCRJT504Y', { 
         send_page_view: false,
-        debug_mode: window.location.hostname === 'localhost' || window.location.hostname.includes('lovable.app')
+        debug_mode: window.__APP_ENV__.isDevelopment
       });
-      console.log('GA4 standalone script initialized with debug mode');
+      console.log('GA4 standalone script initialized');
     </script>
   </head>
   <body>
@@ -91,14 +103,51 @@
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     
-    <!-- Meta Pixel Code (noscript part) - Moved to body -->
-    <noscript>
-      <img height="1" width="1" style="display:none" 
-      src="https://www.facebook.com/tr?id=1234567890123456&ev=PageView&noscript=1"/>
-    </noscript>
+    <!-- Meta Pixel Code (noscript part) - Only in production -->
+    <script>
+      if (window.__APP_ENV__.isProduction) {
+        document.write('<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1234567890123456&ev=PageView&noscript=1"/></noscript>');
+      }
+    </script>
     <!-- End Meta Pixel Code (noscript part) -->
     
-    <div id="root"></div>
+    <div id="root">
+      <!-- Fallback loading indicator -->
+      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif;">
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <p style="color: #6b7280; font-size: 14px;">Loading PitchPerfect AI...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
+    
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- CRITICAL: Prevent any Lovable scripts from loading in production -->
+    <script>
+      if (window.__APP_ENV__.isProduction) {
+        // Block any attempts to load development tools
+        const originalAppendChild = Document.prototype.appendChild || HTMLElement.prototype.appendChild;
+        
+        if (originalAppendChild) {
+          Document.prototype.appendChild = HTMLElement.prototype.appendChild = function(child) {
+            if (child.tagName === 'SCRIPT' && 
+                (child.src.includes('gpteng') || 
+                 child.src.includes('lovable') ||
+                 child.innerHTML.includes('gptEng'))) {
+              console.log('Blocked development script in production:', child.src || 'inline script');
+              return child;
+            }
+            return originalAppendChild.call(this, child);
+          };
+        }
+      }
+    </script>
   </body>
 </html>
