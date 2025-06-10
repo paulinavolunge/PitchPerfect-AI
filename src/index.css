@@ -5,11 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Debug: Ensure CSS is loading */
-body {
-  font-family: 'Inter', sans-serif;
-}
-
 /* Enhanced headline styling with improved contrast and visual effects */
 .hero-headline {
   font-family: 'Inter', sans-serif;
@@ -106,11 +101,4 @@ body {
   .hero-headline {
     font-size: 2rem;
   }
-}
-
-/* Debug: Add visible test styles */
-.css-test {
-  background-color: red !important;
-  color: white !important;
-  padding: 10px !important;
 }

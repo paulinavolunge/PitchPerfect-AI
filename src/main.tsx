@@ -5,9 +5,6 @@ import App from './App.tsx';
 import './index.css';
 import { initGA, checkAnalyticsConnection } from './utils/analytics';
 
-// Debug CSS loading
-console.log('CSS import loaded in main.tsx');
-
 // Supabase configuration for Lovable integration
 const SUPABASE_URL = 'https://ggpodadyycvmmxifqwlp.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
@@ -67,26 +64,6 @@ declare global {
     dataLayer: any[];
   }
 }
-
-// Debug: Check if Tailwind classes are working
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM loaded, checking CSS...');
-  const testElement = document.createElement('div');
-  testElement.className = 'bg-blue-500 text-white p-4';
-  testElement.style.position = 'fixed';
-  testElement.style.top = '10px';
-  testElement.style.right = '10px';
-  testElement.style.zIndex = '9999';
-  testElement.textContent = 'CSS Test';
-  document.body.appendChild(testElement);
-  
-  setTimeout(() => {
-    const computedStyle = window.getComputedStyle(testElement);
-    console.log('Test element background:', computedStyle.backgroundColor);
-    console.log('Test element padding:', computedStyle.padding);
-    document.body.removeChild(testElement);
-  }, 1000);
-});
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
