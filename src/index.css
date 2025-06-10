@@ -5,100 +5,297 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Enhanced headline styling with improved contrast and visual effects */
+/* Professional Design System - Navy, Electric Blue, White */
+:root {
+  /* Professional Navy Palette */
+  --navy-50: #f8fafc;
+  --navy-100: #f1f5f9;
+  --navy-200: #e2e8f0;
+  --navy-300: #cbd5e1;
+  --navy-400: #94a3b8;
+  --navy-500: #64748b;
+  --navy-600: #475569;
+  --navy-700: #334155;
+  --navy-800: #1e293b;
+  --navy-900: #0f172a;
+
+  /* Electric Blue Palette */
+  --electric-blue-50: #eff6ff;
+  --electric-blue-100: #dbeafe;
+  --electric-blue-200: #bfdbfe;
+  --electric-blue-300: #93c5fd;
+  --electric-blue-400: #60a5fa;
+  --electric-blue-500: #3b82f6;
+  --electric-blue-600: #2563eb;
+  --electric-blue-700: #1d4ed8;
+  --electric-blue-800: #1e40af;
+  --electric-blue-900: #1e3a8a;
+
+  /* Conversion-Focused Colors */
+  --primary: var(--electric-blue-600);
+  --primary-hover: var(--electric-blue-700);
+  --secondary: var(--navy-700);
+  --accent: var(--electric-blue-500);
+  --background: #ffffff;
+  --surface: var(--navy-50);
+  --text-primary: var(--navy-900);
+  --text-secondary: var(--navy-600);
+  --text-muted: var(--navy-400);
+}
+
+/* Enhanced typography system for conversion */
 .hero-headline {
   font-family: 'Inter', sans-serif;
   font-weight: 800;
-  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
   line-height: 1.1;
-  letter-spacing: -0.02em;
-  margin-bottom: 1.5rem;
+  letter-spacing: -0.025em;
+  margin-bottom: 2rem;
   position: relative;
   z-index: 1;
 }
 
-/* Dark text with subtle shadow for "Perfect Your" and "with AI" */
-.hero-headline .dark-text {
-  color: #1A202C; /* Dark gray, almost black */
-  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+/* Professional navy text for primary content */
+.hero-headline .primary-text {
+  color: var(--navy-900);
+  text-shadow: 0px 2px 8px rgba(15, 23, 42, 0.1);
 }
 
-/* Enhanced gradient for "Sales" with better contrast */
-.hero-headline .primary-highlight {
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+/* Electric blue gradient for key terms */
+.hero-headline .electric-highlight {
+  background: linear-gradient(135deg, var(--electric-blue-600) 0%, var(--electric-blue-500) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-fill-color: transparent;
-  text-shadow: none;
   position: relative;
 }
 
-/* Enhanced gradient for "Pitch" with better contrast */
-.hero-headline .secondary-highlight {
-  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-fill-color: transparent;
-  text-shadow: none;
-  position: relative;
-}
-
-/* Alternative gradient options for different visual preferences */
-.hero-headline .gradient-primary {
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+/* Navy gradient for supporting terms */
+.hero-headline .navy-highlight {
+  background: linear-gradient(135deg, var(--navy-700) 0%, var(--navy-600) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-fill-color: transparent;
 }
 
-.hero-headline .gradient-secondary {
-  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-fill-color: transparent;
-}
-
-/* Text shadow options for enhanced readability */
-.hero-headline .with-shadow {
-  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.hero-headline .with-stronger-shadow {
-  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Enhanced hero section background */
+/* Professional hero section with conversion focus */
 .hero-section {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+  background: linear-gradient(135deg, #ffffff 0%, var(--navy-50) 50%, var(--electric-blue-50) 100%);
   position: relative;
   overflow: hidden;
 }
 
-/* Optional decorative background element */
+/* Conversion-focused decorative elements */
 .hero-section::before {
   content: '';
   position: absolute;
-  top: -10%;
-  right: -5%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 70%);
+  top: -20%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0) 70%);
   border-radius: 50%;
   z-index: 0;
 }
 
+.hero-section::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(30, 41, 59, 0.06) 0%, rgba(30, 41, 59, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+/* Professional button styles for conversion */
+.btn-primary {
+  background: linear-gradient(135deg, var(--electric-blue-600) 0%, var(--electric-blue-700) 100%);
+  color: white;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--electric-blue-700) 0%, var(--electric-blue-800) 100%);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--navy-700);
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 0.75rem;
+  border: 2px solid var(--navy-200);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--electric-blue-300);
+  color: var(--electric-blue-700);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+/* Professional card styling */
+.professional-card {
+  background: white;
+  border: 1px solid var(--navy-100);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  transition: all 0.3s ease;
+}
+
+.professional-card:hover {
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Conversion-focused section backgrounds */
+.section-primary {
+  background: white;
+}
+
+.section-secondary {
+  background: var(--navy-50);
+}
+
+.section-accent {
+  background: linear-gradient(135deg, var(--electric-blue-50) 0%, white 100%);
+}
+
+/* Professional text hierarchy */
+.text-heading {
+  color: var(--navy-900);
+  font-weight: 700;
+}
+
+.text-subheading {
+  color: var(--navy-700);
+  font-weight: 600;
+}
+
+.text-body {
+  color: var(--navy-600);
+  line-height: 1.6;
+}
+
+.text-muted {
+  color: var(--navy-400);
+}
+
+/* Electric blue accents for conversion elements */
+.accent-electric {
+  color: var(--electric-blue-600);
+}
+
+.bg-accent-electric {
+  background-color: var(--electric-blue-50);
+}
+
+.border-accent-electric {
+  border-color: var(--electric-blue-200);
+}
+
+/* Professional feature highlights */
+.feature-highlight {
+  background: linear-gradient(135deg, var(--electric-blue-50) 0%, white 100%);
+  border: 1px solid var(--electric-blue-100);
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+/* Conversion-focused trust indicators */
+.trust-indicator {
+  background: var(--navy-50);
+  color: var(--navy-700);
+  border: 1px solid var(--navy-100);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Professional pricing card enhancements */
+.pricing-card {
+  background: white;
+  border: 2px solid var(--navy-100);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.08);
+  transition: all 0.3s ease;
+}
+
+.pricing-card.featured {
+  border-color: var(--electric-blue-300);
+  box-shadow: 0 12px 35px rgba(37, 99, 235, 0.15);
+  transform: scale(1.05);
+}
+
+.pricing-card:hover {
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+  transform: translateY(-4px);
+}
+
+/* Professional mobile optimizations */
 @media (max-width: 768px) {
   .hero-headline {
     font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+  }
+  
+  .professional-card {
+    margin-bottom: 1rem;
   }
 }
 
 @media (max-width: 640px) {
   .hero-headline {
     font-size: 2rem;
+    margin-bottom: 1rem;
   }
+}
+
+/* Conversion-focused animations */
+@keyframes professional-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-professional-fade-in {
+  animation: professional-fade-in 0.6s ease-out;
+}
+
+@keyframes electric-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+  }
+}
+
+.animate-electric-pulse {
+  animation: electric-pulse 2s infinite;
 }

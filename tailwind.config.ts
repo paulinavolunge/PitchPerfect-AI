@@ -65,10 +65,37 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
         },
-        "brand-blue": "#4A90E6",
-        "brand-dark": "#333333",
-        "brand-gray": "#555555",
-        "brand-light": "#F6F6F7",
+        // Professional Navy & Electric Blue Design System
+        "navy": {
+          "50": "#f8fafc",
+          "100": "#f1f5f9",
+          "200": "#e2e8f0",
+          "300": "#cbd5e1",
+          "400": "#94a3b8",
+          "500": "#64748b",
+          "600": "#475569",
+          "700": "#334155",
+          "800": "#1e293b",
+          "900": "#0f172a",
+        },
+        "electric-blue": {
+          "50": "#eff6ff",
+          "100": "#dbeafe",
+          "200": "#bfdbfe",
+          "300": "#93c5fd",
+          "400": "#60a5fa",
+          "500": "#3b82f6",
+          "600": "#2563eb",
+          "700": "#1d4ed8",
+          "800": "#1e40af",
+          "900": "#1e3a8a",
+        },
+        // Legacy brand colors maintained for compatibility
+        "brand-blue": "#2563eb",
+        "brand-dark": "#0f172a",
+        "brand-gray": "#475569",
+        "brand-light": "#f8fafc",
+        "brand-green": "#059669",
         "teal": {
           "50": "#f0fdfa",
           "100": "#ccfbf1",
@@ -96,6 +123,26 @@ export default {
         'accordion-up': {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' }
+        },
+        'professional-fade-in': {
+          from: { opacity: '0', transform: 'translateY(20px)' },
+          to: { opacity: '1', transform: 'translateY(0)' }
+        },
+        'electric-pulse': {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(37, 99, 235, 0.4)' },
+          '50%': { boxShadow: '0 0 0 10px rgba(37, 99, 235, 0)' }
+        },
+        'conversion-glow': {
+          '0%, 100%': { boxShadow: '0 0 5px rgba(37, 99, 235, 0.3)' },
+          '50%': { boxShadow: '0 0 20px rgba(37, 99, 235, 0.6), 0 0 30px rgba(37, 99, 235, 0.4)' }
+        },
+        'slide-up': {
+          from: { opacity: '0', transform: 'translateY(30px)' },
+          to: { opacity: '1', transform: 'translateY(0)' }
+        },
+        'scale-in-professional': {
+          from: { opacity: '0', transform: 'scale(0.95)' },
+          to: { opacity: '1', transform: 'scale(1)' }
         },
         'pulse-gentle': {
           '0%, 100%': { opacity: '1' },
@@ -141,6 +188,11 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'professional-fade-in': 'professional-fade-in 0.6s ease-out',
+        'electric-pulse': 'electric-pulse 2s infinite',
+        'conversion-glow': 'conversion-glow 2s ease-in-out infinite',
+        'slide-up': 'slide-up 0.5s ease-out',
+        'scale-in-professional': 'scale-in-professional 0.4s ease-out',
         'pulse-gentle': 'pulse-gentle 2s infinite ease-in-out',
         'fade-in': 'fade-in 0.5s ease-out',
         'scale-in': 'scale-in 0.3s ease-out',
