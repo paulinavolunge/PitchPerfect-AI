@@ -25,8 +25,8 @@ export default defineConfig(({ mode }) => ({
     'import.meta.env.VITE_LOVABLE': JSON.stringify(mode === 'development' ? 'true' : 'false'),
   },
   build: {
-    // Optimize for production
-    minify: 'terser',
+    // Use esbuild for minification instead of terser (no additional dependency required)
+    minify: 'esbuild',
     sourcemap: false,
     rollupOptions: {
       output: {
