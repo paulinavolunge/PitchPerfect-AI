@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Star, Zap, HelpCircle, Clock } from 'lucide-react';
+import { Check, Star, Zap, HelpCircle, Clock, ArrowRight, UserPlus, LogIn } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Helmet } from 'react-helmet-async';
@@ -16,13 +18,38 @@ const Pricing = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handlePurchase = async (productType: string) => {
     if (!user) {
+      // Show clear authentication options instead of just an error
       toast({
-        title: "Please sign in",
-        description: "You need to be logged in to make a purchase.",
-        variant: "destructive",
+        title: "Sign in required",
+        description: "Please create an account or sign in to purchase credits.",
+        variant: "default",
+        duration: 6000,
+        action: (
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/signup')}
+              className="flex items-center gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              Sign Up
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/login')}
+              className="flex items-center gap-2"
+            >
+              <LogIn className="h-4 w-4" />
+              Log In
+            </Button>
+          </div>
+        ),
       });
       return;
     }
@@ -52,6 +79,10 @@ const Pricing = () => {
     }
   };
 
+  const handleSignUpRedirect = () => {
+    navigate('/signup');
+  };
+
   const subscriptionPlans = [
     {
       id: 'basic',
@@ -67,7 +98,7 @@ const Pricing = () => {
         'Email Support'
       ],
       popular: false,
-      buttonText: 'Get Basic Plan',
+      buttonText: user ? 'Get Basic Plan' : 'Sign Up for Basic Plan',
       color: 'border-green-500',
       bgColor: 'bg-green-50',
       emoji: '🟩'
@@ -87,7 +118,7 @@ const Pricing = () => {
         'Team Sharing (up to 3 users)'
       ],
       popular: true,
-      buttonText: 'Go Professional',
+      buttonText: user ? 'Go Professional' : 'Sign Up for Pro Plan',
       color: 'border-blue-500',
       bgColor: 'bg-blue-50',
       emoji: '🟦'
@@ -107,7 +138,7 @@ const Pricing = () => {
         'Custom Training Materials'
       ],
       popular: false,
-      buttonText: 'Go Enterprise',
+      buttonText: user ? 'Go Enterprise' : 'Sign Up for Enterprise',
       color: 'border-purple-500',
       bgColor: 'bg-purple-50',
       emoji: '🟪'
@@ -156,6 +187,25 @@ const Pricing = () => {
               <p className="text-xl text-brand-dark/70 max-w-2xl mx-auto">
                 Start improving your sales pitch today with AI-powered feedback and analysis
               </p>
+              
+              {!user && (
+                <Alert className="max-w-2xl mx-auto mt-6 bg-blue-50 border-blue-200">
+                  <UserPlus className="h-4 w-4" />
+                  <AlertDescription className="text-blue-800">
+                    <strong>New to PitchPerfect AI?</strong> Create a free account to get started with 1 free pitch analysis!
+                    <div className="flex gap-2 mt-3 justify-center">
+                      <Button onClick={handleSignUpRedirect} size="sm" className="bg-brand-green hover:bg-brand-green/90">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Sign Up Free
+                      </Button>
+                      <Button onClick={() => navigate('/login')} variant="outline" size="sm">
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Already have an account?
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
 
             <div className="mb-16">
@@ -191,7 +241,7 @@ const Pricing = () => {
                       </ul>
 
                       <Button
-                        onClick={() => handlePurchase(plan.id)}
+                        onClick={() => user ? handlePurchase(plan.id) : navigate('/signup')}
                         disabled={loading === plan.id}
                         className="w-full border-2 border-brand-green bg-white text-brand-green hover:bg-brand-green hover:text-white transition-all duration-300"
                         variant="outline"
@@ -203,8 +253,17 @@ const Pricing = () => {
                           </div>
                         ) : (
                           <>
-                            <Zap className="h-4 w-4 mr-2" />
-                            {plan.buttonText}
+                            {user ? (
+                              <>
+                                <Zap className="h-4 w-4 mr-2" />
+                                {plan.buttonText}
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                {plan.buttonText}
+                              </>
+                            )}
                           </>
                         )}
                       </Button>
@@ -221,6 +280,15 @@ const Pricing = () => {
                 <p className="text-brand-dark/70 font-medium">Credits never expire. Use them anytime.</p>
               </div>
               
+              {!user && (
+                <Alert className="max-w-md mx-auto mb-8 bg-amber-50 border-amber-200">
+                  <UserPlus className="h-4 w-4" />
+                  <AlertDescription className="text-amber-800 text-center">
+                    <strong>Account Required:</strong> You need to sign up or log in to purchase credit packs.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {creditPacks.map((pack) => (
                   <Card key={pack.id} className="border-2 border-gray-200 hover:border-brand-green transition-colors">
@@ -235,7 +303,7 @@ const Pricing = () => {
 
                     <CardContent>
                       <Button
-                        onClick={() => handlePurchase(pack.id)}
+                        onClick={() => user ? handlePurchase(pack.id) : navigate('/signup')}
                         disabled={loading === pack.id}
                         className="w-full border-2 border-brand-green bg-white text-brand-green hover:bg-brand-green hover:text-white transition-all duration-300"
                         variant="outline"
@@ -247,8 +315,17 @@ const Pricing = () => {
                           </div>
                         ) : (
                           <>
-                            <Zap className="h-4 w-4 mr-2" />
-                            Buy Credits
+                            {user ? (
+                              <>
+                                <Zap className="h-4 w-4 mr-2" />
+                                Buy Credits
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                Sign Up to Buy
+                              </>
+                            )}
                           </>
                         )}
                       </Button>
