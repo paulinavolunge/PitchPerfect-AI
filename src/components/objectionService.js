@@ -1,3 +1,4 @@
+
 // Example API service for objection feedback, with input sanitization
 
 export async function getObjectionFeedback(scenarioId, objectionText) {
