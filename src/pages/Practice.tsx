@@ -1,541 +1,297 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { Mic, MicOff, Pause, Play, RefreshCcw, Award, ArrowUp, ArrowDown, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import PremiumModal from '@/components/PremiumModal';
-import ProgressSummary from '@/components/gamification/ProgressSummary';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Mic, Play, Square, RotateCcw, Zap, Trophy, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
-import StreakBadge from '@/components/dashboard/StreakBadge';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Badge } from '@/components/gamification/BadgeSystem';
-import QuickStartGuide from '@/components/onboarding/QuickStartGuide';
-import { Step } from 'react-joyride';
-import GuidedTour from '@/components/GuidedTour';
-import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
-import { useNavigate } from 'react-router-dom';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { trackEvent } from '@/utils/analytics';
+import { Helmet } from 'react-helmet-async';
 
 const Practice = () => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showProgressSummary, setShowProgressSummary] = useState(false);
-  const [streakCount, setStreakCount] = useState(0);
-  const [showTour, setShowTour] = useState(false);
-  const { user, isPremium } = useAuth();
+  const { user, creditsRemaining, deductUserCredits } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [isRecording, setIsRecording] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [score, setScore] = useState<number | null>(null);
+  const [streakCount, setStreakCount] = useState(0);
 
-  // Mock data for progress summary with visual indicators
-  const mockStats = [
-    { 
-      label: "Clarity", 
-      value: 76, 
-      previousValue: 71, 
-      increase: true,
-      change: 5
-    },
-    { 
-      label: "Engagement", 
-      value: 82, 
-      previousValue: 74, 
-      increase: true,
-      change: 8
-    },
-    { 
-      label: "Pacing", 
-      value: 65, 
-      previousValue: 68, 
-      decrease: true,
-      change: -3
-    }
-  ];
-  
-  // Mock data for progress summary
-  const mockFeedback = [
-    { text: "Clear explanation of the product's core functionality", type: 'strength' as const },
-    { text: "Good enthusiasm and energy throughout the pitch", type: 'strength' as const },
-    { text: "Strong closing statement with clear call-to-action", type: 'strength' as const },
-    { text: "Speaking pace was 15% too fast in the technical section", type: 'improvement' as const },
-    { text: "Consider adding more specific customer examples", type: 'improvement' as const },
-    { text: "The value proposition could be stated earlier in the pitch", type: 'improvement' as const }
-  ];
-  
-  const mockEarnedBadges: Badge[] = [
-    {
-      id: 'first-pitch',
-      name: 'First Pitch',
-      description: 'Completed your first practice pitch',
-      icon: <Award />,
-      unlocked: true,
-      colorClass: 'bg-brand-green',
-    }
-  ];
-  
-  const mockNextMilestone = {
-    name: "Complete 5 Practice Sessions",
-    progress: 1,
-    total: 5
-  };
-
-  // Practice tour steps
-  const tourSteps: Step[] = [
-    {
-      target: '.practice-scenario',
-      content: 'This is your practice scenario. You can see details about what you should focus on in your pitch.',
-      disableBeacon: true,
-    },
-    {
-      target: '.record-button',
-      content: 'Click this button to start recording your practice pitch. Click again when you\'re finished.',
-      placement: 'top' as const,
-    },
-    {
-      target: '.playback-controls',
-      content: 'Use these controls to listen to examples or pause your recording.',
-      placement: 'bottom' as const,
-    },
-    {
-      target: '.tips-section',
-      content: 'Review these tips to help improve your pitch for this specific scenario.',
-      placement: 'top' as const,
-    }
-  ];
-  
+  // Mock streak data since user_streaks table doesn't exist
   useEffect(() => {
-    if (user) {
-      fetchUserStreak();
-      
-      const hasSeenPracticeTour = localStorage.getItem('hasSeenPracticeTour');
-      if (!hasSeenPracticeTour) {
-        setShowTour(true);
+    if (user?.id) {
+      // Use a simple localStorage-based streak for now
+      const storedStreak = localStorage.getItem(`streak_${user.id}`);
+      if (storedStreak) {
+        setStreakCount(parseInt(storedStreak, 10));
       }
     }
-    
-    if (!isPremium) {
-      setShowPremiumModal(true);
-      trackEvent('premium_modal_viewed', { context: 'practice_page' });
-    }
-  }, [user, isPremium]);
-  
-  const fetchUserStreak = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('user_streaks')
-        .select('streak_count, last_activity')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching streak:', error);
-        return;
-      }
-      
-      if (data) {
-        setStreakCount(data.streak_count);
-        
-        // Confirm timezone handling - check if last activity was today
-        const today = new Date().toISOString().split('T')[0];
-        const lastActivity = data.last_activity;
-        
-        console.log('Streak validation:', {
-          today,
-          lastActivity,
-          streakCount: data.streak_count,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        });
-      }
-    } catch (err) {
-      console.error('Failed to fetch streak:', err);
-    }
-  };
-  
-  const toggleRecording = () => {
-    if (!isPremium) {
-      setShowPremiumModal(true);
-      trackEvent('premium_modal_viewed', { context: 'recording_attempt' });
+  }, [user?.id]);
+
+  const handleStartRecording = async () => {
+    if (creditsRemaining < 1) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 1 credit to analyze a pitch.",
+        variant: "destructive",
+      });
       return;
     }
-    
-    if (isRecording) {
-      // Stop recording
-      setIsRecording(false);
-      setShowFeedback(true);
-      setShowProgressSummary(true);
-      updatePracticeStreak();
-      trackEvent('pitch_recording_stopped');
-    } else {
-      // Start recording
+
+    try {
       setIsRecording(true);
-      trackEvent('pitch_recording_started');
+      trackEvent('practice_recording_started');
+      
+      // Mock recording logic
+      setTimeout(() => {
+        setIsRecording(false);
+        handleAnalyzePitch();
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Recording error:', error);
+      setIsRecording(false);
+      toast({
+        title: "Recording Error",
+        description: "Failed to start recording. Please try again.",
+        variant: "destructive",
+      });
     }
   };
-  
-  const updatePracticeStreak = async () => {
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    handleAnalyzePitch();
+  };
+
+  const handleAnalyzePitch = async () => {
     if (!user?.id) return;
-    
+
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // Deduct credits for analysis
+      const success = await deductUserCredits('pitch_analysis', 1);
       
-      const { data: existingStreak, error: fetchError } = await supabase
-        .from('user_streaks')
-        .select('streak_count, last_activity')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error fetching streak for update:', fetchError);
+      if (!success) {
+        toast({
+          title: "Credit Deduction Failed",
+          description: "Unable to process payment for analysis.",
+          variant: "destructive",
+        });
         return;
       }
-      
-      if (!existingStreak) {
-        // Create new streak record
-        const { error: insertError } = await supabase
-          .from('user_streaks')
-          .insert({
-            user_id: user.id,
-            streak_count: 1,
-            last_activity: today
-          });
-          
-        if (insertError) {
-          console.error('Error creating streak:', insertError);
-        } else {
-          setStreakCount(1);
-          toast({
-            title: "Streak started!",
-            description: "You've started your practice streak. Practice tomorrow to keep it going!",
-          });
-        }
-      } else {
-        const lastActivityDate = new Date(existingStreak.last_activity);
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        const isYesterday = lastActivityDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
-        const isToday = lastActivityDate.toISOString().split('T')[0] === today;
-        
-        // Handle same-day repeat sessions - don't update streak
-        if (isToday) {
-          console.log('Same-day practice session - streak unchanged');
-          return;
-        }
-        
-        // Handle missed days (streak resets) or consecutive days
-        const newStreakCount = isYesterday ? existingStreak.streak_count + 1 : 1;
-        
-        const { error: updateError } = await supabase
-          .from('user_streaks')
-          .update({
-            streak_count: newStreakCount,
-            last_activity: today
-          })
-          .eq('user_id', user.id);
-          
-        if (updateError) {
-          console.error('Error updating streak:', updateError);
-        } else {
-          setStreakCount(newStreakCount);
-          
-          if (newStreakCount === 1 && !isYesterday) {
-            toast({
-              title: "Streak reset",
-              description: "Your streak has been reset. Start practicing daily to build it back up!",
-            });
-          } else if (newStreakCount > 1) {
-            toast({
-              title: `${newStreakCount}-day streak!`,
-              description: "You're building great practice habits. Keep it up!",
-            });
-          }
+
+      // Mock analysis results
+      const mockTranscript = "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
+      const mockFeedback = "Great use of specific metrics! Consider adding more emotional connection and addressing potential objections earlier in your pitch.";
+      const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
+
+      setTranscript(mockTranscript);
+      setFeedback(mockFeedback);
+      setScore(mockScore);
+      setAnalysisComplete(true);
+
+      // Update streak if score is good
+      if (mockScore >= 80) {
+        const newStreak = streakCount + 1;
+        setStreakCount(newStreak);
+        if (user?.id) {
+          localStorage.setItem(`streak_${user.id}`, newStreak.toString());
         }
       }
-    } catch (err) {
-      console.error('Failed to update streak:', err);
+
+      trackEvent('practice_analysis_complete', {
+        score: mockScore,
+        credits_used: 1
+      });
+
+      toast({
+        title: "Analysis Complete!",
+        description: `Your pitch scored ${mockScore}/100`,
+      });
+
+    } catch (error) {
+      console.error('Analysis error:', error);
+      toast({
+        title: "Analysis Failed",
+        description: "Failed to analyze your pitch. Please try again.",
+        variant: "destructive",
+      });
     }
   };
-  
+
   const resetPractice = () => {
-    setIsRecording(false);
-    setShowFeedback(false);
-  };
-  
-  const handleTourComplete = () => {
-    localStorage.setItem('hasSeenPracticeTour', 'true');
-    trackEvent('practice_tour_completed');
-  };
-  
-  const handleFeedbackSubmitted = (wasHelpful: boolean) => {
-    console.log('Practice session feedback:', wasHelpful ? 'helpful' : 'not helpful');
-    
-    if (wasHelpful) {
-      toast({
-        title: "Great!",
-        description: "We'll keep refining your practice experience.",
-        variant: "default",
-      });
-    } else {
-      toast({
-        title: "Thanks for your feedback",
-        description: "We'll work on improving your practice sessions.",
-        variant: "default",
-      });
-    }
-  };
-  
-  const handleSaveFeedback = () => {
-    if (!user) {
-      toast({
-        title: "Sign up to save",
-        description: "Create a free account to save feedback",
-      });
-      navigate('/signup');
-      return;
-    }
-    
-    // Save feedback logic for authenticated users
-    toast({
-      title: "Feedback saved!",
-      description: "Your practice session has been saved to your dashboard.",
-    });
+    setAnalysisComplete(false);
+    setTranscript('');
+    setFeedback('');
+    setScore(null);
+    trackEvent('practice_reset');
   };
 
-  const handleViewFeedback = () => {
-    setShowFeedback(true);
-    setShowProgressSummary(true);
-    trackEvent('ai_feedback_viewed');
-    
-    // Track badge earned
-    trackEvent('badge_earned', { 
-      badge: 'First Pitch',
-      context: 'practice_session'
-    });
-  };
-
-  const StatDisplay = ({ stat }: { stat: typeof mockStats[0] }) => (
-    <div className="bg-gray-50 p-4 rounded-lg">
-      <p className="text-sm text-brand-dark/70 mb-1">{stat.label}</p>
-      <div className="flex items-center justify-center gap-2">
-        <div className="text-2xl font-bold text-brand-dark">{stat.value}%</div>
-        <div className={`text-xs px-1.5 py-0.5 rounded flex items-center gap-1 ${
-          stat.increase 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-yellow-100 text-yellow-800'
-        }`}>
-          {stat.increase ? (
-            <ArrowUp className="h-3 w-3" />
-          ) : (
-            <ArrowDown className="h-3 w-3" />
-          )}
-          {Math.abs(stat.change)}%
-        </div>
-      </div>
-    </div>
-  );
-  
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      {/* Practice Tour */}
-      <GuidedTour
-        steps={tourSteps}
-        run={showTour}
-        onComplete={handleTourComplete}
-      />
-      
-      <main className="flex-grow pt-20 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <ResponsiveLayout>
+      <Helmet>
+        <title>Practice Your Pitch - PitchPerfect AI</title>
+        <meta name="description" content="Practice your sales pitch with AI-powered feedback and analysis." />
+      </Helmet>
+
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-brand-dark mb-2">Practice Your Pitch</h1>
+          <p className="text-brand-dark/70">
+            Record your sales pitch and get instant AI-powered feedback to improve your delivery.
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-4 flex items-center">
+              <Zap className="h-8 w-8 text-brand-green mr-3" />
               <div>
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-brand-dark">Practice Your Pitch</h1>
-                  {streakCount > 0 && <StreakBadge streakCount={streakCount} />}
-                </div>
-                <p className="text-brand-dark/70 mb-4">Choose a scenario or upload your script to start practicing and get instant AI feedback.</p>
+                <p className="text-sm text-brand-dark/70">Credits Remaining</p>
+                <p className="text-2xl font-bold text-brand-dark">{creditsRemaining}</p>
               </div>
-              <Button variant="outline" onClick={resetPractice} className="flex items-center gap-2">
-                <RefreshCcw size={16} />
-                New Session
-              </Button>
-            </div>
-            
-            {!localStorage.getItem('hasSeenPracticeTour') && (
-              <div className="mb-8">
-                <QuickStartGuide onStartTour={() => setShowTour(true)} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 flex items-center">
+              <Trophy className="h-8 w-8 text-yellow-500 mr-3" />
+              <div>
+                <p className="text-sm text-brand-dark/70">Current Streak</p>
+                <p className="text-2xl font-bold text-brand-dark">{streakCount}</p>
               </div>
-            )}
-            
-            <Card className="mb-8 practice-scenario">
-              <CardContent className="p-8">
-                <div className="text-center">
-                  <h2 className="text-xl font-medium mb-6">Product Demo Pitch</h2>
-                  
-                  {!showFeedback ? (
-                    <div className="space-y-8">
-                      <p className="text-brand-dark/70 max-w-lg mx-auto">
-                        Demonstrate your product's key features and benefits in a clear, engaging 2-3 minute pitch.
-                      </p>
-                      
-                      <div className="flex justify-center record-button">
-                        <Button
-                          className={`rounded-full h-20 w-20 group ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-brand-green hover:bg-brand-green/90'}`}
-                          onClick={toggleRecording}
-                          aria-label={isRecording ? "Stop recording your pitch" : "Start recording your pitch"}
-                          aria-pressed={isRecording}
-                        >
-                          {isRecording ? (
-                            <MicOff size={32} />
-                          ) : (
-                            <Mic size={32} />
-                          )}
-                        </Button>
-                      </div>
-                      
-                      {isRecording && (
-                        <div className="animate-pulse text-red-500 font-medium" aria-live="polite">
-                          Recording...
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-center gap-4 playback-controls">
-                        <Button 
-                          variant="outline" 
-                          className="flex items-center gap-2 group" 
-                          aria-label="Play example pitch"
-                        >
-                          <Play size={16} />
-                          Example
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="flex items-center gap-2 group" 
-                          aria-label="Pause current recording"
-                          aria-pressed={false}
-                        >
-                          <Pause size={16} />
-                          Pause
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-8">
-                      <div className="bg-brand-blue/20 rounded-xl p-6 text-left" aria-live="polite">
-                        <h3 className="font-medium text-lg mb-4 text-brand-dark">AI Feedback</h3>
-                        
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-medium text-brand-dark mb-2">Strengths</h4>
-                            <ul className="list-disc pl-5 space-y-1 text-brand-dark/70">
-                              <li>Clear explanation of the product's core functionality</li>
-                              <li>Good enthusiasm and energy throughout the pitch</li>
-                              <li>Strong closing statement with clear call-to-action</li>
-                            </ul>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-medium text-brand-dark mb-2">Areas for Improvement</h4>
-                            <ul className="list-disc pl-5 space-y-1 text-brand-dark/70">
-                              <li>Speaking pace was 15% too fast in the technical section</li>
-                              <li>Consider adding more specific customer examples</li>
-                              <li>The value proposition could be stated earlier in the pitch</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center" aria-live="polite">
-                        {mockStats.map((stat, index) => (
-                          <StatDisplay key={index} stat={stat} />
-                        ))}
-                      </div>
-                      
-                      <div className="flex flex-col sm:flex-row justify-center gap-4">
-                        <Button className="btn-primary bg-brand-green hover:bg-brand-green/90 group" onClick={resetPractice}>
-                          Try Again
-                        </Button>
-                        <Button variant="outline" onClick={handleSaveFeedback} className="group">
-                          Save Feedback
-                        </Button>
-                        <Button 
-                          onClick={() => navigate('/roleplay')}
-                          className="bg-brand-blue hover:bg-brand-blue/90 text-white group flex items-center gap-2"
-                        >
-                          <TrendingUp size={16} />
-                          Continue to Roleplay
-                        </Button>
-                      </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 flex items-center">
+              <Target className="h-8 w-8 text-brand-blue mr-3" />
+              <div>
+                <p className="text-sm text-brand-dark/70">Best Score</p>
+                <p className="text-2xl font-bold text-brand-dark">{score || '--'}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recording Interface */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Mic className="h-5 w-5 mr-2" />
+              Record Your Pitch
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center space-y-6">
+              {!analysisComplete ? (
+                <>
+                  <div className="flex justify-center">
+                    {!isRecording ? (
+                      <Button 
+                        onClick={handleStartRecording}
+                        size="lg"
+                        className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-4 text-lg"
+                        disabled={creditsRemaining < 1}
+                      >
+                        <Play className="h-5 w-5 mr-2" />
+                        Start Recording
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={handleStopRecording}
+                        size="lg"
+                        variant="destructive"
+                        className="px-8 py-4 text-lg"
+                      >
+                        <Square className="h-5 w-5 mr-2" />
+                        Stop Recording
+                      </Button>
+                    )}
+                  </div>
+
+                  {isRecording && (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-brand-dark">Recording in progress...</span>
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Add feedback prompt before the tips section */}
-            <div className="mb-8 p-4 bg-blue-50 border-l-4 border-blue-300 rounded-lg">
-              <FeedbackPrompt 
-                feedbackType="practice"
-                onFeedbackSubmitted={handleFeedbackSubmitted}
-              />
-            </div>
-            
-            <Card className="tips-section">
-              <CardContent className="p-6">
-                <h3 className="font-medium text-lg mb-4 text-brand-dark">Tips for this scenario</h3>
-                <ul className="space-y-3">
-                  <li className="flex gap-3">
-                    <div className="text-brand-green font-bold">•</div>
-                    <p className="text-brand-dark/70">Start with a compelling problem statement that resonates with your audience</p>
-                  </li>
-                  <li className="flex gap-3">
-                    <div className="text-brand-green font-bold">•</div>
-                    <p className="text-brand-dark/70">Limit your pitch to 2-3 key benefits rather than listing all features</p>
-                  </li>
-                  <li className="flex gap-3">
-                    <div className="text-brand-green font-bold">•</div>
-                    <p className="text-brand-dark/70">Include a specific success metric or case study to build credibility</p>
-                  </li>
-                  <li className="flex gap-3">
-                    <div className="text-brand-green font-bold">•</div>
-                    <p className="text-brand-dark/70">End with a clear, low-friction next step for your prospect</p>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-      
-      <Footer />
 
-      {/* Premium Modal */}
-      <PremiumModal 
-        isOpen={showPremiumModal} 
-        onClose={() => setShowPremiumModal(false)} 
-        feature="voice practice"
-      />
-      
-      {/* Progress Summary Dialog */}
-      <Dialog open={showProgressSummary} onOpenChange={setShowProgressSummary}>
-        <DialogContent className="sm:max-w-2xl">
-          <ProgressSummary
-            sessionName="Product Demo Pitch"
-            stats={mockStats}
-            feedback={mockFeedback}
-            earnedBadges={mockEarnedBadges}
-            nextMilestone={mockNextMilestone}
-            onClose={() => setShowProgressSummary(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
+                  {creditsRemaining < 1 && (
+                    <p className="text-red-600 text-sm">
+                      You need at least 1 credit to analyze a pitch. Please purchase more credits to continue.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <Badge variant="secondary" className="text-lg px-4 py-2">
+                    Analysis Complete!
+                  </Badge>
+                  
+                  <Button onClick={resetPractice} className="bg-brand-blue hover:bg-brand-blue/90">
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Practice Again
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Results */}
+        {analysisComplete && (
+          <div className="space-y-6">
+            {/* Score */}
+            {score && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Score</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-brand-green mb-2">{score}/100</div>
+                    <p className="text-brand-dark/70">
+                      {score >= 90 ? 'Excellent!' : 
+                       score >= 80 ? 'Great job!' : 
+                       score >= 70 ? 'Good work!' : 'Keep practicing!'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Transcript */}
+            {transcript && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Transcript</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-brand-dark/80 leading-relaxed">{transcript}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Feedback */}
+            {feedback && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Feedback</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-brand-dark/80 leading-relaxed">{feedback}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+      </div>
+    </ResponsiveLayout>
   );
 };
 

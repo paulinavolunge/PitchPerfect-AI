@@ -13,6 +13,7 @@ interface AuthContextType {
   trialUsed: boolean;
   startFreeTrial: () => Promise<boolean>;
   deductUserCredits: (featureType: string, credits: number) => Promise<boolean>;
+  refreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -92,6 +93,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshSubscription = async (): Promise<void> => {
+    if (!user?.id) return;
+    
+    try {
+      await loadUserProfile(user.id);
+    } catch (error) {
+      console.error('Failed to refresh subscription:', error);
+    }
+  };
+
   const startFreeTrial = async (): Promise<boolean> => {
     if (!user?.id || trialUsed) {
       return false;
@@ -138,9 +149,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
 
-      if (data?.success) {
-        setCreditsRemaining(data.remaining_credits || 0);
-        return true;
+      // Handle the response properly based on the function's return type
+      if (typeof data === 'object' && data !== null) {
+        const result = data as any;
+        
+        if (result.success === true) {
+          setCreditsRemaining(result.remaining_credits || 0);
+          return true;
+        }
       }
 
       return false;
@@ -168,6 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     trialUsed,
     startFreeTrial,
     deductUserCredits,
+    refreshSubscription,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
