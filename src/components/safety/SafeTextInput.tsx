@@ -23,11 +23,26 @@ export const SafeTextInput: React.FC<SafeTextInputProps> = ({
   className,
   ...props
 }) => {
-  const [value, setValue] = useState(controlledValue || '');
+  // Convert controlled value to string, handling all possible types
+  const getStringValue = (val: string | number | readonly string[] | undefined): string => {
+    if (val === undefined || val === null) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number') return val.toString();
+    if (Array.isArray(val)) return val.join(', ');
+    return String(val);
+  };
+
+  const [value, setValue] = useState(getStringValue(controlledValue));
   const [safetyLevel, setSafetyLevel] = useState<SafetyLevel>(SafetyLevel.SAFE);
   const [safetyIssues, setSafetyIssues] = useState<string[]>([]);
   const [isValidating, setIsValidating] = useState(false);
   const { validateInput } = useContentSafety();
+
+  // Update internal value when controlled value changes
+  useEffect(() => {
+    const stringValue = getStringValue(controlledValue);
+    setValue(stringValue);
+  }, [controlledValue]);
 
   // Debounced validation
   useEffect(() => {
