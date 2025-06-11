@@ -1,6 +1,4 @@
 
-import { browserInfo } from './browserDetection';
-
 // Extend Navigator interface for polyfills
 declare global {
   interface Navigator {
@@ -31,6 +29,25 @@ declare global {
 if (typeof window === 'undefined') {
   throw new Error('Polyfills can only be initialized in a browser environment');
 }
+
+// Safe browser detection without imports
+const safeBrowserInfo = (() => {
+  try {
+    const userAgent = navigator.userAgent;
+    return {
+      isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent),
+      isIOS: /iP(ad|hone|od)/.test(userAgent),
+      isFirefox: /Firefox/.test(userAgent)
+    };
+  } catch (error) {
+    console.warn('Could not detect browser:', error);
+    return {
+      isSafari: false,
+      isIOS: false,
+      isFirefox: false
+    };
+  }
+})();
 
 // Polyfill for getUserMedia
 if (!navigator.mediaDevices && ((navigator as any).getUserMedia || (navigator as any).webkitGetUserMedia || (navigator as any).mozGetUserMedia)) {
@@ -74,7 +91,7 @@ if (!window.cancelAnimationFrame) {
 }
 
 // Safari-specific fixes
-if (browserInfo?.isSafari) {
+if (safeBrowserInfo.isSafari) {
   // Safari requires user interaction before playing audio
   let audioContextUnlocked = false;
   
@@ -105,7 +122,7 @@ if (browserInfo?.isSafari) {
 }
 
 // iOS-specific fixes
-if (browserInfo?.isIOS) {
+if (safeBrowserInfo.isIOS) {
   // iOS requires user gesture for microphone access
   let microphoneUnlocked = false;
   
@@ -127,7 +144,7 @@ if (browserInfo?.isIOS) {
 }
 
 // Firefox-specific fixes
-if (browserInfo?.isFirefox) {
+if (safeBrowserInfo.isFirefox) {
   // Firefox has different permission handling
   if (!(navigator as any).permissions) {
     (navigator as any).permissions = {
@@ -138,7 +155,6 @@ if (browserInfo?.isFirefox) {
 
 export const initializePolyfills = () => {
   try {
-    console.log(`🔧 Browser: ${browserInfo?.name || 'Unknown'} ${browserInfo?.version || 'Unknown'}`);
     console.log('🔧 Polyfills initialized for cross-browser compatibility');
     
     // Debug logging for voice features
