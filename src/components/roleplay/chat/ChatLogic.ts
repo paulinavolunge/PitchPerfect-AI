@@ -1,5 +1,6 @@
 import { salesMethodologies } from '../../data/salesMethodologies';
 import { objectionDetectionService, ObjectionType } from '../../../services/ObjectionDetectionService';
+import { ContentSafetyAnalyzer } from '@/utils/contentSafety';
 
 interface Scenario {
   difficulty: string;
@@ -42,8 +43,18 @@ export const generateAIResponse = (userInput: string, scenario: Scenario, userSc
   
   console.log("Analyzing user input for objections:", userInput);
   
+  // Content safety check for user input
+  const safetyAnalysis = ContentSafetyAnalyzer.analyzeContent(userInput, 'USER_MESSAGE');
+  if (safetyAnalysis.blocked) {
+    console.warn('User input blocked by content safety:', safetyAnalysis.issues);
+    return `${persona}: I'm sorry, but I can't respond to that type of content. Let's keep our conversation professional and focused on sales practice.`;
+  }
+
+  // Use sanitized input if available
+  const safeUserInput = safetyAnalysis.sanitizedContent || userInput;
+  
   // First, detect if there's an objection in the user input
-  const objectionDetection = objectionDetectionService.detectObjection(userInput);
+  const objectionDetection = objectionDetectionService.detectObjection(safeUserInput);
   
   console.log("Objection detection result:", objectionDetection);
   
@@ -57,7 +68,15 @@ export const generateAIResponse = (userInput: string, scenario: Scenario, userSc
     );
     
     const formattedResponse = objectionDetectionService.formatResponse(objectionResponse);
-    return `${persona}: ${formattedResponse}`;
+    const aiResponse = `${persona}: ${formattedResponse}`;
+    
+    // Safety check for AI output
+    const outputSafety = ContentSafetyAnalyzer.analyzeAIOutput(aiResponse);
+    if (outputSafety.blocked) {
+      return `${persona}: I apologize, but I need to adjust my response. Let me try a different approach to address your concern.`;
+    }
+    
+    return outputSafety.sanitizedContent || aiResponse;
   }
   
   // If confidence is low but we detected something, use fallback
@@ -133,7 +152,15 @@ export const generateAIResponse = (userInput: string, scenario: Scenario, userSc
     `${persona}: That's a common question. The short answer is yes, but there's actually more value in how we implement it compared to others in the market.`
   ];
   
-  return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  const finalResponse = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  
+  // Safety check for final response
+  const outputSafety = ContentSafetyAnalyzer.analyzeAIOutput(finalResponse);
+  if (outputSafety.blocked || outputSafety.sanitizedContent) {
+    return outputSafety.sanitizedContent || `${persona}: I'd like to understand more about your specific situation. Could you share more details about your current challenges?`;
+  }
+  
+  return finalResponse;
 };
 
 /**

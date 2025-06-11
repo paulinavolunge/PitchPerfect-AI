@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
@@ -7,6 +6,7 @@ import VoiceRecognitionManager from '@/components/voice/VoiceRecognitionManager'
 import { cn } from '@/lib/utils';
 import { AIErrorHandler } from '@/utils/aiErrorHandler';
 import { showAIErrorToast } from '@/components/ui/ai-error-toast';
+import { useContentSafety } from '@/hooks/useContentSafety';
 
 interface ChatInputProps {
   mode: 'voice' | 'text' | 'hybrid';
@@ -29,6 +29,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const showVoiceInput = mode === 'voice' || mode === 'hybrid';
+  const { validateInput } = useContentSafety();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -45,19 +46,27 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [voiceTranscript, mode]);
 
-  const handleVoiceTranscript = (text: string, isFinal: boolean) => {
+  const handleVoiceTranscript = async (text: string, isFinal: boolean) => {
     try {
-      setVoiceTranscript(text);
+      // Validate voice transcript for safety
+      const safetyResult = await validateInput(text, 'VOICE_TRANSCRIPT');
+      if (!safetyResult.isValid) {
+        setVoiceError('Voice input contains inappropriate content');
+        return;
+      }
+
+      const safeText = safetyResult.sanitized || text;
+      setVoiceTranscript(safeText);
       setVoiceError(null);
       
       // In voice-only mode, we update the textarea with the transcript
       if (mode === 'voice') {
-        setMessage(text);
+        setMessage(safeText);
       }
       
       // Auto-send final transcripts in voice-only mode if configured
-      if (isFinal && text.trim() && mode === 'voice') {
-        handleSendMessage(text);
+      if (isFinal && safeText.trim() && mode === 'voice') {
+        handleSendMessage(safeText);
       }
     } catch (error) {
       console.error('Error handling voice transcript:', error);
@@ -88,6 +97,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
     
     if (!finalMessage.trim() || disabled || isSubmitting) return;
 
+    // Content safety validation
+    const safetyResult = await validateInput(finalMessage, 'USER_MESSAGE');
+    if (!safetyResult.isValid) {
+      return; // Safety hook will show appropriate error message
+    }
+
+    // Use sanitized content if available
+    const messageToSend = safetyResult.sanitized || finalMessage;
+
     // Check rate limiting
     if (!AIErrorHandler.checkRateLimit(userId, 'chat-message', 20)) {
       return;
@@ -98,11 +116,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
     try {
       await AIErrorHandler.withRetry(
         async () => {
-          if (!finalMessage.trim()) {
+          if (!messageToSend.trim()) {
             throw new Error('Empty message');
           }
           
-          onSendMessage(finalMessage.trim());
+          onSendMessage(messageToSend.trim());
         },
         `send-message-${Date.now()}`,
         { maxRetries: 2 }
@@ -162,6 +180,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             )}
             disabled={disabled || isSubmitting}
             rows={1}
+            maxLength={1500}
             aria-label="Message input"
           />
           
