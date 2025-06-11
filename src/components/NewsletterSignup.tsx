@@ -1,57 +1,68 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { ValidatedInput } from '@/components/ui/validated-input';
 import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { toast } from 'sonner';
-import { Mail, AlertCircle } from 'lucide-react';
+import { Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { emailSchema } from '@/utils/formValidation';
 
 const formSchema = z.object({
-  email: z.string()
-    .min(1, { message: 'Email is required' })
-    .email({ message: 'Please enter a valid email address' })
-    .refine(email => !email.endsWith('.con'), {
-      message: 'Did you mean .com? Please check your email address',
-    })
+  email: emailSchema
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 const NewsletterSignup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: ''
     },
-    mode: 'onBlur' // Validate on blur for better UX
+    mode: 'onChange' // Enable real-time validation
   });
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      // In a real app, you would integrate with an email service API here
-      console.log('Newsletter signup:', data.email);
-      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      toast.success("Thanks for subscribing to our newsletter!", {
-        description: "You'll receive updates on new resources and tips."
+      setIsSuccess(true);
+      toast.success("Welcome to our newsletter!", {
+        description: "You'll receive updates on new resources and tips.",
+        icon: <CheckCircle2 className="h-4 w-4" />
       });
       
       form.reset();
+      
+      // Reset success state after 3 seconds
+      setTimeout(() => setIsSuccess(false), 3000);
     } catch (error) {
       console.error('Newsletter signup error:', error);
       toast.error("Couldn't complete your subscription", {
-        description: "Please try again later."
+        description: "Please try again later.",
+        icon: <AlertCircle className="h-4 w-4" />
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const validateEmail = (email: string): string | undefined => {
+    try {
+      emailSchema.parse(email);
+      return undefined;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return error.errors[0]?.message;
+      }
+      return 'Invalid email';
     }
   };
 
@@ -69,46 +80,55 @@ const NewsletterSignup = () => {
             Subscribe to our newsletter for weekly sales strategies, pitch templates, and AI insights to boost your sales performance.
           </p>
           
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field, fieldState }) => (
-                  <FormItem className="flex-grow relative">
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="Enter your email" 
-                          type="email"
-                          className={`h-12 ${fieldState.error ? 'border-red-500 focus-visible:ring-red-300' : ''}`}
-                          aria-invalid={fieldState.error ? "true" : "false"}
-                          {...field} 
-                        />
-                        {fieldState.error && (
-                          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500">
-                            <AlertCircle className="h-4 w-4" />
-                          </span>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-left absolute text-xs" />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                className="btn-primary h-12 px-6"
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <div className="flex-grow">
+              <ValidatedInput
+                id="newsletter-email"
+                placeholder="Enter your email address"
+                type="email"
+                value={form.watch('email')}
+                onChange={(value) => form.setValue('email', value, { shouldValidate: true })}
+                validateOnChange={validateEmail}
+                error={form.formState.errors.email?.message}
+                success={form.formState.isValid && form.watch('email').length > 0}
+                hint="We'll never spam you or share your email"
+                className="h-12"
                 disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Subscribing...' : 'Subscribe'}
-              </Button>
-            </form>
-          </Form>
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="btn-primary h-12 px-6 flex-shrink-0"
+              disabled={isSubmitting || !form.formState.isValid || !form.watch('email')}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                  Subscribing...
+                </>
+              ) : isSuccess ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Subscribed!
+                </>
+              ) : (
+                'Subscribe'
+              )}
+            </Button>
+          </form>
           
           <p className="text-xs text-brand-dark/60 mt-4">
             We respect your privacy. Unsubscribe at any time.
           </p>
+          
+          {isSuccess && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in">
+              <p className="text-sm text-green-700 font-medium">
+                🎉 Thanks for subscribing! Check your email for a welcome message.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>
