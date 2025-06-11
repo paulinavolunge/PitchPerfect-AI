@@ -3,6 +3,7 @@ console.log('App.tsx: File loaded');
 
 import React, { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import Index from './pages/Index';
 
 console.log('App.tsx: All imports loaded successfully');
 
@@ -157,125 +158,6 @@ const LoadingWithTimeout = () => {
   );
 };
 
-// Simple home page with working navigation
-const HomePage = () => {
-  console.log('HomePage: Component rendered');
-  
-  useEffect(() => {
-    console.log('HomePage: useEffect called');
-  }, []);
-
-  const handleGetStarted = () => {
-    console.log('Button Clicked: Get Started');
-    window.location.href = '/voice';
-  };
-
-  const handleVoiceTraining = () => {
-    console.log('Button Clicked: Voice Training');
-    window.location.href = '/voice';
-  };
-
-  const handleAnalytics = () => {
-    console.log('Button Clicked: Analytics');
-    window.location.href = '/analytics';
-  };
-
-  const handleRoleplay = () => {
-    console.log('Button Clicked: AI Roleplay');
-    window.location.href = '/roleplay';
-  };
-
-  return (
-    <div style={{ 
-      padding: '2rem', 
-      fontFamily: 'Arial, sans-serif',
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white'
-    }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-          🎯 PitchPerfect AI
-        </h1>
-        <p style={{ fontSize: '1.2rem', marginBottom: '2rem', opacity: 0.9 }}>
-          Welcome to your Sales Training Platform
-        </p>
-        <div style={{ 
-          padding: '2rem', 
-          backgroundColor: 'rgba(255,255,255,0.1)', 
-          borderRadius: '12px',
-          backdropFilter: 'blur(10px)',
-          marginBottom: '2rem'
-        }}>
-          <h2 style={{ margin: '0 0 1rem 0', color: '#fff' }}>✅ App Status</h2>
-          <p style={{ margin: '0', fontSize: '1.1rem' }}>
-            Core app is loading successfully! React is working.
-          </p>
-        </div>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '1rem',
-          marginTop: '2rem'
-        }}>
-          <div 
-            style={{ 
-              padding: '1.5rem', 
-              backgroundColor: 'rgba(255,255,255,0.1)', 
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}
-            onClick={handleVoiceTraining}
-          >
-            <h3>🎤 Voice Training</h3>
-            <p>Practice your sales pitches with AI feedback</p>
-          </div>
-          <div 
-            style={{ 
-              padding: '1.5rem', 
-              backgroundColor: 'rgba(255,255,255,0.1)', 
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}
-            onClick={handleAnalytics}
-          >
-            <h3>📊 Analytics</h3>
-            <p>Track your progress and improvements</p>
-          </div>
-          <div 
-            style={{ 
-              padding: '1.5rem', 
-              backgroundColor: 'rgba(255,255,255,0.1)', 
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}
-            onClick={handleRoleplay}
-          >
-            <h3>🤖 AI Roleplay</h3>
-            <p>Practice with realistic customer scenarios</p>
-          </div>
-        </div>
-        <button
-          onClick={handleGetStarted}
-          style={{
-            marginTop: '2rem',
-            padding: '1rem 2rem',
-            fontSize: '1.1rem',
-            backgroundColor: '#fff',
-            color: '#667eea',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          Get Started
-        </button>
-      </div>
-    </div>
-  );
-};
-
 // Placeholder components for testing
 const VoiceTrainingPage = () => (
   <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
@@ -378,7 +260,7 @@ function App() {
   
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<Index />} />
       <Route path="/voice" element={<VoiceTrainingPage />} />
       <Route path="/analytics" element={<AnalyticsPage />} />
       <Route path="/roleplay" element={<RoleplayPage />} />
