@@ -17,12 +17,12 @@ const BrowserCompatibilityChecker: React.FC<BrowserCompatibilityCheckerProps> = 
   onCompatibilityChecked,
   showDetails = true
 }) => {
-  const [capabilities, setCcapabilities] = useState<any>(null);
+  const [capabilities, setCapabilities] = useState<any>(null);
   const [showFullReport, setShowFullReport] = useState(false);
 
   useEffect(() => {
     const caps = crossBrowserVoiceService.getBrowserCapabilities();
-    setCaps(caps);
+    setCapabilities(caps);
     
     // Determine overall compatibility
     const isCompatible = caps.supportsMediaDevices && 

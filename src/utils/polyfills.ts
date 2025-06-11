@@ -1,10 +1,38 @@
 
 import { browserInfo } from './browserDetection';
 
+// Extend Navigator interface for polyfills
+declare global {
+  interface Navigator {
+    getUserMedia?: (
+      constraints: MediaStreamConstraints,
+      successCallback: (stream: MediaStream) => void,
+      errorCallback: (error: any) => void
+    ) => void;
+    webkitGetUserMedia?: (
+      constraints: MediaStreamConstraints,
+      successCallback: (stream: MediaStream) => void,
+      errorCallback: (error: any) => void
+    ) => void;
+    mozGetUserMedia?: (
+      constraints: MediaStreamConstraints,
+      successCallback: (stream: MediaStream) => void,
+      errorCallback: (error: any) => void
+    ) => void;
+  }
+
+  interface Window {
+    SpeechRecognition?: typeof SpeechRecognition;
+    webkitSpeechRecognition?: typeof SpeechRecognition;
+    AudioContext?: typeof AudioContext;
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 // Polyfill for getUserMedia
-if (!navigator.mediaDevices && navigator.getUserMedia) {
-  navigator.mediaDevices = {};
-  navigator.mediaDevices.getUserMedia = function(constraints) {
+if (!navigator.mediaDevices && (navigator.getUserMedia || (navigator as any).webkitGetUserMedia || (navigator as any).mozGetUserMedia)) {
+  (navigator as any).mediaDevices = {};
+  (navigator as any).mediaDevices.getUserMedia = function(constraints: MediaStreamConstraints) {
     const getUserMedia = navigator.getUserMedia || 
                         (navigator as any).webkitGetUserMedia || 
                         (navigator as any).mozGetUserMedia;
@@ -21,23 +49,23 @@ if (!navigator.mediaDevices && navigator.getUserMedia) {
 
 // Polyfill for AudioContext
 if (!window.AudioContext && (window as any).webkitAudioContext) {
-  window.AudioContext = (window as any).webkitAudioContext;
+  (window as any).AudioContext = (window as any).webkitAudioContext;
 }
 
 // Polyfill for SpeechRecognition
 if (!window.SpeechRecognition && (window as any).webkitSpeechRecognition) {
-  window.SpeechRecognition = (window as any).webkitSpeechRecognition;
+  (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
 }
 
 // Polyfill for requestAnimationFrame
 if (!window.requestAnimationFrame) {
-  window.requestAnimationFrame = function(callback) {
+  (window as any).requestAnimationFrame = function(callback: FrameRequestCallback) {
     return window.setTimeout(callback, 1000 / 60);
   };
 }
 
 if (!window.cancelAnimationFrame) {
-  window.cancelAnimationFrame = function(id) {
+  (window as any).cancelAnimationFrame = function(id: number) {
     window.clearTimeout(id);
   };
 }
@@ -78,9 +106,9 @@ if (browserInfo.isIOS) {
     if (microphoneUnlocked) return;
     
     try {
-      const stream = await navigator.mediaDevices?.getUserMedia({ audio: true });
+      const stream = await (navigator as any).mediaDevices?.getUserMedia({ audio: true });
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
         microphoneUnlocked = true;
       }
     } catch (error) {
@@ -94,7 +122,7 @@ if (browserInfo.isIOS) {
 // Firefox-specific fixes
 if (browserInfo.isFirefox) {
   // Firefox has different permission handling
-  if (!navigator.permissions) {
+  if (!(navigator as any).permissions) {
     (navigator as any).permissions = {
       query: () => Promise.resolve({ state: 'prompt' })
     };

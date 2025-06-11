@@ -84,13 +84,16 @@ export class CrossBrowserVoiceService extends VoiceService {
     try {
       // Firefox permission API may not be fully supported
       if ('permissions' in navigator) {
-        const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        const result = await (navigator as any).permissions.query({ name: 'microphone' });
         return result.state === 'granted';
       } else {
         // Fallback: try to access microphone directly
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
-        return true;
+        const stream = await (navigator as any).mediaDevices?.getUserMedia({ audio: true });
+        if (stream) {
+          stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+          return true;
+        }
+        return false;
       }
     } catch (error) {
       return false;
@@ -105,9 +108,12 @@ export class CrossBrowserVoiceService extends VoiceService {
         return false; // Always prompt for permission on mobile Safari
       } else {
         // Desktop Safari
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
-        return true;
+        const stream = await (navigator as any).mediaDevices?.getUserMedia({ audio: true });
+        if (stream) {
+          stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+          return true;
+        }
+        return false;
       }
     } catch (error) {
       return false;
