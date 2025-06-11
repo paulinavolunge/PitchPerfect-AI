@@ -1,93 +1,132 @@
 
-console.log('App.tsx: File loaded');
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider } from '@/context/AuthContext';
+import { GuestModeProvider } from '@/context/GuestModeContext';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
+import MobileNavBar from '@/components/MobileNavBar';
 
-import React, { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Index from './pages/Index';
-import LoadingWithTimeout from './components/LoadingWithTimeout';
-import { VoiceTrainingPage, AnalyticsPage, RoleplayPage, NotFoundPage } from './components/PlaceholderPages';
+// Page imports
+import Index from '@/pages/Index';
+import About from '@/pages/About';
+import Compare from '@/pages/Compare';
+import Pricing from '@/pages/Pricing';
+import Demo from '@/pages/Demo';
+import Login from '@/pages/Login';
+import Signup from '@/pages/Signup';
+import Dashboard from '@/pages/Dashboard';
+import Practice from '@/pages/Practice';
+import RolePlay from '@/pages/RolePlay';
+import Progress from '@/pages/Progress';
+import Tips from '@/pages/Tips';
+import CallRecordings from '@/pages/CallRecordings';
+import PasswordReset from '@/pages/PasswordReset';
+import UpdatePassword from '@/pages/UpdatePassword';
+import EmailConfirmed from '@/pages/EmailConfirmed';
+import Terms from '@/pages/Terms';
+import Privacy from '@/pages/Privacy';
+import DataSafety from '@/pages/DataSafety';
+import AccountDelete from '@/pages/AccountDelete';
+import Subscription from '@/pages/Subscription';
+import SubscriptionManagement from '@/pages/SubscriptionManagement';
+import Success from '@/pages/Success';
+import Cancel from '@/pages/Cancel';
+import TeamDashboard from '@/pages/TeamDashboard';
+import NotFound from '@/pages/NotFound';
 
-console.log('App.tsx: All imports loaded successfully');
+// Create QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      retry: (failureCount, error: any) => {
+        if (error?.status === 404 || error?.status === 403) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+    },
+  },
+});
 
 function App() {
-  console.log('App: Component function called');
-  
-  const [loadingState, setLoadingState] = useState('initial');
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    console.log('App: useEffect started');
-    
-    const loadApp = async () => {
-      try {
-        console.log('App: Starting app loading simulation');
-        
-        // Simulate loading
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        console.log('App: Loading complete, setting state to complete');
-        setLoadingState('complete');
-        
-      } catch (err) {
-        console.error('App: Error during loading:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        setLoadingState('error');
-      }
-    };
-
-    loadApp();
-  }, []);
-
-  console.log('App: Current loading state:', loadingState);
-
-  if (loadingState === 'initial') {
-    console.log('App: Rendering loading component');
-    return <LoadingWithTimeout />;
-  }
-
-  if (loadingState === 'error') {
-    console.log('App: Rendering error state');
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        fontFamily: 'Arial, sans-serif'
-      }}>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <h1 style={{ color: '#ef4444', marginBottom: '1rem' }}>Loading Error</h1>
-          <p style={{ marginBottom: '1rem' }}>Error: {error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{
-              background: '#3b82f6',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: 'pointer'
-            }}
-          >
-            Refresh Page
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  console.log('App: Rendering main app with routes');
-  
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/voice" element={<VoiceTrainingPage />} />
-      <Route path="/analytics" element={<AnalyticsPage />} />
-      <Route path="/roleplay" element={<RoleplayPage />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+            <TooltipProvider>
+              <Router>
+                <AuthProvider>
+                  <GuestModeProvider>
+                    <div className="min-h-screen bg-background font-sans antialiased">
+                      <Routes>
+                        {/* Public routes */}
+                        <Route path="/" element={<Index />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/compare" element={<Compare />} />
+                        <Route path="/pricing" element={<Pricing />} />
+                        <Route path="/demo" element={<Demo />} />
+                        
+                        {/* Authentication routes */}
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/password-reset" element={<PasswordReset />} />
+                        <Route path="/update-password" element={<UpdatePassword />} />
+                        <Route path="/email-confirmed" element={<EmailConfirmed />} />
+                        
+                        {/* Protected routes */}
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/practice" element={<Practice />} />
+                        <Route path="/roleplay" element={<RolePlay />} />
+                        <Route path="/progress" element={<Progress />} />
+                        <Route path="/tips" element={<Tips />} />
+                        <Route path="/call-recordings" element={<CallRecordings />} />
+                        <Route path="/recordings" element={<CallRecordings />} />
+                        <Route path="/team" element={<TeamDashboard />} />
+                        
+                        {/* Subscription routes */}
+                        <Route path="/subscription" element={<Subscription />} />
+                        <Route path="/subscription-management" element={<SubscriptionManagement />} />
+                        <Route path="/success" element={<Success />} />
+                        <Route path="/cancel" element={<Cancel />} />
+                        
+                        {/* Legal routes */}
+                        <Route path="/terms" element={<Terms />} />
+                        <Route path="/privacy" element={<Privacy />} />
+                        <Route path="/data-safety" element={<DataSafety />} />
+                        <Route path="/account-delete" element={<AccountDelete />} />
+                        
+                        {/* Fallback route */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      
+                      {/* Mobile navigation bar */}
+                      <MobileNavBar />
+                      
+                      {/* Global toast notifications */}
+                      <Toaster 
+                        position="top-right"
+                        expand={false}
+                        richColors
+                        closeButton
+                      />
+                    </div>
+                  </GuestModeProvider>
+                </AuthProvider>
+              </Router>
+            </TooltipProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
 
-console.log('App: Component defined, exporting');
 export default App;
