@@ -1,13 +1,15 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Volume2 } from 'lucide-react';
+import { Mic, MicOff, Volume2, Bug } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIErrorHandler } from '@/utils/aiErrorHandler';
 import { showAIErrorToast } from '@/components/ui/ai-error-toast';
 import { crossBrowserVoiceService } from '@/services/CrossBrowserVoiceService';
 import { browserInfo } from '@/utils/browserDetection';
 import BrowserCompatibilityChecker from '@/components/compatibility/BrowserCompatibilityChecker';
+import MicrophoneTestButton from './MicrophoneTestButton';
+import { VoiceDebugger } from '@/utils/voiceDebugger';
 
 interface VoiceRecognitionManagerProps {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -26,35 +28,55 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
   const [audioLevel, setAudioLevel] = useState(0);
   const [isCompatible, setIsCompatible] = useState<boolean | null>(null);
   const [showCompatibilityCheck, setShowCompatibilityCheck] = useState(false);
+  const [showDebugTools, setShowDebugTools] = useState(false);
+  const [debugResults, setDebugResults] = useState<any[]>([]);
   
   const lastAnalysisTime = useRef<number>(0);
   const throttleMs = 50;
 
-  // Check browser compatibility on mount
+  // Enhanced logging for debugging
   useEffect(() => {
+    console.log('🎤 VoiceRecognitionManager: Component mounted');
+    console.log('🎤 Browser Info:', browserInfo);
+    
     const capabilities = crossBrowserVoiceService.getBrowserCapabilities();
+    console.log('🎤 Voice Capabilities:', capabilities);
+    
     const compatible = capabilities.supportsMediaDevices && 
                       (capabilities.supportsWebSpeech || capabilities.fallbackActive);
     setIsCompatible(compatible);
     
     if (!compatible) {
+      console.warn('🎤 Voice features not compatible, showing compatibility check');
       setShowCompatibilityCheck(true);
     }
+
+    return () => {
+      console.log('🎤 VoiceRecognitionManager: Component unmounting');
+    };
   }, []);
 
-  // Start recording with cross-browser support
+  // Start recording with enhanced debugging
   const startRecording = useCallback(async () => {
-    if (disabled || !isCompatible) return;
+    if (disabled || !isCompatible) {
+      console.warn('🎤 Cannot start recording: disabled or incompatible');
+      return;
+    }
 
     try {
+      console.log('🎤 Starting recording process...');
       setError(null);
       
       // Check microphone permission with browser-specific handling
+      console.log('🎤 Checking microphone permission...');
       const hasPermission = await crossBrowserVoiceService.checkMicrophonePermission();
+      console.log('🎤 Permission result:', hasPermission);
+      
       if (!hasPermission) {
         throw new Error('Microphone permission denied');
       }
       
+      console.log('🎤 Initializing speech recognition...');
       await crossBrowserVoiceService.startRecording(
         {
           continuous: true,
@@ -63,10 +85,11 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
         },
         {
           onResult: (result) => {
+            console.log('🗣️ Speech result:', result);
             try {
               onTranscript(result.transcript, result.isFinal);
             } catch (error) {
-              console.error('Error processing speech results:', error);
+              console.error('🗣️ Error processing speech results:', error);
               AIErrorHandler.handleError({
                 name: 'SpeechProcessingError',
                 message: 'Failed to process speech recognition results',
@@ -75,7 +98,7 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
             }
           },
           onError: (error) => {
-            console.error('Speech recognition error:', error);
+            console.error('🗣️ Speech recognition error:', error);
             
             let errorMessage = 'Speech recognition failed';
             switch (error.code) {
@@ -108,27 +131,31 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
             });
           },
           onStart: () => {
-            console.log('Speech recognition started');
+            console.log('🗣️ Speech recognition started successfully');
             setIsListening(true);
             setError(null);
           },
           onEnd: () => {
-            console.log('Speech recognition ended');
+            console.log('🗣️ Speech recognition ended');
             setIsListening(false);
           }
         }
       );
       
       setIsRecording(true);
+      console.log('🎤 Recording state set to true');
       
       // Initialize audio visualization if supported
       if (browserInfo.supportsWebAudio) {
+        console.log('🎵 Initializing audio analysis...');
         await crossBrowserVoiceService.initializeAudioAnalysis();
         updateAudioLevel();
+      } else {
+        console.warn('🎵 Web Audio API not supported');
       }
       
     } catch (error) {
-      console.error('Failed to start recording:', error);
+      console.error('🎤 Failed to start recording:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to start voice recording';
       setError(errorMsg);
       onError?.(errorMsg);
@@ -145,11 +172,13 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
 
   // Stop recording
   const stopRecording = useCallback(() => {
+    console.log('🎤 Stopping recording...');
     setIsRecording(false);
     setIsListening(false);
     setAudioLevel(0);
     
     crossBrowserVoiceService.stopRecording();
+    console.log('🎤 Recording stopped');
   }, []);
 
   // Update audio level with throttling
@@ -186,6 +215,11 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
     }
   };
 
+  const handleDebugComplete = (results: any[]) => {
+    console.log('🔍 Debug results received:', results);
+    setDebugResults(results);
+  };
+
   // Show compatibility checker if not compatible
   if (isCompatible === false) {
     return (
@@ -195,14 +229,26 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
           showDetails={true}
         />
         {showCompatibilityCheck && (
-          <div className="text-center">
+          <div className="text-center space-y-2">
             <Button 
               onClick={() => setShowCompatibilityCheck(false)}
               variant="outline"
             >
               Continue Anyway
             </Button>
+            <Button 
+              onClick={() => setShowDebugTools(!showDebugTools)}
+              variant="outline"
+              className="ml-2"
+            >
+              <Bug className="h-4 w-4 mr-2" />
+              Debug Tools
+            </Button>
           </div>
+        )}
+        
+        {showDebugTools && (
+          <MicrophoneTestButton onTestComplete={handleDebugComplete} />
         )}
       </div>
     );
@@ -218,36 +264,48 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <Button
-        type="button"
-        variant={isRecording ? "destructive" : "outline"}
-        size="icon"
-        onClick={toggleRecording}
-        disabled={disabled}
-        className={cn(
-          "h-11 w-11 sm:h-10 sm:w-10 relative touch-manipulation transition-all duration-200",
-          isRecording && "animate-pulse shadow-lg",
-          isListening && "ring-2 ring-blue-400 ring-opacity-50"
-        )}
-        aria-label={isRecording ? "Stop recording" : "Start recording"}
-      >
-        {isRecording ? (
-          <MicOff size={18} className="sm:size-4" />
-        ) : (
-          <Mic size={18} className="sm:size-4" />
-        )}
-        
-        {/* Audio level indicator */}
-        {isRecording && audioLevel > 0 && browserInfo.supportsWebAudio && (
-          <div
-            className="absolute inset-0 rounded-md border-2 border-blue-400 opacity-50"
-            style={{
-              transform: `scale(${1 + audioLevel * 0.3})`,
-              transition: 'transform 0.1s ease-out'
-            }}
-          />
-        )}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant={isRecording ? "destructive" : "outline"}
+          size="icon"
+          onClick={toggleRecording}
+          disabled={disabled}
+          className={cn(
+            "h-11 w-11 sm:h-10 sm:w-10 relative touch-manipulation transition-all duration-200",
+            isRecording && "animate-pulse shadow-lg",
+            isListening && "ring-2 ring-blue-400 ring-opacity-50"
+          )}
+          aria-label={isRecording ? "Stop recording" : "Start recording"}
+        >
+          {isRecording ? (
+            <MicOff size={18} className="sm:size-4" />
+          ) : (
+            <Mic size={18} className="sm:size-4" />
+          )}
+          
+          {/* Audio level indicator */}
+          {isRecording && audioLevel > 0 && browserInfo.supportsWebAudio && (
+            <div
+              className="absolute inset-0 rounded-md border-2 border-blue-400 opacity-50"
+              style={{
+                transform: `scale(${1 + audioLevel * 0.3})`,
+                transition: 'transform 0.1s ease-out'
+              }}
+            />
+          )}
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowDebugTools(!showDebugTools)}
+          className="h-8 w-8"
+          title="Debug Tools"
+        >
+          <Bug size={14} />
+        </Button>
+      </div>
       
       {/* Status indicator */}
       <div className="text-xs text-center min-h-[16px] max-w-[80px]">
@@ -269,6 +327,13 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
           </div>
         )}
       </div>
+
+      {/* Debug Tools */}
+      {showDebugTools && (
+        <div className="mt-4 w-full max-w-md">
+          <MicrophoneTestButton onTestComplete={handleDebugComplete} />
+        </div>
+      )}
     </div>
   );
 };
