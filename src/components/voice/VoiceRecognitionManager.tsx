@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Mic, MicOff } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { Mic, MicOff, Volume2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { AIErrorHandler } from '@/utils/aiErrorHandler';
-import { showAIErrorToast, showNetworkErrorToast } from '@/components/ui/ai-error-toast';
+import { showAIErrorToast } from '@/components/ui/ai-error-toast';
 
 interface VoiceRecognitionManagerProps {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -18,441 +17,305 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
   disabled = false,
   onError
 }) => {
+  const [isRecording, setIsRecording] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [audioLevel, setAudioLevel] = useState(0);
-  const [isSpeechSupported, setIsSpeechSupported] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-
+  const [audioLevel, setAudioLevel] = useState(0);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const microphoneRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  
-  const { toast } = useToast();
+  const animationFrameRef = useRef<number>();
 
-  // Initialize speech recognition with error handling
-  useEffect(() => {
-    const initializeSpeechRecognition = async () => {
-      try {
-        // Check if browser supports Web Speech API
-        const speechRecognitionConstructor = window.SpeechRecognition || 
-                                            (window as any).webkitSpeechRecognition;
-        
-        if (!speechRecognitionConstructor) {
-          setIsSpeechSupported(false);
-          const errorMsg = 'Your browser does not support speech recognition';
-          setError(errorMsg);
-          if (onError) onError(errorMsg);
-          return;
-        }
-
-        recognitionRef.current = new speechRecognitionConstructor();
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = 'en-US';
-
-        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-          try {
-            const transcript = Array.from(event.results)
-              .map(result => result[0].transcript)
-              .join(' ');
-            
-            const isFinal = event.results[event.results.length - 1].isFinal;
-            
-            onTranscript(transcript, isFinal);
-            
-            // Reset retry count on successful transcription
-            setRetryCount(0);
-          } catch (err) {
-            console.error('Error processing speech result:', err);
-            AIErrorHandler.handleError({
-              name: 'SpeechProcessingError',
-              message: 'Failed to process speech recognition result',
-              code: 'SPEECH_PROCESSING_ERROR',
-            }, 'voice-recognition');
-          }
-        };
-
-        recognitionRef.current.onerror = (event: SpeechRecognitionError) => {
-          console.error('Speech recognition error:', event.error);
-          
-          let errorMessage = '';
-          let errorCode = '';
-          let retryable = false;
-
-          switch (event.error) {
-            case 'not-allowed':
-            case 'permission-denied':
-              errorMessage = 'Microphone access denied. Please allow microphone permissions.';
-              errorCode = 'PERMISSION_DENIED';
-              setHasPermission(false);
-              break;
-            case 'no-speech':
-              errorMessage = 'No speech detected. Please try speaking again.';
-              errorCode = 'NO_SPEECH';
-              retryable = true;
-              break;
-            case 'audio-capture':
-              errorMessage = 'No microphone detected. Please check your device.';
-              errorCode = 'AUDIO_CAPTURE_ERROR';
-              break;
-            case 'network':
-              errorMessage = 'Network error. Please check your connection.';
-              errorCode = 'NETWORK_ERROR';
-              retryable = true;
-              showNetworkErrorToast(() => handleRetryRecognition());
-              break;
-            case 'service-not-allowed':
-              errorMessage = 'Speech recognition service not available.';
-              errorCode = 'SERVICE_UNAVAILABLE';
-              break;
-            default:
-              errorMessage = `Speech recognition error: ${event.error}`;
-              errorCode = 'UNKNOWN_ERROR';
-              retryable = true;
-          }
-
-          setError(errorMessage);
-          if (onError) onError(errorMessage);
-          
-          if (!retryable || errorCode === 'NETWORK_ERROR') {
-            AIErrorHandler.handleError({
-              name: 'SpeechRecognitionError',
-              message: errorMessage,
-              code: errorCode,
-              retryable,
-            }, 'voice-recognition');
-          }
-          
-          stopListening();
-        };
-
-        recognitionRef.current.onend = () => {
-          setIsListening(false);
-        };
-
-        // Check microphone permissions
-        await checkMicrophonePermission();
-
-      } catch (err) {
-        console.error('Failed to initialize speech recognition:', err);
-        AIErrorHandler.handleError({
-          name: 'InitializationError',
-          message: 'Failed to initialize speech recognition',
-          code: 'INITIALIZATION_ERROR',
-        }, 'voice-recognition');
-      }
-    };
-
-    initializeSpeechRecognition();
-
-    return () => {
-      stopListening();
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      cleanupAudioResources();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Check for browser support
+  const isSupported = useCallback(() => {
+    return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
   }, []);
 
-  const checkMicrophonePermission = async () => {
+  // Initialize speech recognition
+  const initializeSpeechRecognition = useCallback(() => {
+    if (!isSupported()) {
+      const errorMsg = 'Speech recognition is not supported in this browser';
+      setError(errorMsg);
+      onError?.(errorMsg);
+      return null;
+    }
+
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        console.log('Speech recognition started');
+        setIsListening(true);
+        setError(null);
+      };
+
+      recognition.onresult = (event) => {
+        try {
+          let interimTranscript = '';
+          let finalTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+
+          if (finalTranscript) {
+            onTranscript(finalTranscript, true);
+          } else if (interimTranscript) {
+            onTranscript(interimTranscript, false);
+          }
+        } catch (error) {
+          console.error('Error processing speech results:', error);
+          AIErrorHandler.handleError({
+            name: 'SpeechProcessingError',
+            message: 'Failed to process speech recognition results',
+            code: 'SPEECH_PROCESSING_ERROR',
+          }, 'voice-recognition');
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        
+        let errorMessage = 'Speech recognition failed';
+        switch (event.error) {
+          case 'not-allowed':
+            errorMessage = 'Microphone access denied. Please allow microphone access and try again.';
+            break;
+          case 'no-speech':
+            errorMessage = 'No speech detected. Please speak clearly.';
+            break;
+          case 'network':
+            errorMessage = 'Network error. Please check your connection.';
+            break;
+          case 'audio-capture':
+            errorMessage = 'Audio capture failed. Please check your microphone.';
+            break;
+          default:
+            errorMessage = `Speech recognition error: ${event.error}`;
+        }
+        
+        setError(errorMessage);
+        onError?.(errorMessage);
+        setIsListening(false);
+        setIsRecording(false);
+        
+        showAIErrorToast({
+          title: "Voice Recognition Error",
+          description: errorMessage,
+          errorCode: event.error.toUpperCase(),
+          duration: 5000,
+        });
+      };
+
+      recognition.onend = () => {
+        console.log('Speech recognition ended');
+        setIsListening(false);
+        
+        // Auto-restart if we're still supposed to be recording
+        if (isRecording && !error) {
+          setTimeout(() => {
+            if (isRecording) {
+              recognition.start();
+            }
+          }, 100);
+        }
+      };
+
+      return recognition;
+    } catch (error) {
+      console.error('Failed to initialize speech recognition:', error);
+      AIErrorHandler.handleError({
+        name: 'SpeechInitError',
+        message: 'Failed to initialize speech recognition',
+        code: 'SPEECH_INIT_ERROR',
+      }, 'voice-recognition');
+      return null;
+    }
+  }, [isSupported, onTranscript, onError, isRecording, error]);
+
+  // Initialize audio visualization
+  const initializeAudioVisualization = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setHasPermission(true);
-      setError(null);
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
       
-      // Clean up the stream
-      stream.getTracks().forEach(track => track.stop());
-    } catch (error) {
-      console.error('Microphone permission error:', error);
-      setHasPermission(false);
-      const errorMsg = 'Microphone access is required for voice recognition';
-      setError(errorMsg);
-      if (onError) onError(errorMsg);
-    }
-  };
-
-  const initializeAudio = async () => {
-    try {
-      // Request microphone access with error handling
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
+      analyser.fftSize = 256;
+      microphone.connect(analyser);
+      
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      
+      const updateAudioLevel = () => {
+        if (analyserRef.current && isRecording) {
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          
+          const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+          setAudioLevel(average / 255);
+          
+          animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
         }
-      });
-
-      mediaStreamRef.current = stream;
+      };
       
-      // Create audio context
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      audioContextRef.current = new AudioContext();
-      
-      // Create analyser
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      
-      // Connect microphone to analyser
-      microphoneRef.current = audioContextRef.current.createMediaStreamSource(stream);
-      microphoneRef.current.connect(analyserRef.current);
-      
-      // Start monitoring audio levels
       updateAudioLevel();
-      
-      return true;
     } catch (error) {
-      console.error('Error initializing audio:', error);
-      
-      let errorCode = 'AUDIO_INIT_ERROR';
-      let errorMessage = 'Could not access microphone';
-      
-      if (error instanceof Error) {
-        if (error.name === 'NotAllowedError') {
-          errorCode = 'PERMISSION_DENIED';
-          errorMessage = 'Microphone access was denied';
-          setHasPermission(false);
-        } else if (error.name === 'NotFoundError') {
-          errorCode = 'NO_MICROPHONE';
-          errorMessage = 'No microphone found on this device';
-        } else if (error.name === 'NotReadableError') {
-          errorCode = 'MICROPHONE_BUSY';
-          errorMessage = 'Microphone is being used by another application';
-        }
-      }
-      
-      setError(errorMessage);
-      if (onError) onError(errorMessage);
-      
-      AIErrorHandler.handleError({
-        name: 'AudioInitError',
-        message: errorMessage,
-        code: errorCode,
-      }, 'voice-recognition');
-      
-      return false;
+      console.error('Failed to initialize audio visualization:', error);
     }
-  };
+  }, [isRecording]);
 
-  const updateAudioLevel = () => {
-    if (!analyserRef.current || !isListening) return;
-    
-    try {
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      analyserRef.current.getByteFrequencyData(dataArray);
-      
-      // Calculate average audio level
-      const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
-      const normalizedLevel = average / 255; // Normalize to range 0-1
-      
-      setAudioLevel(normalizedLevel);
-      
-      // Continue monitoring
-      animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
-    } catch (error) {
-      console.error('Error updating audio level:', error);
-    }
-  };
+  // Start recording
+  const startRecording = useCallback(async () => {
+    if (disabled) return;
 
-  const handleRetryRecognition = async () => {
-    if (retryCount >= 3) {
-      showAIErrorToast({
-        title: "Maximum Retries Exceeded",
-        description: "Unable to start voice recognition after multiple attempts. Please try refreshing the page.",
-        errorCode: "MAX_RETRIES",
-      });
-      return;
-    }
-
-    setRetryCount(prev => prev + 1);
-    setError(null);
-    
-    // Wait a moment before retrying
-    setTimeout(() => {
-      startListening();
-    }, 1000 * retryCount);
-  };
-
-  const startListening = async () => {
-    if (!recognitionRef.current || disabled) return;
-    
     try {
       setError(null);
       
-      if (!(await initializeAudio())) {
-        return;
-      }
+      // Request microphone permission first
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      const recognition = initializeSpeechRecognition();
+      if (!recognition) return;
+      
+      recognitionRef.current = recognition;
+      setIsRecording(true);
       
       await AIErrorHandler.withRetry(
         async () => {
-          if (!recognitionRef.current) throw new Error('Recognition not initialized');
-          recognitionRef.current.start();
-          setIsListening(true);
-          
-          toast({
-            title: "Voice Recognition Active",
-            description: "Speak now. Your voice is being recorded.",
-          });
+          recognition.start();
         },
         'start-voice-recognition',
         { maxRetries: 2 }
       );
-
+      
+      await initializeAudioVisualization();
+      
     } catch (error) {
-      console.error('Error starting recognition:', error);
-      setError('Could not start voice recognition');
-      if (onError) onError('Could not start voice recognition');
+      console.error('Failed to start recording:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to start voice recording';
+      setError(errorMsg);
+      onError?.(errorMsg);
+      setIsRecording(false);
       
       AIErrorHandler.handleError({
-        name: 'StartRecognitionError',
-        message: 'Could not start voice recognition',
-        code: 'START_ERROR',
+        name: 'VoiceStartError',
+        message: 'Failed to start voice recording',
+        code: 'VOICE_START_ERROR',
         retryable: true,
       }, 'voice-recognition');
     }
-  };
+  }, [disabled, initializeSpeechRecognition, initializeAudioVisualization, onError]);
 
-  const stopListening = () => {
-    try {
-      if (recognitionRef.current && isListening) {
+  // Stop recording
+  const stopRecording = useCallback(() => {
+    setIsRecording(false);
+    setIsListening(false);
+    setAudioLevel(0);
+    
+    if (recognitionRef.current) {
+      try {
         recognitionRef.current.stop();
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error);
       }
-      
-      setIsListening(false);
-      
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-      
-      cleanupAudioResources();
-    } catch (error) {
-      console.error('Error stopping recognition:', error);
+      recognitionRef.current = null;
+    }
+    
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopRecording();
+    };
+  }, [stopRecording]);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   };
 
-  const cleanupAudioResources = () => {
-    try {
-      // Stop all tracks in the media stream
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(track => track.stop());
-        mediaStreamRef.current = null;
-      }
-      
-      // Disconnect and close audio nodes
-      if (microphoneRef.current) {
-        microphoneRef.current.disconnect();
-        microphoneRef.current = null;
-      }
-      
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(console.error);
-        audioContextRef.current = null;
-      }
-      
-      analyserRef.current = null;
-    } catch (error) {
-      console.error('Error cleaning up audio resources:', error);
-    }
-  };
-
-  const requestMicrophonePermission = async () => {
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      setHasPermission(true);
-      setError(null);
-      toast({
-        title: "Microphone Access Granted",
-        description: "You can now use voice recognition.",
-      });
-    } catch (error) {
-      console.error('Permission request failed:', error);
-      setHasPermission(false);
-      const errorMsg = 'Microphone access is required for voice recognition';
-      setError(errorMsg);
-      if (onError) onError(errorMsg);
-      
-      AIErrorHandler.handleError({
-        name: 'PermissionError',
-        message: errorMsg,
-        code: 'PERMISSION_DENIED',
-        retryable: false,
-      }, 'voice-recognition');
-    }
-  };
-
-  // Render microphone permission request
-  if (hasPermission === false) {
+  if (!isSupported()) {
     return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription className="flex flex-col gap-2">
-          <span>Microphone access is required for voice recognition.</span>
-          <Button 
-            onClick={requestMicrophonePermission} 
-            className="w-fit"
-            variant="secondary"
-          >
-            Grant Microphone Access
-          </Button>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Render unsupported browser message
-  if (!isSpeechSupported) {
-    return (
-      <Alert className="mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Your browser does not support voice recognition. Please try using Chrome, Edge, or Safari.
-        </AlertDescription>
-      </Alert>
+      <div className="flex items-center justify-center p-2">
+        <div className="text-xs text-gray-500 text-center max-w-[150px]">
+          Voice input not supported in this browser
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col items-center gap-1">
       <Button
-        variant={isListening ? "destructive" : "outline"}
+        type="button"
+        variant={isRecording ? "destructive" : "outline"}
         size="icon"
-        className={`relative ${isListening ? "animate-pulse" : ""}`}
-        onClick={isListening ? stopListening : startListening}
+        onClick={toggleRecording}
         disabled={disabled}
-        aria-label={isListening ? "Stop listening" : "Start listening"}
-        title={isListening ? "Stop listening" : "Start listening"}
+        className={cn(
+          "h-11 w-11 sm:h-10 sm:w-10 relative touch-manipulation transition-all duration-200",
+          isRecording && "animate-pulse shadow-lg",
+          isListening && "ring-2 ring-blue-400 ring-opacity-50"
+        )}
+        aria-label={isRecording ? "Stop recording" : "Start recording"}
       >
-        {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+        {isRecording ? (
+          <MicOff size={18} className="sm:size-4" />
+        ) : (
+          <Mic size={18} className="sm:size-4" />
+        )}
         
-        {/* Audio level visualization */}
-        {isListening && (
-          <div 
-            className="absolute inset-0 rounded-full border-2 border-destructive animate-ping pointer-events-none"
+        {/* Audio level indicator */}
+        {isRecording && audioLevel > 0 && (
+          <div
+            className="absolute inset-0 rounded-md border-2 border-blue-400 opacity-50"
             style={{
-              transform: `scale(${1 + audioLevel})`,
-              opacity: 0.3 + audioLevel * 0.7
+              transform: `scale(${1 + audioLevel * 0.3})`,
+              transition: 'transform 0.1s ease-out'
             }}
-            aria-hidden="true"
           />
         )}
       </Button>
       
-      {error && retryCount < 3 && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleRetryRecognition}
-          className="text-xs"
-        >
-          Retry
-        </Button>
-      )}
+      {/* Status indicator */}
+      <div className="text-xs text-center min-h-[16px] max-w-[80px]">
+        {isListening && (
+          <div className="flex items-center gap-1 text-blue-600">
+            <Volume2 size={10} />
+            <span className="hidden sm:inline">Listening</span>
+            <span className="sm:hidden">●</span>
+          </div>
+        )}
+        {error && (
+          <div className="text-red-500 text-[10px] break-words">
+            {error.substring(0, 20)}...
+          </div>
+        )}
+      </div>
     </div>
   );
 };

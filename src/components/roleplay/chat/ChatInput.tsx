@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
@@ -161,9 +162,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const canSendMessage = message.trim() && !disabled && !isSubmitting;
 
   return (
-    <div className="border-t p-3 bg-white">
-      <div className="flex items-end gap-2">
-        <div className="relative flex-grow">
+    <div className="border-t p-3 sm:p-4 bg-white">
+      <div className="flex items-end gap-2 sm:gap-3">
+        <div className="relative flex-grow min-w-0">
           <Textarea
             ref={textareaRef}
             value={message}
@@ -174,7 +175,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               : placeholder
             }
             className={cn(
-              "min-h-[60px] resize-none py-3 pr-12",
+              "min-h-[44px] sm:min-h-[60px] resize-none py-2 sm:py-3 pr-11 sm:pr-12 text-base",
               disabled || isSubmitting ? "opacity-50 cursor-not-allowed" : "",
               voiceError && mode === 'voice' ? "border-amber-300 bg-amber-50" : ""
             )}
@@ -188,37 +189,40 @@ const ChatInput: React.FC<ChatInputProps> = ({
             type="submit"
             size="icon"
             className={cn(
-              "absolute right-2 bottom-2",
+              "absolute right-1 sm:right-2 bottom-1 sm:bottom-2 h-8 w-8 sm:h-9 sm:w-9 touch-manipulation",
               isSubmitting ? "animate-pulse" : ""
             )}
             onClick={() => handleSendMessage()}
             disabled={!canSendMessage}
             aria-label="Send message"
           >
-            <Send size={18} />
+            <Send size={16} className="sm:hidden" />
+            <Send size={18} className="hidden sm:block" />
             <span className="sr-only">Send</span>
           </Button>
         </div>
         
         {showVoiceInput && (
-          <VoiceRecognitionManager
-            onTranscript={handleVoiceTranscript}
-            disabled={disabled || isSubmitting}
-            onError={handleVoiceError}
-          />
+          <div className="flex-shrink-0">
+            <VoiceRecognitionManager
+              onTranscript={handleVoiceTranscript}
+              disabled={disabled || isSubmitting}
+              onError={handleVoiceError}
+            />
+          </div>
         )}
       </div>
       
       {voiceTranscript && mode === 'hybrid' && (
-        <div className="mt-2 text-sm text-muted-foreground italic">
+        <div className="mt-2 text-sm text-muted-foreground italic break-words">
           Transcript: {voiceTranscript}
         </div>
       )}
       
       {voiceError && (
-        <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-sm">
+        <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
           <p className="text-amber-700 font-medium">Voice Input Issue:</p>
-          <p className="text-amber-600">{voiceError}</p>
+          <p className="text-amber-600 break-words">{voiceError}</p>
           {mode === 'voice' && (
             <p className="text-amber-600 mt-1">You can continue using text input below.</p>
           )}

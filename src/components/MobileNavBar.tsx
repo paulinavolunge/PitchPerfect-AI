@@ -58,13 +58,13 @@ const MobileNavBar: React.FC = () => {
   ];
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-inset-bottom">
-      <div className="flex justify-around items-center h-16 px-2">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb">
+      <div className="flex justify-around items-center h-16 px-1">
         {navItems.map((item) => (
           <button
             key={item.path}
             className={cn(
-              "flex flex-col items-center justify-center w-full h-full py-2 px-1 rounded-lg transition-colors min-h-[44px] touch-manipulation",
+              "flex flex-col items-center justify-center flex-1 h-full py-1 rounded-lg transition-colors touch-manipulation min-h-[56px]",
               item.active 
                 ? "text-[#008D95] bg-[#008D95]/10" 
                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
@@ -72,11 +72,11 @@ const MobileNavBar: React.FC = () => {
             onClick={() => navigate(item.path)}
             aria-label={item.label}
           >
-            <item.icon size={20} className={cn(
+            <item.icon size={22} className={cn(
               "mb-1",
               item.active ? "text-[#008D95]" : "text-gray-500"
             )} />
-            <span className="text-xs font-medium leading-none">{item.label}</span>
+            <span className="text-xs font-medium leading-tight">{item.label}</span>
           </button>
         ))}
       </div>

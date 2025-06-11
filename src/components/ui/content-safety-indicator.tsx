@@ -23,7 +23,7 @@ export const ContentSafetyIndicator: React.FC<ContentSafetyIndicatorProps> = ({
           icon: ShieldCheck,
           variant: 'default' as const,
           color: 'text-green-600',
-          label: 'Safe Content',
+          label: 'Safe',
           description: 'Content passes all safety checks'
         };
       case SafetyLevel.SUSPICIOUS:
@@ -31,7 +31,7 @@ export const ContentSafetyIndicator: React.FC<ContentSafetyIndicatorProps> = ({
           icon: ShieldAlert,
           variant: 'secondary' as const,
           color: 'text-yellow-600',
-          label: 'Filtered Content',
+          label: 'Filtered',
           description: 'Content has been automatically filtered'
         };
       case SafetyLevel.HARMFUL:
@@ -39,7 +39,7 @@ export const ContentSafetyIndicator: React.FC<ContentSafetyIndicatorProps> = ({
           icon: ShieldX,
           variant: 'destructive' as const,
           color: 'text-red-600',
-          label: 'Harmful Content',
+          label: 'Harmful',
           description: 'Content contains potentially harmful material'
         };
       case SafetyLevel.BLOCKED:
@@ -47,7 +47,7 @@ export const ContentSafetyIndicator: React.FC<ContentSafetyIndicatorProps> = ({
           icon: Shield,
           variant: 'destructive' as const,
           color: 'text-red-700',
-          label: 'Blocked Content',
+          label: 'Blocked',
           description: 'Content violates safety policies'
         };
       default:
@@ -68,8 +68,8 @@ export const ContentSafetyIndicator: React.FC<ContentSafetyIndicatorProps> = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant={config.variant} className={`flex items-center gap-1 ${className}`}>
-            <Icon size={12} className={config.color} />
+          <Badge variant={config.variant} className={`flex items-center gap-1 touch-manipulation ${className}`}>
+            <Icon size={10} className={`${config.color} sm:size-3`} />
             <span className="text-xs">{config.label}</span>
           </Badge>
         </TooltipTrigger>
@@ -81,7 +81,7 @@ export const ContentSafetyIndicator: React.FC<ContentSafetyIndicatorProps> = ({
                 <p className="text-sm font-medium">Issues detected:</p>
                 <ul className="text-xs mt-1 space-y-1">
                   {issues.slice(0, 3).map((issue, index) => (
-                    <li key={index}>• {issue}</li>
+                    <li key={index} className="break-words">• {issue}</li>
                   ))}
                   {issues.length > 3 && (
                     <li>• ... and {issues.length - 3} more</li>

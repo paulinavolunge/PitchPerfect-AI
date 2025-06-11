@@ -102,12 +102,13 @@ export const SafeTextInput: React.FC<SafeTextInputProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <Textarea
         {...props}
         value={value}
         onChange={handleChange}
         className={cn(
+          "min-h-[44px] text-base resize-none",
           getSafetyBorderColor(),
           isValidating && 'opacity-75',
           className
@@ -115,21 +116,22 @@ export const SafeTextInput: React.FC<SafeTextInputProps> = ({
         disabled={props.disabled || isValidating}
       />
       
-      <div className="flex items-center justify-between mt-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mt-2 px-1">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           {showSafetyIndicator && (
             <ContentSafetyIndicator 
               level={safetyLevel} 
               issues={safetyIssues}
+              className="flex-shrink-0"
             />
           )}
           {isValidating && (
-            <span className="text-xs text-muted-foreground">Validating...</span>
+            <span className="text-xs text-muted-foreground flex-shrink-0">Validating...</span>
           )}
         </div>
         
         <span className={cn(
-          "text-xs",
+          "text-xs flex-shrink-0 ml-2",
           value.length > maxLength * 0.9 ? "text-yellow-600" : "text-muted-foreground"
         )}>
           {value.length}/{maxLength}

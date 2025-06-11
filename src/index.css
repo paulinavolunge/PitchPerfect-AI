@@ -1,5 +1,6 @@
 
 @import url('./styles/accessibility.css');
+@import url('./styles/mobile-fixes.css');
 
 @tailwind base;
 @tailwind components;
@@ -47,7 +48,7 @@
 .hero-headline {
   font-family: 'Inter', sans-serif;
   font-weight: 800;
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-size: clamp(2rem, 5vw, 4.5rem);
   line-height: 1.1;
   letter-spacing: -0.025em;
   margin-bottom: 2rem;
@@ -122,6 +123,7 @@
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
   transition: all 0.3s ease;
   border: none;
+  min-height: 44px;
 }
 
 .btn-primary:hover {
@@ -139,6 +141,7 @@
   border: 2px solid var(--navy-200);
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
   transition: all 0.3s ease;
+  min-height: 44px;
 }
 
 .btn-secondary:hover {
@@ -249,7 +252,7 @@
 /* Professional mobile optimizations */
 @media (max-width: 768px) {
   .hero-headline {
-    font-size: 2.5rem;
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
     margin-bottom: 1.5rem;
   }
   
@@ -262,11 +265,15 @@
   .professional-card {
     margin-bottom: 1rem;
   }
+  
+  .feature-highlight {
+    padding: 1.5rem;
+  }
 }
 
 @media (max-width: 640px) {
   .hero-headline {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 10vw, 2rem);
     margin-bottom: 1rem;
   }
 }
