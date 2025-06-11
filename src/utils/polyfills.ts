@@ -30,10 +30,10 @@ declare global {
 }
 
 // Polyfill for getUserMedia
-if (!navigator.mediaDevices && (navigator.getUserMedia || (navigator as any).webkitGetUserMedia || (navigator as any).mozGetUserMedia)) {
+if (!navigator.mediaDevices && ((navigator as any).getUserMedia || (navigator as any).webkitGetUserMedia || (navigator as any).mozGetUserMedia)) {
   (navigator as any).mediaDevices = {};
   (navigator as any).mediaDevices.getUserMedia = function(constraints: MediaStreamConstraints) {
-    const getUserMedia = navigator.getUserMedia || 
+    const getUserMedia = (navigator as any).getUserMedia || 
                         (navigator as any).webkitGetUserMedia || 
                         (navigator as any).mozGetUserMedia;
     
