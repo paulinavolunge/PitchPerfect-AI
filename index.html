@@ -15,12 +15,16 @@
   </head>
   <body>
     <div id="root">
-      <!-- Simple loading indicator -->
+      <!-- Fallback content while JavaScript loads -->
       <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif;">
         <div style="text-align: center;">
           <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
           <h2 style="color: #1f2937; font-size: 18px; margin: 0;">PitchPerfect AI</h2>
-          <p style="color: #6b7280; font-size: 14px; margin: 8px 0 0;">Loading...</p>
+          <p style="color: #6b7280; font-size: 14px; margin: 8px 0 0;">Loading JavaScript...</p>
+          <p style="color: #9ca3af; font-size: 12px; margin: 16px 0 0;">
+            If this message persists, check the console for errors or 
+            <a href="/test.html" style="color: #2563eb;">test the basic HTML version</a>
+          </p>
         </div>
       </div>
       
@@ -32,6 +36,10 @@
       </style>
     </div>
     
+    <script>
+      console.log('index.html: Script tag executed');
+      console.log('index.html: About to load main.tsx');
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

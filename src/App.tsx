@@ -1,20 +1,133 @@
 
-import React, { useEffect, useState, Suspense } from 'react';
+console.log('App.tsx: File loaded');
+
+import React, { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
 
-console.log('App: Component file loaded');
+console.log('App.tsx: All imports loaded successfully');
 
-// Simple loading component
-const SimpleLoading = () => {
-  console.log('App: SimpleLoading rendered');
+// Loading component with timeout
+const LoadingWithTimeout = () => {
+  const [timeoutReached, setTimeoutReached] = useState(false);
+  const [secondsElapsed, setSecondsElapsed] = useState(0);
+
+  useEffect(() => {
+    console.log('LoadingWithTimeout: useEffect started');
+    
+    // Update seconds counter
+    const secondsInterval = setInterval(() => {
+      setSecondsElapsed(prev => {
+        const newSeconds = prev + 1;
+        console.log(`LoadingWithTimeout: ${newSeconds} seconds elapsed`);
+        return newSeconds;
+      });
+    }, 1000);
+
+    // Set timeout to show error after 5 seconds
+    const timeout = setTimeout(() => {
+      console.log('LoadingWithTimeout: Timeout reached - showing error message');
+      setTimeoutReached(true);
+    }, 5000);
+
+    return () => {
+      clearInterval(secondsInterval);
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  if (timeoutReached) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        padding: '2rem',
+        fontFamily: 'Arial, sans-serif',
+        textAlign: 'center'
+      }}>
+        <h1 style={{ color: '#dc2626', marginBottom: '1rem' }}>
+          Loading Failed
+        </h1>
+        <p style={{ marginBottom: '1rem', color: '#666' }}>
+          The app took too long to load. Please check the console for errors.
+        </p>
+        <p style={{ marginBottom: '2rem', fontSize: '14px', color: '#888' }}>
+          Waited {secondsElapsed} seconds
+        </p>
+        <div style={{ marginBottom: '2rem' }}>
+          <button
+            onClick={() => {
+              console.log('User clicked Try Again');
+              window.location.reload();
+            }}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              marginRight: '10px'
+            }}
+          >
+            Try Again
+          </button>
+          <button
+            onClick={() => {
+              console.log('User clicked Open Console');
+              // Try to open dev tools programmatically (works in some browsers)
+              if (window.chrome && window.chrome.runtime) {
+                console.log('Chrome detected - please open DevTools manually (F12)');
+              }
+              alert('Please open your browser\'s developer console (F12) to see error details');
+            }}
+            style={{
+              backgroundColor: '#10b981',
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              marginRight: '10px'
+            }}
+          >
+            Check Console
+          </button>
+          <a 
+            href="/test.html"
+            style={{
+              backgroundColor: '#f59e0b',
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              textDecoration: 'none',
+              borderRadius: '6px'
+            }}
+          >
+            Test Basic HTML
+          </a>
+        </div>
+        <details style={{ maxWidth: '600px' }}>
+          <summary style={{ cursor: 'pointer', marginBottom: '0.5rem' }}>Debugging Info</summary>
+          <div style={{ textAlign: 'left', fontSize: '12px', background: '#f5f5f5', padding: '1rem', borderRadius: '4px' }}>
+            <p><strong>URL:</strong> {window.location.href}</p>
+            <p><strong>User Agent:</strong> {navigator.userAgent}</p>
+            <p><strong>Time:</strong> {new Date().toISOString()}</p>
+            <p><strong>React:</strong> {React.version}</p>
+          </div>
+        </details>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       height: '100vh',
-      fontFamily: 'system-ui'
+      fontFamily: 'Arial, sans-serif'
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{
@@ -26,7 +139,12 @@ const SimpleLoading = () => {
           animation: 'spin 1s linear infinite',
           margin: '0 auto 16px'
         }}></div>
-        <p>Loading...</p>
+        <h2 style={{ color: '#1f2937', fontSize: '18px', margin: '0 0 8px 0' }}>
+          PitchPerfect AI
+        </h2>
+        <p style={{ color: '#6b7280', fontSize: '14px', margin: '0' }}>
+          Loading... ({secondsElapsed}s)
+        </p>
         <style>{`
           @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -38,46 +156,110 @@ const SimpleLoading = () => {
   );
 };
 
-// Simple home page component
+// Simple home page
 const HomePage = () => {
-  console.log('App: HomePage rendered');
+  console.log('HomePage: Component rendered');
+  
+  useEffect(() => {
+    console.log('HomePage: useEffect called');
+  }, []);
+
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1 style={{ color: '#2563eb', marginBottom: '1rem' }}>PitchPerfect AI</h1>
-      <p style={{ marginBottom: '1rem' }}>Welcome to PitchPerfect AI - Your Sales Training Platform</p>
-      <div style={{ 
-        padding: '1rem', 
-        backgroundColor: '#f0f9ff', 
-        borderRadius: '8px',
-        border: '1px solid #bae6fd'
-      }}>
-        <h2 style={{ margin: '0 0 0.5rem 0', color: '#0369a1' }}>App Status</h2>
-        <p style={{ margin: 0, color: '#075985' }}>✅ Core app is loading successfully</p>
+    <div style={{ 
+      padding: '2rem', 
+      fontFamily: 'Arial, sans-serif',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: 'white'
+    }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+          🎯 PitchPerfect AI
+        </h1>
+        <p style={{ fontSize: '1.2rem', marginBottom: '2rem', opacity: 0.9 }}>
+          Welcome to your Sales Training Platform
+        </p>
+        <div style={{ 
+          padding: '2rem', 
+          backgroundColor: 'rgba(255,255,255,0.1)', 
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)',
+          marginBottom: '2rem'
+        }}>
+          <h2 style={{ margin: '0 0 1rem 0', color: '#fff' }}>✅ App Status</h2>
+          <p style={{ margin: '0', fontSize: '1.1rem' }}>
+            Core app is loading successfully! React is working.
+          </p>
+        </div>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '1rem',
+          marginTop: '2rem'
+        }}>
+          <div style={{ 
+            padding: '1.5rem', 
+            backgroundColor: 'rgba(255,255,255,0.1)', 
+            borderRadius: '8px' 
+          }}>
+            <h3>🎤 Voice Training</h3>
+            <p>Practice your sales pitches with AI feedback</p>
+          </div>
+          <div style={{ 
+            padding: '1.5rem', 
+            backgroundColor: 'rgba(255,255,255,0.1)', 
+            borderRadius: '8px' 
+          }}>
+            <h3>📊 Analytics</h3>
+            <p>Track your progress and improvements</p>
+          </div>
+          <div style={{ 
+            padding: '1.5rem', 
+            backgroundColor: 'rgba(255,255,255,0.1)', 
+            borderRadius: '8px' 
+          }}>
+            <h3>🤖 AI Roleplay</h3>
+            <p>Practice with realistic customer scenarios</p>
+          </div>
+        </div>
+        <button
+          onClick={() => console.log('Get Started clicked')}
+          style={{
+            marginTop: '2rem',
+            padding: '1rem 2rem',
+            fontSize: '1.1rem',
+            backgroundColor: '#fff',
+            color: '#667eea',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          Get Started
+        </button>
       </div>
     </div>
   );
 };
 
-// App loading states
-type LoadingState = 'initial' | 'basic' | 'complete' | 'error';
-
 function App() {
-  console.log('App: Main component rendering');
-  const [loadingState, setLoadingState] = useState<LoadingState>('initial');
-  const [error, setError] = useState<string | null>(null);
+  console.log('App: Component function called');
+  
+  const [loadingState, setLoadingState] = useState('initial');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log('App: useEffect running');
+    console.log('App: useEffect started');
     
     const loadApp = async () => {
       try {
-        console.log('App: Setting basic state');
-        setLoadingState('basic');
+        console.log('App: Starting app loading simulation');
         
-        // Simulate a brief loading period
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Simulate loading
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        console.log('App: Setting complete state');
+        console.log('App: Loading complete, setting state to complete');
         setLoadingState('complete');
         
       } catch (err) {
@@ -93,19 +275,19 @@ function App() {
   console.log('App: Current loading state:', loadingState);
 
   if (loadingState === 'initial') {
-    console.log('App: Showing initial loading');
-    return <SimpleLoading />;
+    console.log('App: Rendering loading component');
+    return <LoadingWithTimeout />;
   }
 
   if (loadingState === 'error') {
-    console.log('App: Showing error state');
+    console.log('App: Rendering error state');
     return (
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        fontFamily: 'system-ui'
+        fontFamily: 'Arial, sans-serif'
       }}>
         <div style={{ textAlign: 'center', padding: '2rem' }}>
           <h1 style={{ color: '#ef4444', marginBottom: '1rem' }}>Loading Error</h1>
@@ -128,27 +310,37 @@ function App() {
     );
   }
 
-  console.log('App: Rendering main app');
+  console.log('App: Rendering main app with routes');
   
   return (
-    <HelmetProvider>
-      <Helmet>
-        <title>PitchPerfect AI</title>
-      </Helmet>
-      
-      <Suspense fallback={<SimpleLoading />}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="*" element={
-            <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-              <h1>Page Not Found</h1>
-              <p>The page you're looking for doesn't exist.</p>
-              <a href="/" style={{ color: '#2563eb' }}>Go Home</a>
-            </div>
-          } />
-        </Routes>
-      </Suspense>
-    </HelmetProvider>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="*" element={
+        <div style={{ 
+          padding: '2rem', 
+          fontFamily: 'Arial, sans-serif',
+          textAlign: 'center',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <h1>Page Not Found</h1>
+          <p>The page you're looking for doesn't exist.</p>
+          <a href="/" style={{ 
+            color: '#2563eb',
+            textDecoration: 'none',
+            padding: '0.5rem 1rem',
+            border: '1px solid #2563eb',
+            borderRadius: '4px',
+            marginTop: '1rem'
+          }}>
+            Go Home
+          </a>
+        </div>
+      } />
+    </Routes>
   );
 }
 
