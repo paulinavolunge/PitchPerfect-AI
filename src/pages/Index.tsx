@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart } from 'lucide-react';
@@ -10,21 +10,46 @@ import PricingCTA from '@/components/PricingCTA';
 import { Helmet } from 'react-helmet-async';
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  const handleVoiceTrainingClick = () => {
+    console.log("Voice Training clicked");
+    navigate('/voice-training');
+  };
+
+  const handleAnalyticsClick = () => {
+    console.log("Analytics clicked");
+    navigate('/analytics');
+  };
+
+  const handleAIRoleplayClick = () => {
+    console.log("AI Roleplay clicked");
+    navigate('/ai-roleplay');
+  };
+
+  const handleGetStartedClick = () => {
+    console.log("Get Started clicked");
+    navigate('/signup');
+  };
+
   const features = [
     {
       icon: <Zap className="h-8 w-8 text-brand-green" />,
       title: "AI-Powered Practice",
-      description: "Practice with intelligent AI that adapts to your industry and responds like real prospects."
+      description: "Practice with intelligent AI that adapts to your industry and responds like real prospects.",
+      onClick: handleVoiceTrainingClick
     },
     {
       icon: <BarChart className="h-8 w-8 text-brand-blue" />,
       title: "Instant Feedback",
-      description: "Get detailed analysis of your pitch delivery, pacing, and effectiveness immediately after each session."
+      description: "Get detailed analysis of your pitch delivery, pacing, and effectiveness immediately after each session.",
+      onClick: handleAnalyticsClick
     },
     {
       icon: <Users className="h-8 w-8 text-brand-green" />,
       title: "Real Scenarios",
-      description: "Train with realistic objection handling scenarios based on actual sales situations."
+      description: "Train with realistic objection handling scenarios based on actual sales situations.",
+      onClick: handleAIRoleplayClick
     }
   ];
 
@@ -74,11 +99,13 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button asChild size="lg" className="bg-brand-green hover:bg-brand-green/90">
-                <Link to="/signup">
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Free Practice
-                </Link>
+              <Button 
+                size="lg" 
+                className="bg-brand-green hover:bg-brand-green/90"
+                onClick={handleGetStartedClick}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Start Free Practice
               </Button>
               
               <Button asChild variant="outline" size="lg">
@@ -120,7 +147,11 @@ const Index = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {features.map((feature, index) => (
-                <div key={index} className="text-center p-6">
+                <div 
+                  key={index} 
+                  className="text-center p-6 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={feature.onClick}
+                >
                   <div className="flex justify-center mb-4">
                     {feature.icon}
                   </div>

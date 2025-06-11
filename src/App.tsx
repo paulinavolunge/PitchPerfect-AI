@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -39,6 +38,9 @@ import Cancel from '@/pages/Cancel';
 import TeamDashboard from '@/pages/TeamDashboard';
 import NotFound from '@/pages/NotFound';
 
+// Placeholder page imports
+import { VoiceTrainingPage, AnalyticsPage, RoleplayPage } from '@/components/PlaceholderPages';
+
 // Create QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +75,11 @@ function App() {
                         <Route path="/compare" element={<Compare />} />
                         <Route path="/pricing" element={<Pricing />} />
                         <Route path="/demo" element={<Demo />} />
+                        
+                        {/* Placeholder routes for testing */}
+                        <Route path="/voice-training" element={<VoiceTrainingPage />} />
+                        <Route path="/analytics" element={<AnalyticsPage />} />
+                        <Route path="/ai-roleplay" element={<RoleplayPage />} />
                         
                         {/* Authentication routes */}
                         <Route path="/login" element={<Login />} />
