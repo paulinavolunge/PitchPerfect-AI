@@ -50,7 +50,7 @@ if (!window.AudioContext && (window as any).webkitAudioContext) {
   (window as any).AudioContext = (window as any).webkitAudioContext;
 }
 
-// Polyfill for SpeechRecognition - Fixed TypeScript issue
+// Polyfill for SpeechRecognition
 if (typeof window !== 'undefined') {
   if (!(window as any).SpeechRecognition && (window as any).webkitSpeechRecognition) {
     (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
@@ -136,7 +136,7 @@ export const initializePolyfills = () => {
   // Debug logging for voice features
   console.log('🎤 Voice API Support:');
   console.log('  - getUserMedia:', !!navigator.mediaDevices?.getUserMedia);
-  console.log('  - SpeechRecognition:', !!window.SpeechRecognition || !!(window as any).webkitSpeechRecognition);
+  console.log('  - SpeechRecognition:', !!(window as any).SpeechRecognition || !!(window as any).webkitSpeechRecognition);
   console.log('  - SpeechSynthesis:', !!window.speechSynthesis);
   console.log('  - AudioContext:', !!window.AudioContext || !!(window as any).webkitAudioContext);
 };
