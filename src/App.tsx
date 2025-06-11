@@ -157,13 +157,33 @@ const LoadingWithTimeout = () => {
   );
 };
 
-// Simple home page
+// Simple home page with working navigation
 const HomePage = () => {
   console.log('HomePage: Component rendered');
   
   useEffect(() => {
     console.log('HomePage: useEffect called');
   }, []);
+
+  const handleGetStarted = () => {
+    console.log('Button Clicked: Get Started');
+    window.location.href = '/voice';
+  };
+
+  const handleVoiceTraining = () => {
+    console.log('Button Clicked: Voice Training');
+    window.location.href = '/voice';
+  };
+
+  const handleAnalytics = () => {
+    console.log('Button Clicked: Analytics');
+    window.location.href = '/analytics';
+  };
+
+  const handleRoleplay = () => {
+    console.log('Button Clicked: AI Roleplay');
+    window.location.href = '/roleplay';
+  };
 
   return (
     <div style={{ 
@@ -198,33 +218,45 @@ const HomePage = () => {
           gap: '1rem',
           marginTop: '2rem'
         }}>
-          <div style={{ 
-            padding: '1.5rem', 
-            backgroundColor: 'rgba(255,255,255,0.1)', 
-            borderRadius: '8px' 
-          }}>
+          <div 
+            style={{ 
+              padding: '1.5rem', 
+              backgroundColor: 'rgba(255,255,255,0.1)', 
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+            onClick={handleVoiceTraining}
+          >
             <h3>🎤 Voice Training</h3>
             <p>Practice your sales pitches with AI feedback</p>
           </div>
-          <div style={{ 
-            padding: '1.5rem', 
-            backgroundColor: 'rgba(255,255,255,0.1)', 
-            borderRadius: '8px' 
-          }}>
+          <div 
+            style={{ 
+              padding: '1.5rem', 
+              backgroundColor: 'rgba(255,255,255,0.1)', 
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+            onClick={handleAnalytics}
+          >
             <h3>📊 Analytics</h3>
             <p>Track your progress and improvements</p>
           </div>
-          <div style={{ 
-            padding: '1.5rem', 
-            backgroundColor: 'rgba(255,255,255,0.1)', 
-            borderRadius: '8px' 
-          }}>
+          <div 
+            style={{ 
+              padding: '1.5rem', 
+              backgroundColor: 'rgba(255,255,255,0.1)', 
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+            onClick={handleRoleplay}
+          >
             <h3>🤖 AI Roleplay</h3>
             <p>Practice with realistic customer scenarios</p>
           </div>
         </div>
         <button
-          onClick={() => console.log('Get Started clicked')}
+          onClick={handleGetStarted}
           style={{
             marginTop: '2rem',
             padding: '1rem 2rem',
@@ -243,6 +275,37 @@ const HomePage = () => {
     </div>
   );
 };
+
+// Placeholder components for testing
+const VoiceTrainingPage = () => (
+  <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
+    <h1>🎤 Voice Training Section Works!</h1>
+    <p>This is the Voice Training placeholder page.</p>
+    <button onClick={() => window.location.href = '/'} style={{ padding: '0.5rem 1rem', marginTop: '1rem' }}>
+      Back to Home
+    </button>
+  </div>
+);
+
+const AnalyticsPage = () => (
+  <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
+    <h1>📊 Analytics Section Works!</h1>
+    <p>This is the Analytics placeholder page.</p>
+    <button onClick={() => window.location.href = '/'} style={{ padding: '0.5rem 1rem', marginTop: '1rem' }}>
+      Back to Home
+    </button>
+  </div>
+);
+
+const RoleplayPage = () => (
+  <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
+    <h1>🤖 AI Roleplay Section Works!</h1>
+    <p>This is the AI Roleplay placeholder page.</p>
+    <button onClick={() => window.location.href = '/'} style={{ padding: '0.5rem 1rem', marginTop: '1rem' }}>
+      Back to Home
+    </button>
+  </div>
+);
 
 function App() {
   console.log('App: Component function called');
@@ -316,6 +379,9 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/voice" element={<VoiceTrainingPage />} />
+      <Route path="/analytics" element={<AnalyticsPage />} />
+      <Route path="/roleplay" element={<RoleplayPage />} />
       <Route path="*" element={
         <div style={{ 
           padding: '2rem', 
