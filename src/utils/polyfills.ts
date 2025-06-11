@@ -1,3 +1,4 @@
+
 import { browserInfo } from './browserDetection';
 
 // Extend Navigator interface for polyfills
@@ -51,7 +52,7 @@ if (!window.AudioContext && (window as any).webkitAudioContext) {
 
 // Polyfill for SpeechRecognition - Fixed TypeScript issue
 if (typeof window !== 'undefined') {
-  if (!window.SpeechRecognition && (window as any).webkitSpeechRecognition) {
+  if (!(window as any).SpeechRecognition && (window as any).webkitSpeechRecognition) {
     (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
   }
 }
