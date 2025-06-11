@@ -1,4 +1,3 @@
-
 import { browserInfo } from './browserDetection';
 
 // Extend Navigator interface for polyfills
@@ -22,8 +21,6 @@ declare global {
   }
 
   interface Window {
-    SpeechRecognition?: new () => SpeechRecognition;
-    webkitSpeechRecognition?: new () => SpeechRecognition;
     AudioContext?: typeof AudioContext;
     webkitAudioContext?: typeof AudioContext;
   }
@@ -55,7 +52,7 @@ if (!window.AudioContext && (window as any).webkitAudioContext) {
 // Polyfill for SpeechRecognition - Fixed TypeScript issue
 if (typeof window !== 'undefined') {
   if (!window.SpeechRecognition && (window as any).webkitSpeechRecognition) {
-    window.SpeechRecognition = (window as any).webkitSpeechRecognition;
+    (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
   }
 }
 
