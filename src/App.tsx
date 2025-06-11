@@ -19,8 +19,10 @@ import { AuthProvider } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import EnhancedLoading from '@/components/ui/enhanced-loading';
+import AppSkeleton from '@/components/AppSkeleton';
 
-// Lazy load pages for better performance
+// Lazy load all pages for better performance
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Practice = lazy(() => import('@/pages/Practice'));
 const RolePlay = lazy(() => import('@/pages/RolePlay'));
@@ -41,7 +43,7 @@ const AccountDelete = lazy(() => import('@/pages/AccountDelete'));
 const DataSafety = lazy(() => import('@/pages/DataSafety'));
 const EmailConfirmed = lazy(() => import('@/pages/EmailConfirmed'));
 
-// Import non-lazy pages that should load immediately
+// Import critical pages that should load immediately
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
@@ -66,12 +68,30 @@ const queryClient = new QueryClient({
   },
 });
 
-// Enhanced loading fallback component
-const PageLoading = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-green"></div>
-  </div>
-);
+// Enhanced loading fallback with timeout handling
+const PageLoading = ({ timeout = 10000 }: { timeout?: number }) => {
+  const [showError, setShowError] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowError(true);
+    }, timeout);
+
+    return () => clearTimeout(timer);
+  }, [timeout]);
+
+  if (showError) {
+    return (
+      <EnhancedLoading 
+        timeout={timeout}
+        onTimeout={() => console.error('Page loading timeout')}
+        showLogo={false}
+      />
+    );
+  }
+
+  return <AppSkeleton />;
+};
 
 // Mobile viewport optimization hook
 const useMobileOptimizations = () => {
@@ -166,7 +186,9 @@ function App() {
             <GuestModeProvider>
               <TooltipProvider>
                 <ErrorBoundary fallbackMessage="The application encountered an error. Please refresh the page.">
-                  <AppContent />
+                  <Suspense fallback={<EnhancedLoading />}>
+                    <AppContent />
+                  </Suspense>
                 </ErrorBoundary>
               </TooltipProvider>
             </GuestModeProvider>
