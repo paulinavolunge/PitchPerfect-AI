@@ -2,6 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
+import { ScreenReaderOnly } from "./accessibility/ScreenReaderOnly";
 
 /**
  * Header component for the Pitch Perfect AI app.
@@ -17,9 +18,15 @@ const Header = () => (
       boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
       zIndex: 10,
     }}
+    role="banner"
   >
-    <Link to="/" aria-label="PitchPerfect AI Home">
+    <Link 
+      to="/" 
+      aria-label="Go to PitchPerfect AI homepage"
+      style={{ display: "flex", alignItems: "center" }}
+    >
       <Logo />
+      <ScreenReaderOnly>PitchPerfect AI - Home</ScreenReaderOnly>
     </Link>
   </header>
 );

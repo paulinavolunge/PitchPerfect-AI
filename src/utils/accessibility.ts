@@ -53,10 +53,7 @@ export const generateUniqueId = (prefix: string = 'id') => {
 }
 
 export const getContrastRatio = (foreground: string, background: string): number => {
-  // Simplified contrast ratio calculation
-  // In a real implementation, you'd use a proper color library
   const getLuminance = (color: string) => {
-    // This is a simplified version - use a proper color library in production
     const hex = color.replace('#', '')
     const r = parseInt(hex.substr(0, 2), 16) / 255
     const g = parseInt(hex.substr(2, 2), 16) / 255
@@ -75,4 +72,56 @@ export const getContrastRatio = (foreground: string, background: string): number
   const darker = Math.min(l1, l2)
   
   return (lighter + 0.05) / (darker + 0.05)
+}
+
+// New accessibility utilities
+export const setFocusableWhenVisible = (element: HTMLElement, isVisible: boolean) => {
+  const focusableElements = element.querySelectorAll(FOCUS_TRAP_SELECTOR) as NodeListOf<HTMLElement>
+  
+  focusableElements.forEach(el => {
+    if (isVisible) {
+      el.removeAttribute('tabindex')
+    } else {
+      el.setAttribute('tabindex', '-1')
+    }
+  })
+}
+
+export const handleEscapeKey = (callback: () => void) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      callback()
+    }
+  }
+  
+  document.addEventListener('keydown', handleKeyDown)
+  
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown)
+  }
+}
+
+export const createAriaDescribedBy = (baseId: string, descriptors: string[]): string => {
+  return descriptors.map(desc => `${baseId}-${desc}`).join(' ')
+}
+
+export const manageFocus = {
+  save: (): HTMLElement | null => {
+    return document.activeElement as HTMLElement
+  },
+  
+  restore: (element: HTMLElement | null) => {
+    if (element && element.focus) {
+      element.focus()
+    }
+  },
+  
+  trap: trapFocus,
+  
+  moveTo: (selector: string) => {
+    const element = document.querySelector(selector) as HTMLElement
+    if (element) {
+      element.focus()
+    }
+  }
 }

@@ -3,6 +3,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
+import { generateUniqueId } from "@/utils/accessibility"
 
 const accessibleButtonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:-translate-y-0.5 active:translate-y-0 touch-manipulation",
@@ -38,6 +39,8 @@ export interface AccessibleButtonProps
   ariaDescribedBy?: string
   loadingText?: string
   isLoading?: boolean
+  iconDescription?: string
+  hasTooltip?: boolean
 }
 
 const AccessibleButton = React.forwardRef<HTMLButtonElement, AccessibleButtonProps>(
@@ -50,25 +53,54 @@ const AccessibleButton = React.forwardRef<HTMLButtonElement, AccessibleButtonPro
     ariaDescribedBy,
     isLoading = false,
     loadingText = "Loading...",
+    iconDescription,
+    hasTooltip = false,
     children,
     disabled,
     ...props 
   }, ref) => {
     const Comp = asChild ? Slot : "button"
     const isDisabled = disabled || isLoading
+    const buttonId = React.useRef(generateUniqueId('btn')).current
+    
+    // Create comprehensive aria-describedby
+    const describedByIds = React.useMemo(() => {
+      const ids = []
+      if (ariaDescribedBy) ids.push(ariaDescribedBy)
+      if (isLoading) ids.push(`${buttonId}-loading`)
+      if (iconDescription) ids.push(`${buttonId}-icon`)
+      return ids.length > 0 ? ids.join(' ') : undefined
+    }, [ariaDescribedBy, isLoading, iconDescription, buttonId])
     
     return (
-      <Comp
-        className={cn(accessibleButtonVariants({ variant, size, className }))}
-        ref={ref}
-        disabled={isDisabled}
-        aria-label={ariaLabel}
-        aria-describedby={ariaDescribedBy}
-        aria-busy={isLoading}
-        {...props}
-      >
-        {isLoading ? loadingText : children}
-      </Comp>
+      <>
+        <Comp
+          id={buttonId}
+          className={cn(accessibleButtonVariants({ variant, size, className }))}
+          ref={ref}
+          disabled={isDisabled}
+          aria-label={ariaLabel}
+          aria-describedby={describedByIds}
+          aria-busy={isLoading}
+          role={asChild ? undefined : "button"}
+          {...props}
+        >
+          {isLoading ? loadingText : children}
+        </Comp>
+        
+        {/* Hidden descriptions for screen readers */}
+        {isLoading && (
+          <div id={`${buttonId}-loading`} className="sr-only">
+            Button is currently loading, please wait
+          </div>
+        )}
+        
+        {iconDescription && (
+          <div id={`${buttonId}-icon`} className="sr-only">
+            {iconDescription}
+          </div>
+        )}
+      </>
     )
   }
 )

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { AccessibleButton } from '@/components/ui/accessible-button';
 import { Send } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import VoiceRecognitionManager from '@/components/voice/VoiceRecognitionManager';
@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { AIErrorHandler } from '@/utils/aiErrorHandler';
 import { showAIErrorToast } from '@/components/ui/ai-error-toast';
 import { useContentSafety } from '@/hooks/useContentSafety';
+import { announceToScreenReader, generateUniqueId } from '@/utils/accessibility';
 
 interface ChatInputProps {
   mode: 'voice' | 'text' | 'hybrid';
@@ -31,6 +32,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const showVoiceInput = mode === 'voice' || mode === 'hybrid';
   const { validateInput } = useContentSafety();
+  
+  // Generate unique IDs for accessibility
+  const textareaId = useRef(generateUniqueId('chat-input')).current;
+  const voiceErrorId = useRef(generateUniqueId('voice-error')).current;
+  const transcriptId = useRef(generateUniqueId('transcript')).current;
 
   // Auto-resize textarea
   useEffect(() => {
@@ -52,13 +58,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
       // Validate voice transcript for safety
       const safetyResult = await validateInput(text, 'VOICE_TRANSCRIPT');
       if (!safetyResult.isValid) {
-        setVoiceError('Voice input contains inappropriate content');
+        const errorMsg = 'Voice input contains inappropriate content';
+        setVoiceError(errorMsg);
+        announceToScreenReader(errorMsg, 'assertive');
         return;
       }
 
       const safeText = safetyResult.sanitized || text;
       setVoiceTranscript(safeText);
       setVoiceError(null);
+      
+      // Announce transcript to screen readers
+      if (isFinal) {
+        announceToScreenReader(`Voice input complete: ${safeText}`);
+      }
       
       // In voice-only mode, we update the textarea with the transcript
       if (mode === 'voice') {
@@ -81,6 +94,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleVoiceError = (error: string) => {
     setVoiceError(error);
+    announceToScreenReader(`Voice input error: ${error}`, 'assertive');
     
     // Provide fallback options when voice fails
     if (mode === 'voice') {
@@ -113,6 +127,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
 
     setIsSubmitting(true);
+    announceToScreenReader('Sending message...');
     
     try {
       await AIErrorHandler.withRetry(
@@ -132,6 +147,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
       setVoiceTranscript('');
       setVoiceError(null);
       
+      announceToScreenReader('Message sent successfully');
+      
       // Focus textarea after sending
       if (textareaRef.current) {
         setTimeout(() => {
@@ -141,6 +158,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       
     } catch (error) {
       console.error('Error sending message:', error);
+      announceToScreenReader('Failed to send message', 'assertive');
       AIErrorHandler.handleError({
         name: 'MessageSendError',
         message: 'Failed to send message',
@@ -160,12 +178,26 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const canSendMessage = message.trim() && !disabled && !isSubmitting;
+  
+  // Create aria-describedby string
+  const describedBy = [
+    voiceError ? voiceErrorId : null,
+    voiceTranscript && mode === 'hybrid' ? transcriptId : null
+  ].filter(Boolean).join(' ') || undefined;
 
   return (
-    <div className="border-t p-3 sm:p-4 bg-white">
+    <div className="border-t p-3 sm:p-4 bg-white" role="region" aria-label="Message input area">
       <div className="flex items-end gap-2 sm:gap-3">
         <div className="relative flex-grow min-w-0">
+          <label htmlFor={textareaId} className="sr-only">
+            {voiceError && mode === 'voice' 
+              ? "Voice input failed. Type your message here" 
+              : "Type your message"
+            }
+          </label>
+          
           <Textarea
+            id={textareaId}
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -182,10 +214,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
             disabled={disabled || isSubmitting}
             rows={1}
             maxLength={1500}
-            aria-label="Message input"
+            aria-describedby={describedBy}
+            aria-invalid={!!voiceError}
           />
           
-          <Button
+          <AccessibleButton
             type="submit"
             size="icon"
             className={cn(
@@ -194,16 +227,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
             )}
             onClick={() => handleSendMessage()}
             disabled={!canSendMessage}
-            aria-label="Send message"
+            ariaLabel={isSubmitting ? "Sending message..." : "Send message"}
+            loadingText="Sending..."
+            isLoading={isSubmitting}
+            iconDescription="Send message icon"
           >
             <Send size={16} className="sm:hidden" />
             <Send size={18} className="hidden sm:block" />
-            <span className="sr-only">Send</span>
-          </Button>
+          </AccessibleButton>
         </div>
         
         {showVoiceInput && (
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0" role="region" aria-label="Voice input controls">
             <VoiceRecognitionManager
               onTranscript={handleVoiceTranscript}
               disabled={disabled || isSubmitting}
@@ -214,13 +249,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
       </div>
       
       {voiceTranscript && mode === 'hybrid' && (
-        <div className="mt-2 text-sm text-muted-foreground italic break-words">
-          Transcript: {voiceTranscript}
+        <div id={transcriptId} className="mt-2 text-sm text-muted-foreground italic break-words" role="status" aria-live="polite">
+          <span className="font-medium">Voice transcript:</span> {voiceTranscript}
         </div>
       )}
       
       {voiceError && (
-        <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+        <div 
+          id={voiceErrorId}
+          className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm" 
+          role="alert"
+          aria-live="assertive"
+        >
           <p className="text-amber-700 font-medium">Voice Input Issue:</p>
           <p className="text-amber-600 break-words">{voiceError}</p>
           {mode === 'voice' && (
