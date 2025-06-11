@@ -16,7 +16,8 @@ import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
 import { useGuestMode } from "@/context/GuestModeContext";
 import { useNavigate } from 'react-router-dom';
 import MicrophonePermissionCheck from '@/components/voice/MicrophonePermissionCheck';
-
+import { AIErrorHandler } from '@/utils/aiErrorHandler';
+import { showAIErrorToast, showServiceUnavailableToast } from '@/components/ui/ai-error-toast';
 
 interface Message {
   id: string;
@@ -62,6 +63,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [firstAIReplyTriggered, setFirstAIReplyTriggered] = useState(false);
   const [micPermissionGranted, setMicPermissionGranted] = useState<boolean | null>(null);
   const [browserSupportsSpeech, setBrowserSupportsSpeech] = useState<boolean | null>(null);
+  const [aiServiceError, setAiServiceError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Destructure new auth values
@@ -216,18 +219,36 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       const voiceVolume = volume / 100;
       const persona = voiceStyle || 'friendly';
 
-      await voiceSynthRef.current.speak({
-        text: text,
-        volume: voiceVolume,
-        rate: persona === 'rushed' ? 1.2 : 1,
-        pitch: persona === 'skeptical' ? 0.9 : persona === 'friendly' ? 1.1 : 1,
-        voice: persona
-      });
+      await AIErrorHandler.withRetry(
+        async () => {
+          if (!voiceSynthRef.current) {
+            throw new Error('Voice synthesis not available');
+          }
+          
+          await voiceSynthRef.current.speak({
+            text: text,
+            volume: voiceVolume,
+            rate: persona === 'rushed' ? 1.2 : 1,
+            pitch: persona === 'skeptical' ? 0.9 : persona === 'friendly' ? 1.1 : 1,
+            voice: persona
+          });
+        },
+        `speak-message-${Date.now()}`,
+        { maxRetries: 2 }
+      );
     } catch (error) {
       console.error('Error speaking:', error);
+      AIErrorHandler.handleError({
+        name: 'VoiceSynthesisError',
+        message: 'Could not play AI voice',
+        code: 'VOICE_SYNTHESIS_ERROR',
+        retryable: true,
+      }, 'conversation');
+      
+      // Fallback to text-only mode temporarily
       toast({
         title: "Voice Error",
-        description: "Could not play AI voice. Please try again or switch to text mode.",
+        description: "AI voice is temporarily unavailable. Continuing with text responses.",
         variant: "destructive",
       });
     } finally {
@@ -261,6 +282,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     // Reset idle timer when user sends a message
     resetIdleTimer();
     setShowSuggestions(false);
+    setAiServiceError(null);
+
+    // Check rate limiting
+    const userId = user?.id || 'guest';
+    if (!AIErrorHandler.checkRateLimit(userId, 'roleplay-message', 15)) {
+      return;
+    }
 
     // Add user message immediately for responsiveness
     const userMessage: Message = {
@@ -291,11 +319,22 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       }
 
       if (creditsToDeduct > 0) {
-        const deducted = await deductUserCredits(featureType, creditsToDeduct);
-        if (!deducted) {
-          // deductUserCredits already shows a toast on failure
-          setIsProcessing(false); // Stop processing state if deduction failed
-          return; // Stop execution if credits couldn't be deducted
+        try {
+          const deducted = await deductUserCredits(featureType, creditsToDeduct);
+          if (!deducted) {
+            // deductUserCredits already shows a toast on failure
+            setIsProcessing(false); // Stop processing state if deduction failed
+            return; // Stop execution if credits couldn't be deducted
+          }
+        } catch (error) {
+          console.error('Credit deduction failed:', error);
+          AIErrorHandler.handleError({
+            name: 'CreditDeductionError',
+            message: 'Failed to deduct credits',
+            code: 'CREDIT_ERROR',
+          }, 'conversation');
+          setIsProcessing(false);
+          return;
         }
       }
     }
@@ -304,20 +343,21 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     // Show processing state after successful deduction
     setIsProcessing(true);
 
-    // Simulate thinking delay
-    setTimeout(() => {
-      // Generate AI response
-      const aiResponse = generateAIResponse(text, scenario, userScript || null, getAIPersona);
+    try {
+      // Simulate thinking delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Generate AI response with error handling and fallbacks
+      const aiResponseText = await generateAIResponseWithFallback(text);
 
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
-        text: aiResponse,
+        text: aiResponseText,
         sender: 'ai',
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-      setIsProcessing(false);
 
       // Trigger first AI reply callback for guest mode prompts
       if (!firstAIReplyTriggered && onFirstAIReply) {
@@ -325,9 +365,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         onFirstAIReply();
       }
 
-      // Speak the AI response if voice is enabled
-      if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
-        speakMessage(aiResponse);
+      // Speak the AI response if voice is enabled (only if not a fallback response)
+      if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current && !aiServiceError) {
+        await speakMessage(aiResponseText);
       }
 
       // Set session complete after a certain number of exchanges (e.g., 4 AI responses)
@@ -352,7 +392,50 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         });
       }
 
-    }, 1500);
+    } catch (error) {
+      console.error('Error in conversation flow:', error);
+      AIErrorHandler.handleError({
+        name: 'ConversationError',
+        message: 'Failed to process conversation',
+        code: 'CONVERSATION_ERROR',
+        retryable: true,
+      }, 'conversation');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const generateAIResponseWithFallback = async (userText: string): Promise<string> => {
+    try {
+      return await AIErrorHandler.withRetry(
+        async () => {
+          // Simulate AI service call with potential failure
+          const response = generateAIResponse(userText, scenario, userScript || null, getAIPersona);
+          
+          if (!response || response.trim().length === 0) {
+            throw new Error('Empty response from AI service');
+          }
+          
+          return response;
+        },
+        `ai-response-${Date.now()}`,
+        { maxRetries: 3 }
+      );
+    } catch (error) {
+      console.error('AI response generation failed:', error);
+      
+      // Use fallback response
+      const fallbackResponse = AIErrorHandler.getFallbackResponse('roleplay');
+      
+      setAiServiceError('AI service temporarily unavailable');
+      
+      showServiceUnavailableToast(() => {
+        setRetryCount(prev => prev + 1);
+        setAiServiceError(null);
+      });
+      
+      return fallbackResponse;
+    }
   };
 
   const toggleVoice = () => {
@@ -487,6 +570,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           </div>
         </div>
 
+        {aiServiceError && (
+          <div className="px-4 py-2 bg-amber-50 border-amber-200 border-b text-sm text-amber-700">
+            <p className="font-medium">Service Notice:</p>
+            <p>{aiServiceError} - Responses may be limited.</p>
+          </div>
+        )}
+
         <MessageList messages={messages} isAISpeaking={isAISpeaking} />
 
         {isProcessing && (
@@ -536,6 +626,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 mode={actualMode} 
                 onSendMessage={handleSendMessage}
                 disabled={isProcessing}
+                userId={user?.id}
               />
             </MicrophonePermissionCheck>
           </>

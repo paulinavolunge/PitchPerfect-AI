@@ -5,23 +5,28 @@ import { Send } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import VoiceRecognitionManager from '@/components/voice/VoiceRecognitionManager';
 import { cn } from '@/lib/utils';
+import { AIErrorHandler } from '@/utils/aiErrorHandler';
+import { showAIErrorToast } from '@/components/ui/ai-error-toast';
 
 interface ChatInputProps {
   mode: 'voice' | 'text' | 'hybrid';
   onSendMessage: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  userId?: string;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
   mode,
   onSendMessage,
   disabled = false,
-  placeholder = "Type your response..."
+  placeholder = "Type your response...",
+  userId = 'anonymous'
 }) => {
   const [message, setMessage] = useState('');
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const showVoiceInput = mode === 'voice' || mode === 'hybrid';
 
@@ -41,42 +46,101 @@ const ChatInput: React.FC<ChatInputProps> = ({
   }, [voiceTranscript, mode]);
 
   const handleVoiceTranscript = (text: string, isFinal: boolean) => {
-    setVoiceTranscript(text);
-    
-    // In voice-only mode, we update the textarea with the transcript
-    if (mode === 'voice') {
-      setMessage(text);
-    }
-    
-    // Auto-send final transcripts in voice-only mode if configured
-    if (isFinal && text.trim() && mode === 'voice') {
-      handleSendMessage(text);
+    try {
+      setVoiceTranscript(text);
+      setVoiceError(null);
+      
+      // In voice-only mode, we update the textarea with the transcript
+      if (mode === 'voice') {
+        setMessage(text);
+      }
+      
+      // Auto-send final transcripts in voice-only mode if configured
+      if (isFinal && text.trim() && mode === 'voice') {
+        handleSendMessage(text);
+      }
+    } catch (error) {
+      console.error('Error handling voice transcript:', error);
+      AIErrorHandler.handleError({
+        name: 'VoiceTranscriptError',
+        message: 'Failed to process voice transcript',
+        code: 'TRANSCRIPT_ERROR',
+      }, 'chat-input');
     }
   };
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleVoiceError = (error: string) => {
+    setVoiceError(error);
+    
+    // Provide fallback options when voice fails
+    if (mode === 'voice') {
+      showAIErrorToast({
+        title: "Voice Input Failed",
+        description: "Voice recognition encountered an error. You can still type your response below.",
+        errorCode: "VOICE_ERROR",
+        duration: 6000,
+      });
+    }
+  };
+
+  const handleSendMessage = async (textToSend?: string) => {
     const finalMessage = textToSend || message;
     
-    if (!finalMessage.trim() || disabled) return;
+    if (!finalMessage.trim() || disabled || isSubmitting) return;
+
+    // Check rate limiting
+    if (!AIErrorHandler.checkRateLimit(userId, 'chat-message', 20)) {
+      return;
+    }
+
+    setIsSubmitting(true);
     
-    onSendMessage(finalMessage.trim());
-    setMessage('');
-    setVoiceTranscript('');
-    
-    // Focus textarea after sending
-    if (textareaRef.current) {
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 10);
+    try {
+      await AIErrorHandler.withRetry(
+        async () => {
+          if (!finalMessage.trim()) {
+            throw new Error('Empty message');
+          }
+          
+          onSendMessage(finalMessage.trim());
+        },
+        `send-message-${Date.now()}`,
+        { maxRetries: 2 }
+      );
+      
+      // Clear inputs on successful send
+      setMessage('');
+      setVoiceTranscript('');
+      setVoiceError(null);
+      
+      // Focus textarea after sending
+      if (textareaRef.current) {
+        setTimeout(() => {
+          textareaRef.current?.focus();
+        }, 10);
+      }
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      AIErrorHandler.handleError({
+        name: 'MessageSendError',
+        message: 'Failed to send message',
+        code: 'SEND_ERROR',
+        retryable: true,
+      }, 'chat-input');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isSubmitting) {
       e.preventDefault();
       handleSendMessage();
     }
   };
+
+  const canSendMessage = message.trim() && !disabled && !isSubmitting;
 
   return (
     <div className="border-t p-3 bg-white">
@@ -87,12 +151,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={voiceError && mode === 'voice' 
+              ? "Voice input failed. Please type your response..." 
+              : placeholder
+            }
             className={cn(
               "min-h-[60px] resize-none py-3 pr-12",
-              disabled ? "opacity-50 cursor-not-allowed" : ""
+              disabled || isSubmitting ? "opacity-50 cursor-not-allowed" : "",
+              voiceError && mode === 'voice' ? "border-amber-300 bg-amber-50" : ""
             )}
-            disabled={disabled}
+            disabled={disabled || isSubmitting}
             rows={1}
             aria-label="Message input"
           />
@@ -100,9 +168,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <Button
             type="submit"
             size="icon"
-            className="absolute right-2 bottom-2"
+            className={cn(
+              "absolute right-2 bottom-2",
+              isSubmitting ? "animate-pulse" : ""
+            )}
             onClick={() => handleSendMessage()}
-            disabled={!message.trim() || disabled}
+            disabled={!canSendMessage}
             aria-label="Send message"
           >
             <Send size={18} />
@@ -113,8 +184,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         {showVoiceInput && (
           <VoiceRecognitionManager
             onTranscript={handleVoiceTranscript}
-            disabled={disabled}
-            onError={setVoiceError}
+            disabled={disabled || isSubmitting}
+            onError={handleVoiceError}
           />
         )}
       </div>
@@ -126,7 +197,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
       )}
       
       {voiceError && (
-        <p className="mt-2 text-sm text-destructive">{voiceError}</p>
+        <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-sm">
+          <p className="text-amber-700 font-medium">Voice Input Issue:</p>
+          <p className="text-amber-600">{voiceError}</p>
+          {mode === 'voice' && (
+            <p className="text-amber-600 mt-1">You can continue using text input below.</p>
+          )}
+        </div>
       )}
     </div>
   );
