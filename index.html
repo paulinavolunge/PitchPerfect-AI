@@ -8,137 +8,19 @@
     <link rel="icon" href="/favicon.ico" />
     <title>PitchPerfect AI</title>
     
-    <!-- Critical resource preloading -->
+    <!-- Basic font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" /></noscript>
-    
-    <!-- Preload critical CSS -->
-    <link rel="preload" href="/src/index.css" as="style" />
-    
-    <!-- DNS prefetch for external resources -->
-    <link rel="dns-prefetch" href="https://ggpodadyycvmmxifqwlp.supabase.co" />
-    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-    
-    <!-- Open Graph / Social Media Meta Tags -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://pitchperfectai.ai/" />
-    <meta property="og:title" content="PitchPerfect AI - Master Your Sales Pitch" />
-    <meta property="og:description" content="Train, practice, and refine your sales pitches with real-time voice feedback and personalized AI coaching." />
-    <meta property="og:image" content="https://pitchperfectai.ai/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:domain" content="pitchperfectai.ai" />
-    
-    <!-- Environment Detection Script -->
-    <script>
-      // Detect environment early
-      window.__APP_ENV__ = {
-        isProduction: window.location.hostname === 'pitchperfectai.ai' || window.location.hostname.includes('vercel.app'),
-        isDevelopment: window.location.hostname === 'localhost' || window.location.hostname.includes('lovable.app')
-      };
-      
-      console.log('Environment detected in HTML:', window.__APP_ENV__);
-    </script>
-    
-    <!-- Google Tag Manager - Only load in production or when analytics consent is given -->
-    <script>
-      if (window.__APP_ENV__.isProduction || window.__APP_ENV__.isDevelopment) {
-        if (!window.google_tag_manager) {
-          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','GTM-PLR4ZJ3F');
-          
-          console.log('GTM script injected with ID: GTM-PLR4ZJ3F');
-        }
-      }
-    </script>
-    <!-- End Google Tag Manager -->
-    
-    <!-- Meta Pixel Code - Script part only -->
-    <script>
-      if (window.__APP_ENV__.isProduction) {
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '1234567890123456');
-        fbq('track', 'PageView');
-      }
-    </script>
-    <!-- End Meta Pixel Code (Script part) -->
-    
-    <!-- Force light theme -->
-    <script>
-      (function() {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-        
-        try {
-          localStorage.setItem('theme', 'light');
-        } catch (e) {
-          console.error('Error setting theme:', e);
-        }
-      })();
-    </script>
-    
-    <!-- Google Analytics tracking code - Standalone GA4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HVCRJT504Y', { 
-        send_page_view: false,
-        debug_mode: window.__APP_ENV__.isDevelopment
-      });
-      console.log('GA4 standalone script initialized');
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PLR4ZJ3F"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    
-    <!-- Meta Pixel Code (noscript part) - Only in production -->
-    <script>
-      if (window.__APP_ENV__.isProduction) {
-        document.write('<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1234567890123456&ev=PageView&noscript=1"/></noscript>');
-      }
-    </script>
-    <!-- End Meta Pixel Code (noscript part) -->
-    
     <div id="root">
-      <!-- Enhanced loading indicator with faster initial display -->
-      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);">
-        <div style="text-align: center; padding: 2rem;">
-          <!-- Logo -->
-          <div style="width: 64px; height: 64px; margin: 0 auto 24px; background: linear-gradient(135deg, #2563eb 0%, #334155 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);">
-            <span style="color: white; font-size: 24px; font-weight: 700;">P</span>
-          </div>
-          
-          <!-- Enhanced spinner -->
-          <div style="position: relative; width: 48px; height: 48px; margin: 0 auto 24px;">
-            <div style="position: absolute; inset: 0; border: 4px solid #bfdbfe; border-radius: 50%;"></div>
-            <div style="position: absolute; inset: 0; border: 4px solid #2563eb; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-          </div>
-          
-          <!-- Progress bar -->
-          <div style="width: 200px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0 auto 16px; overflow: hidden;">
-            <div style="width: 30%; height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); border-radius: 2px; animation: progress 2s ease-in-out infinite;"></div>
-          </div>
-          
-          <h2 style="color: #0f172a; font-size: 20px; font-weight: 700; margin-bottom: 8px;">PitchPerfect AI</h2>
-          <p style="color: #475569; font-size: 14px; animation: pulse 2s ease-in-out infinite;">Preparing your sales training experience...</p>
+      <!-- Simple loading indicator -->
+      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif;">
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <h2 style="color: #1f2937; font-size: 18px; margin: 0;">PitchPerfect AI</h2>
+          <p style="color: #6b7280; font-size: 14px; margin: 8px 0 0;">Loading...</p>
         </div>
       </div>
       
@@ -147,38 +29,9 @@
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        @keyframes progress {
-          0% { transform: translateX(-100%); }
-          50% { transform: translateX(0%); }
-          100% { transform: translateX(100%); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
       </style>
     </div>
     
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- CRITICAL: Prevent any Lovable scripts from loading in production -->
-    <script>
-      if (window.__APP_ENV__.isProduction) {
-        const originalAppendChild = Document.prototype.appendChild || HTMLElement.prototype.appendChild;
-        
-        if (originalAppendChild) {
-          Document.prototype.appendChild = HTMLElement.prototype.appendChild = function(child) {
-            if (child.tagName === 'SCRIPT' && 
-                (child.src.includes('gpteng') || 
-                 child.src.includes('lovable') ||
-                 child.innerHTML.includes('gptEng'))) {
-              console.log('Blocked development script in production:', child.src || 'inline script');
-              return child;
-            }
-            return originalAppendChild.call(this, child);
-          };
-        }
-      }
-    </script>
   </body>
 </html>

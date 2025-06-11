@@ -1,287 +1,156 @@
 
-import React, { useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { HelmetProvider } from 'react-helmet-async';
-import MobileNavBar from '@/components/MobileNavBar';
-import {
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
-import { initGA, trackPageView, hasValidConsent } from '@/utils/analytics';
-import { IntegratedOnboarding } from '@/components/onboarding/IntegratedOnboarding';
-import { ConsentBanner } from '@/components/consent/ConsentBanner';
-import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
-import ErrorBoundary from '@/components/error/ErrorBoundary';
-import { AuthProvider } from '@/context/AuthContext';
-import { GuestModeProvider } from '@/context/GuestModeContext';
-import { usePageTracking } from '@/hooks/usePageTracking';
-import { useOnboarding } from '@/hooks/useOnboarding';
-import EnhancedLoading from '@/components/ui/enhanced-loading';
-import AppSkeleton from '@/components/AppSkeleton';
+import React, { useEffect, useState, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 
-console.log('App: Loading page imports');
+console.log('App: Component file loaded');
 
-// Lazy load all pages for better performance
-const Dashboard = lazy(() => {
-  console.log('App: Loading Dashboard page');
-  return import('@/pages/Dashboard');
-});
-const Practice = lazy(() => {
-  console.log('App: Loading Practice page');
-  return import('@/pages/Practice');
-});
-const RolePlay = lazy(() => {
-  console.log('App: Loading RolePlay page');
-  return import('@/pages/RolePlay');
-});
-const Progress = lazy(() => {
-  console.log('App: Loading Progress page');
-  return import('@/pages/Progress');
-});
-const CallRecordings = lazy(() => {
-  console.log('App: Loading CallRecordings page');
-  return import('@/pages/CallRecordings');
-});
-const TeamDashboard = lazy(() => {
-  console.log('App: Loading TeamDashboard page');
-  return import('@/pages/TeamDashboard');
-});
-const Tips = lazy(() => {
-  console.log('App: Loading Tips page');
-  return import('@/pages/Tips');
-});
-const About = lazy(() => {
-  console.log('App: Loading About page');
-  return import('@/pages/About');
-});
-const Pricing = lazy(() => {
-  console.log('App: Loading Pricing page');
-  return import('@/pages/Pricing');
-});
-const Success = lazy(() => {
-  console.log('App: Loading Success page');
-  return import('@/pages/Success');
-});
-const Cancel = lazy(() => {
-  console.log('App: Loading Cancel page');
-  return import('@/pages/Cancel');
-});
-const Compare = lazy(() => {
-  console.log('App: Loading Compare page');
-  return import('@/pages/Compare');
-});
-const Demo = lazy(() => {
-  console.log('App: Loading Demo page');
-  return import('@/pages/Demo');
-});
-const Privacy = lazy(() => {
-  console.log('App: Loading Privacy page');
-  return import('@/pages/Privacy');
-});
-const Terms = lazy(() => {
-  console.log('App: Loading Terms page');
-  return import('@/pages/Terms');
-});
-const NotFound = lazy(() => {
-  console.log('App: Loading NotFound page');
-  return import('@/pages/NotFound');
-});
-const AccountDelete = lazy(() => {
-  console.log('App: Loading AccountDelete page');
-  return import('@/pages/AccountDelete');
-});
-const DataSafety = lazy(() => {
-  console.log('App: Loading DataSafety page');
-  return import('@/pages/DataSafety');
-});
-const EmailConfirmed = lazy(() => {
-  console.log('App: Loading EmailConfirmed page');
-  return import('@/pages/EmailConfirmed');
-});
+// Simple loading component
+const SimpleLoading = () => {
+  console.log('App: SimpleLoading rendered');
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      fontFamily: 'system-ui'
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #3498db',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 16px'
+        }}></div>
+        <p>Loading...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+};
 
-// Import critical pages that should load immediately
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
-import Signup from '@/pages/Signup';
-import PasswordReset from '@/pages/PasswordReset';
-import UpdatePassword from '@/pages/UpdatePassword';
+// Simple home page component
+const HomePage = () => {
+  console.log('App: HomePage rendered');
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
+      <h1 style={{ color: '#2563eb', marginBottom: '1rem' }}>PitchPerfect AI</h1>
+      <p style={{ marginBottom: '1rem' }}>Welcome to PitchPerfect AI - Your Sales Training Platform</p>
+      <div style={{ 
+        padding: '1rem', 
+        backgroundColor: '#f0f9ff', 
+        borderRadius: '8px',
+        border: '1px solid #bae6fd'
+      }}>
+        <h2 style={{ margin: '0 0 0.5rem 0', color: '#0369a1' }}>App Status</h2>
+        <p style={{ margin: 0, color: '#075985' }}>✅ Core app is loading successfully</p>
+      </div>
+    </div>
+  );
+};
 
-console.log('App: All imports loaded');
+// App loading states
+type LoadingState = 'initial' | 'basic' | 'complete' | 'error';
 
-// Optimized React Query client configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: (failureCount, error: any) => {
-        if (error?.status === 404 || error?.status === 403) return false;
-        return failureCount < 2;
-      },
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+function App() {
+  console.log('App: Main component rendering');
+  const [loadingState, setLoadingState] = useState<LoadingState>('initial');
+  const [error, setError] = useState<string | null>(null);
 
-console.log('App: Query client created');
-
-// Enhanced loading fallback with timeout handling
-const PageLoading = ({ timeout = 10000 }: { timeout?: number }) => {
-  console.log('App: PageLoading component rendering');
-  const [showError, setShowError] = React.useState(false);
-
-  React.useEffect(() => {
-    console.log('App: PageLoading timeout effect started');
-    const timer = setTimeout(() => {
-      console.log('App: PageLoading timeout reached');
-      setShowError(true);
-    }, timeout);
-
-    return () => {
-      console.log('App: PageLoading timeout cleared');
-      clearTimeout(timer);
+  useEffect(() => {
+    console.log('App: useEffect running');
+    
+    const loadApp = async () => {
+      try {
+        console.log('App: Setting basic state');
+        setLoadingState('basic');
+        
+        // Simulate a brief loading period
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        console.log('App: Setting complete state');
+        setLoadingState('complete');
+        
+      } catch (err) {
+        console.error('App: Error during loading:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        setLoadingState('error');
+      }
     };
-  }, [timeout]);
 
-  if (showError) {
-    console.log('App: PageLoading showing error state');
+    loadApp();
+  }, []);
+
+  console.log('App: Current loading state:', loadingState);
+
+  if (loadingState === 'initial') {
+    console.log('App: Showing initial loading');
+    return <SimpleLoading />;
+  }
+
+  if (loadingState === 'error') {
+    console.log('App: Showing error state');
     return (
-      <EnhancedLoading 
-        timeout={timeout}
-        onTimeout={() => console.error('App: Page loading timeout')}
-        showLogo={false}
-      />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        fontFamily: 'system-ui'
+      }}>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <h1 style={{ color: '#ef4444', marginBottom: '1rem' }}>Loading Error</h1>
+          <p style={{ marginBottom: '1rem' }}>Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              background: '#3b82f6',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer'
+            }}
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
     );
   }
 
-  console.log('App: PageLoading showing skeleton');
-  return <AppSkeleton />;
-};
-
-// Mobile viewport optimization hook
-const useMobileOptimizations = () => {
-  useEffect(() => {
-    console.log('App: Applying mobile optimizations');
-    // Add viewport meta tag if missing
-    const viewport = document.querySelector('meta[name="viewport"]');
-    if (!viewport) {
-      console.log('App: Adding viewport meta tag');
-      const meta = document.createElement('meta');
-      meta.name = 'viewport';
-      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-      document.head.appendChild(meta);
-    }
-
-    // Check for iOS devices and optimize viewport
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    
-    if (isIOSDevice && viewport) {
-      console.log('App: Applying iOS viewport optimizations');
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-    }
-  }, []);
-};
-
-// Secure onboarding check component
-const OnboardingChecker = () => {
-  console.log('App: OnboardingChecker rendering');
-  const { showOnboarding } = useOnboarding();
-
-  if (showOnboarding) {
-    console.log('App: Showing onboarding');
-    return <IntegratedOnboarding />;
-  }
-
-  console.log('App: Not showing onboarding');
-  return null;
-};
-
-function AppContent() {
-  console.log('App: AppContent component rendering');
-  usePageTracking();
-  useMobileOptimizations();
-
-  console.log('App: AppContent returning JSX');
-  return (
-    <>
-      <PrivacyCompliantAnalytics />
-      <Suspense fallback={<PageLoading />}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/password-reset" element={<PasswordReset />} />
-          <Route path="/update-password" element={<UpdatePassword />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/practice" element={<Practice />} />
-          <Route path="/roleplay" element={<RolePlay />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/recordings" element={<CallRecordings />} />
-          <Route path="/team-dashboard" element={<TeamDashboard />} />
-          <Route path="/tips" element={<Tips />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/success" element={<Success />} />
-          <Route path="/cancel" element={<Cancel />} />
-          <Route path="/compare" element={<Compare />} />
-          <Route path="/demo" element={<Demo />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/data-safety" element={<DataSafety />} />
-          <Route path="/account-delete" element={<AccountDelete />} />
-          <Route path="/email-confirmed" element={<EmailConfirmed />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-      <MobileNavBar />
-      <Toaster />
-      
-      <ConsentBanner />
-      <OnboardingChecker />
-    </>
-  );
-}
-
-function App() {
-  console.log('App: Main App component rendering');
+  console.log('App: Rendering main app');
   
-  useEffect(() => {
-    console.log('App: Main App useEffect running');
-    if (hasValidConsent()) {
-      const currentPath = window.location.pathname + window.location.search;
-      console.log('App: Tracking page view for:', currentPath);
-      trackPageView(currentPath);
-    }
-  }, []);
-
-  console.log('App: Returning main App JSX');
   return (
     <HelmetProvider>
-      <NextThemeProvider forcedTheme="light">
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <GuestModeProvider>
-              <TooltipProvider>
-                <ErrorBoundary fallbackMessage="The application encountered an error. Please refresh the page.">
-                  <Suspense fallback={<EnhancedLoading />}>
-                    <AppContent />
-                  </Suspense>
-                </ErrorBoundary>
-              </TooltipProvider>
-            </GuestModeProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </NextThemeProvider>
+      <Helmet>
+        <title>PitchPerfect AI</title>
+      </Helmet>
+      
+      <Suspense fallback={<SimpleLoading />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="*" element={
+            <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
+              <h1>Page Not Found</h1>
+              <p>The page you're looking for doesn't exist.</p>
+              <a href="/" style={{ color: '#2563eb' }}>Go Home</a>
+            </div>
+          } />
+        </Routes>
+      </Suspense>
     </HelmetProvider>
   );
 }
 
-console.log('App: App component defined, exporting');
+console.log('App: Component defined, exporting');
 export default App;
