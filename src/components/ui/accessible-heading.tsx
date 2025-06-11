@@ -30,7 +30,7 @@ const headingVariants = cva(
 )
 
 export interface AccessibleHeadingProps
-  extends React.HTMLAttributes<HTMLHeadingElement>,
+  extends Omit<React.HTMLAttributes<HTMLHeadingElement>, 'color'>,
     VariantProps<typeof headingVariants> {
   level: 1 | 2 | 3 | 4 | 5 | 6
   visualLevel?: 1 | 2 | 3 | 4 | 5 | 6
@@ -40,7 +40,7 @@ export interface AccessibleHeadingProps
 export const AccessibleHeading: React.FC<AccessibleHeadingProps> = ({
   level,
   visualLevel,
-  color,
+  color = "default",
   className,
   children,
   ...props
