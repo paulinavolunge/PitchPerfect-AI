@@ -21,7 +21,7 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number>();
@@ -41,8 +41,8 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
     }
 
     try {
-      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognitionConstructor() as SpeechRecognition;
+      const SpeechRecognitionConstructor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognitionConstructor();
       
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -54,7 +54,7 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
         setError(null);
       };
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: any) => {
         try {
           let interimTranscript = '';
           let finalTranscript = '';
@@ -83,7 +83,7 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
         }
       };
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         
         let errorMessage = 'Speech recognition failed';
@@ -147,7 +147,7 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
   const initializeAudioVisualization = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContextClass();
       const analyser = audioContext.createAnalyser();
       const microphone = audioContext.createMediaStreamSource(stream);
