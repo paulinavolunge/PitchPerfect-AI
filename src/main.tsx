@@ -4,10 +4,10 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import './styles/accessibility.css'
+import { initializePolyfills } from './utils/polyfills';
 
-// Safely initialize polyfills with error handling
+// Initialize polyfills synchronously
 try {
-  const { initializePolyfills } = await import('./utils/polyfills');
   initializePolyfills();
 } catch (error) {
   console.error('Failed to initialize polyfills:', error);
