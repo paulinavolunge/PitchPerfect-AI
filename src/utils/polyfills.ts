@@ -53,7 +53,7 @@ if (!window.AudioContext && (window as any).webkitAudioContext) {
 }
 
 // Polyfill for SpeechRecognition
-if (!window.SpeechRecognition && (window as any).webkitSpeechRecognition) {
+if (!(window as any).SpeechRecognition && (window as any).webkitSpeechRecognition) {
   (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
 }
 
