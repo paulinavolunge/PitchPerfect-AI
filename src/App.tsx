@@ -22,26 +22,85 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import EnhancedLoading from '@/components/ui/enhanced-loading';
 import AppSkeleton from '@/components/AppSkeleton';
 
+console.log('App: Loading page imports');
+
 // Lazy load all pages for better performance
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const Practice = lazy(() => import('@/pages/Practice'));
-const RolePlay = lazy(() => import('@/pages/RolePlay'));
-const Progress = lazy(() => import('@/pages/Progress'));
-const CallRecordings = lazy(() => import('@/pages/CallRecordings'));
-const TeamDashboard = lazy(() => import('@/pages/TeamDashboard'));
-const Tips = lazy(() => import('@/pages/Tips'));
-const About = lazy(() => import('@/pages/About'));
-const Pricing = lazy(() => import('@/pages/Pricing'));
-const Success = lazy(() => import('@/pages/Success'));
-const Cancel = lazy(() => import('@/pages/Cancel'));
-const Compare = lazy(() => import('@/pages/Compare'));
-const Demo = lazy(() => import('@/pages/Demo'));
-const Privacy = lazy(() => import('@/pages/Privacy'));
-const Terms = lazy(() => import('@/pages/Terms'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
-const AccountDelete = lazy(() => import('@/pages/AccountDelete'));
-const DataSafety = lazy(() => import('@/pages/DataSafety'));
-const EmailConfirmed = lazy(() => import('@/pages/EmailConfirmed'));
+const Dashboard = lazy(() => {
+  console.log('App: Loading Dashboard page');
+  return import('@/pages/Dashboard');
+});
+const Practice = lazy(() => {
+  console.log('App: Loading Practice page');
+  return import('@/pages/Practice');
+});
+const RolePlay = lazy(() => {
+  console.log('App: Loading RolePlay page');
+  return import('@/pages/RolePlay');
+});
+const Progress = lazy(() => {
+  console.log('App: Loading Progress page');
+  return import('@/pages/Progress');
+});
+const CallRecordings = lazy(() => {
+  console.log('App: Loading CallRecordings page');
+  return import('@/pages/CallRecordings');
+});
+const TeamDashboard = lazy(() => {
+  console.log('App: Loading TeamDashboard page');
+  return import('@/pages/TeamDashboard');
+});
+const Tips = lazy(() => {
+  console.log('App: Loading Tips page');
+  return import('@/pages/Tips');
+});
+const About = lazy(() => {
+  console.log('App: Loading About page');
+  return import('@/pages/About');
+});
+const Pricing = lazy(() => {
+  console.log('App: Loading Pricing page');
+  return import('@/pages/Pricing');
+});
+const Success = lazy(() => {
+  console.log('App: Loading Success page');
+  return import('@/pages/Success');
+});
+const Cancel = lazy(() => {
+  console.log('App: Loading Cancel page');
+  return import('@/pages/Cancel');
+});
+const Compare = lazy(() => {
+  console.log('App: Loading Compare page');
+  return import('@/pages/Compare');
+});
+const Demo = lazy(() => {
+  console.log('App: Loading Demo page');
+  return import('@/pages/Demo');
+});
+const Privacy = lazy(() => {
+  console.log('App: Loading Privacy page');
+  return import('@/pages/Privacy');
+});
+const Terms = lazy(() => {
+  console.log('App: Loading Terms page');
+  return import('@/pages/Terms');
+});
+const NotFound = lazy(() => {
+  console.log('App: Loading NotFound page');
+  return import('@/pages/NotFound');
+});
+const AccountDelete = lazy(() => {
+  console.log('App: Loading AccountDelete page');
+  return import('@/pages/AccountDelete');
+});
+const DataSafety = lazy(() => {
+  console.log('App: Loading DataSafety page');
+  return import('@/pages/DataSafety');
+});
+const EmailConfirmed = lazy(() => {
+  console.log('App: Loading EmailConfirmed page');
+  return import('@/pages/EmailConfirmed');
+});
 
 // Import critical pages that should load immediately
 import Index from '@/pages/Index';
@@ -49,6 +108,8 @@ import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import PasswordReset from '@/pages/PasswordReset';
 import UpdatePassword from '@/pages/UpdatePassword';
+
+console.log('App: All imports loaded');
 
 // Optimized React Query client configuration
 const queryClient = new QueryClient({
@@ -68,37 +129,49 @@ const queryClient = new QueryClient({
   },
 });
 
+console.log('App: Query client created');
+
 // Enhanced loading fallback with timeout handling
 const PageLoading = ({ timeout = 10000 }: { timeout?: number }) => {
+  console.log('App: PageLoading component rendering');
   const [showError, setShowError] = React.useState(false);
 
   React.useEffect(() => {
+    console.log('App: PageLoading timeout effect started');
     const timer = setTimeout(() => {
+      console.log('App: PageLoading timeout reached');
       setShowError(true);
     }, timeout);
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('App: PageLoading timeout cleared');
+      clearTimeout(timer);
+    };
   }, [timeout]);
 
   if (showError) {
+    console.log('App: PageLoading showing error state');
     return (
       <EnhancedLoading 
         timeout={timeout}
-        onTimeout={() => console.error('Page loading timeout')}
+        onTimeout={() => console.error('App: Page loading timeout')}
         showLogo={false}
       />
     );
   }
 
+  console.log('App: PageLoading showing skeleton');
   return <AppSkeleton />;
 };
 
 // Mobile viewport optimization hook
 const useMobileOptimizations = () => {
   useEffect(() => {
+    console.log('App: Applying mobile optimizations');
     // Add viewport meta tag if missing
     const viewport = document.querySelector('meta[name="viewport"]');
     if (!viewport) {
+      console.log('App: Adding viewport meta tag');
       const meta = document.createElement('meta');
       meta.name = 'viewport';
       meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
@@ -110,6 +183,7 @@ const useMobileOptimizations = () => {
                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     
     if (isIOSDevice && viewport) {
+      console.log('App: Applying iOS viewport optimizations');
       viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
     }
   }, []);
@@ -117,19 +191,24 @@ const useMobileOptimizations = () => {
 
 // Secure onboarding check component
 const OnboardingChecker = () => {
+  console.log('App: OnboardingChecker rendering');
   const { showOnboarding } = useOnboarding();
 
   if (showOnboarding) {
+    console.log('App: Showing onboarding');
     return <IntegratedOnboarding />;
   }
 
+  console.log('App: Not showing onboarding');
   return null;
 };
 
 function AppContent() {
+  console.log('App: AppContent component rendering');
   usePageTracking();
   useMobileOptimizations();
 
+  console.log('App: AppContent returning JSX');
   return (
     <>
       <PrivacyCompliantAnalytics />
@@ -171,13 +250,18 @@ function AppContent() {
 }
 
 function App() {
+  console.log('App: Main App component rendering');
+  
   useEffect(() => {
+    console.log('App: Main App useEffect running');
     if (hasValidConsent()) {
       const currentPath = window.location.pathname + window.location.search;
+      console.log('App: Tracking page view for:', currentPath);
       trackPageView(currentPath);
     }
   }, []);
 
+  console.log('App: Returning main App JSX');
   return (
     <HelmetProvider>
       <NextThemeProvider forcedTheme="light">
@@ -199,4 +283,5 @@ function App() {
   );
 }
 
+console.log('App: App component defined, exporting');
 export default App;
