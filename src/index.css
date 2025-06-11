@@ -95,23 +95,6 @@ body {
   }
 }
 
-/* Brand Color Utilities */
-.brand-green {
-  color: var(--brand-green);
-}
-
-.bg-brand-green {
-  background-color: var(--brand-green);
-}
-
-.text-brand-dark {
-  color: var(--brand-dark);
-}
-
-.bg-brand-light {
-  background-color: var(--brand-light);
-}
-
 /* Animation Keyframes */
 @keyframes spin {
   0% { transform: rotate(0deg); }
@@ -181,95 +164,6 @@ body {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Utility Classes */
-.text-center {
-  text-align: center;
-}
-
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.min-h-screen {
-  min-height: 100vh;
-}
-
-.container {
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (min-width: 640px) {
-  .container {
-    max-width: 640px;
-  }
-}
-
-@media (min-width: 768px) {
-  .container {
-    max-width: 768px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container {
-    max-width: 1024px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .container {
-    max-width: 1280px;
-  }
-}
-
-@media (min-width: 1536px) {
-  .container {
-    max-width: 1536px;
-  }
-}
-
-/* Error Boundary Styles */
-.error-boundary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 2rem;
-  text-align: center;
-}
-
-.error-boundary h1 {
-  color: #dc2626;
-  margin-bottom: 1rem;
-}
-
-.error-boundary button {
-  background-color: #3b82f6;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.error-boundary button:hover {
-  background-color: #2563eb;
-}
-
 /* Safe area for mobile devices */
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom);
@@ -279,32 +173,4 @@ body {
 :focus-visible {
   outline: 2px solid var(--brand-green);
   outline-offset: 2px;
-}
-
-/* Scrollbar styles */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Print styles */
-@media print {
-  * {
-    background: transparent !important;
-    color: black !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
 }
