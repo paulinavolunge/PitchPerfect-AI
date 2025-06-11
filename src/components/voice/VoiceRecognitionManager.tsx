@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Mic, MicOff } from 'lucide-react';
@@ -59,7 +58,7 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
       onTranscript(transcript, isFinal);
     };
 
-    recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+    recognitionRef.current.onerror = (event: SpeechRecognitionError) => {
       console.error('Speech recognition error:', event.error);
       
       let errorMessage = '';
