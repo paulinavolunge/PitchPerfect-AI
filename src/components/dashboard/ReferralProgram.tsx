@@ -1,57 +1,24 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Gift, Copy, Share2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
 
 const ReferralProgram = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
-  const [referralStats, setReferralStats] = useState({
+  
+  // Mock referral stats since the table doesn't exist yet
+  const [referralStats] = useState({
     totalReferrals: 0,
     pendingReferrals: 0,
     successfulReferrals: 0,
     monthsEarned: 0
   });
-  
-  useEffect(() => {
-    // Fetch referral data for the current user
-    const fetchReferralData = async () => {
-      if (!user) return;
-      
-      try {
-        // In a real app, we'd fetch actual referral data from Supabase
-        // This is a placeholder implementation
-        const { data, error } = await supabase
-          .from('user_referrals')
-          .select('total_referrals, pending_referrals, successful_referrals, months_earned')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching referral data:', error);
-        }
-        
-        if (data) {
-          setReferralStats({
-            totalReferrals: data.total_referrals || 0,
-            pendingReferrals: data.pending_referrals || 0,
-            successfulReferrals: data.successful_referrals || 0,
-            monthsEarned: data.months_earned || 0
-          });
-        }
-      } catch (error) {
-        console.error('Error in fetchReferralData:', error);
-      }
-    };
-    
-    fetchReferralData();
-  }, [user]);
   
   // Generate a unique referral code based on user ID
   const referralCode = user?.id ? `${user.id.substring(0, 8)}-${Math.random().toString(36).substring(2, 8).toUpperCase()}` : '';
