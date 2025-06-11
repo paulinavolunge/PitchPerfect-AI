@@ -25,167 +25,180 @@ declare global {
   }
 }
 
-// Safe browser environment check
-const isBrowser = () => {
-  try {
-    return typeof window !== 'undefined' && typeof navigator !== 'undefined';
-  } catch {
-    return false;
-  }
-};
-
-// Safe browser detection without external dependencies
-const getSafeBrowserInfo = () => {
-  if (!isBrowser()) {
-    return {
-      isSafari: false,
-      isIOS: false,
-      isFirefox: false
-    };
-  }
-
-  try {
-    const userAgent = navigator.userAgent || '';
-    return {
-      isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent),
-      isIOS: /iP(ad|hone|od)/.test(userAgent),
-      isFirefox: /Firefox/.test(userAgent)
-    };
-  } catch (error) {
-    console.warn('Could not detect browser:', error);
-    return {
-      isSafari: false,
-      isIOS: false,
-      isFirefox: false
-    };
-  }
-};
-
 export const initializePolyfills = () => {
+  // Early return if not in browser environment
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    console.log('🔧 Polyfills skipped - not in browser environment');
+    return;
+  }
+
   try {
-    // Early exit if not in browser environment
-    if (!isBrowser()) {
-      console.log('🔧 Polyfills skipped - not in browser environment');
-      return;
+    console.log('🔧 Starting polyfill initialization...');
+
+    // Safe browser detection
+    let userAgent = '';
+    try {
+      userAgent = navigator.userAgent || '';
+    } catch (e) {
+      console.warn('Could not access navigator.userAgent');
     }
 
-    const browserInfo = getSafeBrowserInfo();
+    const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+    const isIOS = /iP(ad|hone|od)/.test(userAgent);
+    const isFirefox = /Firefox/.test(userAgent);
+
+    console.log('🔧 Browser detection:', { isSafari, isIOS, isFirefox });
 
     // Polyfill for getUserMedia
-    if (!navigator.mediaDevices && ((navigator as any).getUserMedia || (navigator as any).webkitGetUserMedia || (navigator as any).mozGetUserMedia)) {
-      (navigator as any).mediaDevices = {};
-      (navigator as any).mediaDevices.getUserMedia = function(constraints: MediaStreamConstraints) {
-        const getUserMedia = (navigator as any).getUserMedia || 
-                            (navigator as any).webkitGetUserMedia || 
-                            (navigator as any).mozGetUserMedia;
+    try {
+      if (navigator && !navigator.mediaDevices) {
+        const legacyGetUserMedia = (navigator as any).getUserMedia || 
+                                  (navigator as any).webkitGetUserMedia || 
+                                  (navigator as any).mozGetUserMedia;
         
-        if (!getUserMedia) {
-          return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+        if (legacyGetUserMedia) {
+          (navigator as any).mediaDevices = {};
+          (navigator as any).mediaDevices.getUserMedia = function(constraints: MediaStreamConstraints) {
+            return new Promise((resolve, reject) => {
+              legacyGetUserMedia.call(navigator, constraints, resolve, reject);
+            });
+          };
+          console.log('🔧 getUserMedia polyfill applied');
         }
-        
-        return new Promise((resolve, reject) => {
-          getUserMedia.call(navigator, constraints, resolve, reject);
-        });
-      };
+      }
+    } catch (e) {
+      console.warn('getUserMedia polyfill failed:', e);
     }
 
     // Polyfill for AudioContext
-    if (!window.AudioContext && (window as any).webkitAudioContext) {
-      (window as any).AudioContext = (window as any).webkitAudioContext;
+    try {
+      if (window && !window.AudioContext && (window as any).webkitAudioContext) {
+        (window as any).AudioContext = (window as any).webkitAudioContext;
+        console.log('🔧 AudioContext polyfill applied');
+      }
+    } catch (e) {
+      console.warn('AudioContext polyfill failed:', e);
     }
 
     // Polyfill for SpeechRecognition
-    if (!(window as any).SpeechRecognition && (window as any).webkitSpeechRecognition) {
-      (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
+    try {
+      if (window && !(window as any).SpeechRecognition && (window as any).webkitSpeechRecognition) {
+        (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
+        console.log('🔧 SpeechRecognition polyfill applied');
+      }
+    } catch (e) {
+      console.warn('SpeechRecognition polyfill failed:', e);
     }
 
     // Polyfill for requestAnimationFrame
-    if (!window.requestAnimationFrame) {
-      (window as any).requestAnimationFrame = function(callback: FrameRequestCallback) {
-        return window.setTimeout(callback, 1000 / 60);
-      };
-    }
+    try {
+      if (window && !window.requestAnimationFrame) {
+        (window as any).requestAnimationFrame = function(callback: FrameRequestCallback) {
+          return window.setTimeout(callback, 1000 / 60);
+        };
+        console.log('🔧 requestAnimationFrame polyfill applied');
+      }
 
-    if (!window.cancelAnimationFrame) {
-      (window as any).cancelAnimationFrame = function(id: number) {
-        window.clearTimeout(id);
-      };
+      if (window && !window.cancelAnimationFrame) {
+        (window as any).cancelAnimationFrame = function(id: number) {
+          window.clearTimeout(id);
+        };
+        console.log('🔧 cancelAnimationFrame polyfill applied');
+      }
+    } catch (e) {
+      console.warn('Animation frame polyfills failed:', e);
     }
 
     // Safari-specific fixes
-    if (browserInfo.isSafari) {
-      // Safari requires user interaction before playing audio
-      let audioContextUnlocked = false;
-      
-      const unlockAudioContext = () => {
-        if (audioContextUnlocked) return;
+    if (isSafari) {
+      try {
+        let audioContextUnlocked = false;
         
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioContextClass) return;
-        
-        try {
-          const context = new AudioContextClass();
-          const buffer = context.createBuffer(1, 1, 22050);
-          const source = context.createBufferSource();
-          source.buffer = buffer;
-          source.connect(context.destination);
-          source.start(0);
+        const unlockAudioContext = () => {
+          if (audioContextUnlocked) return;
           
-          audioContextUnlocked = true;
-          document.removeEventListener('touchstart', unlockAudioContext);
-          document.removeEventListener('click', unlockAudioContext);
-        } catch (error) {
-          console.warn('Could not unlock AudioContext on Safari:', error);
-        }
-      };
-      
-      document.addEventListener('touchstart', unlockAudioContext, { once: true });
-      document.addEventListener('click', unlockAudioContext, { once: true });
-    }
-
-    // iOS-specific fixes
-    if (browserInfo.isIOS) {
-      // iOS requires user gesture for microphone access
-      let microphoneUnlocked = false;
-      
-      const unlockMicrophone = async () => {
-        if (microphoneUnlocked) return;
-        
-        try {
-          const stream = await (navigator as any).mediaDevices?.getUserMedia({ audio: true });
-          if (stream) {
-            stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
-            microphoneUnlocked = true;
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          if (!AudioContextClass) return;
+          
+          try {
+            const context = new AudioContextClass();
+            const buffer = context.createBuffer(1, 1, 22050);
+            const source = context.createBufferSource();
+            source.buffer = buffer;
+            source.connect(context.destination);
+            source.start(0);
+            
+            audioContextUnlocked = true;
+            document.removeEventListener('touchstart', unlockAudioContext);
+            document.removeEventListener('click', unlockAudioContext);
+            console.log('🔧 Safari AudioContext unlocked');
+          } catch (error) {
+            console.warn('Could not unlock AudioContext on Safari:', error);
           }
-        } catch (error) {
-          console.warn('Could not unlock microphone on iOS:', error);
-        }
-      };
-      
-      document.addEventListener('touchstart', unlockMicrophone, { once: true });
-    }
-
-    // Firefox-specific fixes
-    if (browserInfo.isFirefox) {
-      // Firefox has different permission handling
-      if (!(navigator as any).permissions) {
-        (navigator as any).permissions = {
-          query: () => Promise.resolve({ state: 'prompt' })
         };
+        
+        document.addEventListener('touchstart', unlockAudioContext, { once: true });
+        document.addEventListener('click', unlockAudioContext, { once: true });
+      } catch (e) {
+        console.warn('Safari-specific fixes failed:', e);
       }
     }
 
-    console.log('🔧 Polyfills initialized for cross-browser compatibility');
+    // iOS-specific fixes
+    if (isIOS) {
+      try {
+        let microphoneUnlocked = false;
+        
+        const unlockMicrophone = async () => {
+          if (microphoneUnlocked) return;
+          
+          try {
+            const stream = await navigator.mediaDevices?.getUserMedia({ audio: true });
+            if (stream) {
+              stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+              microphoneUnlocked = true;
+              console.log('🔧 iOS microphone unlocked');
+            }
+          } catch (error) {
+            console.warn('Could not unlock microphone on iOS:', error);
+          }
+        };
+        
+        document.addEventListener('touchstart', unlockMicrophone, { once: true });
+      } catch (e) {
+        console.warn('iOS-specific fixes failed:', e);
+      }
+    }
+
+    // Firefox-specific fixes
+    if (isFirefox) {
+      try {
+        if (navigator && !(navigator as any).permissions) {
+          (navigator as any).permissions = {
+            query: () => Promise.resolve({ state: 'prompt' })
+          };
+          console.log('🔧 Firefox permissions polyfill applied');
+        }
+      } catch (e) {
+        console.warn('Firefox-specific fixes failed:', e);
+      }
+    }
+
+    console.log('🔧 Polyfills initialized successfully');
     
     // Debug logging for voice features
-    console.log('🎤 Voice API Support:');
-    console.log('  - getUserMedia:', !!navigator.mediaDevices?.getUserMedia);
-    console.log('  - SpeechRecognition:', !!(window as any).SpeechRecognition || !!(window as any).webkitSpeechRecognition);
-    console.log('  - SpeechSynthesis:', !!window.speechSynthesis);
-    console.log('  - AudioContext:', !!window.AudioContext || !!(window as any).webkitAudioContext);
+    try {
+      console.log('🎤 Voice API Support:');
+      console.log('  - getUserMedia:', !!(navigator?.mediaDevices?.getUserMedia));
+      console.log('  - SpeechRecognition:', !!(window && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)));
+      console.log('  - SpeechSynthesis:', !!(window?.speechSynthesis));
+      console.log('  - AudioContext:', !!(window && (window.AudioContext || (window as any).webkitAudioContext)));
+    } catch (e) {
+      console.warn('Voice API debug logging failed:', e);
+    }
     
   } catch (error) {
-    console.error('Error initializing polyfills:', error);
-    // Don't throw - just log and continue
+    console.error('Error during polyfill initialization:', error);
+    // Don't re-throw - just log and continue
   }
 };
