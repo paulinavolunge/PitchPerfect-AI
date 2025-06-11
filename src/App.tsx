@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -58,6 +59,8 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  console.log('App component rendering - routes should be available');
+  
   return (
     <ErrorBoundary>
       <HelmetProvider>
@@ -110,7 +113,7 @@ function App() {
                         <Route path="/data-safety" element={<DataSafety />} />
                         <Route path="/account-delete" element={<AccountDelete />} />
                         
-                        {/* Fallback route */}
+                        {/* Fallback route - IMPORTANT: This catches all unmatched routes */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                       
