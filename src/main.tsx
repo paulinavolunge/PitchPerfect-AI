@@ -4,15 +4,20 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import './styles/accessibility.css'
-import { initializePolyfills } from './utils/polyfills';
 
-// Initialize polyfills synchronously
-try {
-  initializePolyfills();
-} catch (error) {
-  console.error('Failed to initialize polyfills:', error);
-  // Continue without polyfills - app should still work
-}
+// Initialize polyfills asynchronously and non-blocking
+setTimeout(() => {
+  try {
+    import('./utils/polyfills').then(({ initializePolyfills }) => {
+      initializePolyfills();
+      console.log('🔧 Polyfills initialized successfully');
+    }).catch(error => {
+      console.warn('🔧 Polyfills failed to initialize, continuing without them:', error);
+    });
+  } catch (error) {
+    console.warn('🔧 Could not load polyfills module:', error);
+  }
+}, 0);
 
 // Add additional voice debugging on startup
 console.log('🔧 Voice Feature Debug Mode Enabled');
