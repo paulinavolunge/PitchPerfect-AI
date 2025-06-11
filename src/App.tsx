@@ -77,8 +77,9 @@ const LoadingWithTimeout = () => {
           <button
             onClick={() => {
               console.log('User clicked Open Console');
-              // Try to open dev tools programmatically (works in some browsers)
-              if (window.chrome && window.chrome.runtime) {
+              // Check if Chrome DevTools API is available
+              const isChrome = 'chrome' in window && (window as any).chrome?.runtime;
+              if (isChrome) {
                 console.log('Chrome detected - please open DevTools manually (F12)');
               }
               alert('Please open your browser\'s developer console (F12) to see error details');
@@ -247,7 +248,7 @@ function App() {
   console.log('App: Component function called');
   
   const [loadingState, setLoadingState] = useState('initial');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('App: useEffect started');
