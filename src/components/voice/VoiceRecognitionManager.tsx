@@ -41,13 +41,12 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
     }
 
     try {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
+      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognitionConstructor() as SpeechRecognition;
       
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
-      recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
         console.log('Speech recognition started');
@@ -148,7 +147,8 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
   const initializeAudioVisualization = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const audioContext = new AudioContextClass();
       const analyser = audioContext.createAnalyser();
       const microphone = audioContext.createMediaStreamSource(stream);
       
