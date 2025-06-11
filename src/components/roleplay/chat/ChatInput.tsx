@@ -1,11 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import VoiceInput from '@/components/voice/VoiceInput';
+import VoiceRecognitionManager from '@/components/voice/VoiceRecognitionManager';
+import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
   mode: 'voice' | 'text' | 'hybrid';
@@ -21,45 +20,51 @@ const ChatInput: React.FC<ChatInputProps> = ({
   placeholder = "Type your response..."
 }) => {
   const [message, setMessage] = useState('');
-  const [useVoice, setUseVoice] = useState(mode === 'voice');
   const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Update voice mode when prop changes
-  useEffect(() => {
-    if (mode === 'voice') {
-      setUseVoice(true);
-    } else if (mode === 'text') {
-      setUseVoice(false);
-    }
-  }, [mode]);
+  const showVoiceInput = mode === 'voice' || mode === 'hybrid';
 
   // Auto-resize textarea
   useEffect(() => {
-    if (textareaRef.current && !useVoice) {
+    if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [message, useVoice]);
+  }, [message]);
+
+  // Update textarea with voice transcript
+  useEffect(() => {
+    if (voiceTranscript && mode === 'voice') {
+      setMessage(voiceTranscript);
+    }
+  }, [voiceTranscript, mode]);
 
   const handleVoiceTranscript = (text: string, isFinal: boolean) => {
     setVoiceTranscript(text);
-    if (isFinal && text.trim()) {
-      handleSend(text);
+    
+    // In voice-only mode, we update the textarea with the transcript
+    if (mode === 'voice') {
+      setMessage(text);
+    }
+    
+    // Auto-send final transcripts in voice-only mode if configured
+    if (isFinal && text.trim() && mode === 'voice') {
+      handleSendMessage(text);
     }
   };
 
-  const handleSend = (textToSend?: string) => {
-    const finalMessage = textToSend || (useVoice ? voiceTranscript : message);
+  const handleSendMessage = (textToSend?: string) => {
+    const finalMessage = textToSend || message;
     
-    if (!finalMessage.trim()) return;
+    if (!finalMessage.trim() || disabled) return;
     
     onSendMessage(finalMessage.trim());
     setMessage('');
     setVoiceTranscript('');
     
-    // Focus textarea after sending (for text mode)
-    if (!useVoice && textareaRef.current) {
+    // Focus textarea after sending
+    if (textareaRef.current) {
       setTimeout(() => {
         textareaRef.current?.focus();
       }, 10);
@@ -69,71 +74,59 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      handleSendMessage();
     }
   };
-  
-  const showVoiceToggle = mode === 'hybrid';
-  const currentMessage = useVoice ? voiceTranscript : message;
 
   return (
-    <div className="border-t p-3 bg-white space-y-3">
-      {showVoiceToggle && (
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="voice-toggle"
-            checked={useVoice}
-            onCheckedChange={setUseVoice}
-            disabled={disabled}
-          />
-          <Label htmlFor="voice-toggle" className="text-sm">
-            Voice input
-          </Label>
-        </div>
-      )}
-
+    <div className="border-t p-3 bg-white">
       <div className="flex items-end gap-2">
-        {useVoice ? (
-          <div className="flex-grow">
-            <VoiceInput
-              onTranscript={handleVoiceTranscript}
-              disabled={disabled}
-              placeholder="Click the microphone to speak your response..."
-              showSpeechOutput={false}
-            />
-          </div>
-        ) : (
-          <div className="flex-grow relative">
-            <Textarea
-              ref={textareaRef}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              disabled={disabled}
-              className="resize-none min-h-[44px] pr-10 py-2"
-              rows={1}
-              aria-label="Your message"
-            />
-          </div>
-        )}
+        <div className="relative flex-grow">
+          <Textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className={cn(
+              "min-h-[60px] resize-none py-3 pr-12",
+              disabled ? "opacity-50 cursor-not-allowed" : ""
+            )}
+            disabled={disabled}
+            rows={1}
+            aria-label="Message input"
+          />
+          
+          <Button
+            type="submit"
+            size="icon"
+            className="absolute right-2 bottom-2"
+            onClick={() => handleSendMessage()}
+            disabled={!message.trim() || disabled}
+            aria-label="Send message"
+          >
+            <Send size={18} />
+            <span className="sr-only">Send</span>
+          </Button>
+        </div>
         
-        <Button
-          type="button"
-          size="icon"
-          onClick={() => handleSend()}
-          disabled={!currentMessage.trim() || disabled}
-          className="h-10 w-10 bg-[#3A66DB] hover:bg-[#3A66DB]/90 text-white"
-          aria-label="Send message"
-        >
-          <Send size={18} />
-        </Button>
+        {showVoiceInput && (
+          <VoiceRecognitionManager
+            onTranscript={handleVoiceTranscript}
+            disabled={disabled}
+            onError={setVoiceError}
+          />
+        )}
       </div>
       
-      {currentMessage && (
-        <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-          Preview: "{currentMessage}"
+      {voiceTranscript && mode === 'hybrid' && (
+        <div className="mt-2 text-sm text-muted-foreground italic">
+          Transcript: {voiceTranscript}
         </div>
+      )}
+      
+      {voiceError && (
+        <p className="mt-2 text-sm text-destructive">{voiceError}</p>
       )}
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
@@ -14,8 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Flag, CheckCircle } from 'lucide-react';
 import LoadingIndicator from '@/components/ui/loading-indicator';
 import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
-import { useGuestMode } from "@/context/GuestModeContext"; // Import useGuestMode
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useGuestMode } from "@/context/GuestModeContext";
+import { useNavigate } from 'react-router-dom';
+import MicrophonePermissionCheck from '@/components/voice/MicrophonePermissionCheck';
 
 
 interface Message {
@@ -60,13 +60,14 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [userIdleTime, setUserIdleTime] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [firstAIReplyTriggered, setFirstAIReplyTriggered] = useState(false);
+  const [micPermissionGranted, setMicPermissionGranted] = useState<boolean | null>(null);
+  const [browserSupportsSpeech, setBrowserSupportsSpeech] = useState<boolean | null>(null);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Destructure new auth values
   const { user, isPremium, creditsRemaining, trialUsed, startFreeTrial, deductUserCredits } = useAuth();
-  const { isGuestMode } = useGuestMode(); // Access guest mode
-  const navigate = useNavigate(); // For navigation
-
+  const { isGuestMode } = useGuestMode();
+  const navigate = useNavigate();
 
   const voiceSynthRef = useRef<VoiceSynthesis | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -116,8 +117,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   useEffect(() => {
     // Initialize voice synthesis
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    if (typeof window !== 'undefined') {
       voiceSynthRef.current = VoiceSynthesis.getInstance();
+      setBrowserSupportsSpeech(
+        voiceSynthRef.current.isVoiceSupported() && 
+        (window.SpeechRecognition || (window as any).webkitSpeechRecognition)
+      );
     }
 
     return () => {
@@ -176,7 +181,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
     // Reset idle timer
     resetIdleTimer();
-  }, [scenario]); // Removed voiceEnabled, isPremium, actualMode, volume, voiceSynthRef to prevent re-runs on unrelated state changes
+  }, [scenario]); // Removed voiceEnabled, isPremium, actualMode, volume, voiceSynthRef to prevent re-runs
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -203,7 +208,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const speakMessage = async (text: string) => {
-    if (!voiceSynthRef.current) return;
+    if (!voiceSynthRef.current || !voiceEnabled) return;
 
     setIsAISpeaking(true);
 
@@ -220,6 +225,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       });
     } catch (error) {
       console.error('Error speaking:', error);
+      toast({
+        title: "Voice Error",
+        description: "Could not play AI voice. Please try again or switch to text mode.",
+        variant: "destructive",
+      });
     } finally {
       setIsAISpeaking(false);
     }
@@ -352,6 +362,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       return;
     }
 
+    // Check if speech synthesis is supported
+    if (!voiceSynthRef.current?.isVoiceSupported() && !voiceEnabled) {
+      toast({
+        title: "Voice Not Supported",
+        description: "Your browser does not support AI voice. Please try using Chrome, Edge, or Safari.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setVoiceEnabled(!voiceEnabled);
 
     // Stop speaking if turning off
@@ -414,6 +434,23 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     handleSendMessage(suggestion);
   };
 
+  // Handle microphone permission changes
+  const handleMicPermissionChange = (hasPermission: boolean) => {
+    setMicPermissionGranted(hasPermission);
+  };
+
+  // If speech recognition not supported, provide a warning
+  const renderSpeechSupportWarning = () => {
+    if (browserSupportsSpeech === false && (actualMode === 'voice' || actualMode === 'hybrid')) {
+      return (
+        <div className="px-4 py-2 bg-amber-50 border-amber-200 border rounded-md text-sm text-amber-700 mb-2">
+          <p>Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari for voice features, or switch to text mode.</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <>
       <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden relative">
@@ -444,7 +481,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 onCheckedChange={toggleVoice}
                 aria-label="Toggle voice responses"
                 // Disable voice toggle if not premium and no credits
-                disabled={!isPremium && creditsRemaining <= 0}
+                disabled={!isPremium && creditsRemaining <= 0 || !browserSupportsSpeech}
               />
             </div>
           </div>
@@ -492,7 +529,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             </Button>
           </div>
         ) : !showFeedback && !isProcessing && (
-          <ChatInput mode={actualMode} onSendMessage={handleSendMessage} />
+          <>
+            {renderSpeechSupportWarning()}
+            <MicrophonePermissionCheck onPermissionChange={handleMicPermissionChange}>
+              <ChatInput 
+                mode={actualMode} 
+                onSendMessage={handleSendMessage}
+                disabled={isProcessing}
+              />
+            </MicrophonePermissionCheck>
+          </>
         )}
 
         <div ref={messagesEndRef} />
