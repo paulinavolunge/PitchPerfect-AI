@@ -27,6 +27,11 @@ declare global {
   }
 }
 
+// Ensure we're in a browser environment
+if (typeof window === 'undefined') {
+  throw new Error('Polyfills can only be initialized in a browser environment');
+}
+
 // Polyfill for getUserMedia
 if (!navigator.mediaDevices && ((navigator as any).getUserMedia || (navigator as any).webkitGetUserMedia || (navigator as any).mozGetUserMedia)) {
   (navigator as any).mediaDevices = {};
@@ -51,10 +56,8 @@ if (!window.AudioContext && (window as any).webkitAudioContext) {
 }
 
 // Polyfill for SpeechRecognition
-if (typeof window !== 'undefined') {
-  if (!(window as any).SpeechRecognition && (window as any).webkitSpeechRecognition) {
-    (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
-  }
+if (!(window as any).SpeechRecognition && (window as any).webkitSpeechRecognition) {
+  (window as any).SpeechRecognition = (window as any).webkitSpeechRecognition;
 }
 
 // Polyfill for requestAnimationFrame
@@ -71,7 +74,7 @@ if (!window.cancelAnimationFrame) {
 }
 
 // Safari-specific fixes
-if (browserInfo.isSafari) {
+if (browserInfo?.isSafari) {
   // Safari requires user interaction before playing audio
   let audioContextUnlocked = false;
   
@@ -81,16 +84,20 @@ if (browserInfo.isSafari) {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     
-    const context = new AudioContextClass();
-    const buffer = context.createBuffer(1, 1, 22050);
-    const source = context.createBufferSource();
-    source.buffer = buffer;
-    source.connect(context.destination);
-    source.start(0);
-    
-    audioContextUnlocked = true;
-    document.removeEventListener('touchstart', unlockAudioContext);
-    document.removeEventListener('click', unlockAudioContext);
+    try {
+      const context = new AudioContextClass();
+      const buffer = context.createBuffer(1, 1, 22050);
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      source.start(0);
+      
+      audioContextUnlocked = true;
+      document.removeEventListener('touchstart', unlockAudioContext);
+      document.removeEventListener('click', unlockAudioContext);
+    } catch (error) {
+      console.warn('Could not unlock AudioContext on Safari:', error);
+    }
   };
   
   document.addEventListener('touchstart', unlockAudioContext, { once: true });
@@ -98,7 +105,7 @@ if (browserInfo.isSafari) {
 }
 
 // iOS-specific fixes
-if (browserInfo.isIOS) {
+if (browserInfo?.isIOS) {
   // iOS requires user gesture for microphone access
   let microphoneUnlocked = false;
   
@@ -120,7 +127,7 @@ if (browserInfo.isIOS) {
 }
 
 // Firefox-specific fixes
-if (browserInfo.isFirefox) {
+if (browserInfo?.isFirefox) {
   // Firefox has different permission handling
   if (!(navigator as any).permissions) {
     (navigator as any).permissions = {
@@ -130,13 +137,17 @@ if (browserInfo.isFirefox) {
 }
 
 export const initializePolyfills = () => {
-  console.log(`🔧 Browser: ${browserInfo.name} ${browserInfo.version}`);
-  console.log('🔧 Polyfills initialized for cross-browser compatibility');
-  
-  // Debug logging for voice features
-  console.log('🎤 Voice API Support:');
-  console.log('  - getUserMedia:', !!navigator.mediaDevices?.getUserMedia);
-  console.log('  - SpeechRecognition:', !!(window as any).SpeechRecognition || !!(window as any).webkitSpeechRecognition);
-  console.log('  - SpeechSynthesis:', !!window.speechSynthesis);
-  console.log('  - AudioContext:', !!window.AudioContext || !!(window as any).webkitAudioContext);
+  try {
+    console.log(`🔧 Browser: ${browserInfo?.name || 'Unknown'} ${browserInfo?.version || 'Unknown'}`);
+    console.log('🔧 Polyfills initialized for cross-browser compatibility');
+    
+    // Debug logging for voice features
+    console.log('🎤 Voice API Support:');
+    console.log('  - getUserMedia:', !!navigator.mediaDevices?.getUserMedia);
+    console.log('  - SpeechRecognition:', !!(window as any).SpeechRecognition || !!(window as any).webkitSpeechRecognition);
+    console.log('  - SpeechSynthesis:', !!window.speechSynthesis);
+    console.log('  - AudioContext:', !!window.AudioContext || !!(window as any).webkitAudioContext);
+  } catch (error) {
+    console.error('Error initializing polyfills:', error);
+  }
 };
