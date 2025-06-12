@@ -13,23 +13,28 @@ const Index = () => {
   const navigate = useNavigate();
 
   const handleVoiceTrainingClick = () => {
-    console.log("Voice Training clicked");
+    console.log("Voice Training button clicked - navigating to /voice-training");
     navigate('/voice-training');
   };
 
   const handleAnalyticsClick = () => {
-    console.log("Analytics clicked");
+    console.log("Analytics button clicked - navigating to /analytics");
     navigate('/analytics');
   };
 
   const handleAIRoleplayClick = () => {
-    console.log("AI Roleplay clicked");
+    console.log("AI Roleplay button clicked - navigating to /ai-roleplay");
     navigate('/ai-roleplay');
   };
 
   const handleGetStartedClick = () => {
-    console.log("Get Started clicked");
+    console.log("Get Started button clicked - navigating to /signup");
     navigate('/signup');
+  };
+
+  const handleWatchDemoClick = () => {
+    console.log("Watch Demo button clicked - navigating to /demo");
+    navigate('/demo');
   };
 
   const features = [
@@ -41,7 +46,7 @@ const Index = () => {
     },
     {
       icon: <BarChart className="h-8 w-8 text-brand-blue" />,
-      title: "Instant Feedback",
+      title: "Instant Feedback", 
       description: "Get detailed analysis of your pitch delivery, pacing, and effectiveness immediately after each session.",
       onClick: handleAnalyticsClick
     },
@@ -108,11 +113,13 @@ const Index = () => {
                 Start Free Practice
               </Button>
               
-              <Button asChild variant="outline" size="lg">
-                <Link to="/demo">
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Watch Demo
-                </Link>
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={handleWatchDemoClick}
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Watch Demo
               </Button>
             </div>
 
@@ -177,7 +184,20 @@ const Index = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {testimonials.map((testimonial, index) => (
+              {[
+                {
+                  name: "Sarah Johnson",
+                  role: "Sales Manager", 
+                  content: "PitchPerfect AI helped me improve my closing rate by 35% in just 2 months. The feedback is incredibly detailed.",
+                  rating: 5
+                },
+                {
+                  name: "Mike Chen",
+                  role: "Account Executive",
+                  content: "Finally, a way to practice objection handling without bothering my colleagues. The AI responses are amazingly realistic.",
+                  rating: 5
+                }
+              ].map((testimonial, index) => (
                 <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
                   <div className="flex items-center mb-3">
                     {[...Array(testimonial.rating)].map((_, i) => (

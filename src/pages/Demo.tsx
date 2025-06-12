@@ -11,7 +11,7 @@ import WebhookSettings from '@/components/WebhookSettings';
 import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Settings, UserPlus } from 'lucide-react';
+import { Settings, UserPlus, RefreshCw } from 'lucide-react';
 import MicrophoneGuard from '@/components/MicrophoneGuard';
 import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
@@ -25,6 +25,8 @@ const Demo = () => {
   const [sessionData, setSessionData] = useState<any>(null);
   const [crmProvider, setCrmProvider] = useState<CRMProvider>("zapier");
   const [objectionScenario, setObjectionScenario] = useState("Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less.");
+  const [hasError, setHasError] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const { isGuestMode } = useGuestMode();
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
@@ -69,42 +71,66 @@ const Demo = () => {
   const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
     console.log('Objection practice submission:', input);
     
-    // For demo purposes, we'll deduct credits if user is authenticated
-    if (!isGuestMode && user) {
-      const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
-      const featureType = `demo_objection_${input.type}`;
+    try {
+      setHasError(false);
       
-      const deducted = await deductUserCredits(featureType, creditsToDeduct);
-      if (!deducted) {
-        // Credit deduction failed, don't process the demo
-        // The deductUserCredits function already shows appropriate toast
-        return;
+      // For demo purposes, we'll deduct credits if user is authenticated
+      if (!isGuestMode && user) {
+        const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
+        const featureType = `demo_objection_${input.type}`;
+        
+        const deducted = await deductUserCredits(featureType, creditsToDeduct);
+        if (!deducted) {
+          // Credit deduction failed, don't process the demo
+          // The deductUserCredits function already shows appropriate toast
+          return;
+        }
       }
+      
+      // Simulate AI processing
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Generate mock feedback
+      const feedbackData = {
+        type: input.type,
+        response: input.type === 'text' ? input.data : 'Voice response processed',
+        timestamp: new Date().toISOString(),
+        feedback: "Good handling of the objection. Consider emphasizing value over cost and highlighting ROI to strengthen your response.",
+        score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
+      };
+      
+      setFeedback(feedbackData.feedback);
+      
+      // Complete the demo with the feedback data
+      handleDemoComplete(feedbackData);
+      
+      // Show completion toast (separate from credit usage toast)
+      toast({
+        title: "Response Analyzed",
+        description: `Your ${input.type} response has been processed and feedback is ready.`,
+        variant: "default",
+        duration: 4000,
+      });
+    } catch (error) {
+      console.error('Error processing objection:', error);
+      setHasError(true);
+      toast({
+        title: "Processing Error",
+        description: "There was an issue analyzing your response. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    // Process the submission and generate feedback
-    const feedbackData = {
-      type: input.type,
-      response: input.type === 'text' ? input.data : 'Voice response processed',
-      timestamp: new Date().toISOString(),
-      feedback: "Good handling of the objection. Consider emphasizing value over cost.",
-      score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
-    };
-    
-    // Complete the demo with the feedback data
-    handleDemoComplete(feedbackData);
-    
-    // Show completion toast (separate from credit usage toast)
-    toast({
-      title: "Response Analyzed",
-      description: `Your ${input.type} response has been processed and feedback is ready.`,
-      variant: "default",
-      duration: 4000,
-    });
   };
 
   const handleTryMoreFeatures = () => {
     navigate('/roleplay');
+  };
+
+  const handleRetry = () => {
+    console.log('Retrying demo...');
+    setHasError(false);
+    setFeedback(null);
+    setSessionData(null);
   };
   
   return (
@@ -155,12 +181,32 @@ const Demo = () => {
                   Practice handling pricing objections using either voice or text input, and get instant feedback.
                 </p>
                 
-                <MicrophoneGuard>
-                  <PracticeObjection
-                    scenario={objectionScenario}
-                    onSubmit={handleObjectionSubmit}
-                  />
-                </MicrophoneGuard>
+                {hasError ? (
+                  <div className="text-center py-8">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+                      <h3 className="text-lg font-medium text-red-800 mb-2">Something went wrong</h3>
+                      <p className="text-red-600 mb-4">We encountered an issue processing your response. This could be a temporary problem.</p>
+                      <Button onClick={handleRetry} className="flex items-center gap-2">
+                        <RefreshCw className="h-4 w-4" />
+                        Try Again
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <MicrophoneGuard>
+                    <PracticeObjection
+                      scenario={objectionScenario}
+                      onSubmit={handleObjectionSubmit}
+                    />
+                  </MicrophoneGuard>
+                )}
+
+                {feedback && (
+                  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h3 className="font-medium text-green-800 mb-2">AI Feedback</h3>
+                    <p className="text-green-700">{feedback}</p>
+                  </div>
+                )}
               </div>
               
               {isGuestMode && sessionData && (
