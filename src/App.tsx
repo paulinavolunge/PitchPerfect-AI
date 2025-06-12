@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -38,6 +37,11 @@ import Success from '@/pages/Success';
 import Cancel from '@/pages/Cancel';
 import TeamDashboard from '@/pages/TeamDashboard';
 import NotFound from '@/pages/NotFound';
+
+// Add new page imports
+import VoiceTraining from '@/pages/VoiceTraining';
+import Analytics from '@/pages/Analytics';
+import AIRoleplay from '@/pages/AIRoleplay';
 
 // Placeholder page imports
 import { VoiceTrainingPage, AnalyticsPage, RoleplayPage } from '@/components/PlaceholderPages';
@@ -79,10 +83,15 @@ function App() {
                         <Route path="/pricing" element={<Pricing />} />
                         <Route path="/demo" element={<Demo />} />
                         
-                        {/* Placeholder routes for testing */}
-                        <Route path="/voice-training" element={<VoiceTrainingPage />} />
-                        <Route path="/analytics" element={<AnalyticsPage />} />
-                        <Route path="/ai-roleplay" element={<RoleplayPage />} />
+                        {/* New functional routes */}
+                        <Route path="/voice-training" element={<VoiceTraining />} />
+                        <Route path="/analytics" element={<Analytics />} />
+                        <Route path="/ai-roleplay" element={<AIRoleplay />} />
+                        
+                        {/* Placeholder routes for testing (keeping as backup) */}
+                        <Route path="/voice-training-old" element={<VoiceTrainingPage />} />
+                        <Route path="/analytics-old" element={<AnalyticsPage />} />
+                        <Route path="/ai-roleplay-old" element={<RoleplayPage />} />
                         
                         {/* Authentication routes */}
                         <Route path="/login" element={<Login />} />
