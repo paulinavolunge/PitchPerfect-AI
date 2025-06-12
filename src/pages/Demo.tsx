@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -24,11 +24,19 @@ const Demo = () => {
   const [showWebhookSettings, setShowWebhookSettings] = useState(false);
   const [sessionData, setSessionData] = useState<any>(null);
   const [crmProvider, setCrmProvider] = useState<CRMProvider>("zapier");
+  const [objectionScenario, setObjectionScenario] = useState("Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less.");
   const { isGuestMode } = useGuestMode();
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("Demo component mounted");
+    console.log("Demo page loaded with objection scenario:", objectionScenario);
+    console.log("Guest mode:", isGuestMode, "User:", user);
+  }, []);
   
   const handleDemoComplete = (data?: any) => {
+    console.log("Demo completed with data:", data);
     // Save session data
     if (data) {
       setSessionData(data);
@@ -59,7 +67,6 @@ const Demo = () => {
   };
 
   const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
-    // Handle both voice and text submissions
     console.log('Objection practice submission:', input);
     
     // For demo purposes, we'll deduct credits if user is authenticated
@@ -132,7 +139,7 @@ const Demo = () => {
               
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
                 <div className="flex justify-between items-center mb-4">
-                  <h1 className="text-2xl font-bold text-brand-dark">Try PitchPerfect AI</h1>
+                  <h1 className="text-2xl font-bold text-brand-dark">Try PitchPerfect AI - Objection Handling Practice</h1>
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -150,7 +157,7 @@ const Demo = () => {
                 
                 <MicrophoneGuard>
                   <PracticeObjection
-                    scenario="Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less."
+                    scenario={objectionScenario}
                     onSubmit={handleObjectionSubmit}
                   />
                 </MicrophoneGuard>
