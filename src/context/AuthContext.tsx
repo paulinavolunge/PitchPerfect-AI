@@ -137,11 +137,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // Use the secure function for credit deduction
+      // Use the secure function for credit deduction - match current function signature
       const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
         p_user_id: user.id,
-        p_feature_used: featureType,
-        p_credits_to_deduct: credits
+        p_feature_used: featureType
       });
 
       if (error) {

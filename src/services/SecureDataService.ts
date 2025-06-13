@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 export interface SecureDataResponse<T = any> {
@@ -17,10 +16,10 @@ export class SecureDataService {
     creditsToDeduct: number
   ): Promise<SecureDataResponse> {
     try {
+      // Match current function signature
       const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
         p_user_id: userId,
-        p_feature_used: featureType,
-        p_credits_to_deduct: creditsToDeduct
+        p_feature_used: featureType
       });
 
       if (error) {

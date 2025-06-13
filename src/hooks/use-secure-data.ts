@@ -24,10 +24,10 @@ export const useSecureData = () => {
     setIsProcessing(true);
 
     try {
+      // Match current function signature
       const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
         p_user_id: user.id,
-        p_feature_used: featureType,
-        p_credits_to_deduct: creditsToDeduct
+        p_feature_used: featureType
       });
 
       if (error) {

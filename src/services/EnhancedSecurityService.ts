@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeStrictly } from '@/lib/sanitizeInput';
 
@@ -53,10 +52,10 @@ export class EnhancedSecurityService {
         user_id: userId
       }, userId);
 
+      // Match current function signature
       const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
         p_user_id: userId,
-        p_feature_used: sanitizeStrictly(featureType),
-        p_credits_to_deduct: creditsToDeduct
+        p_feature_used: sanitizeStrictly(featureType)
       });
 
       if (error) {
