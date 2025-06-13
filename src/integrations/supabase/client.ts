@@ -5,22 +5,36 @@ import type { Database } from './types'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// Enhanced validation - no fallback values for security
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables are missing. Using fallback configuration.')
+  throw new Error('Missing required Supabase environment variables. Please check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+}
+
+// Validate URL format
+try {
+  new URL(supabaseUrl)
+} catch {
+  throw new Error('Invalid VITE_SUPABASE_URL format. Please provide a valid Supabase project URL.')
 }
 
 export const supabase = createClient<Database>(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
+  supabaseUrl,
+  supabaseAnonKey,
   {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      flowType: 'pkce'
     },
     realtime: {
       params: {
         eventsPerSecond: 2
+      }
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'pitchperfect-ai'
       }
     }
   }

@@ -430,11 +430,7 @@ export type Database = {
         Returns: undefined
       }
       secure_deduct_credits_and_log_usage: {
-        Args: {
-          p_user_id: string
-          p_feature_used: string
-          p_credits_to_deduct: number
-        }
+        Args: { p_user_id: string; p_feature_used: string }
         Returns: Json
       }
     }
