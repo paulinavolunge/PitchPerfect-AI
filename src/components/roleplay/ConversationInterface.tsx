@@ -297,7 +297,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       sender: 'user',
       timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
 
     // Stop any ongoing AI speech when user speaks
     if (voiceSynthRef.current && isAISpeaking) {
@@ -344,11 +345,14 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setIsProcessing(true);
 
     try {
-      // Simulate thinking delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Generate AI response with error handling and fallbacks
-      const aiResponseText = await generateAIResponseWithFallback(text);
+      // Generate AI response using the secure OpenAI integration
+      const aiResponseText = await generateAIResponse(
+        text, 
+        scenario, 
+        userScript || null, 
+        getAIPersona,
+        updatedMessages // Pass conversation history
+      );
 
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
@@ -357,7 +361,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         timestamp: new Date(),
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages(prev => [...prev, aiMessage]);
 
       // Trigger first AI reply callback for guest mode prompts
       if (!firstAIReplyTriggered && onFirstAIReply) {
@@ -365,8 +369,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         onFirstAIReply();
       }
 
-      // Speak the AI response if voice is enabled (only if not a fallback response)
-      if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current && !aiServiceError) {
+      // Speak the AI response if voice is enabled
+      if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
         await speakMessage(aiResponseText);
       }
 
@@ -394,47 +398,14 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
     } catch (error) {
       console.error('Error in conversation flow:', error);
-      AIErrorHandler.handleError({
-        name: 'ConversationError',
-        message: 'Failed to process conversation',
-        code: 'CONVERSATION_ERROR',
-        retryable: true,
-      }, 'conversation');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const generateAIResponseWithFallback = async (userText: string): Promise<string> => {
-    try {
-      return await AIErrorHandler.withRetry(
-        async () => {
-          // Simulate AI service call with potential failure
-          const response = generateAIResponse(userText, scenario, userScript || null, getAIPersona);
-          
-          if (!response || response.trim().length === 0) {
-            throw new Error('Empty response from AI service');
-          }
-          
-          return response;
-        },
-        `ai-response-${Date.now()}`,
-        { maxRetries: 3 }
-      );
-    } catch (error) {
-      console.error('AI response generation failed:', error);
-      
-      // Use fallback response
-      const fallbackResponse = AIErrorHandler.getFallbackResponse('roleplay');
-      
       setAiServiceError('AI service temporarily unavailable');
       
       showServiceUnavailableToast(() => {
         setRetryCount(prev => prev + 1);
         setAiServiceError(null);
       });
-      
-      return fallbackResponse;
+    } finally {
+      setIsProcessing(false);
     }
   };
 
