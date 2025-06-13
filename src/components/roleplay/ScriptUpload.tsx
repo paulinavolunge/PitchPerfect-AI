@@ -6,10 +6,10 @@ import { Upload, CheckCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ScriptUploadProps {
-  onScriptSubmit: (script: string) => void;
+  onScriptUpload: (script: string) => void;
 }
 
-const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptSubmit }) => {
+const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptUpload }) => {
   const [script, setScript] = useState('');
   const [isScriptUploaded, setIsScriptUploaded] = useState(false);
   const { toast } = useToast();
@@ -50,7 +50,7 @@ const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptSubmit }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (script.trim()) {
-      onScriptSubmit(script);
+      onScriptUpload(script);
       toast({
         title: "Script Saved",
         description: "Your script is ready for practice.",
