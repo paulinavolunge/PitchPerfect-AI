@@ -167,9 +167,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log('Signing out user...');
+      
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      setCreditsRemaining(0);
+      setTrialUsed(false);
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
+      }
+
+      console.log('User signed out successfully');
+      
+      // Redirect to home page using the appropriate domain
+      const targetUrl = window.location.hostname.includes('lovable.app') 
+        ? '/' 
+        : 'https://pitchperfectai.ai/';
+      
+      window.location.href = targetUrl;
+      
     } catch (error) {
       console.error('Sign out error:', error);
+      // Even if there's an error, redirect to home
+      const targetUrl = window.location.hostname.includes('lovable.app') 
+        ? '/' 
+        : 'https://pitchperfectai.ai/';
+      
+      window.location.href = targetUrl;
     }
   };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
@@ -48,10 +47,16 @@ const Navbar: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log('Navbar: Starting sign out process...');
       await signOut();
-      window.location.href = '/';
     } catch (error) {
       console.error('Error during sign out:', error);
+      // Force redirect even if there's an error
+      const targetUrl = window.location.hostname.includes('lovable.app') 
+        ? '/' 
+        : 'https://pitchperfectai.ai/';
+      
+      window.location.href = targetUrl;
     }
   };
 

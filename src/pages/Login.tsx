@@ -36,33 +36,50 @@ const Login = () => {
     resolver: zodResolver(loginSchema)
   });
 
-  // All hooks must be called before any conditional returns
+  // Check if user is already logged in and redirect immediately
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
+    if (user && !loading) {
+      console.log('User is logged in, redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
     }
+  }, [user, loading, navigate]);
 
+  useEffect(() => {
     // Check for verification message in URL params
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('verified') === 'true') {
       setVerificationMessage("Email verified successfully! You can now log in.");
     }
-  }, [user, navigate, location]);
+
+    // Handle OAuth callback errors
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    if (error) {
+      console.error('OAuth error:', error, errorDescription);
+      setLoginError(errorDescription || 'Authentication failed. Please try again.');
+    }
+  }, [location]);
 
   useEffect(() => {
     // Listen for auth state changes with proper cleanup
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN') {
+        console.log('Auth state changed in Login:', event, session);
+        
+        if (event === 'SIGNED_IN' && session) {
           // Clear any errors on successful sign in
           setLoginError(null);
 
           // Track successful login
           trackEvent('login_success', {
-            method: 'email',
+            method: session.user.app_metadata.provider || 'email',
             timestamp: new Date().toISOString(),
-            user_id: session?.user?.id
+            user_id: session.user.id
           });
+
+          // Redirect to dashboard
+          console.log('Successful sign in, redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
 
         } else if (event === 'SIGNED_OUT') {
           // User signed out, clear any errors
@@ -72,7 +89,7 @@ const Login = () => {
     );
 
     return () => authListener.subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   // Auto-dismiss alerts after 6 seconds
   useEffect(() => {
@@ -93,7 +110,7 @@ const Login = () => {
     }
   }, [verificationMessage]);
 
-  // Show loading state while auth context loads - AFTER all hooks
+  // Show loading state while auth context loads
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -145,10 +162,15 @@ const Login = () => {
     setLoginError(null);
 
     try {
+      // Use the .ai domain as default now
+      const redirectTo = window.location.hostname.includes('lovable.app') 
+        ? `${window.location.origin}/dashboard`
+        : 'https://pitchperfectai.ai/dashboard';
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectTo,
         },
       });
 
