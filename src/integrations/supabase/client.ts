@@ -33,7 +33,7 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Debug: verify client and warn if the import problem is detected (dev only)
+// --- DEV-ONLY error detection for default-import postgrest bugs ---
 if (
   typeof window !== "undefined" &&
   typeof import.meta !== "undefined" &&
@@ -45,9 +45,15 @@ if (
     // In dev mode: check window['postgrest'] for signs of incorrect import
     if (window && (window as any).postgrest) {
       // eslint-disable-next-line no-console
-      console.warn("[Supabase Client] Detected global 'postgrest' object. Check your imports for incorrect 'import postgrest from ...' usage.");
+      console.error(
+        "[Supabase Client] Detected global 'postgrest' object, likely caused by 'import postgrest from \"@supabase/postgrest-js\"', which is INVALID. Please use 'import * as postgrest from \"@supabase/postgrest-js\"' everywhere. Failing initialization."
+      );
+      // Throwing to halt app in dev so this is seen
+      throw new Error(
+        "[Supabase Client] Fatal: Incorrect 'default' import from '@supabase/postgrest-js' found. Check project for 'import postgrest from ...' and replace with 'import * as postgrest from ...'"
+      );
     }
-  } catch (_) {}
+  } catch (_) { }
   if (!supabase || typeof supabase !== 'object' || !supabase.auth) {
     // eslint-disable-next-line no-console
     console.error('[Supabase] Client initialization failed:', supabase);
@@ -58,3 +64,4 @@ if (
 }
 
 // If more postgrest integration is ever needed, only use named or namespace imports, never default.
+
