@@ -30,7 +30,12 @@ export const supabase = createClient<Database>(
 );
 
 // Debug: verify client object shape (only in development)
-if (typeof window !== "undefined" && import.meta.env.MODE === "development") {
+if (
+  typeof window !== "undefined" &&
+  typeof import.meta !== "undefined" &&
+  import.meta.env &&
+  import.meta.env.MODE === "development"
+) {
   if (!supabase || typeof supabase !== 'object' || !supabase.auth) {
     // eslint-disable-next-line no-console
     console.error('[Supabase] Client initialization failed:', supabase);
