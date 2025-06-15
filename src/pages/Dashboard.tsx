@@ -43,11 +43,19 @@ const Dashboard = () => {
   const { isGuestMode } = useGuestMode(); // Access guest mode
   const navigate = useNavigate();
 
-  // Redirect to login if not authenticated and not in guest mode
+  // --- FIX: improved redirect, clearer logging, always show some output for debugging ---
+
   useEffect(() => {
     if (!loading && !user && !isGuestMode) {
+      // Not logged in and not guest mode: force redirect to login
       navigate('/login', { replace: true });
       return;
+    }
+    if (!loading && user) {
+      console.log('[Dashboard] Authenticated user:', user.email);
+    }
+    if (!loading && isGuestMode) {
+      console.log('[Dashboard] In guest mode');
     }
   }, [user, loading, isGuestMode, navigate]);
 
@@ -63,9 +71,15 @@ const Dashboard = () => {
     );
   }
 
-  // Don't render anything if no user and not guest mode (will redirect)
+  // --- IMPROVED: Always render fallback for troubleshooting ---
   if (!user && !isGuestMode) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500">Not signed in. Redirecting...</p>
+        </div>
+      </div>
+    );
   }
 
   const [showTour, setShowTour] = useState(false);
