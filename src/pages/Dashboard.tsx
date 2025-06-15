@@ -48,11 +48,12 @@ const Dashboard = () => {
   useEffect(() => {
     if (!loading && !user && !isGuestMode) {
       // Not logged in and not guest mode: force redirect to login
+      console.warn('[Dashboard] Not authenticated, redirecting from dashboard!');
       navigate('/login', { replace: true });
       return;
     }
     if (!loading && user) {
-      console.log('[Dashboard] Authenticated user:', user.email);
+      console.log('[Dashboard] Authenticated user:', user.email, user.id);
     }
     if (!loading && isGuestMode) {
       console.log('[Dashboard] In guest mode');
@@ -61,6 +62,7 @@ const Dashboard = () => {
 
   // Show loading state while auth context loads - AFTER all hooks
   if (loading) {
+    console.log('[Dashboard] Still loading authentication context');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -73,6 +75,7 @@ const Dashboard = () => {
 
   // --- IMPROVED: Always render fallback for troubleshooting ---
   if (!user && !isGuestMode) {
+    console.warn('[Dashboard] No user and not in guest mode. Showing fallback UI.');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
