@@ -1,10 +1,14 @@
 
+// Only import createClient and types from supabase-js
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './types'
 
-// Use the actual Supabase project configuration
+// DO NOT import @supabase/postgrest-js directly. If you ever need it, use:
+// import * as postgrest from '@supabase/postgrest-js'
+
+// Core Supabase configuration (do not wrap in try/catch, do not default-import cjs modules)
 const supabaseUrl = 'https://ggpodadyycvmmxifqwlp.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
 
 export const supabase = createClient<Database>(
   supabaseUrl,
@@ -29,13 +33,21 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Debug: verify client object shape (only in development)
+// Debug: verify client and warn if the import problem is detected (dev only)
 if (
   typeof window !== "undefined" &&
   typeof import.meta !== "undefined" &&
   import.meta.env &&
   import.meta.env.MODE === "development"
 ) {
+  // Check if we have any postgrest usage (paranoid!)
+  try {
+    // In dev mode: check window['postgrest'] for signs of incorrect import
+    if (window && (window as any).postgrest) {
+      // eslint-disable-next-line no-console
+      console.warn("[Supabase Client] Detected global 'postgrest' object. Check your imports for incorrect 'import postgrest from ...' usage.");
+    }
+  } catch (_) {}
   if (!supabase || typeof supabase !== 'object' || !supabase.auth) {
     // eslint-disable-next-line no-console
     console.error('[Supabase] Client initialization failed:', supabase);
@@ -44,3 +56,5 @@ if (
     console.log('[Supabase] Client initialized:', supabase);
   }
 }
+
+// If more postgrest integration is ever needed, only use named or namespace imports, never default.
