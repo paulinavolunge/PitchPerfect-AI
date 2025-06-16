@@ -80,17 +80,24 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
 
       recognitionRef.current.onresult = (event: any) => {
         console.log("Speech recognition result:", event);
+        let interimTranscript = '';
         let finalTranscript = '';
         
         for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcriptPart = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
+            finalTranscript += transcriptPart;
+          } else {
+            interimTranscript += transcriptPart;
           }
         }
         
-        if (finalTranscript) {
-          setTranscript(prev => prev + finalTranscript);
-        }
+        // Update transcript with both final and interim results
+        setTranscript(prev => {
+          const newTranscript = prev + finalTranscript;
+          console.log("Updated transcript:", newTranscript);
+          return newTranscript;
+        });
       };
 
       recognitionRef.current.onerror = (event: any) => {
@@ -121,7 +128,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
 
     if (recognitionRef.current) {
       setError(null);
-      setTranscript('');
+      setTranscript(''); // Clear previous transcript
       
       try {
         recognitionRef.current.start();
@@ -155,6 +162,9 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
 
   const handleSubmit = async () => {
     console.log("Submitting objection response");
+    console.log("Input mode:", inputMode);
+    console.log("Transcript:", transcript);
+    console.log("Text input:", textInput);
     
     const response = inputMode === 'voice' ? transcript.trim() : textInput.trim();
     
@@ -173,22 +183,28 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
 
     try {
       console.log(`Submitting ${inputMode} response:`, response);
+      
+      // Call the onSubmit prop with the response data
       await onSubmit({
         type: inputMode,
         data: response
       });
       
-      // Reset form
+      console.log("Response submitted successfully");
+      
+      // Reset form after successful submission
       setTranscript('');
       setTextInput('');
       
-      toast({
-        title: "Response Submitted",
-        description: "Your objection handling response is being analyzed...",
-      });
     } catch (err) {
       console.error("Submission error:", err);
       setError("Failed to submit response. Please try again.");
+      
+      toast({
+        title: "Submission Error",
+        description: "There was an error submitting your response. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -209,6 +225,10 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
     setError(null);
     requestMicrophonePermission();
   };
+
+  // Get the current response for validation
+  const currentResponse = inputMode === 'voice' ? transcript.trim() : textInput.trim();
+  const canSubmit = currentResponse.length >= 10 && !isSubmitting;
 
   return (
     <div className="space-y-6">
@@ -279,7 +299,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
                 size="lg"
                 variant={isListening ? "destructive" : "default"}
                 onClick={isListening ? stopListening : startListening}
-                disabled={!hasPermission}
+                disabled={!hasPermission || isSubmitting}
                 className="h-16 w-16 rounded-full"
               >
                 {isListening ? (
@@ -303,9 +323,10 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
             </div>
 
             {transcript && (
-              <div className="p-3 bg-gray-50 rounded-md">
+              <div className="p-3 bg-gray-50 rounded-md border">
                 <label className="text-sm font-medium text-gray-700">Your Response:</label>
-                <p className="text-sm text-gray-800 mt-1">"{transcript}"</p>
+                <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">"{transcript}"</p>
+                <p className="text-xs text-gray-500 mt-1">{transcript.length} characters</p>
               </div>
             )}
           </CardContent>
@@ -325,6 +346,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
               placeholder="Type your response to the pricing objection here..."
               className="min-h-[120px]"
               maxLength={500}
+              disabled={isSubmitting}
             />
             <div className="text-xs text-gray-500 mt-1">
               {textInput.length}/500 characters
@@ -336,12 +358,19 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
       {/* Submit Button */}
       <Button 
         onClick={handleSubmit}
-        disabled={isSubmitting || (inputMode === 'voice' ? !transcript.trim() : !textInput.trim())}
+        disabled={!canSubmit}
         className="w-full"
         size="lg"
       >
         {isSubmitting ? "Analyzing..." : "Submit Response for Analysis"}
       </Button>
+
+      {/* Debug Info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+          <p>Debug: Mode={inputMode}, Response length={currentResponse.length}, Can submit={canSubmit}</p>
+        </div>
+      )}
 
       {/* Help Text */}
       <div className="text-sm text-gray-600 text-center">

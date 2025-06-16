@@ -70,34 +70,51 @@ const Demo = () => {
 
   const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
     console.log('Objection practice submission:', input);
+    console.log('Submission type:', input.type);
+    console.log('Submission data:', input.data);
     
     try {
       setHasError(false);
+      
+      // Show immediate feedback that we're processing
+      toast({
+        title: "Processing Response",
+        description: `Analyzing your ${input.type} response...`,
+        duration: 3000,
+      });
       
       // For demo purposes, we'll deduct credits if user is authenticated
       if (!isGuestMode && user) {
         const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
         const featureType = `demo_objection_${input.type}`;
         
+        console.log(`Attempting to deduct ${creditsToDeduct} credits for ${featureType}`);
+        
         const deducted = await deductUserCredits(featureType, creditsToDeduct);
         if (!deducted) {
-          // Credit deduction failed, don't process the demo
+          console.log('Credit deduction failed - stopping demo');
           // The deductUserCredits function already shows appropriate toast
           return;
         }
+        
+        console.log('Credits deducted successfully');
       }
       
-      // Simulate AI processing
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Simulate AI processing with a more realistic delay
+      console.log('Starting AI analysis simulation...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Generate mock feedback
+      // Generate mock feedback based on input type and content
+      const responseText = typeof input.data === 'string' ? input.data : 'Voice response processed';
       const feedbackData = {
         type: input.type,
-        response: input.type === 'text' ? input.data : 'Voice response processed',
+        response: responseText,
         timestamp: new Date().toISOString(),
-        feedback: "Good handling of the objection. Consider emphasizing value over cost and highlighting ROI to strengthen your response.",
+        feedback: generateMockFeedback(responseText),
         score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
       };
+      
+      console.log('Generated feedback data:', feedbackData);
       
       setFeedback(feedbackData.feedback);
       
@@ -106,11 +123,14 @@ const Demo = () => {
       
       // Show completion toast (separate from credit usage toast)
       toast({
-        title: "Response Analyzed",
-        description: `Your ${input.type} response has been processed and feedback is ready.`,
+        title: "Analysis Complete",
+        description: `Your ${input.type} response has been analyzed and feedback is ready.`,
         variant: "default",
         duration: 4000,
       });
+      
+      console.log('Demo submission completed successfully');
+      
     } catch (error) {
       console.error('Error processing objection:', error);
       setHasError(true);
@@ -119,6 +139,19 @@ const Demo = () => {
         description: "There was an issue analyzing your response. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const generateMockFeedback = (response: string): string => {
+    // Generate more realistic feedback based on response content
+    if (response.toLowerCase().includes('value') || response.toLowerCase().includes('roi')) {
+      return "Excellent approach! You focused on value and ROI, which effectively addresses pricing concerns. Consider providing specific examples or metrics to strengthen your response further.";
+    } else if (response.toLowerCase().includes('understand') || response.toLowerCase().includes('budget')) {
+      return "Good empathetic approach. You acknowledged their budget concerns, which builds rapport. Try adding more concrete benefits and cost justification to overcome the objection.";
+    } else if (response.toLowerCase().includes('compare') || response.toLowerCase().includes('competition')) {
+      return "Smart strategy addressing the competitive landscape. Consider highlighting unique differentiators and long-term value proposition to justify the premium pricing.";
+    } else {
+      return "Good handling of the objection. Consider emphasizing value over cost and highlighting ROI to strengthen your response. Try to be more specific about benefits that justify the pricing.";
     }
   };
 
