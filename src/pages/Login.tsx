@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -36,13 +35,36 @@ const Login = () => {
     resolver: zodResolver(loginSchema)
   });
 
-  // Check if user is already logged in and redirect immediately
+  // Strong redirect logic - redirect if already authenticated
   useEffect(() => {
     if (user && !loading) {
-      console.log('User is logged in, redirecting to dashboard');
+      console.log('User is already authenticated, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);
+
+  // Show loading state while auth context loads
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
+          <p className="text-brand-dark">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is already authenticated, don't render the login form
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-brand-dark">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     // Check for verification message in URL params
@@ -110,18 +132,6 @@ const Login = () => {
     }
   }, [verificationMessage]);
 
-  // Show loading state while auth context loads
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-brand-dark">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   const handleEmailLogin = async (data: LoginForm) => {
     setIsSubmitting(true);
     setLoginError(null);
@@ -162,10 +172,10 @@ const Login = () => {
     setLoginError(null);
 
     try {
-      // Use the .ai domain as default now
+      // Updated redirect URL for production domain
       const redirectTo = window.location.hostname.includes('lovable.app') 
         ? `${window.location.origin}/dashboard`
-        : 'https://pitchperfectai.ai/dashboard';
+        : 'https://pitchperfectai.ai/login';
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
