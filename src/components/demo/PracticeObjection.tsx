@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mic, MicOff, Send, AlertTriangle, RefreshCw, Sparkles, Volume2, Users } from 'lucide-react';
+import { Mic, MicOff, Send, AlertTriangle, RefreshCw, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface PracticeObjectionProps {
@@ -230,38 +230,27 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
   const canSubmit = currentResponse.length >= 10 && !isSubmitting;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Enhanced Scenario Display */}
-      <Card className="premium-card border-l-4 border-l-primary-500 bg-gradient-to-r from-primary-50 to-white">
+      <Card className="vibrant-card border-l-4 border-l-vibrant-blue-500 bg-gradient-to-r from-vibrant-blue-50 to-white">
         <CardHeader>
-          <CardTitle className="text-headline flex items-center gap-3 font-bold text-xl">
-            <div className="p-2 bg-primary-500 rounded-xl">
-              <Users className="h-6 w-6 text-white" />
-            </div>
+          <CardTitle className="text-deep-navy flex items-center gap-2 font-bold">
+            <Sparkles className="h-5 w-5 text-vibrant-blue-500" />
             Customer Objection Scenario
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-white rounded-xl p-6 border border-primary-100 shadow-soft">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-primary-100 rounded-full">
-                <Volume2 className="h-5 w-5 text-primary-600" />
-              </div>
-              <div>
-                <p className="text-headline font-semibold italic text-lg leading-relaxed mb-3">"{scenario}"</p>
-                <p className="text-premium font-medium">
-                  How would you respond to this pricing objection? Practice your response below using voice or text input.
-                </p>
-              </div>
-            </div>
-          </div>
+          <p className="text-deep-navy font-semibold italic text-lg leading-relaxed">"{scenario}"</p>
+          <p className="text-deep-navy/70 mt-4 font-medium">
+            How would you respond to this pricing objection? Practice your response below.
+          </p>
         </CardContent>
       </Card>
 
       {/* Enhanced Error Display */}
       {error && (
-        <Alert variant="destructive" className="border-danger-300 bg-danger-50/90 shadow-soft">
-          <AlertTriangle className="h-5 w-5" />
+        <Alert variant="destructive" className="border-red-300 bg-red-50/90 shadow-vibrant">
+          <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="flex justify-between items-center">
             <span className="font-medium">{error}</span>
             {hasPermission === false && (
@@ -269,9 +258,9 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
                 variant="outline" 
                 size="sm" 
                 onClick={retryVoiceMode}
-                className="ml-4 border-danger-400 text-danger-600 hover:bg-danger-50"
+                className="ml-2 border-red-400 text-red-600 hover:bg-red-50"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 mr-1" />
                 Retry Voice
               </Button>
             )}
@@ -280,68 +269,66 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
       )}
 
       {/* Enhanced Input Mode Selector */}
-      <div className="flex gap-4 mb-8">
+      <div className="flex gap-3 mb-6">
         <Button
           variant={inputMode === 'voice' ? 'default' : 'outline'}
           onClick={() => setInputMode('voice')}
           disabled={!hasPermission}
-          className={inputMode === 'voice' ? 'premium-button' : 'outline-button'}
-          size="lg"
+          className={inputMode === 'voice' ? 'vibrant-button' : 'outline-button'}
         >
-          <Mic className="h-5 w-5 mr-3" />
-          Voice Response
+          <Mic className="h-4 w-4 mr-2" />
+          Voice Input
         </Button>
         <Button
           variant={inputMode === 'text' ? 'default' : 'outline'}
           onClick={switchToTextMode}
-          className={inputMode === 'text' ? 'premium-button' : 'outline-button'}
-          size="lg"
+          className={inputMode === 'text' ? 'vibrant-button' : 'outline-button'}
         >
-          <Send className="h-5 w-5 mr-3" />
-          Text Response
+          <Send className="h-4 w-4 mr-2" />
+          Text Input
         </Button>
       </div>
 
       {/* Enhanced Voice Input Mode */}
       {inputMode === 'voice' && (
-        <Card className="premium-card">
+        <Card className="vibrant-card">
           <CardHeader>
-            <CardTitle className="text-headline font-bold text-xl">Voice Response</CardTitle>
+            <CardTitle className="text-deep-navy font-bold">Voice Response</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-8">
+          <CardContent className="space-y-6">
             <div className="text-center">
               <Button
                 size="lg"
                 variant={isListening ? "destructive" : "default"}
                 onClick={isListening ? stopListening : startListening}
                 disabled={!hasPermission || isSubmitting}
-                className={`h-24 w-24 rounded-full font-bold text-lg ${isListening ? 'bg-danger-500 hover:bg-danger-600 animate-pulse-strong' : 'premium-button animate-glow'}`}
+                className={`h-20 w-20 rounded-full font-bold ${isListening ? 'bg-red-500 hover:bg-red-600 animate-strong-pulse' : 'vibrant-button animate-vibrant-glow'}`}
               >
                 {isListening ? (
-                  <MicOff className="h-10 w-10" />
+                  <MicOff className="h-8 w-8" />
                 ) : (
-                  <Mic className="h-10 w-10" />
+                  <Mic className="h-8 w-8" />
                 )}
               </Button>
               
-              <div className="mt-8">
+              <div className="mt-6">
                 {isListening && (
-                  <div className="flex items-center justify-center gap-4">
-                    <div className="h-4 w-4 bg-danger-500 rounded-full animate-pulse-strong"></div>
-                    <span className="text-danger-600 font-bold text-lg">Listening...</span>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="h-3 w-3 bg-red-500 rounded-full animate-strong-pulse"></div>
+                    <span className="text-red-600 font-bold">Listening...</span>
                   </div>
                 )}
                 {!isListening && hasPermission && (
-                  <p className="text-primary-600 font-bold text-lg">Click to start recording your response</p>
+                  <p className="text-vibrant-blue-600 font-bold">Click to start recording</p>
                 )}
               </div>
             </div>
 
             {transcript && (
-              <div className="premium-card p-6 bg-primary-50 border-primary-300">
-                <label className="text-sm font-bold text-headline mb-3 block">Your Response:</label>
-                <p className="text-premium mt-2 whitespace-pre-wrap leading-relaxed font-medium text-lg">"{transcript}"</p>
-                <p className="text-xs text-neutral-500 mt-3 font-medium">{transcript.length} characters</p>
+              <div className="vibrant-card p-4 bg-vibrant-blue-50 border-vibrant-blue-300">
+                <label className="text-sm font-bold text-deep-navy">Your Response:</label>
+                <p className="text-deep-navy mt-2 whitespace-pre-wrap leading-relaxed font-medium">"{transcript}"</p>
+                <p className="text-xs text-deep-navy/60 mt-2 font-medium">{transcript.length} characters</p>
               </div>
             )}
           </CardContent>
@@ -350,20 +337,20 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
 
       {/* Enhanced Text Input Mode */}
       {inputMode === 'text' && (
-        <Card className="premium-card">
+        <Card className="vibrant-card">
           <CardHeader>
-            <CardTitle className="text-headline font-bold text-xl">Text Response</CardTitle>
+            <CardTitle className="text-deep-navy font-bold">Text Response</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               placeholder="Type your response to the pricing objection here..."
-              className="min-h-[140px] border-primary-300 focus:border-primary-500 resize-none font-medium text-lg"
+              className="min-h-[120px] border-vibrant-blue-300 focus:border-vibrant-blue-500 resize-none font-medium"
               maxLength={500}
               disabled={isSubmitting}
             />
-            <div className="text-xs text-neutral-500 mt-3 font-medium">
+            <div className="text-xs text-deep-navy/60 mt-2 font-medium">
               {textInput.length}/500 characters
             </div>
           </CardContent>
@@ -374,27 +361,31 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
       <Button 
         onClick={handleSubmit}
         disabled={!canSubmit}
-        className="w-full premium-button text-xl py-6"
+        className="w-full strong-cta text-lg py-4"
         size="lg"
       >
         {isSubmitting ? (
-          <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-            Analyzing Your Response...
+          <div className="flex items-center gap-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            Analyzing...
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-6 w-6" />
-            Submit Response for AI Analysis
-          </div>
+          "Submit Response for Analysis"
         )}
       </Button>
 
+      {/* Enhanced Debug Info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+          <p>Debug: Mode={inputMode}, Response length={currentResponse.length}, Can submit={canSubmit}</p>
+        </div>
+      )}
+
       {/* Enhanced Help Text */}
-      <div className="text-center p-6 bg-white/80 rounded-2xl shadow-soft border border-neutral-200">
-        <p className="text-premium font-medium text-lg">
-          💡 <strong>Tip:</strong> Speak naturally and confidently. Our AI will analyze your tone, 
-          pacing, and content to provide personalized feedback for improvement.
+      <div className="text-center p-4 bg-white/70 rounded-lg shadow-vibrant">
+        <p className="text-deep-navy/70 font-medium">
+          Speak naturally or type your response to the customer's pricing objection. 
+          Our AI will analyze your approach and provide feedback.
         </p>
       </div>
     </div>
