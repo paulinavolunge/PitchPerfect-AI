@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Star, Zap, HelpCircle, Clock, ArrowRight, UserPlus, LogIn } from 'lucide-react';
+import { Check, Star, Zap, HelpCircle, Clock, ArrowRight, UserPlus, LogIn, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -99,9 +98,7 @@ const Pricing = () => {
       ],
       popular: false,
       buttonText: user ? 'Get Basic Plan' : 'Sign Up for Basic Plan',
-      color: 'border-green-500',
-      bgColor: 'bg-green-50',
-      emoji: '🟩'
+      gradient: 'from-soft-blue-100 to-sky-blue/50'
     },
     {
       id: 'pro',
@@ -119,9 +116,7 @@ const Pricing = () => {
       ],
       popular: true,
       buttonText: user ? 'Go Professional' : 'Sign Up for Pro Plan',
-      color: 'border-blue-500',
-      bgColor: 'bg-blue-50',
-      emoji: '🟦'
+      gradient: 'from-primary/10 to-sky-blue/30'
     },
     {
       id: 'enterprise',
@@ -139,9 +134,7 @@ const Pricing = () => {
       ],
       popular: false,
       buttonText: user ? 'Go Enterprise' : 'Sign Up for Enterprise',
-      color: 'border-purple-500',
-      bgColor: 'bg-purple-50',
-      emoji: '🟪'
+      gradient: 'from-navy/10 to-primary/20'
     }
   ];
 
@@ -151,21 +144,18 @@ const Pricing = () => {
       name: '20 Credits',
       price: '$4.99',
       description: 'Perfect for occasional practice',
-      emoji: '🎯'
     },
     {
       id: 'credits-100',
       name: '100 Credits',
       price: '$14.99',
       description: 'Great value for regular users',
-      emoji: '🎯'
     },
     {
       id: 'credits-500',
       name: '500 Credits',
       price: '$49.99',
       description: 'Best value for power users',
-      emoji: '🎯'
     }
   ];
 
@@ -176,29 +166,34 @@ const Pricing = () => {
         <meta name="description" content="Choose the perfect plan for your sales training needs. Get started with AI-powered pitch practice today." />
       </Helmet>
 
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-soft-blue-50 via-soft-blue-100 to-sky-blue">
         <Navbar />
-        <main className="flex-grow pt-24 pb-12">
+        <main className="pt-24 pb-12">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-brand-dark mb-4">
-                Choose Your Practice Plan
+            <div className="text-center mb-16">
+              <Badge className="mb-6 bg-white/80 text-navy border-sky-blue/30 backdrop-blur-sm shadow-soft">
+                <Sparkles className="h-4 w-4 mr-1" />
+                Flexible Pricing Plans
+              </Badge>
+              
+              <h1 className="text-4xl md:text-5xl font-bold text-navy mb-6">
+                Choose Your <span className="text-primary">Practice Plan</span>
               </h1>
-              <p className="text-xl text-brand-dark/70 max-w-2xl mx-auto">
+              <p className="text-xl text-navy/70 max-w-2xl mx-auto leading-relaxed">
                 Start improving your sales pitch today with AI-powered feedback and analysis
               </p>
               
               {!user && (
-                <Alert className="max-w-2xl mx-auto mt-6 bg-blue-50 border-blue-200">
-                  <UserPlus className="h-4 w-4" />
-                  <AlertDescription className="text-blue-800">
+                <Alert className="max-w-2xl mx-auto mt-8 modern-card bg-primary/5 border-primary/20">
+                  <UserPlus className="h-5 w-5 text-primary" />
+                  <AlertDescription className="text-navy">
                     <strong>New to PitchPerfect AI?</strong> Create a free account to get started with 1 free pitch analysis!
-                    <div className="flex gap-2 mt-3 justify-center">
-                      <Button onClick={handleSignUpRedirect} size="sm" className="bg-brand-green hover:bg-brand-green/90">
+                    <div className="flex gap-3 mt-4 justify-center">
+                      <Button onClick={handleSignUpRedirect} className="soft-button">
                         <UserPlus className="h-4 w-4 mr-2" />
                         Sign Up Free
                       </Button>
-                      <Button onClick={() => navigate('/login')} variant="outline" size="sm">
+                      <Button onClick={() => navigate('/login')} className="outline-button">
                         <LogIn className="h-4 w-4 mr-2" />
                         Already have an account?
                       </Button>
@@ -208,34 +203,35 @@ const Pricing = () => {
               )}
             </div>
 
-            <div className="mb-16">
-              <h2 className="text-2xl font-bold text-center mb-8">Monthly Subscription Plans</h2>
+            <div className="mb-20">
+              <h2 className="text-3xl font-bold text-center text-navy mb-12">Monthly Subscription Plans</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 {subscriptionPlans.map((plan) => (
-                  <Card key={plan.id} className={`relative ${plan.popular ? 'border-brand-green shadow-lg scale-105' : plan.color} ${plan.bgColor} border-2`}>
+                  <Card key={plan.id} className={`modern-card relative card-hover ${plan.popular ? 'scale-105 shadow-soft-xl border-primary/30' : ''}`}>
                     {plan.popular && (
-                      <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-brand-green">
-                        <Star className="h-3 w-3 mr-1" />
+                      <Badge className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-white shadow-soft">
+                        <Star className="h-4 w-4 mr-1" />
                         Most Popular
                       </Badge>
                     )}
                     
-                    <CardHeader className="text-center">
-                      <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
-                        <span className="text-2xl">{plan.emoji}</span>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} rounded-xl opacity-50`}></div>
+                    
+                    <CardHeader className="text-center relative z-10">
+                      <CardTitle className="text-2xl font-bold text-navy">
                         {plan.name}
                       </CardTitle>
-                      <div className="text-3xl font-bold text-brand-green">{plan.price}</div>
-                      <p className="text-sm text-brand-dark/60">{plan.priceNote}</p>
-                      <p className="text-brand-dark/70">{plan.description}</p>
+                      <div className="text-4xl font-bold text-primary mb-2">{plan.price}</div>
+                      <p className="text-navy/60">{plan.priceNote}</p>
+                      <p className="text-navy/70 mt-2">{plan.description}</p>
                     </CardHeader>
 
-                    <CardContent>
-                      <ul className="space-y-3 mb-6">
+                    <CardContent className="relative z-10">
+                      <ul className="space-y-4 mb-8">
                         {plan.features.map((feature, index) => (
                           <li key={index} className="flex items-center">
-                            <Check className="h-4 w-4 text-brand-green mr-2 flex-shrink-0" />
-                            <span className="text-sm">{feature}</span>
+                            <Check className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                            <span className="text-navy">{feature}</span>
                           </li>
                         ))}
                       </ul>
@@ -243,8 +239,7 @@ const Pricing = () => {
                       <Button
                         onClick={() => user ? handlePurchase(plan.id) : navigate('/signup')}
                         disabled={loading === plan.id}
-                        className="w-full border-2 border-brand-green bg-white text-brand-green hover:bg-brand-green hover:text-white transition-all duration-300"
-                        variant="outline"
+                        className={`w-full ${plan.popular ? 'soft-button' : 'outline-button'} group`}
                       >
                         {loading === plan.id ? (
                           <div className="flex items-center">
@@ -255,7 +250,7 @@ const Pricing = () => {
                           <>
                             {user ? (
                               <>
-                                <Zap className="h-4 w-4 mr-2" />
+                                <Zap className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                                 {plan.buttonText}
                               </>
                             ) : (
@@ -273,17 +268,17 @@ const Pricing = () => {
               </div>
             </div>
 
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-center mb-4">Pay-As-You-Go Credit Packs</h2>
+            <div className="mb-16">
+              <h2 className="text-3xl font-bold text-center text-navy mb-6">Pay-As-You-Go Credit Packs</h2>
               <div className="flex items-center justify-center gap-2 mb-8">
-                <Clock className="h-4 w-4 text-brand-green" />
-                <p className="text-brand-dark/70 font-medium">Credits never expire. Use them anytime.</p>
+                <Clock className="h-5 w-5 text-primary" />
+                <p className="text-navy/70 font-medium">Credits never expire. Use them anytime.</p>
               </div>
               
               {!user && (
-                <Alert className="max-w-md mx-auto mb-8 bg-amber-50 border-amber-200">
-                  <UserPlus className="h-4 w-4" />
-                  <AlertDescription className="text-amber-800 text-center">
+                <Alert className="max-w-md mx-auto mb-8 modern-card bg-yellow-50 border-yellow-200">
+                  <UserPlus className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800 text-center">
                     <strong>Account Required:</strong> You need to sign up or log in to purchase credit packs.
                   </AlertDescription>
                 </Alert>
@@ -291,22 +286,20 @@ const Pricing = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {creditPacks.map((pack) => (
-                  <Card key={pack.id} className="border-2 border-gray-200 hover:border-brand-green transition-colors">
+                  <Card key={pack.id} className="modern-card card-hover">
                     <CardHeader className="text-center">
-                      <CardTitle className="text-xl font-bold flex items-center justify-center gap-2">
-                        <span className="text-xl">{pack.emoji}</span>
+                      <CardTitle className="text-xl font-bold text-navy">
                         {pack.name}
                       </CardTitle>
-                      <div className="text-2xl font-bold text-brand-green">{pack.price}</div>
-                      <p className="text-sm text-brand-dark/70">{pack.description}</p>
+                      <div className="text-3xl font-bold text-primary">{pack.price}</div>
+                      <p className="text-navy/70">{pack.description}</p>
                     </CardHeader>
 
                     <CardContent>
                       <Button
                         onClick={() => user ? handlePurchase(pack.id) : navigate('/signup')}
                         disabled={loading === pack.id}
-                        className="w-full border-2 border-brand-green bg-white text-brand-green hover:bg-brand-green hover:text-white transition-all duration-300"
-                        variant="outline"
+                        className="w-full outline-button group"
                       >
                         {loading === pack.id ? (
                           <div className="flex items-center">
@@ -317,7 +310,7 @@ const Pricing = () => {
                           <>
                             {user ? (
                               <>
-                                <Zap className="h-4 w-4 mr-2" />
+                                <Zap className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                                 Buy Credits
                               </>
                             ) : (
@@ -335,35 +328,35 @@ const Pricing = () => {
               </div>
             </div>
 
-            <div className="max-w-2xl mx-auto mb-12">
-              <Card className="border border-brand-green/20 bg-brand-green/5">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <HelpCircle className="h-5 w-5 text-brand-green" />
-                    <h3 className="text-lg font-semibold">How Credits Work</h3>
+            <div className="max-w-2xl mx-auto mb-16">
+              <Card className="modern-card bg-gradient-to-r from-primary/5 to-sky-blue/10">
+                <CardContent className="p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <HelpCircle className="h-6 w-6 text-primary" />
+                    <h3 className="text-xl font-semibold text-navy">How Credits Work</h3>
                   </div>
                   
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="credits-info">
-                      <AccordionTrigger className="text-left">
+                      <AccordionTrigger className="text-left text-navy">
                         💡 Credit Usage & Pricing
                       </AccordionTrigger>
-                      <AccordionContent className="space-y-3">
-                        <div className="space-y-2">
-                          <p className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-brand-green rounded-full"></span>
+                      <AccordionContent className="space-y-4 text-navy/80">
+                        <div className="space-y-3">
+                          <p className="flex items-center gap-3">
+                            <span className="w-3 h-3 bg-primary rounded-full"></span>
                             <strong>1 Roleplay Session (Text or Voice) = 1 Credit</strong>
                           </p>
-                          <p className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-brand-blue rounded-full"></span>
+                          <p className="flex items-center gap-3">
+                            <span className="w-3 h-3 bg-sky-blue rounded-full"></span>
                             <strong>AI Voice + Feedback Session = 2–3 Credits</strong>
                           </p>
-                          <p className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-brand-green rounded-full"></span>
+                          <p className="flex items-center gap-3">
+                            <span className="w-3 h-3 bg-primary rounded-full"></span>
                             <strong>You can always buy more credits if you run out</strong>
                           </p>
-                          <p className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                          <p className="flex items-center gap-3">
+                            <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
                             <strong>Credits never expire - use them anytime</strong>
                           </p>
                         </div>
@@ -375,10 +368,10 @@ const Pricing = () => {
             </div>
 
             <div className="text-center">
-              <p className="text-brand-dark/70 mb-4">
+              <p className="text-navy/70 mb-4 text-lg">
                 All plans include a 7-day money-back guarantee
               </p>
-              <p className="text-sm text-brand-dark/50">
+              <p className="text-navy/60">
                 Secure payments powered by Stripe • Cancel anytime
               </p>
             </div>

@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -19,7 +20,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Inter', 'Poppins', 'sans-serif'],
+        rounded: ['Nunito', 'Inter', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -28,188 +30,118 @@ export default {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))'
+          DEFAULT: '#3B82F6',
+          foreground: '#FFFFFF',
+          50: '#EAF6FB',
+          100: '#DCEEFF',
+          200: '#A2D2FF',
+          300: '#7CB9E8',
+          400: '#56A0D3',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1F3B73',
+          800: '#1E40AF',
+          900: '#1E3A8A',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))'
+          DEFAULT: '#F8FAFC',
+          foreground: '#1E293B',
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B',
+          600: '#475569',
+          700: '#334155',
+          800: '#1E293B',
+          900: '#0F172A',
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))'
+          DEFAULT: '#EF4444',
+          foreground: '#FFFFFF',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))'
+          DEFAULT: '#F1F5F9',
+          foreground: '#64748B',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))'
+          DEFAULT: '#A2D2FF',
+          foreground: '#1F3B73',
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))'
+          DEFAULT: '#FFFFFF',
+          foreground: '#1E293B',
         },
         card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))'
+          DEFAULT: '#FFFFFF',
+          foreground: '#1E293B',
         },
-        sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))'
+        // New modern color palette
+        "soft-blue": {
+          50: '#EAF6FB',
+          100: '#DCEEFF', 
+          200: '#A2D2FF',
+          300: '#7CB9E8',
+          400: '#56A0D3',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1F3B73',
+          800: '#1E40AF',
+          900: '#1E3A8A',
         },
-        // Professional Navy & Electric Blue Design System
+        "sky-blue": {
+          DEFAULT: '#A2D2FF',
+          light: '#C7E2FF',
+          dark: '#7CB9E8',
+        },
         "navy": {
-          "50": "#f8fafc",
-          "100": "#f1f5f9",
-          "200": "#e2e8f0",
-          "300": "#cbd5e1",
-          "400": "#94a3b8",
-          "500": "#64748b",
-          "600": "#475569",
-          "700": "#334155",
-          "800": "#1e293b",
-          "900": "#0f172a",
+          DEFAULT: '#1F3B73',
+          light: '#2563EB',
+          dark: '#1E2A5E',
         },
-        "electric-blue": {
-          "50": "#eff6ff",
-          "100": "#dbeafe",
-          "200": "#bfdbfe",
-          "300": "#93c5fd",
-          "400": "#60a5fa",
-          "500": "#3b82f6",
-          "600": "#2563eb",
-          "700": "#1d4ed8",
-          "800": "#1e40af",
-          "900": "#1e3a8a",
-        },
-        // Legacy brand colors maintained for compatibility
-        "brand-blue": "#2563eb",
-        "brand-dark": "#0f172a",
-        "brand-gray": "#475569",
-        "brand-light": "#f8fafc",
-        "brand-green": "#059669",
-        "teal": {
-          "50": "#f0fdfa",
-          "100": "#ccfbf1",
-          "200": "#99f6e4",
-          "300": "#5eead4",
-          "400": "#2dd4bf",
-          "500": "#14b8a6",
-          "600": "#0d9488",
-          "700": "#0f766e",
-          "800": "#115e59",
-          "900": "#134e4a",
-          "950": "#042f2e",
-        }
+        "clean-white": '#FFFFFF',
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        lg: '1rem',
+        md: '0.75rem',
+        sm: '0.5rem',
+        xl: '1.5rem',
+        '2xl': '2rem',
       },
       keyframes: {
-        'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' }
+        'gentle-float': {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-6px)' }
         },
-        'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' }
-        },
-        'professional-fade-in': {
-          from: { opacity: '0', transform: 'translateY(20px)' },
-          to: { opacity: '1', transform: 'translateY(0)' }
-        },
-        'electric-pulse': {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(37, 99, 235, 0.4)' },
-          '50%': { boxShadow: '0 0 0 10px rgba(37, 99, 235, 0)' }
-        },
-        'conversion-glow': {
-          '0%, 100%': { boxShadow: '0 0 5px rgba(37, 99, 235, 0.3)' },
-          '50%': { boxShadow: '0 0 20px rgba(37, 99, 235, 0.6), 0 0 30px rgba(37, 99, 235, 0.4)' }
-        },
-        'slide-up': {
-          from: { opacity: '0', transform: 'translateY(30px)' },
-          to: { opacity: '1', transform: 'translateY(0)' }
-        },
-        'scale-in-professional': {
-          from: { opacity: '0', transform: 'scale(0.95)' },
-          to: { opacity: '1', transform: 'scale(1)' }
-        },
-        'pulse-gentle': {
+        'soft-pulse': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' }
         },
-        'fade-in': {
-          from: { opacity: '0', transform: 'translateY(10px)' },
-          to: { opacity: '1', transform: 'translateY(0)' }
+        'smooth-scale': {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' }
         },
-        'scale-in': {
-          from: { transform: 'scale(0.95)', opacity: '0' },
-          to: { transform: 'scale(1)', opacity: '1' }
-        },
-        'slide-in': {
-          from: { transform: 'translateX(-10px)', opacity: '0' },
-          to: { transform: 'translateX(0)', opacity: '1' }
-        },
-        'bounce-subtle': {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-5px)' }
-        },
-        'float': {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' }
-        },
-        'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(0, 141, 149, 0)' },
-          '50%': { boxShadow: '0 0 10px 2px rgba(0, 141, 149, 0.3)' }
-        },
-        'pulse-scale': {
-          '0%, 100%': { transform: 'scale(1)' },
-          '50%': { transform: 'scale(1.05)' }
-        },
-        'rotate-slow': {
-          '0%': { transform: 'rotate(0deg)' },
-          '100%': { transform: 'rotate(360deg)' }
-        },
-        'icon-switch': {
-          '0%, 100%': { transform: 'rotate(0deg)' },
-          '50%': { transform: 'rotate(180deg)' }
+        'slide-up-soft': {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' }
         },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-        'professional-fade-in': 'professional-fade-in 0.6s ease-out',
-        'electric-pulse': 'electric-pulse 2s infinite',
-        'conversion-glow': 'conversion-glow 2s ease-in-out infinite',
-        'slide-up': 'slide-up 0.5s ease-out',
-        'scale-in-professional': 'scale-in-professional 0.4s ease-out',
-        'pulse-gentle': 'pulse-gentle 2s infinite ease-in-out',
-        'fade-in': 'fade-in 0.5s ease-out',
-        'scale-in': 'scale-in 0.3s ease-out',
-        'slide-in': 'slide-in 0.3s ease-out',
-        'bounce-subtle': 'bounce-subtle 2s infinite ease-in-out',
-        'float': 'float 5s infinite ease-in-out',
-        'pulse-glow': 'pulse-glow 2s infinite ease-in-out',
-        'pulse-scale': 'pulse-scale 2s infinite ease-in-out',
-        'rotate-slow': 'rotate-slow 8s linear infinite',
-        'icon-switch': 'icon-switch 0.5s ease-in-out forwards',
+        'gentle-float': 'gentle-float 3s ease-in-out infinite',
+        'soft-pulse': 'soft-pulse 2s ease-in-out infinite',
+        'smooth-scale': 'smooth-scale 0.3s ease-out',
+        'slide-up-soft': 'slide-up-soft 0.5s ease-out',
       },
-      scale: {
-        '102': '1.02',
-        '103': '1.03',
+      boxShadow: {
+        'soft': '0 2px 4px 0 rgb(59 130 246 / 0.08)',
+        'soft-lg': '0 8px 25px -5px rgb(59 130 246 / 0.1)',
+        'soft-xl': '0 20px 40px -12px rgb(59 130 246 / 0.15)',
       },
-      transitionProperty: {
-        'theme': 'background-color, color, border-color, text-decoration-color, fill, stroke',
+      backgroundImage: {
+        'soft-gradient': 'linear-gradient(135deg, #EAF6FB 0%, #DCEEFF 100%)',
+        'hero-gradient': 'linear-gradient(135deg, #EAF6FB 0%, #A2D2FF 50%, #DCEEFF 100%)',
+        'card-gradient': 'linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%)',
       }
     }
   },

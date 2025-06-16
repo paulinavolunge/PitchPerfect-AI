@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart } from 'lucide-react';
+import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PricingCTA from '@/components/PricingCTA';
@@ -39,37 +39,22 @@ const Index = () => {
 
   const features = [
     {
-      icon: <Zap className="h-8 w-8 text-brand-green" />,
+      icon: <Zap className="h-8 w-8 text-primary" />,
       title: "AI-Powered Practice",
       description: "Practice with intelligent AI that adapts to your industry and responds like real prospects.",
       onClick: handleVoiceTrainingClick
     },
     {
-      icon: <BarChart className="h-8 w-8 text-brand-blue" />,
+      icon: <BarChart className="h-8 w-8 text-sky-blue" />,
       title: "Instant Feedback", 
       description: "Get detailed analysis of your pitch delivery, pacing, and effectiveness immediately after each session.",
       onClick: handleAnalyticsClick
     },
     {
-      icon: <Users className="h-8 w-8 text-brand-green" />,
+      icon: <Users className="h-8 w-8 text-primary" />,
       title: "Real Scenarios",
       description: "Train with realistic objection handling scenarios based on actual sales situations.",
       onClick: handleAIRoleplayClick
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Sarah Johnson",
-      role: "Sales Manager",
-      content: "PitchPerfect AI helped me improve my closing rate by 35% in just 2 months. The feedback is incredibly detailed.",
-      rating: 5
-    },
-    {
-      name: "Mike Chen",
-      role: "Account Executive",
-      content: "Finally, a way to practice objection handling without bothering my colleagues. The AI responses are amazingly realistic.",
-      rating: 5
     }
   ];
 
@@ -83,57 +68,63 @@ const Index = () => {
         <meta property="og:description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios." />
       </Helmet>
 
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-soft-blue-50 via-soft-blue-100 to-sky-blue">
         <Navbar />
         
         {/* Hero Section */}
-        <section className="pt-24 pb-16 bg-gradient-to-b from-gray-50 to-white">
-          <div className="container mx-auto px-4 text-center">
-            <Badge className="mb-4 bg-brand-green/10 text-brand-green border-brand-green/20">
-              🚀 AI-Powered Sales Training
+        <section className="pt-24 pb-16 relative overflow-hidden">
+          {/* Floating background elements */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-sky-blue/20 rounded-full blur-3xl animate-gentle-float"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-gentle-float" style={{animationDelay: '1s'}}></div>
+          
+          <div className="container mx-auto px-4 text-center relative z-10">
+            <Badge className="mb-6 bg-white/80 text-navy border-sky-blue/30 backdrop-blur-sm shadow-soft">
+              <Sparkles className="h-4 w-4 mr-1" />
+              AI-Powered Sales Training
             </Badge>
             
-            <h1 className="text-4xl md:text-6xl font-bold text-brand-dark mb-6">
+            <h1 className="hero-text mb-6 animate-slide-up-soft">
               Master Your Sales Pitch<br />
-              <span className="text-brand-green">with AI Practice</span>
+              <span className="text-primary">with AI Practice</span>
             </h1>
             
-            <p className="text-xl text-brand-dark/70 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-navy/70 mb-8 max-w-2xl mx-auto leading-relaxed font-medium animate-slide-up-soft" style={{animationDelay: '0.2s'}}>
               Practice objection handling and perfect your pitch with intelligent AI that responds like real prospects. 
               Get instant feedback and watch your closing rate soar.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up-soft" style={{animationDelay: '0.4s'}}>
               <Button 
                 size="lg" 
-                className="bg-brand-green hover:bg-brand-green/90"
+                className="soft-button group"
                 onClick={handleGetStartedClick}
               >
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
                 Start Free Practice
               </Button>
               
               <Button 
                 variant="outline" 
                 size="lg"
+                className="outline-button group"
                 onClick={handleWatchDemoClick}
               >
-                <ArrowRight className="h-4 w-4 mr-2" />
+                <ArrowRight className="h-5 w-5 mr-2 group-hover:translate-x-1 transition-transform" />
                 Watch Demo
               </Button>
             </div>
 
-            <div className="flex items-center justify-center gap-6 text-sm text-brand-dark/60">
-              <div className="flex items-center gap-1">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-navy/60 animate-slide-up-soft" style={{animationDelay: '0.6s'}}>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary" />
                 No credit card required
               </div>
-              <div className="flex items-center gap-1">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary" />
                 Instant setup
               </div>
-              <div className="flex items-center gap-1">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary" />
                 Free trial included
               </div>
             </div>
@@ -141,13 +132,13 @@ const Index = () => {
         </section>
 
         {/* Features Section */}
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-brand-dark mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
                 Why Sales Professionals Choose PitchPerfect AI
               </h2>
-              <p className="text-brand-dark/70 max-w-2xl mx-auto">
+              <p className="text-navy/70 max-w-2xl mx-auto text-lg">
                 Our AI understands sales conversations and provides the realistic practice you need to excel.
               </p>
             </div>
@@ -156,16 +147,18 @@ const Index = () => {
               {features.map((feature, index) => (
                 <div 
                   key={index} 
-                  className="text-center p-6 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
+                  className="modern-card p-8 text-center cursor-pointer card-hover group"
                   onClick={feature.onClick}
                 >
-                  <div className="flex justify-center mb-4">
-                    {feature.icon}
+                  <div className="flex justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <div className="p-4 bg-gradient-to-br from-soft-blue-100 to-sky-blue rounded-2xl">
+                      {feature.icon}
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-brand-dark mb-2">
+                  <h3 className="text-xl font-semibold text-navy mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-brand-dark/70">
+                  <p className="text-navy/70 leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -175,10 +168,10 @@ const Index = () => {
         </section>
 
         {/* Testimonials */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-gradient-to-r from-white to-soft-blue-50/50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-brand-dark mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
                 Trusted by Sales Professionals
               </h2>
             </div>
@@ -198,18 +191,18 @@ const Index = () => {
                   rating: 5
                 }
               ].map((testimonial, index) => (
-                <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="flex items-center mb-3">
+                <div key={index} className="modern-card p-8 card-hover">
+                  <div className="flex items-center mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <p className="text-brand-dark/80 mb-4 italic">
+                  <p className="text-navy/80 mb-6 italic text-lg leading-relaxed">
                     "{testimonial.content}"
                   </p>
                   <div>
-                    <p className="font-semibold text-brand-dark">{testimonial.name}</p>
-                    <p className="text-sm text-brand-dark/60">{testimonial.role}</p>
+                    <p className="font-semibold text-navy text-lg">{testimonial.name}</p>
+                    <p className="text-navy/60">{testimonial.role}</p>
                   </div>
                 </div>
               ))}
