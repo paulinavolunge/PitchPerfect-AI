@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { supabase, getRedirectUrl } from '@/lib/supabase';
+import { supabase, getRedirectUrl } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
