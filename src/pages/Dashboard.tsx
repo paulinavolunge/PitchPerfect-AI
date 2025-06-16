@@ -4,15 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3, Crown, Diamond } // Added Diamond icon
-from 'lucide-react';
+import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3, Crown, Diamond } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
 import StreakBadge from '@/components/dashboard/StreakBadge';
 import LeaderboardTable from '@/components/dashboard/LeaderboardTable';
 import ReferralProgram from '@/components/dashboard/ReferralProgram';
-import CreditBalanceTracker from '@/components/dashboard/CreditBalanceTracker'; // Import new component
+import CreditBalanceTracker from '@/components/dashboard/CreditBalanceTracker';
 import { useAuth } from '@/context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Step } from 'react-joyride';
@@ -31,38 +30,19 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import EmptyState from '@/components/dashboard/EmptyState';
-import { useGuestMode } from '@/context/GuestModeContext'; // Import useGuestMode
+import { useGuestMode } from '@/context/GuestModeContext';
 
 const TOUR_STORAGE_KEY = 'pitchperfect_tour_completed';
 const TOUR_COOLDOWN_KEY = 'pitchperfect_tour_cooldown';
-const TOUR_COOLDOWN_HOURS = 24; // 24 hours between tour resets
+const TOUR_COOLDOWN_HOURS = 24;
 
 const Dashboard = () => {
-  // Access new creditsRemaining and trialUsed from useAuth
   const { user, refreshSubscription, isPremium, creditsRemaining, trialUsed, loading } = useAuth();
-  const { isGuestMode } = useGuestMode(); // Access guest mode
+  const { isGuestMode } = useGuestMode();
   const navigate = useNavigate();
 
-  // --- FIX: improved redirect, clearer logging, always show some output for debugging ---
-
-  useEffect(() => {
-    if (!loading && !user && !isGuestMode) {
-      // Not logged in and not guest mode: force redirect to login
-      console.warn('[Dashboard] Not authenticated, redirecting from dashboard!');
-      navigate('/login', { replace: true });
-      return;
-    }
-    if (!loading && user) {
-      console.log('[Dashboard] Authenticated user:', user.email, user.id);
-    }
-    if (!loading && isGuestMode) {
-      console.log('[Dashboard] In guest mode');
-    }
-  }, [user, loading, isGuestMode, navigate]);
-
-  // Show loading state while auth context loads - AFTER all hooks
+  // Show loading state while auth context loads
   if (loading) {
-    console.log('[Dashboard] Still loading authentication context');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -73,13 +53,13 @@ const Dashboard = () => {
     );
   }
 
-  // --- IMPROVED: Always render fallback for troubleshooting ---
+  // If not authenticated and not in guest mode, redirect to login
   if (!user && !isGuestMode) {
-    console.warn('[Dashboard] No user and not in guest mode. Showing fallback UI.');
+    navigate('/login', { replace: true });
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500">Not signed in. Redirecting...</p>
+          <p className="text-brand-dark">Redirecting to login...</p>
         </div>
       </div>
     );
@@ -90,7 +70,6 @@ const Dashboard = () => {
   const [tourCompleted, setTourCompleted] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
 
-  // Use our updated hook for dashboard data and settings
   const {
     isLoading,
     isRefreshing,
@@ -101,25 +80,6 @@ const Dashboard = () => {
     refreshDashboardData
   } = useDashboardData();
 
-  // Check if mic test is required
-  const micCheckRequired = () => {
-    const lastMicCheck = localStorage.getItem('lastMicCheck');
-    if (!lastMicCheck) return true;
-
-    const daysSinceCheck = (Date.now() - parseInt(lastMicCheck)) / (1000 * 60 * 60 * 24);
-    return daysSinceCheck > 7; // Require check every 7 days
-  };
-
-  // Check tour cooldown
-  const canShowTour = () => {
-    const cooldownTime = localStorage.getItem(TOUR_COOLDOWN_KEY);
-    if (!cooldownTime) return true;
-
-    const hoursSinceCooldown = (Date.now() - parseInt(cooldownTime)) / (1000 * 60 * 60);
-    return hoursSinceCooldown > TOUR_COOLDOWN_HOURS;
-  };
-
-  // Define tour steps with better accessibility
   const tourSteps: Step[] = [
     {
       target: '.tour-step-1',
@@ -153,7 +113,6 @@ const Dashboard = () => {
               localStorage.setItem(TOUR_COOLDOWN_KEY, Date.now().toString());
               setTourCompleted(true);
               setShowTour(false);
-              // trackEvent('tour_completed'); // Analytics event (uncomment if needed)
               toast.success('Tour completed! You\'re ready to start practicing.');
             }} 
             className="bg-brand-green hover:bg-brand-green/90"
@@ -170,19 +129,29 @@ const Dashboard = () => {
     }
   ];
 
-  // Track dashboard load
+  const micCheckRequired = () => {
+    const lastMicCheck = localStorage.getItem('lastMicCheck');
+    if (!lastMicCheck) return true;
+
+    const daysSinceCheck = (Date.now() - parseInt(lastMicCheck)) / (1000 * 60 * 60 * 24);
+    return daysSinceCheck > 7;
+  };
+
+  const canShowTour = () => {
+    const cooldownTime = localStorage.getItem(TOUR_COOLDOWN_KEY);
+    if (!cooldownTime) return true;
+
+    const hoursSinceCooldown = (Date.now() - parseInt(cooldownTime)) / (1000 * 60 * 60);
+    return hoursSinceCooldown > TOUR_COOLDOWN_HOURS;
+  };
+
   useEffect(() => {
     if (user && !isLoading) {
-      // trackEvent('dashboard_loaded', { // Analytics event (uncomment if needed)
-      //   user_id: user.id,
-      //   has_data: dashboardData.hasData,
-      //   streak_count: streakCount
-      // });
+      // Track dashboard load if needed
     }
   }, [user, isLoading, dashboardData.hasData, streakCount]);
 
   useEffect(() => {
-    // Check if user has completed the tour and cooldown
     const hasTourBeenCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
     const isNewSession = sessionStorage.getItem('newSessionLogin') === 'true';
 
@@ -193,18 +162,16 @@ const Dashboard = () => {
       setTourCompleted(!!hasTourBeenCompleted);
     }
 
-    // Always refresh subscription and profile data on dashboard load for logged-in users
     if (user) {
       refreshSubscription();
     }
-  }, [user, refreshSubscription]); // Added refreshSubscription to dependencies
+  }, [user, refreshSubscription]);
 
   const handleTourComplete = () => {
     localStorage.setItem(TOUR_STORAGE_KEY, 'true');
     localStorage.setItem(TOUR_COOLDOWN_KEY, Date.now().toString());
     setTourCompleted(true);
     setShowTour(false);
-    // trackEvent('tour_completed'); // Analytics event (uncomment if needed)
     toast.success('Tour completed! You\'re ready to start practicing.');
   };
 
@@ -221,11 +188,9 @@ const Dashboard = () => {
   };
 
   const handleStartPractice = () => {
-    // trackEvent('practice_start_clicked', { source: 'dashboard' }); // Analytics event (uncomment if needed)
     sessionStorage.setItem('startingPractice', 'true');
 
     if (micCheckRequired()) {
-      // trackEvent('mic_test_started'); // Analytics event (uncomment if needed)
       setShowMicTest(true);
     } else {
       navigate('/practice');
@@ -242,7 +207,6 @@ const Dashboard = () => {
     updateSettings({ activeTab: value });
   };
 
-  // Get context-aware CTA based on credits/trial status
   const getContextualCTA = () => {
     if (isGuestMode) {
       return {
@@ -251,7 +215,7 @@ const Dashboard = () => {
       };
     }
 
-    if (!user) { // Should be caught by redirect, but for safety
+    if (!user) {
       return {
         label: "Sign Up for Free",
         route: "/signup"
@@ -261,7 +225,7 @@ const Dashboard = () => {
     if (!trialUsed) {
       return {
         label: "Get 1 Free Pitch Analysis",
-        route: "/demo" // Direct to demo, which will trigger the free analysis
+        route: "/demo"
       };
     }
 
@@ -272,7 +236,6 @@ const Dashboard = () => {
       };
     }
 
-    // No credits, trial used
     return {
       label: "Top Up Credits / Upgrade Plan",
       route: "/pricing"
@@ -301,7 +264,6 @@ const Dashboard = () => {
         />
       )}
 
-      {/* Microphone Test Modal */}
       <MicrophoneTestModal
         open={showMicTest}
         onOpenChange={setShowMicTest}
@@ -378,8 +340,7 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          {/* Upgrade Plan Button for Non-Premium Users */}
-          {user && !isPremium && ( // Ensure user is logged in
+          {user && !isPremium && (
             <motion.div 
               className="flex justify-end mb-6"
               initial={{ opacity: 0, y: -10 }}
@@ -388,7 +349,6 @@ const Dashboard = () => {
             >
               <Button 
                 onClick={() => {
-                  // trackEvent('upgrade_button_clicked', { source: 'dashboard' }); // Analytics event (uncomment if needed)
                   navigate('/pricing');
                 }}
                 className="bg-gradient-to-r from-brand-blue to-brand-green text-white hover:from-brand-blue/90 hover:to-brand-green/90 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
@@ -399,8 +359,7 @@ const Dashboard = () => {
             </motion.div>
           )}
 
-          {/* Enhanced Credit Balance Display - prominent and visible */}
-          {user && ( // Only show for logged in users
+          {user && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -411,7 +370,6 @@ const Dashboard = () => {
             </motion.div>
           )}
 
-          {/* View Tabs with keyboard navigation */}
           <Tabs 
             value={settings.activeTab}
             onValueChange={handleTabChange}
@@ -643,7 +601,7 @@ const Dashboard = () => {
                       <p className="text-gray-500 mb-4">No practice sessions yet. Start your first practice to see your progress here.</p>
                       <div className="group">
                         <Button 
-                          onClick={() => navigate(contextualCTA.route)} // Use contextual CTA route
+                          onClick={() => navigate(contextualCTA.route)}
                           className="bg-brand-green hover:bg-brand-green/90 group-hover:shadow-sm transition-all"
                           aria-label="Start your first practice session"
                         >
@@ -674,7 +632,7 @@ const Dashboard = () => {
                     <div className="group">
                       <Button 
                         className="w-full mb-4 bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-all group-hover:shadow-md" 
-                        onClick={() => navigate(contextualCTA.route)} // Use contextual CTA route
+                        onClick={() => navigate(contextualCTA.route)}
                         aria-label="Start new practice session"
                       >
                         {contextualCTA.label}

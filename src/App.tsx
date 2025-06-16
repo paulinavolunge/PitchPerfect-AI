@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -100,7 +101,7 @@ function App() {
                         <Route path="/update-password" element={<UpdatePassword />} />
                         <Route path="/email-confirmed" element={<EmailConfirmed />} />
                         
-                        {/* Protected routes */}
+                        {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/practice" element={<Practice />} />
                         <Route path="/roleplay" element={<RolePlay />} />

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -35,10 +36,9 @@ const Login = () => {
     resolver: zodResolver(loginSchema)
   });
 
-  // Strong redirect logic - redirect if already authenticated
+  // Redirect if already authenticated (exact logic as requested)
   useEffect(() => {
     if (user && !loading) {
-      console.log('User is already authenticated, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);
@@ -173,9 +173,7 @@ const Login = () => {
 
     try {
       // Updated redirect URL for production domain
-      const redirectTo = window.location.hostname.includes('lovable.app') 
-        ? `${window.location.origin}/dashboard`
-        : 'https://pitchperfectai.ai/login';
+      const redirectTo = 'https://pitchperfectai.ai/login';
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
