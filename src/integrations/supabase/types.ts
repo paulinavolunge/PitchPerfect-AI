@@ -401,6 +401,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_permission: {
+        Args: { p_user_id: string; p_required_role?: string }
+        Returns: boolean
+      }
       deduct_credits_and_log_usage: {
         Args: {
           p_user_id: string
@@ -431,6 +435,10 @@ export type Database = {
       }
       secure_deduct_credits_and_log_usage: {
         Args: { p_user_id: string; p_feature_used: string }
+        Returns: Json
+      }
+      validate_voice_input: {
+        Args: { p_input: string; p_user_id?: string }
         Returns: Json
       }
     }

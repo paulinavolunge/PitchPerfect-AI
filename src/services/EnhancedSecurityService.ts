@@ -1,16 +1,5 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { sanitizeStrictly } from '@/lib/sanitizeInput';
-
-export interface SecurityEventDetails {
-  [key: string]: any;
-}
-
-export interface VoiceRateLimit {
-  success: boolean;
-  blocked: boolean;
-  remainingRequests?: number;
-  resetTime?: Date;
-}
 
 export interface CreditDeductionResult {
   success: boolean;
@@ -19,79 +8,60 @@ export interface CreditDeductionResult {
   creditsUsed?: number;
 }
 
-export class EnhancedSecurityService {
-  private static readonly RATE_LIMITS = {
-    VOICE_PROCESSING: {
-      MAX_REQUESTS: 10,
-      WINDOW_MINUTES: 5
-    },
-    API_CALLS: {
-      MAX_REQUESTS: 100,
-      WINDOW_MINUTES: 15
-    }
-  };
+export interface VoiceRateLimit {
+  success: boolean;
+  blocked: boolean;
+  resetTime?: Date;
+  requestCount?: number;
+}
 
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+  sanitizedInput?: string;
+  wasSanitized?: boolean;
+}
+
+export interface FileValidationResult {
+  valid: boolean;
+  error?: string;
+  fileType?: string;
+  fileSize?: number;
+}
+
+export class EnhancedSecurityService {
   /**
-   * Securely deduct credits with enhanced error handling and logging
+   * Securely deduct credits using the database function
    */
   static async secureDeductCredits(
-    userId: string,
-    featureType: string,
-    creditsToDeduct: number
+    userId: string, 
+    featureType: string, 
+    creditsToDeduct: number = 1
   ): Promise<CreditDeductionResult> {
     try {
-      // Validate inputs
-      if (!userId || !featureType || creditsToDeduct < 1) {
-        throw new Error('Invalid parameters for credit deduction');
-      }
-
-      // Log the attempt
-      await this.logSecurityEvent('credit_deduction_attempt', {
-        feature_type: featureType,
-        credits_requested: creditsToDeduct,
-        user_id: userId
-      }, userId);
-
-      // Match current function signature
       const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
         p_user_id: userId,
-        p_feature_used: sanitizeStrictly(featureType)
+        p_feature_used: featureType
       });
 
       if (error) {
-        await this.logSecurityEvent('credit_deduction_failed', {
-          error: error.message,
-          feature_type: featureType,
-          user_id: userId
-        }, userId);
-        return { success: false, error: error.message };
+        console.error('Credit deduction error:', error);
+        return { 
+          success: false, 
+          error: error.message 
+        };
       }
 
-      // Handle the JSONB response
       if (typeof data === 'object' && data !== null) {
         const result = data as any;
         
         if (result.success === true) {
-          await this.logSecurityEvent('credit_deduction_success', {
-            feature_type: featureType,
-            credits_used: result.credits_used,
-            remaining_credits: result.remaining_credits,
-            user_id: userId
-          }, userId);
-
           return {
             success: true,
             remainingCredits: result.remaining_credits,
             creditsUsed: result.credits_used
           };
         } else {
-          await this.logSecurityEvent('credit_deduction_insufficient', {
-            error: result.error,
-            available: result.available,
-            required: result.required,
-            user_id: userId
-          }, userId);
-
           return {
             success: false,
             error: result.error || 'Credit deduction failed'
@@ -99,145 +69,112 @@ export class EnhancedSecurityService {
         }
       }
 
-      return { success: false, error: 'Invalid response from server' };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
-      await this.logSecurityEvent('credit_deduction_error', {
-        error: errorMessage,
-        feature_type: featureType,
-        user_id: userId
-      }, userId);
-
       return { 
         success: false, 
-        error: errorMessage
+        error: 'Invalid response from server' 
+      };
+    } catch (error) {
+      console.error('Credit deduction failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
 
   /**
-   * Check voice processing rate limits with enhanced tracking
+   * Validate voice input using the database function
    */
-  static async checkVoiceRateLimit(userId: string): Promise<VoiceRateLimit> {
+  static async validateVoiceInput(
+    input: string,
+    userId?: string
+  ): Promise<ValidationResult> {
     try {
-      const windowStart = new Date(Date.now() - this.RATE_LIMITS.VOICE_PROCESSING.WINDOW_MINUTES * 60 * 1000);
-      
-      const { data, error } = await supabase
-        .from('voice_rate_limits')
-        .select('request_count, blocked_until, window_start')
-        .eq('user_id', userId)
-        .gte('window_start', windowStart.toISOString())
-        .order('window_start', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('validate_voice_input', {
+        p_input: input,
+        p_user_id: userId || null
+      });
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Rate limit check error:', error);
-        await this.logSecurityEvent('rate_limit_check_error', {
-          error: error.message,
-          user_id: userId
-        }, userId);
-        return { success: false, blocked: false };
-      }
-
-      if (data) {
-        // Check if user is currently blocked
-        if (data.blocked_until && new Date(data.blocked_until) > new Date()) {
-          await this.logSecurityEvent('rate_limit_blocked_access_attempt', {
-            blocked_until: data.blocked_until,
-            user_id: userId
-          }, userId);
-          
-          return { 
-            success: false, 
-            blocked: true, 
-            resetTime: new Date(data.blocked_until) 
-          };
-        }
-
-        // Check if rate limit exceeded
-        if (data.request_count >= this.RATE_LIMITS.VOICE_PROCESSING.MAX_REQUESTS) {
-          // Block user for the remaining window time
-          const blockUntil = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-          
-          await supabase
-            .from('voice_rate_limits')
-            .update({ blocked_until: blockUntil.toISOString() })
-            .eq('user_id', userId)
-            .eq('window_start', data.window_start);
-
-          await this.logSecurityEvent('rate_limit_exceeded', {
-            request_count: data.request_count,
-            max_requests: this.RATE_LIMITS.VOICE_PROCESSING.MAX_REQUESTS,
-            blocked_until: blockUntil.toISOString(),
-            user_id: userId
-          }, userId);
-
-          return { 
-            success: false, 
-            blocked: true, 
-            resetTime: blockUntil 
-          };
-        }
-
-        // Increment request count
-        await supabase
-          .from('voice_rate_limits')
-          .update({ 
-            request_count: data.request_count + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId)
-          .eq('window_start', data.window_start);
-
+      if (error) {
+        console.error('Voice input validation error:', error);
         return { 
-          success: true, 
-          blocked: false, 
-          remainingRequests: this.RATE_LIMITS.VOICE_PROCESSING.MAX_REQUESTS - data.request_count - 1 
-        };
-      } else {
-        // First request in this window
-        await supabase
-          .from('voice_rate_limits')
-          .insert({
-            user_id: userId,
-            ip_address: '0.0.0.0', // Will be set by database function
-            request_count: 1,
-            window_start: new Date().toISOString()
-          });
-
-        return { 
-          success: true, 
-          blocked: false, 
-          remainingRequests: this.RATE_LIMITS.VOICE_PROCESSING.MAX_REQUESTS - 1 
+          valid: false, 
+          error: error.message 
         };
       }
+
+      if (typeof data === 'object' && data !== null) {
+        const result = data as any;
+        
+        return {
+          valid: result.valid,
+          error: result.error,
+          sanitizedInput: result.sanitized_input,
+          wasSanitized: result.was_sanitized
+        };
+      }
+
+      return { 
+        valid: false, 
+        error: 'Invalid validation response' 
+      };
     } catch (error) {
-      console.error('Rate limiting error:', error);
-      await this.logSecurityEvent('rate_limit_system_error', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        user_id: userId
-      }, userId);
-      return { success: true, blocked: false }; // Fail open to not block legitimate users
+      console.error('Voice input validation failed:', error);
+      return { 
+        valid: false, 
+        error: error instanceof Error ? error.message : 'Validation failed'
+      };
     }
   }
 
   /**
-   * Enhanced security event logging with better error handling
+   * Check voice processing rate limits
+   */
+  static async checkVoiceRateLimit(userId: string): Promise<VoiceRateLimit> {
+    try {
+      const { data, error } = await supabase
+        .from('voice_rate_limits')
+        .select('blocked_until, request_count, window_start')
+        .eq('user_id', userId)
+        .gte('window_start', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Rate limit check error:', error);
+        return { success: true, blocked: false }; // Fail open for availability
+      }
+
+      if (!data) {
+        return { success: true, blocked: false };
+      }
+
+      const blocked = data.blocked_until && new Date(data.blocked_until) > new Date();
+      const resetTime = data.blocked_until ? new Date(data.blocked_until) : undefined;
+
+      return {
+        success: true,
+        blocked: !!blocked,
+        resetTime,
+        requestCount: data.request_count || 0
+      };
+    } catch (error) {
+      console.error('Rate limit check failed:', error);
+      return { success: true, blocked: false }; // Fail open
+    }
+  }
+
+  /**
+   * Log security events
    */
   static async logSecurityEvent(
     eventType: string,
-    eventDetails: SecurityEventDetails = {},
+    eventDetails: Record<string, any> = {},
     userId?: string
   ): Promise<boolean> {
     try {
-      // Sanitize event details
-      const sanitizedDetails = this.sanitizeEventDetails(eventDetails);
-      
       const { error } = await supabase.rpc('log_security_event', {
-        p_event_type: sanitizeStrictly(eventType),
-        p_event_details: sanitizedDetails,
+        p_event_type: eventType,
+        p_event_details: eventDetails,
         p_user_id: userId || null
       });
 
@@ -254,150 +191,87 @@ export class EnhancedSecurityService {
   }
 
   /**
-   * Validate and sanitize audio file uploads
+   * Validate audio file uploads
    */
-  static validateAudioFile(file: File): { valid: boolean; error?: string } {
-    const allowedTypes = ['audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/webm', 'audio/ogg'];
+  static validateAudioFile(file: File): FileValidationResult {
     const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+      'audio/wav',
+      'audio/mp3',
+      'audio/mpeg',
+      'audio/m4a',
+      'audio/webm',
+      'audio/ogg'
+    ];
 
-    if (!allowedTypes.includes(file.type)) {
-      return {
-        valid: false,
-        error: 'Invalid file type. Only WAV, MP3, WebM, and OGG audio files are allowed.'
-      };
+    if (!file) {
+      return { valid: false, error: 'No file provided' };
     }
 
     if (file.size > maxSize) {
-      return {
-        valid: false,
-        error: 'File too large. Maximum 10MB allowed.'
+      return { 
+        valid: false, 
+        error: `File too large. Maximum size is ${maxSize / 1024 / 1024}MB`,
+        fileSize: file.size
       };
     }
 
-    // Check for suspicious file names
-    const suspiciousPatterns = ['.exe', '.bat', '.cmd', '.scr', '.vbs', '.js', '..'];
-    const fileName = file.name.toLowerCase();
-    
-    if (suspiciousPatterns.some(pattern => fileName.includes(pattern))) {
-      return {
-        valid: false,
-        error: 'Suspicious file name detected.'
+    if (!allowedTypes.includes(file.type)) {
+      return { 
+        valid: false, 
+        error: `Invalid file type. Allowed types: ${allowedTypes.join(', ')}`,
+        fileType: file.type
       };
     }
 
-    return { valid: true };
-  }
-
-  /**
-   * Sanitize voice input with comprehensive security checks
-   */
-  static sanitizeVoiceInput(input: string): string {
-    if (!input || typeof input !== 'string') {
-      throw new Error('Invalid input: Voice input must be a non-empty string');
-    }
-
-    const maxLength = 5000;
-    if (input.length > maxLength) {
-      throw new Error(`Input too long: Maximum ${maxLength} characters allowed`);
-    }
-
-    // Remove potentially dangerous patterns
-    let sanitized = sanitizeStrictly(input)
-      .replace(/javascript:/gi, '')
-      .replace(/data:/gi, '')
-      .replace(/vbscript:/gi, '')
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/on\w+\s*=/gi, '') // Remove event handlers
-      .replace(/\0/g, ''); // Remove null bytes
-
-    return sanitized.trim();
-  }
-
-  /**
-   * Get security headers for API responses
-   */
-  static getSecurityHeaders(): HeadersInit {
-    return {
-      'X-Frame-Options': 'DENY',
-      'X-Content-Type-Options': 'nosniff',
-      'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+    return { 
+      valid: true, 
+      fileType: file.type, 
+      fileSize: file.size 
     };
   }
 
   /**
-   * Sanitize event details to prevent injection attacks
+   * Sanitize voice input (client-side basic validation)
    */
-  private static sanitizeEventDetails(details: SecurityEventDetails): any {
-    const sanitized: any = {};
-    
-    for (const [key, value] of Object.entries(details)) {
-      const cleanKey = sanitizeStrictly(key);
-      
-      if (typeof value === 'string') {
-        sanitized[cleanKey] = sanitizeStrictly(value);
-      } else if (typeof value === 'number' || typeof value === 'boolean') {
-        sanitized[cleanKey] = value;
-      } else if (value === null || value === undefined) {
-        sanitized[cleanKey] = value;
-      } else {
-        // For objects and arrays, convert to string and sanitize
-        sanitized[cleanKey] = sanitizeStrictly(JSON.stringify(value));
-      }
+  static sanitizeVoiceInput(input: string): string {
+    if (!input || typeof input !== 'string') {
+      throw new Error('Invalid input provided');
     }
+
+    if (input.length > 5000) {
+      throw new Error('Input too long (max 5000 characters)');
+    }
+
+    // Basic XSS protection
+    let sanitized = input.replace(/<[^>]*>/g, '');
+    sanitized = sanitized.replace(/javascript:/gi, '');
+    sanitized = sanitized.replace(/data:/gi, '');
     
-    return sanitized;
+    return sanitized.trim();
   }
 
   /**
-   * Check if user has sufficient permissions for an action
+   * Check user permissions
    */
-  static async checkUserPermissions(userId: string, action: string): Promise<boolean> {
+  static async checkUserPermission(
+    userId: string,
+    requiredRole: string = 'user'
+  ): Promise<boolean> {
     try {
-      const { data: userRoles, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
+      const { data, error } = await supabase.rpc('check_user_permission', {
+        p_user_id: userId,
+        p_required_role: requiredRole
+      });
 
       if (error) {
-        await this.logSecurityEvent('permission_check_error', {
-          error: error.message,
-          action,
-          user_id: userId
-        }, userId);
+        console.error('Permission check error:', error);
         return false;
       }
 
-      const roles = userRoles?.map(r => r.role) || [];
-      
-      // Define action-role mappings
-      const permissions: Record<string, string[]> = {
-        'admin_access': ['admin'],
-        'manager_access': ['admin', 'manager'],
-        'user_access': ['admin', 'manager', 'user']
-      };
-
-      const requiredRoles = permissions[action] || ['user'];
-      const hasPermission = roles.some(role => requiredRoles.includes(role));
-
-      if (!hasPermission) {
-        await this.logSecurityEvent('unauthorized_access_attempt', {
-          action,
-          user_roles: roles,
-          required_roles: requiredRoles,
-          user_id: userId
-        }, userId);
-      }
-
-      return hasPermission;
+      return !!data;
     } catch (error) {
-      await this.logSecurityEvent('permission_check_system_error', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        action,
-        user_id: userId
-      }, userId);
+      console.error('Permission check failed:', error);
       return false;
     }
   }
