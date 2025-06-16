@@ -231,34 +231,34 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
 
   return (
     <div className="space-y-6">
-      {/* Scenario Display */}
-      <Card className="modern-card border-l-4 border-l-sky-blue bg-gradient-to-r from-soft-blue-50 to-white">
+      {/* Enhanced Scenario Display */}
+      <Card className="vibrant-card border-l-4 border-l-vibrant-blue-500 bg-gradient-to-r from-vibrant-blue-50 to-white">
         <CardHeader>
-          <CardTitle className="text-navy flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-sky-blue" />
+          <CardTitle className="text-deep-navy flex items-center gap-2 font-bold">
+            <Sparkles className="h-5 w-5 text-vibrant-blue-500" />
             Customer Objection Scenario
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-navy font-medium italic text-lg leading-relaxed">"{scenario}"</p>
-          <p className="text-navy/70 mt-4">
+          <p className="text-deep-navy font-semibold italic text-lg leading-relaxed">"{scenario}"</p>
+          <p className="text-deep-navy/70 mt-4 font-medium">
             How would you respond to this pricing objection? Practice your response below.
           </p>
         </CardContent>
       </Card>
 
-      {/* Error Display */}
+      {/* Enhanced Error Display */}
       {error && (
-        <Alert variant="destructive" className="border-red-200 bg-red-50">
+        <Alert variant="destructive" className="border-red-300 bg-red-50/90 shadow-vibrant">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="flex justify-between items-center">
-            <span>{error}</span>
+            <span className="font-medium">{error}</span>
             {hasPermission === false && (
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={retryVoiceMode}
-                className="ml-2 border-red-300"
+                className="ml-2 border-red-400 text-red-600 hover:bg-red-50"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Retry Voice
@@ -268,13 +268,13 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
         </Alert>
       )}
 
-      {/* Input Mode Selector */}
+      {/* Enhanced Input Mode Selector */}
       <div className="flex gap-3 mb-6">
         <Button
           variant={inputMode === 'voice' ? 'default' : 'outline'}
           onClick={() => setInputMode('voice')}
           disabled={!hasPermission}
-          className={inputMode === 'voice' ? 'soft-button' : 'outline-button'}
+          className={inputMode === 'voice' ? 'vibrant-button' : 'outline-button'}
         >
           <Mic className="h-4 w-4 mr-2" />
           Voice Input
@@ -282,18 +282,18 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
         <Button
           variant={inputMode === 'text' ? 'default' : 'outline'}
           onClick={switchToTextMode}
-          className={inputMode === 'text' ? 'soft-button' : 'outline-button'}
+          className={inputMode === 'text' ? 'vibrant-button' : 'outline-button'}
         >
           <Send className="h-4 w-4 mr-2" />
           Text Input
         </Button>
       </div>
 
-      {/* Voice Input Mode */}
+      {/* Enhanced Voice Input Mode */}
       {inputMode === 'voice' && (
-        <Card className="modern-card">
+        <Card className="vibrant-card">
           <CardHeader>
-            <CardTitle className="text-navy">Voice Response</CardTitle>
+            <CardTitle className="text-deep-navy font-bold">Voice Response</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center">
@@ -302,7 +302,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
                 variant={isListening ? "destructive" : "default"}
                 onClick={isListening ? stopListening : startListening}
                 disabled={!hasPermission || isSubmitting}
-                className={`h-20 w-20 rounded-full ${isListening ? 'bg-red-500 hover:bg-red-600 animate-soft-pulse' : 'soft-button animate-soft-glow'}`}
+                className={`h-20 w-20 rounded-full font-bold ${isListening ? 'bg-red-500 hover:bg-red-600 animate-strong-pulse' : 'vibrant-button animate-vibrant-glow'}`}
               >
                 {isListening ? (
                   <MicOff className="h-8 w-8" />
@@ -314,54 +314,54 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
               <div className="mt-6">
                 {isListening && (
                   <div className="flex items-center justify-center gap-3">
-                    <div className="h-3 w-3 bg-red-500 rounded-full animate-soft-pulse"></div>
-                    <span className="text-red-600 font-medium">Listening...</span>
+                    <div className="h-3 w-3 bg-red-500 rounded-full animate-strong-pulse"></div>
+                    <span className="text-red-600 font-bold">Listening...</span>
                   </div>
                 )}
                 {!isListening && hasPermission && (
-                  <p className="text-primary font-medium">Click to start recording</p>
+                  <p className="text-vibrant-blue-600 font-bold">Click to start recording</p>
                 )}
               </div>
             </div>
 
             {transcript && (
-              <div className="modern-card p-4 bg-soft-blue-50 border-soft-blue-200">
-                <label className="text-sm font-semibold text-navy">Your Response:</label>
-                <p className="text-navy mt-2 whitespace-pre-wrap leading-relaxed">"{transcript}"</p>
-                <p className="text-xs text-navy/60 mt-2">{transcript.length} characters</p>
+              <div className="vibrant-card p-4 bg-vibrant-blue-50 border-vibrant-blue-300">
+                <label className="text-sm font-bold text-deep-navy">Your Response:</label>
+                <p className="text-deep-navy mt-2 whitespace-pre-wrap leading-relaxed font-medium">"{transcript}"</p>
+                <p className="text-xs text-deep-navy/60 mt-2 font-medium">{transcript.length} characters</p>
               </div>
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* Text Input Mode */}
+      {/* Enhanced Text Input Mode */}
       {inputMode === 'text' && (
-        <Card className="modern-card">
+        <Card className="vibrant-card">
           <CardHeader>
-            <CardTitle className="text-navy">Text Response</CardTitle>
+            <CardTitle className="text-deep-navy font-bold">Text Response</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               placeholder="Type your response to the pricing objection here..."
-              className="min-h-[120px] border-soft-blue-200 focus:border-primary resize-none"
+              className="min-h-[120px] border-vibrant-blue-300 focus:border-vibrant-blue-500 resize-none font-medium"
               maxLength={500}
               disabled={isSubmitting}
             />
-            <div className="text-xs text-navy/60 mt-2">
+            <div className="text-xs text-deep-navy/60 mt-2 font-medium">
               {textInput.length}/500 characters
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Submit Button */}
+      {/* Enhanced Submit Button */}
       <Button 
         onClick={handleSubmit}
         disabled={!canSubmit}
-        className="w-full soft-button text-lg py-4"
+        className="w-full strong-cta text-lg py-4"
         size="lg"
       >
         {isSubmitting ? (
@@ -374,16 +374,16 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
         )}
       </Button>
 
-      {/* Debug Info */}
+      {/* Enhanced Debug Info */}
       {process.env.NODE_ENV === 'development' && (
         <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
           <p>Debug: Mode={inputMode}, Response length={currentResponse.length}, Can submit={canSubmit}</p>
         </div>
       )}
 
-      {/* Help Text */}
-      <div className="text-center p-4 bg-white/50 rounded-lg">
-        <p className="text-navy/70">
+      {/* Enhanced Help Text */}
+      <div className="text-center p-4 bg-white/70 rounded-lg shadow-vibrant">
+        <p className="text-deep-navy/70 font-medium">
           Speak naturally or type your response to the customer's pricing objection. 
           Our AI will analyze your approach and provide feedback.
         </p>
