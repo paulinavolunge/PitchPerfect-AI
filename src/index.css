@@ -111,7 +111,7 @@ body {
   }
 
   .feature-card {
-    @apply premium-card p-8 group hover:border-primary-200 transition-all duration-300 card-hover;
+    @apply premium-card p-8 hover:border-primary-200 transition-all duration-300 card-hover;
   }
   
   .cta-section {
