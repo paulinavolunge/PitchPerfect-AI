@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase, getRedirectUrl } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -36,27 +36,32 @@ const Login = () => {
     resolver: zodResolver(loginSchema)
   });
 
-  // Redirect if already authenticated (exact logic as requested)
+  // Enhanced redirect logic for authenticated users
   useEffect(() => {
+    console.log('Login: Auth state check', { user: !!user, loading });
+    
     if (user && !loading) {
+      console.log('User already authenticated, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);
 
-  // Show loading state while auth context loads
+  // Show simplified loading state while auth context loads
   if (loading) {
+    console.log('Login: Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-brand-dark">Loading...</p>
+          <p className="text-brand-dark">Checking authentication...</p>
         </div>
       </div>
     );
   }
 
-  // If user is already authenticated, don't render the login form
+  // If user is already authenticated, show redirect message
   if (user) {
+    console.log('Login: User authenticated, showing redirect message');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -86,25 +91,23 @@ const Login = () => {
     // Listen for auth state changes with proper cleanup
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed in Login:', event, session);
+        console.log('Login: Auth state changed', event, !!session);
         
         if (event === 'SIGNED_IN' && session) {
-          // Clear any errors on successful sign in
           setLoginError(null);
-
+          
           // Track successful login
           trackEvent('login_success', {
             method: session.user.app_metadata.provider || 'email',
             timestamp: new Date().toISOString(),
-            user_id: session.user.id
+            user_id: session.user.id,
+            domain: window.location.hostname
           });
 
-          // Redirect to dashboard
-          console.log('Successful sign in, redirecting to dashboard');
+          console.log('Login: Successful sign in, redirecting to dashboard');
           navigate('/dashboard', { replace: true });
 
         } else if (event === 'SIGNED_OUT') {
-          // User signed out, clear any errors
           setLoginError(null);
         }
       }
@@ -133,6 +136,7 @@ const Login = () => {
   }, [verificationMessage]);
 
   const handleEmailLogin = async (data: LoginForm) => {
+    console.log('Login: Starting email login');
     setIsSubmitting(true);
     setLoginError(null);
 
@@ -146,7 +150,6 @@ const Login = () => {
         throw error;
       }
 
-      // Success will be handled by the auth state change listener
       toast.success("Successfully logged in!");
       
     } catch (error: any) {
@@ -156,7 +159,8 @@ const Login = () => {
       trackEvent('login_error', {
         error_type: error.message || 'unknown_error',
         method: 'email',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        domain: window.location.hostname
       });
 
       toast.error("Login failed", {
@@ -168,12 +172,13 @@ const Login = () => {
   };
 
   const handleGoogleLogin = async () => {
+    console.log('Login: Starting Google login');
     setIsSubmitting(true);
     setLoginError(null);
 
     try {
-      // Updated redirect URL for production domain
-      const redirectTo = 'https://pitchperfectai.ai/login';
+      const redirectTo = getRedirectUrl();
+      console.log('Login: Using redirect URL:', redirectTo);
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -196,6 +201,8 @@ const Login = () => {
       setIsSubmitting(false);
     }
   };
+
+  console.log('Login: Rendering login form');
 
   return (
     <div className="min-h-screen flex flex-col">

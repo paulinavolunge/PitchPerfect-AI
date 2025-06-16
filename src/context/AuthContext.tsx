@@ -27,6 +27,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [trialUsed, setTrialUsed] = useState(false);
 
   useEffect(() => {
+    console.log('AuthContext: Initializing auth state');
+    
     // Initialize auth state
     const initializeAuth = async () => {
       try {
@@ -35,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) {
           console.warn('Auth initialization error:', error);
         } else {
+          console.log('AuthContext: Initial session', !!initialSession);
           setSession(initialSession);
           setUser(initialSession?.user ?? null);
           
@@ -55,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        console.log('AuthContext: Auth state changed:', event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -71,7 +74,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('AuthContext: Cleaning up auth listener');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadUserProfile = async (userId: string) => {
@@ -167,7 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      console.log('Signing out user...');
+      console.log('AuthContext: Signing out user...');
       
       // Clear local state first
       setUser(null);
@@ -183,11 +189,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
-      console.log('User signed out successfully');
+      console.log('AuthContext: User signed out successfully');
       
-      // Redirect to home page using the appropriate domain
+      // Redirect to appropriate domain
       const targetUrl = window.location.hostname.includes('lovable.app') 
-        ? '/' 
+        ? 'https://pitchperfectai.lovable.app/' 
         : 'https://pitchperfectai.ai/';
       
       window.location.href = targetUrl;
@@ -196,7 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Sign out error:', error);
       // Even if there's an error, redirect to home
       const targetUrl = window.location.hostname.includes('lovable.app') 
-        ? '/' 
+        ? 'https://pitchperfectai.lovable.app/' 
         : 'https://pitchperfectai.ai/';
       
       window.location.href = targetUrl;
