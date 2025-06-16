@@ -37,7 +37,7 @@ export const checkVoiceRateLimit = async (
     
     const { data, error } = await supabaseClient
       .from('voice_rate_limits')
-      .select('request_count, blocked_until')
+      .select('request_count, blocked_until, window_start')
       .eq('user_id', userId)
       .gte('window_start', fiveMinutesAgo.toISOString())
       .single();
@@ -73,7 +73,7 @@ export const checkVoiceRateLimit = async (
         user_id: userId,
         ip_address: '127.0.0.1', // Will be updated by RLS if available
         request_count: (data?.request_count || 0) + 1,
-        window_start: data ? data.window_start : now,
+        window_start: data?.window_start || now,
         updated_at: now
       });
 

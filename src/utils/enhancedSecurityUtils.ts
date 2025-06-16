@@ -5,7 +5,6 @@ import { EnhancedSecurityService } from '@/services/EnhancedSecurityService';
 export const {
   validateAudioFile,
   sanitizeVoiceInput,
-  getSecurityHeaders,
   logSecurityEvent,
   checkVoiceRateLimit,
   secureDeductCredits
@@ -46,6 +45,15 @@ export const createSecureFormData = (data: Record<string, any>): FormData => {
   
   return formData;
 };
+
+// Security headers utility function
+export const getSecurityHeaders = () => ({
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Content-Security-Policy': "default-src 'self'",
+});
 
 // Rate limiting constants
 export const RATE_LIMITS = {
