@@ -185,9 +185,3 @@ export const ConsentBanner: React.FC = () => {
     </>
   );
 };
-
-declare global {
-  interface Window {
-    loadAnalytics?: () => void;
-  }
-}
