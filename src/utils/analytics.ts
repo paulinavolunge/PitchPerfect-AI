@@ -1,3 +1,4 @@
+
 // Privacy-compliant Google Analytics implementation with enhanced debugging
 
 // Define global loadAnalytics function for dynamic consent updates
@@ -21,7 +22,7 @@ window.loadAnalytics = function() {
 
   // Load GA script if not already loaded
   if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
-    const gaScript = document.createElement('script');
+    const gaScript = document.createElement('script') as HTMLScriptElement;
     gaScript.async = true;
     gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y';
     document.head.appendChild(gaScript);
@@ -33,7 +34,7 @@ window.loadAnalytics = function() {
       w[l]=w[l]||[];
       w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
       const f=d.getElementsByTagName(s)[0];
-      const j=d.createElement(s);
+      const j=d.createElement(s) as HTMLScriptElement;
       const dl=l!='dataLayer'?'&l='+l:'';
       j.async=true;
       j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
