@@ -27,13 +27,21 @@ export const ConsentBanner: React.FC = () => {
     }
   }, []);
 
+  // Trigger analytics when consent already exists
+  useEffect(() => {
+    const consent = localStorage.getItem('analytics-consent');
+    if (consent === 'true' && typeof window.loadAnalytics === 'function') {
+      window.loadAnalytics();
+    }
+  }, []);
+
   const saveConsent = (consentData: ConsentPreferences) => {
     localStorage.setItem('privacy-consent', JSON.stringify(consentData));
     localStorage.setItem('analytics-consent', consentData.analytics.toString());
     localStorage.setItem('marketing-consent', consentData.marketing.toString());
     
-    // Trigger analytics loading if consented
-    if (consentData.analytics && window.loadAnalytics) {
+    // Trigger analytics loading if consented using global function
+    if (consentData.analytics && typeof window.loadAnalytics === 'function') {
       window.loadAnalytics();
     }
     

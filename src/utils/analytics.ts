@@ -1,5 +1,64 @@
-
 // Privacy-compliant Google Analytics implementation with enhanced debugging
+
+// Define global loadAnalytics function for dynamic consent updates
+window.loadAnalytics = function() {
+  console.log('🔧 Global loadAnalytics: Loading analytics after consent');
+  
+  if (!hasValidConsent()) {
+    console.log('❌ Global loadAnalytics: No valid consent');
+    return;
+  }
+
+  // Initialize dataLayer and gtag if not already done
+  window.dataLayer = window.dataLayer || [];
+  
+  if (!window.gtag) {
+    window.gtag = function() { 
+      console.log('📊 GA4 Event:', arguments);
+      window.dataLayer.push(arguments); 
+    };
+  }
+
+  // Load GA script if not already loaded
+  if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
+    const gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y';
+    document.head.appendChild(gaScript);
+  }
+
+  // Load GTM if not already loaded
+  if (!document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
+    (function(w,d,s,l,i){
+      w[l]=w[l]||[];
+      w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
+      const f=d.getElementsByTagName(s)[0];
+      const j=d.createElement(s);
+      const dl=l!='dataLayer'?'&l='+l:'';
+      j.async=true;
+      j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+      f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-XXXXXXX');
+  }
+
+  // Configure GA4
+  setTimeout(() => {
+    if (window.gtag) {
+      window.gtag('js', new Date());
+      window.gtag('config', 'G-HVCRJT504Y', {
+        debug_mode: true,
+        send_page_view: false,
+        anonymize_ip: true,
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false
+      });
+      
+      // Track current page
+      const currentPath = window.location.pathname + window.location.search;
+      trackPageView(currentPath);
+    }
+  }, 500);
+};
 
 // Initialize Google Analytics with debug mode and consent validation
 export const initGA = () => {
@@ -18,23 +77,12 @@ export const initGA = () => {
       return;
     }
 
-    // Initialize dataLayer for GTM
-    window.dataLayer = window.dataLayer || [];
-    
-    // Setup gtag function for direct GA4 calls
-    window.gtag = function() { 
-      console.log('📊 GA4 Event:', arguments);
-      window.dataLayer.push(arguments); 
-    };
-    
-    // Configure GA4 with privacy settings
-    window.gtag('config', 'G-HVCRJT504Y', { 
-      debug_mode: true, // Always enable debug mode for troubleshooting
-      send_page_view: false,
-      anonymize_ip: true,
-      allow_google_signals: false, // Disable Google Signals for privacy
-      allow_ad_personalization_signals: false // Disable ad personalization
-    });
+    // Use the global loadAnalytics function
+    if (typeof window.loadAnalytics === 'function') {
+      window.loadAnalytics();
+    } else {
+      console.warn('⚠️ Analytics: Global loadAnalytics function not available');
+    }
     
     console.log('✅ Analytics: Successfully initialized with GA ID: G-HVCRJT504Y');
     
@@ -84,8 +132,10 @@ export const setAnalyticsConsent = (granted: boolean) => {
     localStorage.setItem('analytics-consent-date', Date.now().toString());
     console.log('✅ Analytics: Consent granted and timestamped');
     
-    // Initialize analytics immediately after consent
-    initGA();
+    // Initialize analytics immediately after consent using global function
+    if (typeof window.loadAnalytics === 'function') {
+      window.loadAnalytics();
+    }
   } else {
     localStorage.removeItem('analytics-consent');
     localStorage.removeItem('analytics-consent-date');

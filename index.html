@@ -13,36 +13,43 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
-    <!-- Google Tag Manager -->
+    <!-- Improved Google Analytics with proper consent logic -->
     <script>
-      // Check for analytics consent before loading GTM
       const hasConsent = localStorage.getItem('analytics-consent') === 'true';
       console.log('Analytics consent status:', hasConsent);
-      
+
       if (hasConsent) {
-        console.log('Loading Google Tag Manager...');
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-XXXXXXX');
-        
-        // Initialize GA4 directly as backup
+        console.log('Loading Google Tag Manager and Google Analytics');
+
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-HVCRJT504Y', {
-          debug_mode: true,
-          send_page_view: false
-        });
-        
-        // Load GA4 script
+
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+
         const gaScript = document.createElement('script');
         gaScript.async = true;
         gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y';
         document.head.appendChild(gaScript);
+
+        (function(w,d,s,l,i){
+          w[l]=w[l]||[];
+          w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
+          const f=d.getElementsByTagName(s)[0];
+          const j=d.createElement(s);
+          const dl=l!='dataLayer'?'&l='+l:'';
+          j.async=true;
+          j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+          f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-XXXXXXX');
+
+        gtag('js', new Date());
+        gtag('config', 'G-HVCRJT504Y', {
+          debug_mode: true,
+          send_page_view: true
+        });
       } else {
-        console.log('Analytics consent not given, skipping GTM and GA4 loading');
+        console.log('Analytics consent not given, skipping tracking setup');
       }
     </script>
   </head>
