@@ -232,6 +232,6 @@ declare global {
     dataLayer: any[];
     gtag: (command: string, ...args: any[]) => void;
     fbq: any;
-    loadAnalytics: () => void;
+    loadAnalytics?: () => void; // Made optional to match actual usage
   }
 }
