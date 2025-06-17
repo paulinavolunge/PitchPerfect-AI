@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -10,6 +9,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
 import MobileNavBar from '@/components/MobileNavBar';
+import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
+import { usePageTracking } from '@/hooks/usePageTracking';
 
 // Page imports
 import Index from '@/pages/Index';
@@ -63,6 +64,12 @@ const queryClient = new QueryClient({
   },
 });
 
+// Component to handle page tracking
+const PageTrackingProvider = ({ children }: { children: React.ReactNode }) => {
+  usePageTracking();
+  return <>{children}</>;
+};
+
 function App() {
   console.log('App component rendering - routes should be available');
   
@@ -75,69 +82,74 @@ function App() {
               <Router>
                 <AuthProvider>
                   <GuestModeProvider>
-                    <div className="min-h-screen bg-background font-sans antialiased">
-                      <Routes>
-                        {/* Public routes */}
-                        <Route path="/" element={<Index />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="/compare" element={<Compare />} />
-                        <Route path="/pricing" element={<Pricing />} />
-                        <Route path="/demo" element={<Demo />} />
-                        
-                        {/* New functional routes */}
-                        <Route path="/voice-training" element={<VoiceTraining />} />
-                        <Route path="/analytics" element={<Analytics />} />
-                        <Route path="/ai-roleplay" element={<AIRoleplay />} />
-                        
-                        {/* Placeholder routes for testing (keeping as backup) */}
-                        <Route path="/voice-training-old" element={<VoiceTrainingPage />} />
-                        <Route path="/analytics-old" element={<AnalyticsPage />} />
-                        <Route path="/ai-roleplay-old" element={<RoleplayPage />} />
-                        
-                        {/* Authentication routes */}
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/password-reset" element={<PasswordReset />} />
-                        <Route path="/update-password" element={<UpdatePassword />} />
-                        <Route path="/email-confirmed" element={<EmailConfirmed />} />
-                        
-                        {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/practice" element={<Practice />} />
-                        <Route path="/roleplay" element={<RolePlay />} />
-                        <Route path="/progress" element={<Progress />} />
-                        <Route path="/tips" element={<Tips />} />
-                        <Route path="/call-recordings" element={<CallRecordings />} />
-                        <Route path="/recordings" element={<CallRecordings />} />
-                        <Route path="/team" element={<TeamDashboard />} />
-                        
-                        {/* Subscription routes */}
-                        <Route path="/subscription" element={<Subscription />} />
-                        <Route path="/subscription-management" element={<SubscriptionManagement />} />
-                        <Route path="/success" element={<Success />} />
-                        <Route path="/cancel" element={<Cancel />} />
-                        
-                        {/* Legal routes */}
-                        <Route path="/terms" element={<Terms />} />
-                        <Route path="/privacy" element={<Privacy />} />
-                        <Route path="/data-safety" element={<DataSafety />} />
-                        <Route path="/account-delete" element={<AccountDelete />} />
-                        
-                        {/* Fallback route - IMPORTANT: This catches all unmatched routes */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
+                    <PageTrackingProvider>
+                      {/* Initialize analytics */}
+                      <PrivacyCompliantAnalytics />
                       
-                      {/* Mobile navigation bar */}
-                      <MobileNavBar />
-                      
-                      {/* Global toast notifications */}
-                      <Toaster 
-                        position="top-right"
-                        expand={false}
-                        richColors
-                        closeButton
-                      />
-                    </div>
+                      <div className="min-h-screen bg-background font-sans antialiased">
+                        <Routes>
+                          {/* Public routes */}
+                          <Route path="/" element={<Index />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/compare" element={<Compare />} />
+                          <Route path="/pricing" element={<Pricing />} />
+                          <Route path="/demo" element={<Demo />} />
+                          
+                          {/* New functional routes */}
+                          <Route path="/voice-training" element={<VoiceTraining />} />
+                          <Route path="/analytics" element={<Analytics />} />
+                          <Route path="/ai-roleplay" element={<AIRoleplay />} />
+                          
+                          {/* Placeholder routes for testing (keeping as backup) */}
+                          <Route path="/voice-training-old" element={<VoiceTrainingPage />} />
+                          <Route path="/analytics-old" element={<AnalyticsPage />} />
+                          <Route path="/ai-roleplay-old" element={<RoleplayPage />} />
+                          
+                          {/* Authentication routes */}
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/signup" element={<Signup />} />
+                          <Route path="/password-reset" element={<PasswordReset />} />
+                          <Route path="/update-password" element={<UpdatePassword />} />
+                          <Route path="/email-confirmed" element={<EmailConfirmed />} />
+                          
+                          {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/practice" element={<Practice />} />
+                          <Route path="/roleplay" element={<RolePlay />} />
+                          <Route path="/progress" element={<Progress />} />
+                          <Route path="/tips" element={<Tips />} />
+                          <Route path="/call-recordings" element={<CallRecordings />} />
+                          <Route path="/recordings" element={<CallRecordings />} />
+                          <Route path="/team" element={<TeamDashboard />} />
+                          
+                          {/* Subscription routes */}
+                          <Route path="/subscription" element={<Subscription />} />
+                          <Route path="/subscription-management" element={<SubscriptionManagement />} />
+                          <Route path="/success" element={<Success />} />
+                          <Route path="/cancel" element={<Cancel />} />
+                          
+                          {/* Legal routes */}
+                          <Route path="/terms" element={<Terms />} />
+                          <Route path="/privacy" element={<Privacy />} />
+                          <Route path="/data-safety" element={<DataSafety />} />
+                          <Route path="/account-delete" element={<AccountDelete />} />
+                          
+                          {/* Fallback route - IMPORTANT: This catches all unmatched routes */}
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                        
+                        {/* Mobile navigation bar */}
+                        <MobileNavBar />
+                        
+                        {/* Global toast notifications */}
+                        <Toaster 
+                          position="top-right"
+                          expand={false}
+                          richColors
+                          closeButton
+                        />
+                      </div>
+                    </PageTrackingProvider>
                   </GuestModeProvider>
                 </AuthProvider>
               </Router>
