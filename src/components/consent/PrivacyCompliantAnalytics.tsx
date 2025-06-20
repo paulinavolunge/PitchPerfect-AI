@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { autoInitAnalytics, trackPageView, hasValidConsent } from '@/utils/analytics';
+import { autoInitAnalytics, trackPageView, hasValidConsent, checkAnalyticsConnection } from '@/utils/analytics';
 
 export const PrivacyCompliantAnalytics = () => {
   useEffect(() => {
@@ -9,25 +9,25 @@ export const PrivacyCompliantAnalytics = () => {
     // Auto-initialize analytics if consent exists
     autoInitAnalytics();
     
-    // Track initial page view if analytics is ready
+    // Track initial page view if analytics is ready and consent is valid
     if (hasValidConsent()) {
       const currentPath = window.location.pathname + window.location.search;
       console.log('📄 PrivacyCompliantAnalytics: Tracking initial page view:', currentPath);
-      trackPageView(currentPath);
+      
+      // Delay page view tracking to ensure analytics is loaded
+      setTimeout(() => {
+        trackPageView(currentPath);
+      }, 1500);
     }
     
-    // Set up global function for consent banner
-    window.loadAnalytics = () => {
-      console.log('🔧 PrivacyCompliantAnalytics: loadAnalytics called');
-      if (hasValidConsent()) {
-        autoInitAnalytics();
-        const currentPath = window.location.pathname + window.location.search;
-        trackPageView(currentPath);
-      }
-    };
+    // Set up debug check
+    setTimeout(() => {
+      console.log('🔍 PrivacyCompliantAnalytics: Running connection check...');
+      checkAnalyticsConnection();
+    }, 3000);
     
     return () => {
-      delete window.loadAnalytics;
+      console.log('🔧 PrivacyCompliantAnalytics: Component unmounting');
     };
   }, []);
 

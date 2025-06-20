@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { X, Shield, Cookie } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { setAnalyticsConsent } from '@/utils/analytics';
 
 interface ConsentPreferences {
   analytics: boolean;
@@ -25,25 +25,30 @@ export const ConsentBanner: React.FC = () => {
     if (!consent) {
       setShowBanner(true);
     }
-  }, []);
-
-  // Trigger analytics when consent already exists
-  useEffect(() => {
-    const consent = localStorage.getItem('analytics-consent');
-    if (consent === 'true' && typeof window.loadAnalytics === 'function') {
-      window.loadAnalytics();
+    
+    // Check if analytics consent already exists and trigger analytics
+    const analyticsConsent = localStorage.getItem('analytics-consent');
+    if (analyticsConsent === 'true') {
+      console.log('🔧 ConsentBanner: Analytics consent found, triggering loadAnalytics');
+      if (typeof window.loadAnalytics === 'function') {
+        // Delay slightly to ensure DOM is ready
+        setTimeout(() => {
+          window.loadAnalytics!();
+        }, 100);
+      } else {
+        console.warn('⚠️ ConsentBanner: window.loadAnalytics not available');
+      }
     }
   }, []);
 
   const saveConsent = (consentData: ConsentPreferences) => {
+    console.log('🔧 ConsentBanner: Saving consent:', consentData);
+    
     localStorage.setItem('privacy-consent', JSON.stringify(consentData));
-    localStorage.setItem('analytics-consent', consentData.analytics.toString());
     localStorage.setItem('marketing-consent', consentData.marketing.toString());
     
-    // Trigger analytics loading if consented using global function
-    if (consentData.analytics && typeof window.loadAnalytics === 'function') {
-      window.loadAnalytics();
-    }
+    // Use the analytics utility function to set consent properly
+    setAnalyticsConsent(consentData.analytics);
     
     setShowBanner(false);
     setShowPreferences(false);

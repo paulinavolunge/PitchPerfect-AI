@@ -22,29 +22,23 @@ window.loadAnalytics = function() {
 
   // Load GA script if not already loaded
   if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
+    console.log('🔧 Loading GA4 script...');
     const gaScript = document.createElement('script') as HTMLScriptElement;
     gaScript.async = true;
     gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y';
+    gaScript.onload = () => {
+      console.log('✅ GA4 script loaded successfully');
+    };
+    gaScript.onerror = () => {
+      console.error('❌ Failed to load GA4 script');
+    };
     document.head.appendChild(gaScript);
   }
 
-  // Load GTM if not already loaded
-  if (!document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
-    (function(w,d,s,l,i){
-      w[l]=w[l]||[];
-      w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
-      const f=d.getElementsByTagName(s)[0];
-      const j=d.createElement(s) as HTMLScriptElement;
-      const dl=l!='dataLayer'?'&l='+l:'';
-      j.async=true;
-      j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-      f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-XXXXXXX');
-  }
-
-  // Configure GA4
+  // Configure GA4 after script loads
   setTimeout(() => {
     if (window.gtag) {
+      console.log('🔧 Configuring GA4...');
       window.gtag('js', new Date());
       window.gtag('config', 'G-HVCRJT504Y', {
         debug_mode: true,
@@ -54,11 +48,15 @@ window.loadAnalytics = function() {
         allow_ad_personalization_signals: false
       });
       
+      console.log('✅ GA4 configured successfully');
+      
       // Track current page
       const currentPath = window.location.pathname + window.location.search;
       trackPageView(currentPath);
+    } else {
+      console.error('❌ gtag function not available after script load');
     }
-  }, 500);
+  }, 1000);
 };
 
 // Initialize Google Analytics with debug mode and consent validation
@@ -73,13 +71,14 @@ export const initGA = () => {
     }
 
     // Check if already initialized to prevent duplicate initialization
-    if (window.dataLayer && window.gtag) {
+    if (window.dataLayer && window.gtag && document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
       console.log('✅ Analytics: Already initialized');
       return;
     }
 
     // Use the global loadAnalytics function
     if (typeof window.loadAnalytics === 'function') {
+      console.log('🔧 Analytics: Calling global loadAnalytics function');
       window.loadAnalytics();
     } else {
       console.warn('⚠️ Analytics: Global loadAnalytics function not available');
@@ -90,7 +89,7 @@ export const initGA = () => {
     // Test connection
     setTimeout(() => {
       checkAnalyticsConnection();
-    }, 1000);
+    }, 2000);
     
   } catch (error) {
     console.error('❌ Analytics: Error during initialization:', error);
@@ -135,6 +134,7 @@ export const setAnalyticsConsent = (granted: boolean) => {
     
     // Initialize analytics immediately after consent using global function
     if (typeof window.loadAnalytics === 'function') {
+      console.log('🔧 Analytics: Triggering loadAnalytics after consent');
       window.loadAnalytics();
     }
   } else {
@@ -165,7 +165,7 @@ export const trackPageView = (path: string) => {
         } else {
           console.error('❌ Analytics: Still not initialized after retry');
         }
-      }, 500);
+      }, 1500);
       return;
     }
     
@@ -178,8 +178,8 @@ export const trackPageView = (path: string) => {
     
     // Send pageview to GA4
     window.gtag('event', 'page_view', pageData);
+    console.log('✅ Analytics: Page view tracked successfully:', pageData);
     
-    console.log('✅ Analytics: Page view tracked successfully:', path);
   } catch (error) {
     console.error('❌ Analytics: Error tracking page view:', error);
   }
@@ -210,8 +210,8 @@ export const trackEvent = (
     
     // Send to GA4
     window.gtag('event', eventName, enhancedParams);
-    
     console.log('✅ Analytics: Event tracked successfully:', eventName, enhancedParams);
+    
   } catch (error) {
     console.error(`❌ Analytics: Error tracking event ${eventName}:`, error);
   }
@@ -238,6 +238,7 @@ export const checkAnalyticsConnection = () => {
       gtmLoaded: typeof window.dataLayer !== 'undefined',
       ga4Loaded: typeof window.gtag === 'function',
       consentValid: hasValidConsent(),
+      scriptLoaded: !!document.querySelector('script[src*="googletagmanager.com/gtag/js"]'),
       timestamp: new Date().toISOString()
     };
     
@@ -260,6 +261,7 @@ export const checkAnalyticsConnection = () => {
       gtmLoaded: false,
       ga4Loaded: false,
       consentValid: false,
+      scriptLoaded: false,
       error: error
     };
   }
@@ -283,6 +285,6 @@ declare global {
     dataLayer: any[];
     gtag: (command: string, ...args: any[]) => void;
     fbq: any;
-    loadAnalytics?: () => void; // Made optional to match actual usage
+    loadAnalytics?: () => void;
   }
 }
