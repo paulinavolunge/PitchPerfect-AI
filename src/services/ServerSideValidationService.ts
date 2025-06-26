@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface FileValidationResult {
@@ -41,6 +40,7 @@ export class ServerSideValidationService {
         };
       }
 
+      // Safely cast the JSON response to our interface
       return data as FileValidationResult;
     } catch (error) {
       console.error('File validation service error:', error);
@@ -72,6 +72,7 @@ export class ServerSideValidationService {
         };
       }
 
+      // Safely cast the JSON response to our interface
       return data as VoiceInputValidationResult;
     } catch (error) {
       console.error('Voice input validation service error:', error);

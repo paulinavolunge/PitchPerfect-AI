@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from 'react';
 import { AccessibleButton } from '@/components/ui/accessible-button';
 import { AccessibleProgress } from '@/components/ui/accessible-progress';
@@ -61,7 +60,7 @@ export const AccessibleCallUploader: React.FC<AccessibleCallUploaderProps> = ({ 
     setUploadError(null);
   }, []);
 
-  const validateAndSetFile = useCallback((selectedFile: File | null) => {
+  const validateAndSetFile = useCallback(async (selectedFile: File | null) => {
     if (!selectedFile) {
       resetState();
       return;
@@ -71,8 +70,8 @@ export const AccessibleCallUploader: React.FC<AccessibleCallUploaderProps> = ({ 
     setValidationError(null);
     announceToScreenReader('Validating file...');
     
-    setTimeout(() => {
-      const validation = fileValidator.validateFile(selectedFile);
+    try {
+      const validation = await fileValidator.validateFile(selectedFile);
       
       if (validation.isValid) {
         setFile(selectedFile);
@@ -89,7 +88,13 @@ export const AccessibleCallUploader: React.FC<AccessibleCallUploaderProps> = ({ 
         setFile(null);
         announceToScreenReader(`Validation failed: ${errorMessage}`, 'assertive');
       }
-    }, 500);
+    } catch (error) {
+      const errorMessage = 'Validation failed';
+      setValidationError(errorMessage);
+      setUploadStatus('error');
+      setFile(null);
+      announceToScreenReader(`Validation failed: ${errorMessage}`, 'assertive');
+    }
   }, [fileValidator, toast, resetState]);
   
   const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {

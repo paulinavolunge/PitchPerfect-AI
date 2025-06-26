@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, AlertCircle } from 'lucide-react';
@@ -49,7 +48,7 @@ export const CallUploader: React.FC<CallUploaderProps> = ({ onCallUploaded }) =>
     setUploadError(null);
   }, []);
 
-  const validateAndSetFile = useCallback((selectedFile: File | null) => {
+  const validateAndSetFile = useCallback(async (selectedFile: File | null) => {
     if (!selectedFile) {
       resetState();
       return;
@@ -58,9 +57,8 @@ export const CallUploader: React.FC<CallUploaderProps> = ({ onCallUploaded }) =>
     setUploadStatus('validating');
     setValidationError(null);
     
-    // Simulate validation delay for better UX
-    setTimeout(() => {
-      const validation = fileValidator.validateFile(selectedFile);
+    try {
+      const validation = await fileValidator.validateFile(selectedFile);
       
       if (validation.isValid) {
         setFile(selectedFile);
@@ -74,7 +72,11 @@ export const CallUploader: React.FC<CallUploaderProps> = ({ onCallUploaded }) =>
         setUploadStatus('error');
         setFile(null);
       }
-    }, 500);
+    } catch (error) {
+      setValidationError('Validation failed');
+      setUploadStatus('error');
+      setFile(null);
+    }
   }, [fileValidator, toast, resetState]);
   
   const handleFileChange = useCallback((selectedFile: File | null) => {
