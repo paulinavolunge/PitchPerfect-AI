@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface FileValidationResult {
@@ -41,7 +42,18 @@ export class ServerSideValidationService {
       }
 
       // Safely cast the JSON response to our interface
-      return data as FileValidationResult;
+      const result = data as unknown as FileValidationResult;
+      
+      // Validate the response structure
+      if (typeof result !== 'object' || result === null || typeof result.valid !== 'boolean') {
+        console.error('Invalid response structure from server validation');
+        return {
+          valid: false,
+          error: 'Invalid server response'
+        };
+      }
+
+      return result;
     } catch (error) {
       console.error('File validation service error:', error);
       return {
@@ -73,7 +85,18 @@ export class ServerSideValidationService {
       }
 
       // Safely cast the JSON response to our interface
-      return data as VoiceInputValidationResult;
+      const result = data as unknown as VoiceInputValidationResult;
+      
+      // Validate the response structure
+      if (typeof result !== 'object' || result === null || typeof result.valid !== 'boolean') {
+        console.error('Invalid response structure from server validation');
+        return {
+          valid: false,
+          error: 'Invalid server response'
+        };
+      }
+
+      return result;
     } catch (error) {
       console.error('Voice input validation service error:', error);
       return {
