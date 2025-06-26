@@ -1,4 +1,6 @@
 
+import { ServerSideValidationService } from '@/services/ServerSideValidationService';
+
 export interface FileValidationResult {
   isValid: boolean;
   error?: string;
@@ -7,6 +9,7 @@ export interface FileValidationResult {
 export interface FileValidationConfig {
   allowedMimeTypes: string[];
   maxFileSizeBytes: number;
+  enableServerSideValidation: boolean;
 }
 
 export const DEFAULT_VALIDATION_CONFIG: FileValidationConfig = {
@@ -20,7 +23,8 @@ export const DEFAULT_VALIDATION_CONFIG: FileValidationConfig = {
     'audio/mp4',
     'audio/aac'
   ],
-  maxFileSizeBytes: 50 * 1024 * 1024 // 50MB
+  maxFileSizeBytes: 50 * 1024 * 1024, // 50MB
+  enableServerSideValidation: true
 };
 
 export class FileValidator {
@@ -30,7 +34,38 @@ export class FileValidator {
     this.config = config;
   }
 
-  validateFile(file: File): FileValidationResult {
+  async validateFile(file: File, userId?: string): Promise<FileValidationResult> {
+    // Client-side validation first
+    const clientValidation = this.validateFileClientSide(file);
+    if (!clientValidation.isValid) {
+      return clientValidation;
+    }
+
+    // Server-side validation if enabled
+    if (this.config.enableServerSideValidation) {
+      try {
+        const serverValidation = await ServerSideValidationService.validateFileUpload(
+          file.name,
+          file.size,
+          file.type,
+          userId
+        );
+
+        return {
+          isValid: serverValidation.valid,
+          error: serverValidation.error
+        };
+      } catch (error) {
+        console.error('Server-side validation failed:', error);
+        // Fall back to client-side validation if server fails
+        return clientValidation;
+      }
+    }
+
+    return clientValidation;
+  }
+
+  private validateFileClientSide(file: File): FileValidationResult {
     // Check file type
     if (!this.config.allowedMimeTypes.includes(file.type)) {
       return {

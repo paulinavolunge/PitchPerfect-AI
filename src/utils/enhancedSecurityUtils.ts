@@ -1,5 +1,6 @@
 
 import { EnhancedSecurityService } from '@/services/EnhancedSecurityService';
+import { ServerSideValidationService } from '@/services/ServerSideValidationService';
 
 // Re-export commonly used security utilities for backward compatibility
 export const {
@@ -10,34 +11,69 @@ export const {
   secureDeductCredits
 } = EnhancedSecurityService;
 
-// Additional utility functions
-export const sanitizeErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
-    // Remove sensitive information from error messages
-    const sanitized = error.message
-      .replace(/password|secret|key|token/gi, '[REDACTED]')
-      .replace(/\b\d{4,}\b/g, '[NUMBER]') // Remove long numbers (could be IDs)
-      .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]'); // Remove emails
-    
-    return sanitized;
+// Enhanced error message sanitization using server-side service
+export const sanitizeErrorMessage = ServerSideValidationService.sanitizeErrorMessage;
+
+// Enhanced file validation with server-side verification
+export const validateFileWithServerSideCheck = async (
+  file: File,
+  userId?: string
+): Promise<{ valid: boolean; error?: string }> => {
+  // Client-side pre-validation
+  const clientValidation = EnhancedSecurityService.validateAudioFile(file);
+  if (!clientValidation.valid) {
+    return clientValidation;
   }
-  
-  return 'An unexpected error occurred';
+
+  // Server-side validation
+  try {
+    const serverValidation = await ServerSideValidationService.validateFileUpload(
+      file.name,
+      file.size,
+      file.type,
+      userId
+    );
+    return serverValidation;
+  } catch (error) {
+    return {
+      valid: false,
+      error: sanitizeErrorMessage(error)
+    };
+  }
 };
 
+// Enhanced voice input validation with server-side verification
+export const validateVoiceInputWithServerSideCheck = async (
+  input: string,
+  userId?: string
+): Promise<{ valid: boolean; sanitizedInput?: string; error?: string }> => {
+  try {
+    // Server-side validation and sanitization
+    const serverValidation = await ServerSideValidationService.validateVoiceInput(input, userId);
+    return serverValidation;
+  } catch (error) {
+    return {
+      valid: false,
+      error: sanitizeErrorMessage(error)
+    };
+  }
+};
+
+// Security monitoring utilities
+export const performSecurityHealthCheck = ServerSideValidationService.performSecurityHealthCheck;
+export const cleanupExpiredRateLimits = ServerSideValidationService.cleanupExpiredRateLimits;
+
+// Create secure form data with enhanced validation
 export const createSecureFormData = (data: Record<string, any>): FormData => {
   const formData = new FormData();
   
   Object.entries(data).forEach(([key, value]) => {
     if (typeof value === 'string') {
+      // Use client-side sanitization as fallback, server-side validation will be primary
       formData.append(key, EnhancedSecurityService.sanitizeVoiceInput(value));
     } else if (value instanceof File) {
-      const validation = EnhancedSecurityService.validateAudioFile(value);
-      if (validation.valid) {
-        formData.append(key, value);
-      } else {
-        throw new Error(validation.error);
-      }
+      // File validation will be handled separately with server-side check
+      formData.append(key, value);
     } else {
       formData.append(key, String(value));
     }

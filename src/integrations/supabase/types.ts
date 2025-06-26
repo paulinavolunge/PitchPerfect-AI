@@ -189,6 +189,36 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_summary: {
+        Row: {
+          created_at: string
+          date: string
+          event_count: number | null
+          event_type: string
+          id: string
+          severity_level: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          event_count?: number | null
+          event_type: string
+          id?: string
+          severity_level?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          event_count?: number | null
+          event_type?: string
+          id?: string
+          severity_level?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
@@ -405,6 +435,10 @@ export type Database = {
         Args: { p_user_id: string; p_required_role?: string }
         Returns: boolean
       }
+      cleanup_expired_rate_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       deduct_credits_and_log_usage: {
         Args: {
           p_user_id: string
@@ -435,6 +469,19 @@ export type Database = {
       }
       secure_deduct_credits_and_log_usage: {
         Args: { p_user_id: string; p_feature_used: string }
+        Returns: Json
+      }
+      security_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      validate_file_upload: {
+        Args: {
+          p_file_name: string
+          p_file_size: number
+          p_file_type: string
+          p_user_id?: string
+        }
         Returns: Json
       }
       validate_voice_input: {
