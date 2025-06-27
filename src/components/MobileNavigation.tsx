@@ -81,7 +81,12 @@ export const MobileNavigation: React.FC = () => {
                   </PrimaryButton>
                 </Link>
                 <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
-                  <PrimaryButton variant="primary" fullWidth size="lg">
+                  <PrimaryButton 
+                    variant="primary" 
+                    fullWidth 
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+                  >
                     Sign Up Free
                   </PrimaryButton>
                 </Link>

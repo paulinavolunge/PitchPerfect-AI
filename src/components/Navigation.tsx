@@ -89,7 +89,11 @@ export const Navigation: React.FC = () => {
                   </PrimaryButton>
                 </Link>
                 <Link to="/signup">
-                  <PrimaryButton variant="primary" size="sm">
+                  <PrimaryButton 
+                    variant="primary" 
+                    size="sm"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                  >
                     Sign Up Free
                   </PrimaryButton>
                 </Link>
