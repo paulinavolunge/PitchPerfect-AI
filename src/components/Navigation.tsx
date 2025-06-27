@@ -92,7 +92,7 @@ export const Navigation: React.FC = () => {
                   <PrimaryButton 
                     variant="primary" 
                     size="sm"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 ring-2 ring-green-400/20"
                   >
                     Sign Up Free
                   </PrimaryButton>
