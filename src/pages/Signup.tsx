@@ -1,11 +1,13 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, User, Loader2, AlertCircle, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ const Signup = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -27,6 +30,16 @@ const Signup = () => {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  // Auto-dismiss Google error after 8 seconds
+  useEffect(() => {
+    if (googleError) {
+      const timer = setTimeout(() => {
+        setGoogleError(null);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [googleError]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -86,6 +99,7 @@ const Signup = () => {
 
   const handleGoogleSignup = async () => {
     setIsGoogleLoading(true);
+    setGoogleError(null);
     
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -96,17 +110,15 @@ const Signup = () => {
       });
 
       if (error) {
-        toast({
-          title: "Google Signup Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        throw error;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google signup error:', error);
+      setGoogleError(error.message || 'Google authentication is temporarily unavailable. Please try email signup instead.');
+      
       toast({
-        title: "Error",
-        description: "Failed to sign up with Google. Please try again.",
+        title: "Google Signup Issue",
+        description: "Please try email signup or contact support if the problem persists.",
         variant: "destructive",
       });
     } finally {
@@ -123,6 +135,22 @@ const Signup = () => {
             Back to Home
           </Link>
         </div>
+
+        {googleError && (
+          <Alert className="mb-6 bg-yellow-50 border-yellow-200 relative" aria-live="assertive">
+            <AlertCircle className="h-5 w-5 text-yellow-500" />
+            <AlertDescription className="text-yellow-700 pr-8">
+              <strong>Google Signup Issue:</strong> {googleError}
+            </AlertDescription>
+            <button
+              onClick={() => setGoogleError(null)}
+              className="absolute top-3 right-3 text-yellow-600 hover:text-yellow-800"
+              aria-label="Dismiss error"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </Alert>
+        )}
 
         <Card>
           <CardHeader className="text-center">

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase, getRedirectUrl } from '@/integrations/supabase/client';
@@ -30,6 +31,7 @@ const Login = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema)
@@ -82,7 +84,7 @@ const Login = () => {
     const errorDescription = searchParams.get('error_description');
     if (error) {
       console.error('OAuth error:', error, errorDescription);
-      setLoginError(errorDescription || 'Authentication failed. Please try again.');
+      setGoogleError(errorDescription || 'Google authentication failed. Please try again or use email login.');
     }
   }, [location]);
 
@@ -94,6 +96,7 @@ const Login = () => {
         
         if (event === 'SIGNED_IN' && session) {
           setLoginError(null);
+          setGoogleError(null);
           
           // Track successful login
           trackEvent('login_success', {
@@ -108,6 +111,7 @@ const Login = () => {
 
         } else if (event === 'SIGNED_OUT') {
           setLoginError(null);
+          setGoogleError(null);
         }
       }
     );
@@ -133,6 +137,15 @@ const Login = () => {
       return () => clearTimeout(timer);
     }
   }, [verificationMessage]);
+
+  useEffect(() => {
+    if (googleError) {
+      const timer = setTimeout(() => {
+        setGoogleError(null);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [googleError]);
 
   const handleEmailLogin = async (data: LoginForm) => {
     console.log('Login: Starting email login');
@@ -174,6 +187,7 @@ const Login = () => {
     console.log('Login: Starting Google login');
     setIsSubmitting(true);
     setLoginError(null);
+    setGoogleError(null);
 
     try {
       const redirectTo = getRedirectUrl();
@@ -191,10 +205,10 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error('Google login error:', error);
-      setLoginError(error.message || 'Failed to sign in with Google');
+      setGoogleError(error.message || 'Google authentication is temporarily unavailable. Please try email login instead.');
       
       toast.error("Google login failed", {
-        description: error.message || 'Please try again.',
+        description: 'Please try email login or contact support if the problem persists.',
       });
     } finally {
       setIsSubmitting(false);
@@ -238,6 +252,22 @@ const Login = () => {
               <button
                 onClick={() => setLoginError(null)}
                 className="absolute top-3 right-3 text-red-600 hover:text-red-800"
+                aria-label="Dismiss error"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </Alert>
+          )}
+
+          {googleError && (
+            <Alert className="mb-6 bg-yellow-50 border-yellow-200 relative" aria-live="assertive">
+              <AlertCircle className="h-5 w-5 text-yellow-500" />
+              <AlertDescription className="text-yellow-700 pr-8">
+                <strong>Google Login Issue:</strong> {googleError}
+              </AlertDescription>
+              <button
+                onClick={() => setGoogleError(null)}
+                className="absolute top-3 right-3 text-yellow-600 hover:text-yellow-800"
                 aria-label="Dismiss error"
               >
                 <X className="h-4 w-4" />
