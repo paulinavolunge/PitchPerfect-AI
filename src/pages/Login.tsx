@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { supabase, getRedirectUrl } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -190,7 +190,7 @@ const Login = () => {
     setGoogleError(null);
 
     try {
-      const redirectTo = getRedirectUrl();
+      const redirectTo = `${window.location.origin}/login`;
       console.log('Login: Using redirect URL:', redirectTo);
 
       const { error } = await supabase.auth.signInWithOAuth({
