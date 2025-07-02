@@ -1,7 +1,7 @@
 import { salesMethodologies } from '../../data/salesMethodologies';
 import { objectionDetectionService, ObjectionType } from '../../../services/ObjectionDetectionService';
 import { ContentSafetyAnalyzer } from '@/utils/contentSafety';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Scenario {
   difficulty: string;
