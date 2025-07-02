@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MessageList from './chat/MessageList';
 import ChatInput from './chat/ChatInput';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { getScenarioIntro, generateAIResponse } from './chat/ChatLogic';
 import { useAuth } from '@/context/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
