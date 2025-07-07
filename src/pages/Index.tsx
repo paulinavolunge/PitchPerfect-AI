@@ -99,21 +99,22 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up-vibrant" style={{animationDelay: '0.4s'}}>
               <Button 
                 size="lg" 
-                className="vibrant-button group text-lg font-bold"
+                className="bg-gradient-to-r from-primary-600 via-primary-500 to-vibrant-blue-500 hover:from-primary-700 hover:via-primary-600 hover:to-vibrant-blue-600 text-white text-xl font-bold px-8 py-4 h-16 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 transform hover:scale-105 animate-pulse border-0 ring-4 ring-primary-200 hover:ring-primary-300"
                 onClick={handleGetStartedClick}
               >
-                <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
-                Start Free Practice
+                <Play className="h-6 w-6 mr-3 group-hover:scale-110 transition-transform" aria-hidden="true" />
+                Start Practicing Now - Free!
+                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </Button>
               
               <Button 
                 variant="outline" 
                 size="lg"
-                className="outline-button group text-lg"
+                className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 text-lg font-semibold px-6 py-4 h-16 hover:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                 onClick={handleWatchDemoClick}
               >
-                <ArrowRight className="h-5 w-5 mr-2 group-hover:translate-x-1 transition-transform" />
-                Watch Demo
+                <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" aria-hidden="true" />
+                Watch 2-Min Demo
               </Button>
             </div>
 

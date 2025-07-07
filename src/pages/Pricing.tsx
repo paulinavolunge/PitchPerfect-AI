@@ -171,30 +171,46 @@ const Pricing = () => {
         <main className="pt-24 pb-12">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <Badge className="mb-6 bg-white/80 text-navy border-sky-blue/30 backdrop-blur-sm shadow-soft">
-                <Sparkles className="h-4 w-4 mr-1" />
+              <Badge className="mb-6 bg-white/80 text-deep-navy border-primary-200 backdrop-blur-sm shadow-lg">
+                <Sparkles className="h-4 w-4 mr-1" aria-hidden="true" />
                 Flexible Pricing Plans
               </Badge>
               
-              <h1 className="text-4xl md:text-5xl font-bold text-navy mb-6">
-                Choose Your <span className="text-primary">Practice Plan</span>
+              <h1 className="text-4xl md:text-5xl font-bold text-deep-navy mb-6">
+                Choose Your <span className="text-primary-600">Practice Plan</span>
               </h1>
-              <p className="text-xl text-navy/70 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-xl text-deep-navy/70 max-w-2xl mx-auto leading-relaxed mb-8">
                 Start improving your sales pitch today with AI-powered feedback and analysis
               </p>
               
+              {/* Prominent CTA Above the Fold */}
+              <div className="mb-8">
+                <Button 
+                  size="lg"
+                  className="bg-gradient-to-r from-primary-600 via-primary-500 to-vibrant-blue-500 hover:from-primary-700 hover:via-primary-600 hover:to-vibrant-blue-600 text-white text-xl font-bold px-12 py-6 h-16 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 transform hover:scale-105 animate-pulse border-0 ring-4 ring-primary-200 hover:ring-primary-300"
+                  onClick={handleSignUpRedirect}
+                >
+                  <UserPlus className="h-6 w-6 mr-3" aria-hidden="true" />
+                  Start Free Trial Now
+                  <ArrowRight className="h-5 w-5 ml-3" aria-hidden="true" />
+                </Button>
+                <p className="text-sm text-deep-navy/60 mt-3 font-medium">
+                  🎯 Get 1 free AI analysis • No credit card required • Start in 30 seconds
+                </p>
+              </div>
+              
               {!user && (
-                <Alert className="max-w-2xl mx-auto mt-8 modern-card bg-primary/5 border-primary/20">
-                  <UserPlus className="h-5 w-5 text-primary" />
-                  <AlertDescription className="text-navy">
+                <Alert className="max-w-2xl mx-auto mt-8 bg-white/90 border-primary-200 shadow-lg backdrop-blur-sm">
+                  <UserPlus className="h-5 w-5 text-primary-600" aria-hidden="true" />
+                  <AlertDescription className="text-deep-navy">
                     <strong>New to PitchPerfect AI?</strong> Create a free account to get started with 1 free pitch analysis!
                     <div className="flex gap-3 mt-4 justify-center">
-                      <Button onClick={handleSignUpRedirect} className="soft-button">
-                        <UserPlus className="h-4 w-4 mr-2" />
+                      <Button onClick={handleSignUpRedirect} className="bg-primary-600 hover:bg-primary-700 text-white">
+                        <UserPlus className="h-4 w-4 mr-2" aria-hidden="true" />
                         Sign Up Free
                       </Button>
-                      <Button onClick={() => navigate('/login')} className="outline-button">
-                        <LogIn className="h-4 w-4 mr-2" />
+                      <Button onClick={() => navigate('/login')} variant="outline" className="border-primary-200 text-primary-700 hover:bg-primary-50">
+                        <LogIn className="h-4 w-4 mr-2" aria-hidden="true" />
                         Already have an account?
                       </Button>
                     </div>
@@ -239,7 +255,11 @@ const Pricing = () => {
                       <Button
                         onClick={() => user ? handlePurchase(plan.id) : navigate('/signup')}
                         disabled={loading === plan.id}
-                        className={`w-full ${plan.popular ? 'soft-button' : 'outline-button'} group`}
+                        className={`w-full h-12 text-lg font-semibold transition-all duration-300 ${
+                          plan.popular 
+                            ? 'bg-gradient-to-r from-primary-600 to-vibrant-blue-500 hover:from-primary-700 hover:to-vibrant-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105' 
+                            : 'border-2 border-primary-400 text-primary-700 hover:bg-primary-50 hover:border-primary-500 bg-white'
+                        } group`}
                       >
                         {loading === plan.id ? (
                           <div className="flex items-center">
@@ -250,15 +270,16 @@ const Pricing = () => {
                           <>
                             {user ? (
                               <>
-                                <Zap className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                                <Zap className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" aria-hidden="true" />
                                 {plan.buttonText}
                               </>
                             ) : (
                               <>
-                                <UserPlus className="h-4 w-4 mr-2" />
+                                <UserPlus className="h-5 w-5 mr-2" aria-hidden="true" />
                                 {plan.buttonText}
                               </>
                             )}
+                            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                           </>
                         )}
                       </Button>
@@ -299,7 +320,7 @@ const Pricing = () => {
                       <Button
                         onClick={() => user ? handlePurchase(pack.id) : navigate('/signup')}
                         disabled={loading === pack.id}
-                        className="w-full outline-button group"
+                        className="w-full h-11 border-2 border-primary-400 text-primary-700 hover:bg-primary-50 hover:border-primary-500 bg-white font-semibold transition-all duration-300 group"
                       >
                         {loading === pack.id ? (
                           <div className="flex items-center">
@@ -310,15 +331,16 @@ const Pricing = () => {
                           <>
                             {user ? (
                               <>
-                                <Zap className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                                <Zap className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" aria-hidden="true" />
                                 Buy Credits
                               </>
                             ) : (
                               <>
-                                <UserPlus className="h-4 w-4 mr-2" />
+                                <UserPlus className="h-4 w-4 mr-2" aria-hidden="true" />
                                 Sign Up to Buy
                               </>
                             )}
+                            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                           </>
                         )}
                       </Button>
