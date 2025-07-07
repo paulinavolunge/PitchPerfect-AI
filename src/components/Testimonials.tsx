@@ -90,16 +90,17 @@ const Testimonials = () => {
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl font-bold mb-4 text-brand-dark">What Our Users Say</h2>
-          <p className="text-lg text-brand-dark/70 mb-10">
+          <h2 className="text-3xl font-bold mb-4 text-deep-navy">What Our Users Say</h2>
+          <p className="text-lg text-deep-navy/70 mb-10">
             Don't just take our word for it - hear from sales professionals who have transformed their pitches
           </p>
           
           <Link to="/signup" className="inline-block mb-6">
             <Button 
-              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg touch-target animate-pulse-slow"
+              className="bg-primary-600 hover:bg-primary-700 text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg touch-target"
+              aria-label="Start your free trial now"
             >
-              Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} />
+              Try Free Now <Rocket className="group-hover:translate-x-1 transition-transform" size={isMobile ? 20 : 18} aria-hidden="true" />
             </Button>
           </Link>
         </div>
@@ -110,19 +111,19 @@ const Testimonials = () => {
               variant="outline"
               size="icon"
               onClick={() => handleNavigation('prev')}
-              className="bg-white shadow-lg border hover:bg-gray-50 touch-target"
-              aria-label="Previous testimonial"
+              className="bg-white shadow-lg border hover:bg-primary-50 hover:border-primary-200 touch-target"
+              aria-label="Show previous testimonials"
             >
-              <ArrowLeft size={24} />
+              <ArrowLeft size={24} aria-hidden="true" />
             </Button>
             <Button
               variant="outline"
               size="icon"
               onClick={() => handleNavigation('next')}
-              className="bg-white shadow-lg border hover:bg-gray-50 touch-target"
-              aria-label="Next testimonial"
+              className="bg-white shadow-lg border hover:bg-primary-50 hover:border-primary-200 touch-target"
+              aria-label="Show next testimonials"
             >
-              <ArrowRight size={24} />
+              <ArrowRight size={24} aria-hidden="true" />
             </Button>
           </div>
           
@@ -137,25 +138,30 @@ const Testimonials = () => {
                 className="grid grid-cols-1 md:grid-cols-3 gap-8"
               >
                 {visibleTestimonials.map((testimonial, index) => (
-                  <Card key={index} className="border-none shadow-lg">
-                    <CardContent className="p-8">
-                      <div className="flex items-center mb-6">
-                        <Avatar className="h-12 w-12 border-2 border-brand-green/20">
-                          <AvatarImage src={testimonial.avatar} alt={testimonial.author} />
-                          <AvatarFallback>{testimonial.author.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                      </div>
-                      
-                      <div className="mb-6 text-4xl text-brand-green">"</div>
-                      <p className="mb-6 text-brand-dark/80 italic">
-                        {testimonial.quote}
-                      </p>
-                      <div>
-                        <p className="font-medium text-brand-dark">{testimonial.author}</p>
-                        <p className="text-sm text-brand-dark/70">{testimonial.role}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    <Card key={index} className="border-none shadow-lg" role="article" aria-labelledby={`testimonial-${index}-author`}>
+                      <CardContent className="p-8">
+                        <div className="flex items-center mb-6">
+                          <Avatar className="h-12 w-12 border-2 border-primary-200">
+                            <AvatarImage 
+                              src={testimonial.avatar} 
+                              alt={`Profile photo of ${testimonial.author}`}
+                            />
+                            <AvatarFallback className="bg-primary-100 text-primary-700 font-semibold">
+                              {testimonial.author.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        
+                        <div className="mb-6 text-4xl text-primary-600" aria-hidden="true">"</div>
+                        <blockquote className="mb-6 text-deep-navy/80 italic">
+                          {testimonial.quote}
+                        </blockquote>
+                        <div>
+                          <p id={`testimonial-${index}-author`} className="font-medium text-deep-navy">{testimonial.author}</p>
+                          <p className="text-sm text-deep-navy/70">{testimonial.role}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                 ))}
               </motion.div>
             </AnimatePresence>
@@ -171,10 +177,11 @@ const Testimonials = () => {
                 setAutoRotate(false);
                 setTimeout(() => setAutoRotate(true), 10000);
               }}
-              className={`h-2 w-2 mx-1 rounded-full touch-target ${
-                currentIndex === idx ? 'bg-brand-green' : 'bg-gray-300'
+              className={`h-2 w-2 mx-1 rounded-full touch-target transition-colors ${
+                currentIndex === idx ? 'bg-primary-600' : 'bg-muted-foreground/30 hover:bg-primary-300'
               }`}
-              aria-label={`Go to testimonial ${idx + 1}`}
+              aria-label={`Show testimonials ${idx + 1} to ${Math.min(idx + displayCount, testimonials.length)}`}
+              aria-current={currentIndex === idx ? 'true' : 'false'}
             />
           ))}
         </div>

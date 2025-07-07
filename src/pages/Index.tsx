@@ -7,6 +7,8 @@ import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles } f
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PricingCTA from '@/components/PricingCTA';
+import InteractiveDemo from '@/components/InteractiveDemo';
+import Testimonials from '@/components/Testimonials';
 import { Helmet } from 'react-helmet-async';
 
 const Index = () => {
@@ -167,48 +169,11 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Interactive Demo Section */}
+        <InteractiveDemo />
+
         {/* Enhanced Testimonials */}
-        <section className="py-16 bg-gradient-to-r from-white to-vibrant-blue-50/50">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-deep-navy mb-4">
-                Trusted by Sales Professionals
-              </h2>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {[
-                {
-                  name: "Sarah Johnson",
-                  role: "Sales Manager", 
-                  content: "PitchPerfect AI helped me improve my closing rate by 35% in just 2 months. The feedback is incredibly detailed.",
-                  rating: 5
-                },
-                {
-                  name: "Mike Chen",
-                  role: "Account Executive",
-                  content: "Finally, a way to practice objection handling without bothering my colleagues. The AI responses are amazingly realistic.",
-                  rating: 5
-                }
-              ].map((testimonial, index) => (
-                <div key={index} className="vibrant-card p-8 card-hover">
-                  <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-deep-navy/80 mb-6 italic text-lg leading-relaxed font-medium">
-                    "{testimonial.content}"
-                  </p>
-                  <div>
-                    <p className="font-bold text-deep-navy text-lg">{testimonial.name}</p>
-                    <p className="text-deep-navy/60 font-medium">{testimonial.role}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <Testimonials />
 
         {/* CTA Section */}
         <section className="py-16">
