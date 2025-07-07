@@ -12,6 +12,7 @@ import VideoWalkthrough from '@/components/VideoWalkthrough';
 import Testimonials from '@/components/Testimonials';
 import TrustBadges from '@/components/TrustBadges';
 import CompanyLogos from '@/components/CompanyLogos';
+import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
 
 const Index = () => {
@@ -74,10 +75,14 @@ const Index = () => {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200">
+        <SkipLink href="#main-content">Skip to main content</SkipLink>
+        <SkipLink href="#features">Skip to features</SkipLink>
+        <SkipLink href="#testimonials">Skip to testimonials</SkipLink>
         <Navbar />
         
         {/* Hero Section with Enhanced Contrast */}
-        <section className="pt-24 pb-16 relative overflow-hidden">
+        <main>
+        <section id="main-content" className="pt-24 pb-16 relative overflow-hidden" role="main" aria-labelledby="hero-heading">
           {/* Enhanced floating background elements */}
           <div className="absolute top-20 left-10 w-72 h-72 bg-vibrant-blue-500/20 rounded-full blur-3xl animate-vibrant-float"></div>
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary-600/15 rounded-full blur-3xl animate-vibrant-float" style={{animationDelay: '1s'}}></div>
@@ -88,7 +93,7 @@ const Index = () => {
               AI-Powered Sales Training
             </Badge>
             
-            <h1 className="hero-text mb-6 animate-slide-up-vibrant font-extrabold">
+            <h1 id="hero-heading" className="hero-text mb-6 animate-slide-up-vibrant font-extrabold">
               Master Your Sales Pitch<br />
               <span className="text-vibrant-blue-500">with AI Practice</span>
             </h1>
@@ -145,10 +150,10 @@ const Index = () => {
         </section>
 
         {/* Features Section with Enhanced Cards */}
-        <section className="py-16 bg-white/70 backdrop-blur-sm">
+        <section id="features" className="py-16 bg-white/70 backdrop-blur-sm" aria-labelledby="features-heading">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-deep-navy mb-4">
+              <h2 id="features-heading" className="text-3xl md:text-4xl font-bold text-deep-navy mb-4">
                 Why Sales Professionals Choose PitchPerfect AI
               </h2>
               <p className="text-deep-navy/70 max-w-2xl mx-auto text-lg font-medium">
@@ -162,6 +167,15 @@ const Index = () => {
                   key={index} 
                   className="vibrant-card p-8 text-center cursor-pointer card-hover group md:p-6 sm:p-4"
                   onClick={feature.onClick}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Learn more about ${feature.title}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      feature.onClick();
+                    }
+                  }}
                 >
                   <div className="flex justify-center mb-6 group-hover:scale-110 transition-transform duration-300 md:mb-4">
                     <div className="p-4 bg-gradient-to-br from-vibrant-blue-100 to-vibrant-blue-200 rounded-2xl shadow-vibrant md:p-3">
@@ -184,7 +198,9 @@ const Index = () => {
         <CompanyLogos />
 
         {/* Enhanced Testimonials */}
-        <Testimonials />
+        <section id="testimonials">
+          <Testimonials />
+        </section>
 
         {/* Trust Badges Section */}
         <section className="py-12 bg-gradient-to-r from-gray-50 to-gray-100">
@@ -210,6 +226,7 @@ const Index = () => {
         </section>
 
         <Footer />
+        </main>
       </div>
     </>
   );

@@ -129,7 +129,7 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Accessibility Enhancements */
+/* Enhanced Accessibility Enhancements */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -146,11 +146,33 @@ body {
 .high-contrast {
   --background: 0 0% 100%;
   --foreground: 0 0% 0%;
-  --muted: 0 0% 90%;
-  --muted-foreground: 0 0% 20%;
-  --border: 0 0% 60%;
-  --primary: 220 100% 30%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 10%;
+  --border: 0 0% 40%;
+  --primary: 220 100% 25%;
   --primary-foreground: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+}
+
+.high-contrast * {
+  text-shadow: none !important;
+  box-shadow: 0 0 0 2px currentColor !important;
+}
+
+.high-contrast button,
+.high-contrast [role="button"] {
+  border: 3px solid currentColor !important;
+  font-weight: bold !important;
+}
+
+/* Font size adjustments */
+.font-large {
+  font-size: 1.125rem !important;
+}
+
+.font-xl {
+  font-size: 1.25rem !important;
 }
 
 /* Reduced motion */
@@ -160,17 +182,57 @@ body {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
-/* Focus styles */
+/* Enhanced focus styles */
 *:focus-visible {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
+  outline: 3px solid hsl(var(--primary)) !important;
+  outline-offset: 2px !important;
   border-radius: 4px;
+  box-shadow: 0 0 0 1px hsl(var(--background)), 0 0 0 4px hsl(var(--primary)) !important;
+}
+
+/* Improved button focus states */
+button:focus-visible,
+[role="button"]:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px hsl(var(--background)), 0 0 0 4px hsl(var(--primary)), 0 4px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Touch targets */
 .touch-target {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Skip links */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 12px 16px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  transition: top 0.3s ease;
+  font-weight: 600;
+  border: 2px solid transparent;
+}
+
+.skip-link:focus {
+  top: 6px;
+  border-color: hsl(var(--ring));
+}
+
+/* Improved link focus */
+a:focus-visible {
+  outline: 2px solid hsl(var(--primary)) !important;
+  outline-offset: 2px !important;
+  border-radius: 2px;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }

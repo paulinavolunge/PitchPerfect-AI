@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface AccessibilityContextType {
-  announceToScreenReader: (message: string) => void;
-  isHighContrast: boolean;
+  highContrast: boolean;
   reducedMotion: boolean;
-  setHighContrast: (enabled: boolean) => void;
+  fontSize: 'normal' | 'large' | 'xl';
+  toggleHighContrast: () => void;
+  toggleReducedMotion: () => void;
+  setFontSize: (size: 'normal' | 'large' | 'xl') => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -12,75 +14,31 @@ const AccessibilityContext = createContext<AccessibilityContextType | undefined>
 export const useAccessibility = () => {
   const context = useContext(AccessibilityContext);
   if (!context) {
-    throw new Error('useAccessibility must be used within AccessibilityProvider');
+    throw new Error('useAccessibility must be used within an AccessibilityProvider');
   }
   return context;
 };
 
-interface AccessibilityProviderProps {
-  children: React.ReactNode;
-}
-
-export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ children }) => {
-  const [isHighContrast, setIsHighContrast] = useState(false);
+export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [highContrast, setHighContrast] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xl'>('normal');
 
-  useEffect(() => {
-    // Check for user's motion preferences
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mediaQuery.matches);
+  const toggleHighContrast = () => setHighContrast(!highContrast);
+  const toggleReducedMotion = () => setReducedMotion(!reducedMotion);
+  const handleSetFontSize = (size: 'normal' | 'large' | 'xl') => setFontSize(size);
 
-    const handleChange = (e: MediaQueryListEvent) => {
-      setReducedMotion(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  useEffect(() => {
-    // Check for high contrast preferences
-    const mediaQuery = window.matchMedia('(prefers-contrast: high)');
-    setIsHighContrast(mediaQuery.matches);
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setIsHighContrast(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  const announceToScreenReader = (message: string) => {
-    const announcement = document.createElement('div');
-    announcement.setAttribute('aria-live', 'polite');
-    announcement.setAttribute('aria-atomic', 'true');
-    announcement.className = 'sr-only';
-    announcement.textContent = message;
-    
-    document.body.appendChild(announcement);
-    
-    setTimeout(() => {
-      document.body.removeChild(announcement);
-    }, 1000);
-  };
-
-  const setHighContrast = (enabled: boolean) => {
-    setIsHighContrast(enabled);
-    if (enabled) {
-      document.documentElement.classList.add('high-contrast');
-    } else {
-      document.documentElement.classList.remove('high-contrast');
-    }
+  const value = {
+    highContrast,
+    reducedMotion,
+    fontSize,
+    toggleHighContrast,
+    toggleReducedMotion,
+    setFontSize: handleSetFontSize,
   };
 
   return (
-    <AccessibilityContext.Provider value={{
-      announceToScreenReader,
-      isHighContrast,
-      reducedMotion,
-      setHighContrast
-    }}>
+    <AccessibilityContext.Provider value={value}>
       {children}
     </AccessibilityContext.Provider>
   );

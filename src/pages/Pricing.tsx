@@ -11,6 +11,7 @@ import { Check, Star, Zap, HelpCircle, Clock, ArrowRight, UserPlus, LogIn, Spark
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
 import MobilePricingCard from '@/components/mobile/MobilePricingCard';
 import CollapsibleSection from '@/components/mobile/CollapsibleSection';
@@ -172,8 +173,11 @@ const Pricing = () => {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-soft-blue-50 via-soft-blue-100 to-sky-blue">
+        <SkipLink href="#main-content">Skip to main content</SkipLink>
+        <SkipLink href="#subscription-plans">Skip to subscription plans</SkipLink>
+        <SkipLink href="#credit-packs">Skip to credit packs</SkipLink>
         <Navbar />
-        <main className="pt-24 pb-12">
+        <main id="main-content" className="pt-24 pb-12" role="main">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <Badge className="mb-6 bg-white/80 text-deep-navy border-primary-200 backdrop-blur-sm shadow-lg">
@@ -229,8 +233,8 @@ const Pricing = () => {
               )}
             </div>
 
-            <div className="mb-20">
-              <h2 className="text-3xl font-bold text-center text-navy mb-8 md:text-2xl sm:text-xl">Monthly Subscription Plans</h2>
+            <section id="subscription-plans" className="mb-20" aria-labelledby="subscription-heading">
+              <h2 id="subscription-heading" className="text-3xl font-bold text-center text-navy mb-8 md:text-2xl sm:text-xl">Monthly Subscription Plans</h2>
               
               {isMobile ? (
                 <div className="space-y-6 max-w-sm mx-auto">
@@ -320,10 +324,10 @@ const Pricing = () => {
                   ))}
                 </div>
               )}
-            </div>
+            </section>
 
-            <div className="mb-16">
-              <h2 className="text-3xl font-bold text-center text-navy mb-6 md:text-2xl sm:text-xl">Pay-As-You-Go Credit Packs</h2>
+            <section id="credit-packs" className="mb-16" aria-labelledby="credit-packs-heading">
+              <h2 id="credit-packs-heading" className="text-3xl font-bold text-center text-navy mb-6 md:text-2xl sm:text-xl">Pay-As-You-Go Credit Packs</h2>
               <div className="flex items-center justify-center gap-2 mb-8">
                 <Clock className="h-5 w-5 text-primary" />
                 <p className="text-navy/70 font-medium text-center sm:text-sm">Credits never expire. Use them anytime.</p>
@@ -381,7 +385,7 @@ const Pricing = () => {
                   </Card>
                 ))}
               </div>
-            </div>
+            </section>
 
             <div className="max-w-2xl mx-auto mb-16">
               <CollapsibleSection
