@@ -99,22 +99,24 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up-vibrant" style={{animationDelay: '0.4s'}}>
               <Button 
                 size="lg" 
-                className="bg-gradient-to-r from-primary-600 via-primary-500 to-vibrant-blue-500 hover:from-primary-700 hover:via-primary-600 hover:to-vibrant-blue-600 text-white text-xl font-bold px-8 py-4 h-16 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 transform hover:scale-105 animate-pulse border-0 ring-4 ring-primary-200 hover:ring-primary-300"
+                className="bg-gradient-to-r from-primary-600 via-primary-500 to-vibrant-blue-500 hover:from-primary-700 hover:via-primary-600 hover:to-vibrant-blue-600 text-white text-xl font-bold px-8 py-4 h-16 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 transform hover:scale-105 animate-pulse border-0 ring-4 ring-primary-200 hover:ring-primary-300 md:text-lg md:h-14 md:px-6 sm:text-base sm:h-12 sm:px-4"
                 onClick={handleGetStartedClick}
               >
-                <Play className="h-6 w-6 mr-3 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                Start Practicing Now - Free!
-                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                <Play className="h-6 w-6 mr-3 group-hover:scale-110 transition-transform md:h-5 md:w-5 md:mr-2 sm:h-4 sm:w-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Start Practicing Now - Free!</span>
+                <span className="sm:hidden">Start Free!</span>
+                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform md:h-4 md:w-4 sm:ml-1" aria-hidden="true" />
               </Button>
               
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 text-lg font-semibold px-6 py-4 h-16 hover:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 text-lg font-semibold px-6 py-4 h-16 hover:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm md:text-base md:h-14 md:px-4 sm:text-sm sm:h-12"
                 onClick={handleWatchDemoClick}
               >
-                <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                Watch 2-Min Demo
+                <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform md:h-4 md:w-4 sm:mr-1" aria-hidden="true" />
+                <span className="hidden sm:inline">Watch 2-Min Demo</span>
+                <span className="sm:hidden">Demo</span>
               </Button>
             </div>
 
@@ -151,18 +153,18 @@ const Index = () => {
               {features.map((feature, index) => (
                 <div 
                   key={index} 
-                  className="vibrant-card p-8 text-center cursor-pointer card-hover group"
+                  className="vibrant-card p-8 text-center cursor-pointer card-hover group md:p-6 sm:p-4"
                   onClick={feature.onClick}
                 >
-                  <div className="flex justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <div className="p-4 bg-gradient-to-br from-vibrant-blue-100 to-vibrant-blue-200 rounded-2xl shadow-vibrant">
+                  <div className="flex justify-center mb-6 group-hover:scale-110 transition-transform duration-300 md:mb-4">
+                    <div className="p-4 bg-gradient-to-br from-vibrant-blue-100 to-vibrant-blue-200 rounded-2xl shadow-vibrant md:p-3">
                       {feature.icon}
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-deep-navy mb-3">
+                  <h3 className="text-xl font-bold text-deep-navy mb-3 md:text-lg">
                     {feature.title}
                   </h3>
-                  <p className="text-deep-navy/70 leading-relaxed font-medium">
+                  <p className="text-deep-navy/70 leading-relaxed font-medium md:text-sm">
                     {feature.description}
                   </p>
                 </div>

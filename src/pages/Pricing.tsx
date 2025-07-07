@@ -12,12 +12,16 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Helmet } from 'react-helmet-async';
+import MobilePricingCard from '@/components/mobile/MobilePricingCard';
+import CollapsibleSection from '@/components/mobile/CollapsibleSection';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Pricing = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handlePurchase = async (productType: string) => {
     if (!user) {
@@ -220,107 +224,130 @@ const Pricing = () => {
             </div>
 
             <div className="mb-20">
-              <h2 className="text-3xl font-bold text-center text-navy mb-12">Monthly Subscription Plans</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                {subscriptionPlans.map((plan) => (
-                  <Card key={plan.id} className={`modern-card relative card-hover ${plan.popular ? 'scale-105 shadow-soft-xl border-primary/30' : ''}`}>
-                    {plan.popular && (
-                      <Badge className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-white shadow-soft">
-                        <Star className="h-4 w-4 mr-1" />
-                        Most Popular
-                      </Badge>
-                    )}
-                    
-                    <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} rounded-xl opacity-50`}></div>
-                    
-                    <CardHeader className="text-center relative z-10">
-                      <CardTitle className="text-2xl font-bold text-navy">
-                        {plan.name}
-                      </CardTitle>
-                      <div className="text-4xl font-bold text-primary mb-2">{plan.price}</div>
-                      <p className="text-navy/60">{plan.priceNote}</p>
-                      <p className="text-navy/70 mt-2">{plan.description}</p>
-                    </CardHeader>
+              <h2 className="text-3xl font-bold text-center text-navy mb-8 md:text-2xl sm:text-xl">Monthly Subscription Plans</h2>
+              
+              {isMobile ? (
+                <div className="space-y-6 max-w-sm mx-auto">
+                  {subscriptionPlans.map((plan) => (
+                    <MobilePricingCard
+                      key={plan.id}
+                      id={plan.id}
+                      name={plan.name}
+                      price={plan.price}
+                      priceNote={plan.priceNote}
+                      description={plan.description}
+                      features={plan.features}
+                      popular={plan.popular}
+                      buttonText={plan.buttonText}
+                      loading={loading === plan.id}
+                      onPurchase={() => user ? handlePurchase(plan.id) : navigate('/signup')}
+                      user={user}
+                      gradient={plan.gradient}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                  {subscriptionPlans.map((plan) => (
+                    <Card key={plan.id} className={`modern-card relative card-hover ${plan.popular ? 'scale-105 shadow-soft-xl border-primary/30' : ''}`}>
+                      {plan.popular && (
+                        <Badge className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-white shadow-soft">
+                          <Star className="h-4 w-4 mr-1" />
+                          Most Popular
+                        </Badge>
+                      )}
+                      
+                      <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} rounded-xl opacity-50`}></div>
+                      
+                      <CardHeader className="text-center relative z-10">
+                        <CardTitle className="text-2xl font-bold text-navy">
+                          {plan.name}
+                        </CardTitle>
+                        <div className="text-4xl font-bold text-primary mb-2">{plan.price}</div>
+                        <p className="text-navy/60">{plan.priceNote}</p>
+                        <p className="text-navy/70 mt-2">{plan.description}</p>
+                      </CardHeader>
 
-                    <CardContent className="relative z-10">
-                      <ul className="space-y-4 mb-8">
-                        {plan.features.map((feature, index) => (
-                          <li key={index} className="flex items-center">
-                            <Check className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-                            <span className="text-navy">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <CardContent className="relative z-10">
+                        <ul className="space-y-4 mb-8">
+                          {plan.features.map((feature, index) => (
+                            <li key={index} className="flex items-center">
+                              <Check className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                              <span className="text-navy">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
 
-                      <Button
-                        onClick={() => user ? handlePurchase(plan.id) : navigate('/signup')}
-                        disabled={loading === plan.id}
-                        className={`w-full h-12 text-lg font-semibold transition-all duration-300 ${
-                          plan.popular 
-                            ? 'bg-gradient-to-r from-primary-600 to-vibrant-blue-500 hover:from-primary-700 hover:to-vibrant-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105' 
-                            : 'border-2 border-primary-400 text-primary-700 hover:bg-primary-50 hover:border-primary-500 bg-white'
-                        } group`}
-                      >
-                        {loading === plan.id ? (
-                          <div className="flex items-center">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                            Processing...
-                          </div>
-                        ) : (
-                          <>
-                            {user ? (
-                              <>
-                                <Zap className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                                {plan.buttonText}
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="h-5 w-5 mr-2" aria-hidden="true" />
-                                {plan.buttonText}
-                              </>
-                            )}
-                            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        <Button
+                          onClick={() => user ? handlePurchase(plan.id) : navigate('/signup')}
+                          disabled={loading === plan.id}
+                          className={`w-full h-12 text-lg font-semibold transition-all duration-300 ${
+                            plan.popular 
+                              ? 'bg-gradient-to-r from-primary-600 to-vibrant-blue-500 hover:from-primary-700 hover:to-vibrant-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105' 
+                              : 'border-2 border-primary-400 text-primary-700 hover:bg-primary-50 hover:border-primary-500 bg-white'
+                          } group`}
+                        >
+                          {loading === plan.id ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                              Processing...
+                            </div>
+                          ) : (
+                            <>
+                              {user ? (
+                                <>
+                                  <Zap className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" aria-hidden="true" />
+                                  {plan.buttonText}
+                                </>
+                              ) : (
+                                <>
+                                  <UserPlus className="h-5 w-5 mr-2" aria-hidden="true" />
+                                  {plan.buttonText}
+                                </>
+                              )}
+                              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                            </>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mb-16">
-              <h2 className="text-3xl font-bold text-center text-navy mb-6">Pay-As-You-Go Credit Packs</h2>
+              <h2 className="text-3xl font-bold text-center text-navy mb-6 md:text-2xl sm:text-xl">Pay-As-You-Go Credit Packs</h2>
               <div className="flex items-center justify-center gap-2 mb-8">
                 <Clock className="h-5 w-5 text-primary" />
-                <p className="text-navy/70 font-medium">Credits never expire. Use them anytime.</p>
+                <p className="text-navy/70 font-medium text-center sm:text-sm">Credits never expire. Use them anytime.</p>
               </div>
               
               {!user && (
                 <Alert className="max-w-md mx-auto mb-8 modern-card bg-yellow-50 border-yellow-200">
                   <UserPlus className="h-4 w-4 text-yellow-600" />
-                  <AlertDescription className="text-yellow-800 text-center">
+                  <AlertDescription className="text-yellow-800 text-center text-sm">
                     <strong>Account Required:</strong> You need to sign up or log in to purchase credit packs.
                   </AlertDescription>
                 </Alert>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className={`${isMobile ? 'space-y-4 max-w-sm mx-auto' : 'grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto'}`}>
                 {creditPacks.map((pack) => (
                   <Card key={pack.id} className="modern-card card-hover">
                     <CardHeader className="text-center">
-                      <CardTitle className="text-xl font-bold text-navy">
+                      <CardTitle className={`font-bold text-navy ${isMobile ? 'text-lg' : 'text-xl'}`}>
                         {pack.name}
                       </CardTitle>
-                      <div className="text-3xl font-bold text-primary">{pack.price}</div>
-                      <p className="text-navy/70">{pack.description}</p>
+                      <div className={`font-bold text-primary ${isMobile ? 'text-2xl' : 'text-3xl'}`}>{pack.price}</div>
+                      <p className={`text-navy/70 ${isMobile ? 'text-sm' : ''}`}>{pack.description}</p>
                     </CardHeader>
 
                     <CardContent>
                       <Button
                         onClick={() => user ? handlePurchase(pack.id) : navigate('/signup')}
                         disabled={loading === pack.id}
-                        className="w-full h-11 border-2 border-primary-400 text-primary-700 hover:bg-primary-50 hover:border-primary-500 bg-white font-semibold transition-all duration-300 group"
+                        className={`w-full border-2 border-primary-400 text-primary-700 hover:bg-primary-50 hover:border-primary-500 bg-white font-semibold transition-all duration-300 group ${isMobile ? 'h-10 text-sm' : 'h-11'}`}
                       >
                         {loading === pack.id ? (
                           <div className="flex items-center">
@@ -351,42 +378,33 @@ const Pricing = () => {
             </div>
 
             <div className="max-w-2xl mx-auto mb-16">
-              <Card className="modern-card bg-gradient-to-r from-primary/5 to-sky-blue/10">
-                <CardContent className="p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <HelpCircle className="h-6 w-6 text-primary" />
-                    <h3 className="text-xl font-semibold text-navy">How Credits Work</h3>
+              <CollapsibleSection
+                title="How Credits Work"
+                icon={<HelpCircle className="h-5 w-5 text-primary" />}
+                className="bg-gradient-to-r from-primary/5 to-sky-blue/10"
+                defaultOpen={!isMobile}
+              >
+                <div className="space-y-4 text-navy/80">
+                  <div className="space-y-3">
+                    <p className="flex items-center gap-3">
+                      <span className="w-3 h-3 bg-primary rounded-full"></span>
+                      <strong>1 Roleplay Session (Text or Voice) = 1 Credit</strong>
+                    </p>
+                    <p className="flex items-center gap-3">
+                      <span className="w-3 h-3 bg-sky-blue rounded-full"></span>
+                      <strong>AI Voice + Feedback Session = 2–3 Credits</strong>
+                    </p>
+                    <p className="flex items-center gap-3">
+                      <span className="w-3 h-3 bg-primary rounded-full"></span>
+                      <strong>You can always buy more credits if you run out</strong>
+                    </p>
+                    <p className="flex items-center gap-3">
+                      <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                      <strong>Credits never expire - use them anytime</strong>
+                    </p>
                   </div>
-                  
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="credits-info">
-                      <AccordionTrigger className="text-left text-navy">
-                        💡 Credit Usage & Pricing
-                      </AccordionTrigger>
-                      <AccordionContent className="space-y-4 text-navy/80">
-                        <div className="space-y-3">
-                          <p className="flex items-center gap-3">
-                            <span className="w-3 h-3 bg-primary rounded-full"></span>
-                            <strong>1 Roleplay Session (Text or Voice) = 1 Credit</strong>
-                          </p>
-                          <p className="flex items-center gap-3">
-                            <span className="w-3 h-3 bg-sky-blue rounded-full"></span>
-                            <strong>AI Voice + Feedback Session = 2–3 Credits</strong>
-                          </p>
-                          <p className="flex items-center gap-3">
-                            <span className="w-3 h-3 bg-primary rounded-full"></span>
-                            <strong>You can always buy more credits if you run out</strong>
-                          </p>
-                          <p className="flex items-center gap-3">
-                            <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                            <strong>Credits never expire - use them anytime</strong>
-                          </p>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </CardContent>
-              </Card>
+                </div>
+              </CollapsibleSection>
             </div>
 
             <div className="text-center">
