@@ -14,6 +14,7 @@ import Footer from '@/components/Footer';
 import { Helmet } from 'react-helmet-async';
 import MobilePricingCard from '@/components/mobile/MobilePricingCard';
 import CollapsibleSection from '@/components/mobile/CollapsibleSection';
+import TrustBadges from '@/components/TrustBadges';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Pricing = () => {
@@ -201,6 +202,11 @@ const Pricing = () => {
                 <p className="text-sm text-deep-navy/60 mt-3 font-medium">
                   🎯 Get 1 free AI analysis • No credit card required • Start in 30 seconds
                 </p>
+                
+                {/* Trust indicators below CTA */}
+                <div className="mt-6">
+                  <TrustBadges variant="compact" className="justify-center" />
+                </div>
               </div>
               
               {!user && (

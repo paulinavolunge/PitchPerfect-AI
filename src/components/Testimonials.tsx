@@ -9,34 +9,46 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const testimonials = [
   {
-    quote: "PitchPerfect AI helped me increase my close rate by 27% in just three weeks. The feedback is incredibly specific and actionable.",
+    quote: "PitchPerfect AI helped me increase my close rate by 27% in just three weeks. The AI feedback is incredibly specific and actionable. It's like having a personal sales coach available 24/7.",
     author: "Sarah Johnson",
-    role: "Sales Executive, Tech Innovators Inc.",
-    avatar: "/lovable-uploads/1167785f-2451-4e85-a1ae-a2bf86c90a95.png"
+    role: "Senior Sales Executive, TechFlow Solutions",
+    avatar: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop&crop=face",
+    results: "27% increase in close rate"
   },
   {
-    quote: "As a sales manager, I've seen my team's performance skyrocket since implementing PitchPerfect AI into our training routine.",
+    quote: "As a sales manager, I've seen my team's performance skyrocket since implementing PitchPerfect AI. Our team revenue increased by 34% in the first quarter alone.",
     author: "Michael Chen",
-    role: "Sales Director, Growth Solutions",
-    avatar: "/lovable-uploads/255b0025-56b1-4a4a-b966-bb658c0c5a51.png"
+    role: "VP of Sales, Growth Dynamics",
+    avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=400&fit=crop&crop=face",
+    results: "34% revenue increase"
   },
   {
-    quote: "The AI feedback is like having a personal coach available 24/7. I practice every morning before my calls and it's been game-changing.",
+    quote: "The AI roleplay feature is game-changing. I practice handling objections every morning, and my confidence in sales calls has never been higher. Highly recommend!",
     author: "Jessica Patel",
-    role: "Account Manager, Swift Enterprise",
-    avatar: "/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png"
+    role: "Account Executive, Swift Enterprise",
+    avatar: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop&crop=face",
+    results: "2x more confident in calls"
   },
   {
-    quote: "My cold call success rate doubled after just two weeks of using PitchPerfect AI. The real-time feedback makes all the difference.",
+    quote: "My cold call success rate doubled after using PitchPerfect AI for just two weeks. The real-time feedback and voice analysis features are incredible.",
     author: "David Rodriguez",
-    role: "Business Development, Nexus Group",
-    avatar: "/lovable-uploads/1167785f-2451-4e85-a1ae-a2bf86c90a95.png"
+    role: "Business Development Manager, Nexus Corp",
+    avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=400&fit=crop&crop=face",
+    results: "2x cold call success rate"
   },
   {
-    quote: "Our entire sales team uses PitchPerfect AI daily. It's transformed our approach to customer conversations and boosted revenue.",
+    quote: "Our entire sales team uses PitchPerfect AI daily. It's transformed our approach to customer conversations and helped us achieve our quarterly goals ahead of schedule.",
     author: "Emma Wilson",
-    role: "VP of Sales, Future Technologies",
-    avatar: "/lovable-uploads/255b0025-56b1-4a4a-b966-bb658c0c5a51.png"
+    role: "Director of Sales Operations, Future Tech",
+    avatar: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop&crop=face",
+    results: "Goals achieved 3 weeks early"
+  },
+  {
+    quote: "The personalized coaching suggestions are spot-on. PitchPerfect AI identified exactly what I needed to improve and helped me close 3 major deals this month.",
+    author: "Robert Kim",
+    role: "Senior Account Manager, Innovate Solutions",
+    avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=400&fit=crop&crop=face",
+    results: "3 major deals closed"
   }
 ];
 
@@ -137,28 +149,43 @@ const Testimonials = () => {
                 transition={{ duration: 0.5 }}
                 className="grid grid-cols-1 md:grid-cols-3 gap-8"
               >
-                {visibleTestimonials.map((testimonial, index) => (
-                    <Card key={index} className="border-none shadow-lg" role="article" aria-labelledby={`testimonial-${index}-author`}>
+                 {visibleTestimonials.map((testimonial, index) => (
+                    <Card key={index} className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300" role="article" aria-labelledby={`testimonial-${index}-author`}>
                       <CardContent className="p-8">
                         <div className="flex items-center mb-6">
-                          <Avatar className="h-12 w-12 border-2 border-primary-200">
+                          <Avatar className="h-14 w-14 border-3 border-primary-200 shadow-md">
                             <AvatarImage 
                               src={testimonial.avatar} 
                               alt={`Profile photo of ${testimonial.author}`}
+                              className="object-cover"
                             />
-                            <AvatarFallback className="bg-primary-100 text-primary-700 font-semibold">
+                            <AvatarFallback className="bg-primary-100 text-primary-700 font-semibold text-lg">
                               {testimonial.author.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
+                          <div className="ml-4">
+                            <div className="flex items-center gap-2">
+                              <div className="flex text-yellow-400">
+                                {[...Array(5)].map((_, i) => (
+                                  <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                  </svg>
+                                ))}
+                              </div>
+                              <span className="text-xs text-primary-600 font-medium bg-primary-50 px-2 py-1 rounded-full">
+                                {testimonial.results}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         
                         <div className="mb-6 text-4xl text-primary-600" aria-hidden="true">"</div>
-                        <blockquote className="mb-6 text-deep-navy/80 italic">
+                        <blockquote className="mb-6 text-deep-navy/80 italic text-base leading-relaxed">
                           {testimonial.quote}
                         </blockquote>
                         <div>
-                          <p id={`testimonial-${index}-author`} className="font-medium text-deep-navy">{testimonial.author}</p>
-                          <p className="text-sm text-deep-navy/70">{testimonial.role}</p>
+                          <p id={`testimonial-${index}-author`} className="font-semibold text-deep-navy text-lg">{testimonial.author}</p>
+                          <p className="text-sm text-deep-navy/70 font-medium">{testimonial.role}</p>
                         </div>
                       </CardContent>
                     </Card>

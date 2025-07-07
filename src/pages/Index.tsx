@@ -10,6 +10,8 @@ import PricingCTA from '@/components/PricingCTA';
 import InteractiveDemo from '@/components/InteractiveDemo';
 import VideoWalkthrough from '@/components/VideoWalkthrough';
 import Testimonials from '@/components/Testimonials';
+import TrustBadges from '@/components/TrustBadges';
+import CompanyLogos from '@/components/CompanyLogos';
 import { Helmet } from 'react-helmet-async';
 
 const Index = () => {
@@ -134,6 +136,11 @@ const Index = () => {
                 Free trial included
               </div>
             </div>
+            
+            {/* Trust indicators */}
+            <div className="mt-8 animate-slide-up-vibrant" style={{animationDelay: '0.8s'}}>
+              <TrustBadges variant="compact" className="justify-center" />
+            </div>
           </div>
         </section>
 
@@ -173,18 +180,31 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Company Logos Section */}
+        <CompanyLogos />
+
+        {/* Enhanced Testimonials */}
+        <Testimonials />
+
+        {/* Trust Badges Section */}
+        <section className="py-12 bg-gradient-to-r from-gray-50 to-gray-100">
+          <div className="container mx-auto px-4">
+            <TrustBadges variant="horizontal" />
+          </div>
+        </section>
+
         {/* Interactive Demo Section */}
         <InteractiveDemo />
 
         {/* Video Walkthrough Alternative */}
         <VideoWalkthrough />
 
-        {/* Enhanced Testimonials */}
-        <Testimonials />
-
         {/* CTA Section */}
         <section className="py-16">
           <div className="container mx-auto px-4 max-w-3xl">
+            <div className="mb-8">
+              <TrustBadges variant="compact" className="justify-center mb-6" />
+            </div>
             <PricingCTA />
           </div>
         </section>
