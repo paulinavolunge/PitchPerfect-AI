@@ -83,6 +83,8 @@ const Signup = () => {
           title: "Welcome!",
           description: "Your account has been created successfully.",
         });
+        // Mark as new user for onboarding
+        sessionStorage.setItem('newUser', 'true');
         navigate('/dashboard');
       }
     } catch (error) {

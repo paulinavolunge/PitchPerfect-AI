@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
+import NewUserOnboarding from '@/components/onboarding/NewUserOnboarding';
 import MicrophoneTestModal from '@/components/dashboard/MicrophoneTestModal';
 import VoiceSynthesis from '@/utils/VoiceSynthesis';
 import AIDisclosure from '@/components/AIDisclosure';
@@ -37,7 +38,7 @@ const TOUR_COOLDOWN_KEY = 'pitchperfect_tour_cooldown';
 const TOUR_COOLDOWN_HOURS = 24;
 
 const Dashboard = () => {
-  const { user, refreshSubscription, isPremium, creditsRemaining, trialUsed, loading } = useAuth();
+  const { user, refreshSubscription, isPremium, creditsRemaining, trialUsed, loading, isNewUser, markOnboardingComplete } = useAuth();
   const { isGuestMode } = useGuestMode();
   const navigate = useNavigate();
 
@@ -69,6 +70,7 @@ const Dashboard = () => {
   const [showMicTest, setShowMicTest] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const {
     isLoading,
@@ -155,7 +157,10 @@ const Dashboard = () => {
     const hasTourBeenCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
     const isNewSession = sessionStorage.getItem('newSessionLogin') === 'true';
 
-    if (user && (!hasTourBeenCompleted || isNewSession) && canShowTour()) {
+    if (user && isNewUser) {
+      // Show onboarding for new users
+      setShowOnboarding(true);
+    } else if (user && (!hasTourBeenCompleted || isNewSession) && canShowTour()) {
       setShowTour(true);
       sessionStorage.removeItem('newSessionLogin');
     } else {
@@ -165,7 +170,20 @@ const Dashboard = () => {
     if (user) {
       refreshSubscription();
     }
-  }, [user, refreshSubscription]);
+  }, [user, refreshSubscription, isNewUser]);
+
+  const handleOnboardingComplete = () => {
+    markOnboardingComplete();
+    setShowOnboarding(false);
+    
+    // Show welcome message
+    toast.success("Welcome to PitchPerfect AI! 🎉 Ready to improve your sales skills?");
+    
+    // Start the guided tour after onboarding
+    setTimeout(() => {
+      setShowTour(true);
+    }, 1000);
+  };
 
   const handleTourComplete = () => {
     localStorage.setItem(TOUR_STORAGE_KEY, 'true');
@@ -254,14 +272,22 @@ const Dashboard = () => {
       <Navbar />
 
       {user && (
-        <GuidedTour
-          steps={tourSteps}
-          run={showTour}
-          onComplete={handleTourComplete}
-          continuous={true}
-          scrollToSteps={true}
-          spotlightClicks={true}
-        />
+        <>
+          <GuidedTour
+            steps={tourSteps}
+            run={showTour}
+            onComplete={handleTourComplete}
+            continuous={true}
+            scrollToSteps={true}
+            spotlightClicks={true}
+          />
+          
+          <NewUserOnboarding
+            open={showOnboarding}
+            onOpenChange={setShowOnboarding}
+            onComplete={handleOnboardingComplete}
+          />
+        </>
       )}
 
       <MicrophoneTestModal

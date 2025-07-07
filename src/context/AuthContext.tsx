@@ -11,9 +11,11 @@ interface AuthContextType {
   isPremium: boolean;
   creditsRemaining: number;
   trialUsed: boolean;
+  isNewUser: boolean;
   startFreeTrial: () => Promise<boolean>;
   deductUserCredits: (featureType: string, credits: number) => Promise<boolean>;
   refreshSubscription: () => Promise<void>;
+  markOnboardingComplete: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isPremium] = useState(false);
   const [creditsRemaining, setCreditsRemaining] = useState(0);
   const [trialUsed, setTrialUsed] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     console.log('AuthContext: Initializing auth state');
@@ -79,6 +82,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               p_user_id: session.user.id
             });
           }, 0);
+
+          // Check if this is a new user
+          if (event === 'SIGNED_IN') {
+            const hasCompletedOnboarding = localStorage.getItem('onboardingComplete');
+            if (!hasCompletedOnboarding) {
+              setIsNewUser(true);
+            }
+          }
         }
 
         setSession(session);
@@ -279,6 +290,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const markOnboardingComplete = () => {
+    setIsNewUser(false);
+    localStorage.setItem('onboardingComplete', 'true');
+    localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
+  };
+
   const value = {
     user,
     session,
@@ -287,9 +304,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isPremium,
     creditsRemaining,
     trialUsed,
+    isNewUser,
     startFreeTrial,
     deductUserCredits,
     refreshSubscription,
+    markOnboardingComplete,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
