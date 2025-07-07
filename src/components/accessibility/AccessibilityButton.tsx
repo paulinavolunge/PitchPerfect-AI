@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Accessibility } from 'lucide-react';
-import { AccessibilityMenu } from './AccessibilityMenu';  // ← FIXED!
+import AccessibilityMenu from './AccessibilityMenu';
 
 const AccessibilityButton: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <>
