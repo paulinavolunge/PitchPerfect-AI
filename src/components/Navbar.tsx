@@ -103,11 +103,15 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-brand-green rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
+          <Link 
+            to="/" 
+            className="flex items-center space-x-2"
+            aria-label="PitchPerfect AI - Home"
+          >
+            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm" aria-hidden="true">P</span>
             </div>
-            <span className="font-bold text-xl text-brand-dark">PitchPerfect AI</span>
+            <span className="font-bold text-xl text-deep-navy">PitchPerfect AI</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -122,9 +126,10 @@ const Navbar: React.FC = () => {
                           to={item.href}
                           className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                             location.pathname === item.href
-                              ? 'text-brand-green bg-brand-green/10'
-                              : 'text-brand-dark hover:text-brand-green hover:bg-brand-green/5'
+                              ? 'text-primary-600 bg-primary-50'
+                              : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
                           }`}
+                          aria-current={location.pathname === item.href ? 'page' : undefined}
                         >
                           {item.name}
                         </Link>
@@ -139,9 +144,10 @@ const Navbar: React.FC = () => {
                           to={item.href}
                           className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                             location.pathname === item.href
-                              ? 'text-brand-green bg-brand-green/10'
-                              : 'text-brand-dark hover:text-brand-green hover:bg-brand-green/5'
+                              ? 'text-primary-600 bg-primary-50'
+                              : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
                           }`}
+                          aria-current={location.pathname === item.href ? 'page' : undefined}
                         >
                           {item.name}
                         </Link>
@@ -156,9 +162,10 @@ const Navbar: React.FC = () => {
                           to={item.href}
                           className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                             location.pathname === item.href
-                              ? 'text-brand-green bg-brand-green/10'
-                              : 'text-brand-dark hover:text-brand-green hover:bg-brand-green/5'
+                              ? 'text-primary-600 bg-primary-50'
+                              : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
                           }`}
+                          aria-current={location.pathname === item.href ? 'page' : undefined}
                         >
                           {item.name}
                         </Link>
@@ -184,8 +191,8 @@ const Navbar: React.FC = () => {
 
                 {/* Credits display */}
                 {!isPremium && (
-                  <div className="hidden sm:flex items-center space-x-1 text-sm text-brand-dark/70">
-                    <Diamond className="h-4 w-4" />
+                  <div className="hidden sm:flex items-center space-x-1 text-sm text-deep-navy/70">
+                    <Diamond className="h-4 w-4" aria-hidden="true" />
                     <span>{creditsRemaining} credits</span>
                   </div>
                 )}
@@ -193,16 +200,23 @@ const Navbar: React.FC = () => {
                 {/* User menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Button 
+                      variant="ghost" 
+                      className="relative h-8 w-8 rounded-full"
+                      aria-label="User account menu"
+                    >
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.user_metadata?.avatar_url} alt="User" />
-                        <AvatarFallback className="bg-brand-green text-white text-xs">
+                        <AvatarImage 
+                          src={user?.user_metadata?.avatar_url} 
+                          alt={`Profile picture of ${user?.user_metadata?.name || user?.email}`}
+                        />
+                        <AvatarFallback className="bg-primary-600 text-white text-xs">
                           {getUserInitials()}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuContent className="w-56 bg-white z-50" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
@@ -215,28 +229,28 @@ const Navbar: React.FC = () => {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/dashboard" className="cursor-pointer">
-                        <Home className="mr-2 h-4 w-4" />
+                      <Link to="/dashboard" className="cursor-pointer w-full">
+                        <Home className="mr-2 h-4 w-4" aria-hidden="true" />
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/progress" className="cursor-pointer">
-                        <UserRound className="mr-2 h-4 w-4" />
+                      <Link to="/progress" className="cursor-pointer w-full">
+                        <UserRound className="mr-2 h-4 w-4" aria-hidden="true" />
                         Profile
                       </Link>
                     </DropdownMenuItem>
                     {!isPremium && (
                       <DropdownMenuItem asChild>
-                        <Link to="/pricing" className="cursor-pointer">
-                          <Crown className="mr-2 h-4 w-4" />
+                        <Link to="/pricing" className="cursor-pointer w-full">
+                          <Crown className="mr-2 h-4 w-4" aria-hidden="true" />
                           Upgrade to Premium
                         </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-                      <LogIn className="mr-2 h-4 w-4" />
+                      <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
                       Sign out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -256,9 +270,9 @@ const Navbar: React.FC = () => {
                 <Button
                   size="sm"
                   onClick={handleSignup}
-                  className="bg-brand-green hover:bg-brand-green/90"
+                  className="bg-primary-600 hover:bg-primary-700 text-white"
                 >
-                  <UserPlus className="mr-2 h-4 w-4" />
+                  <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
                   Sign Up Free
                 </Button>
               </>
@@ -267,15 +281,21 @@ const Navbar: React.FC = () => {
             {/* Mobile menu */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="lg:hidden">
-                  <Menu className="h-5 w-5" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="lg:hidden"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu className="h-5 w-5" aria-hidden="true" />
+                  <span className="sr-only">Open main menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-white">
                 <SheetHeader>
-                  <SheetTitle>Navigation</SheetTitle>
+                  <SheetTitle>Navigation Menu</SheetTitle>
                   <SheetDescription>
-                    Access all features and pages
+                    Access all features and pages of PitchPerfect AI
                   </SheetDescription>
                 </SheetHeader>
                 <div className="flex flex-col space-y-4 mt-6">

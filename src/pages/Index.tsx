@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PricingCTA from '@/components/PricingCTA';
 import InteractiveDemo from '@/components/InteractiveDemo';
+import VideoWalkthrough from '@/components/VideoWalkthrough';
 import Testimonials from '@/components/Testimonials';
 import { Helmet } from 'react-helmet-async';
 
@@ -171,6 +172,9 @@ const Index = () => {
 
         {/* Interactive Demo Section */}
         <InteractiveDemo />
+
+        {/* Video Walkthrough Alternative */}
+        <VideoWalkthrough />
 
         {/* Enhanced Testimonials */}
         <Testimonials />
