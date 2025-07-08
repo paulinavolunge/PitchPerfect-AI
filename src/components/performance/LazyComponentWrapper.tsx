@@ -1,7 +1,7 @@
 
 import React, { Suspense, lazy } from 'react';
 import { useLazyLoading } from '@/hooks/use-lazy-loading';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 interface LazyComponentWrapperProps {
   componentImporter: () => Promise<{ default: React.ComponentType<any> }>;
