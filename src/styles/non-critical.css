@@ -1,0 +1,174 @@
+
+/* Non-critical animations and styles - loaded after page interaction */
+
+/* Floating animation */
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.5rem);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 4s infinite ease-in-out;
+}
+
+/* Pulse animation for electric effect */
+@keyframes electric-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.animate-electric-pulse {
+  animation: electric-pulse 2s infinite ease-in-out;
+}
+
+/* Scale in animation */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s ease-out forwards;
+}
+
+/* Hero text animation */
+@keyframes hero-text-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-vibrant {
+  animation: hero-text-slide-up 0.75s ease-out forwards;
+}
+
+/* Professional fade in animation */
+@keyframes professional-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-professional-fade-in {
+  animation: professional-fade-in 0.75s ease-out forwards;
+}
+
+/* Professional scale in animation */
+@keyframes scale-in-professional {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in-professional {
+  animation: scale-in-professional 0.6s ease-out forwards;
+}
+
+/* Strong pulse animation */
+@keyframes strong-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+.animate-strong-pulse {
+  animation: strong-pulse 1.5s infinite ease-in-out;
+}
+
+/* Vibrant glow animation */
+@keyframes vibrant-glow {
+  0% {
+    box-shadow: 0 0 8px rgba(0, 85, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 85, 255, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(0, 85, 255, 0.4);
+  }
+}
+
+.animate-vibrant-glow {
+  animation: vibrant-glow 2s infinite;
+}
+
+/* Additional button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-vibrant-blue-500 to-vibrant-blue-600 hover:from-vibrant-blue-600 hover:to-vibrant-blue-700 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300;
+}
+
+.btn-secondary {
+  @apply bg-white text-vibrant-blue-600 border border-vibrant-blue-300 hover:bg-vibrant-blue-50 hover:text-vibrant-blue-700 transition-all duration-300 px-6 py-3 rounded-full;
+}
+
+/* Trust indicator styles */
+.trust-indicator {
+  @apply flex items-center gap-2 text-sm text-deep-navy font-medium;
+}
+
+/* Professional card styles */
+.professional-card {
+  @apply bg-white rounded-lg shadow-md border border-gray-100;
+}
+
+/* Feature highlight styles */
+.feature-highlight {
+  @apply border-l-4 border-vibrant-blue-400 pl-4 py-2;
+}
+
+/* Outline button styles */
+.outline-button {
+  @apply border-2 border-vibrant-blue-500 text-vibrant-blue-600 hover:bg-vibrant-blue-50 hover:border-vibrant-blue-600 transition-colors duration-300;
+}
+
+/* Vibrant button styles */
+.vibrant-button {
+  @apply bg-vibrant-blue-500 text-white font-bold hover:bg-vibrant-blue-600 transition-colors duration-300;
+}

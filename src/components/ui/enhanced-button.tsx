@@ -27,12 +27,14 @@ export const EnhancedButton: React.FC<EnhancedButtonProps> = ({
   ...props
 }) => {
   const baseClasses = cn(
-    "inline-flex items-center justify-center font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+    "inline-flex items-center justify-center font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
     {
-      // Enhanced primary button with bright blue
-      "strong-cta": enhanced && variant === 'primary',
-      // Mobile touch targets
-      "mobile-cta": size === 'lg',
+      // Enhanced primary button with bright blue (#0055FF)
+      "bg-[#0055FF] text-white border-2 border-[#0044DD] hover:bg-[#0044DD] hover:border-[#0033BB] shadow-lg hover:shadow-xl transform hover:scale-105": enhanced && variant === 'primary',
+      // Mobile touch targets (44px minimum)
+      "min-h-[44px] px-6 py-3 text-lg": size === 'lg',
+      "min-h-[44px] px-4 py-2": size === 'md',
+      "min-h-[36px] px-3 py-1": size === 'sm',
       // Full width
       "w-full": fullWidth,
     },

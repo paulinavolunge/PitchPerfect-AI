@@ -7,7 +7,26 @@
     <meta name="description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills." />
     <meta name="keywords" content="sales pitch practice, objection handling, AI coaching, sales enablement, roleplay training" />
     
-    <!-- Enhanced Favicon Support -->
+    <!-- Critical CSS inlined -->
+    <style>
+      /* Critical above-the-fold styles */
+      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+      .hero-section { min-height: 100vh; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+      .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+      .hero-headline { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }
+      .strong-cta { background: #0055FF; color: white; font-weight: bold; padding: 1rem 2rem; border-radius: 0.5rem; border: 2px solid #0044DD; }
+      @media (max-width: 768px) {
+        .hero-headline { font-size: 2.5rem; }
+        input, textarea { padding: 16px !important; min-height: 44px; }
+        button:not(.icon-only) { min-height: 44px; padding: 12px 24px; }
+      }
+    </style>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/assets/logo-pitchperfectai.png" as="image" type="image/png" />
+    <link rel="preload" href="/src/main.tsx" as="script" crossorigin />
+    
+    <!-- Enhanced Favicon Support with caching -->
     <link rel="icon" type="image/png" sizes="32x32" href="/lovable-uploads/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/lovable-uploads/favicon-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/lovable-uploads/favicon-512x512.png" />
@@ -29,6 +48,29 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Defer non-critical JavaScript -->
+    <script type="module" src="/src/main.tsx" defer></script>
+    
+    <!-- Load analytics after page interaction -->
+    <script>
+      // Lazy load analytics only after user interaction
+      let analyticsLoaded = false;
+      function loadAnalytics() {
+        if (!analyticsLoaded) {
+          analyticsLoaded = true;
+          // Analytics loading code would go here
+          console.log('Analytics loaded on interaction');
+        }
+      }
+      
+      // Load on first interaction
+      ['click', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, loadAnalytics, { once: true, passive: true });
+      });
+      
+      // Fallback: load after 3 seconds
+      setTimeout(loadAnalytics, 3000);
+    </script>
   </body>
 </html>

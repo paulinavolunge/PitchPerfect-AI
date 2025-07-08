@@ -83,7 +83,7 @@
   }
 }
 
-/* Enhanced CTA Button Styling */
+/* Critical Performance CTA Button Styling - Enhanced with #0055FF */
 .strong-cta {
   @apply bg-[#0055FF] text-white font-bold border-2 border-[#0044DD] hover:bg-[#0044DD] hover:border-[#0033BB] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
 }
@@ -92,7 +92,7 @@
   @apply bg-[#0055FF] hover:bg-[#0044DD] text-white font-bold px-8 py-4 rounded-lg border-2 border-[#0044DD] hover:border-[#0033BB] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105;
 }
 
-/* Enhanced Mobile Touch Targets */
+/* Enhanced Mobile Touch Targets - 44px minimum for accessibility */
 @media (max-width: 599px) {
   input[type="text"],
   input[type="email"],
@@ -155,44 +155,20 @@
   @apply shadow-lg transform scale-105 transition-transform duration-300;
 }
 
-/* Floating animation */
-@keyframes float {
+/* Critical animations only - defer others */
+@keyframes fade-in {
   0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-0.5rem);
+    opacity: 0;
   }
   100% {
-    transform: translateY(0);
-  }
-}
-
-.animate-float {
-  animation: float 4s infinite ease-in-out;
-}
-
-/* Pulse animation for electric effect */
-@keyframes electric-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.2);
     opacity: 1;
   }
-  100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
 }
 
-.animate-electric-pulse {
-  animation: electric-pulse 2s infinite ease-in-out;
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
 }
 
-/* Slide up animation */
 @keyframes slide-up {
   0% {
     opacity: 0;
@@ -208,53 +184,7 @@
   animation: slide-up 0.75s ease-out forwards;
 }
 
-/* Fade in animation */
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
-}
-
-/* Scale in animation */
-@keyframes scale-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-scale-in {
-  animation: scale-in 0.5s ease-out forwards;
-}
-
-/* Hero text animation */
-@keyframes hero-text-slide-up {
-  0% {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up-vibrant {
-  animation: hero-text-slide-up 0.75s ease-out forwards;
-}
-
-/* Button glow animation */
+/* Button glow animation for CTA */
 @keyframes conversion-glow {
   0% {
     box-shadow: 0 0 5px rgba(0, 85, 255, 0.5);
@@ -271,125 +201,44 @@
   animation: conversion-glow 2s infinite;
 }
 
-/* Professional fade in animation */
-@keyframes professional-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Lazy loading placeholder */
+.lazy-loading {
+  @apply bg-gray-200 animate-pulse;
 }
 
-.animate-professional-fade-in {
-  animation: professional-fade-in 0.75s ease-out forwards;
+/* WebP support detection */
+.webp .webp-image {
+  @apply block;
 }
 
-/* Professional scale in animation */
-@keyframes scale-in-professional {
-  0% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+.no-webp .webp-image {
+  @apply hidden;
 }
 
-.animate-scale-in-professional {
-  animation: scale-in-professional 0.6s ease-out forwards;
+.webp .fallback-image {
+  @apply hidden;
 }
 
-/* Strong pulse animation */
-@keyframes strong-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
+.no-webp .fallback-image {
+  @apply block;
 }
 
-.animate-strong-pulse {
-  animation: strong-pulse 1.5s infinite ease-in-out;
-}
-
-/* Vibrant glow animation */
-@keyframes vibrant-glow {
-  0% {
-    box-shadow: 0 0 8px rgba(0, 85, 255, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(0, 85, 255, 0.7);
-  }
-  100% {
-    box-shadow: 0 0 8px rgba(0, 85, 255, 0.4);
-  }
-}
-
-.animate-vibrant-glow {
-  animation: vibrant-glow 2s infinite;
-}
-
-/* Text styles */
+/* Critical above-the-fold text styles */
 .hero-text {
   @apply text-5xl md:text-6xl lg:text-7xl font-extrabold text-deep-navy leading-tight;
 }
 
-/* Primary text color */
 .primary-text {
   @apply text-deep-navy;
 }
 
-/* Navy highlight - using deep-navy colors instead */
 .navy-highlight {
   @apply text-deep-navy-light;
 }
 
-/* Electric highlight */
 .electric-highlight {
   @apply text-vibrant-blue-500;
 }
 
-/* Button styles */
-.btn-primary {
-  @apply bg-gradient-to-r from-vibrant-blue-500 to-vibrant-blue-600 hover:from-vibrant-blue-600 hover:to-vibrant-blue-700 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300;
-}
-
-.btn-secondary {
-  @apply bg-white text-vibrant-blue-600 border border-vibrant-blue-300 hover:bg-vibrant-blue-50 hover:text-vibrant-blue-700 transition-all duration-300 px-6 py-3 rounded-full;
-}
-
-/* Trust indicator styles */
-.trust-indicator {
-  @apply flex items-center gap-2 text-sm text-deep-navy font-medium;
-}
-
-/* Professional card styles */
-.professional-card {
-  @apply bg-white rounded-lg shadow-md border border-gray-100;
-}
-
-/* Feature highlight styles */
-.feature-highlight {
-  @apply border-l-4 border-vibrant-blue-400 pl-4 py-2;
-}
-
-/* Outline button styles */
-.outline-button {
-  @apply border-2 border-vibrant-blue-500 text-vibrant-blue-600 hover:bg-vibrant-blue-50 hover:border-vibrant-blue-600 transition-colors duration-300;
-}
-
-/* Vibrant button styles */
-.vibrant-button {
-  @apply bg-vibrant-blue-500 text-white font-bold hover:bg-vibrant-blue-600 transition-colors duration-300;
-}
+/* Deferred styles - load after critical content */
+/* These will be moved to a separate CSS file for lazy loading */

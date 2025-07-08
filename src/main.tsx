@@ -8,6 +8,9 @@ import './index.css';
 import { initializePolyfills } from './utils/polyfills';
 initializePolyfills();
 
+// Import performance optimizer
+import PerformanceOptimizer from './utils/performanceOptimizations';
+
 // Global error boundary for root
 function RootErrorFallback({ error }: { error: Error }) {
   return (
@@ -43,9 +46,54 @@ class RootErrorBoundary extends React.Component<{
   }
 }
 
+// Performance optimizations
+function initializePerformanceOptimizations() {
+  // Load non-critical CSS after page load
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      // Defer non-critical styles
+      PerformanceOptimizer.loadNonCriticalCSS('/src/styles/non-critical.css');
+      
+      // Setup lazy loading for images
+      PerformanceOptimizer.setupLazyImages();
+      
+      // Preload critical resources
+      PerformanceOptimizer.preloadCriticalResources();
+    });
+
+    // Load additional resources on interaction
+    let interactionLoaded = false;
+    const loadOnInteraction = () => {
+      if (!interactionLoaded) {
+        interactionLoaded = true;
+        
+        // Load heavy dependencies after interaction
+        import('@tanstack/react-query').catch(console.error);
+        import('recharts').catch(console.error);
+        import('framer-motion').catch(console.error);
+      }
+    };
+
+    ['click', 'scroll', 'touchstart', 'keydown'].forEach(event => {
+      document.addEventListener(event, loadOnInteraction, { once: true, passive: true });
+    });
+
+    // Fallback: load after 2 seconds
+    setTimeout(loadOnInteraction, 2000);
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      PerformanceOptimizer.cleanup();
+    });
+  }
+}
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
+// Initialize performance optimizations
+initializePerformanceOptimizations();
 
 root.render(
   <RootErrorBoundary>
@@ -54,4 +102,3 @@ root.render(
     </React.StrictMode>
   </RootErrorBoundary>
 );
-
