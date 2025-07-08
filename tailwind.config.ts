@@ -1,7 +1,7 @@
 
 import type { Config } from "tailwindcss";
 
-export default {
+const config: Config = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -13,139 +13,116 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: '2rem',
+      padding: "2rem",
       screens: {
-        '2xl': '1400px'
-      }
+        "2xl": "1400px",
+      },
     },
     extend: {
-      fontFamily: {
-        sans: ['Inter', 'Poppins', 'sans-serif'],
-        rounded: ['Nunito', 'Inter', 'sans-serif'],
-      },
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: '#63A4FF',
-          foreground: '#FFFFFF',
-          50: '#EBF4FF',
-          100: '#DBEAFE',
-          200: '#BFDBFE',
-          300: '#93C5FD',
-          400: '#71AFFF',
-          500: '#63A4FF',
-          600: '#3B82F6',
-          700: '#2563EB',
-          800: '#1E40AF',
-          900: '#1E3A8A',
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+          50: "hsl(var(--primary-50))",
+          100: "hsl(var(--primary-100))",
+          200: "hsl(var(--primary-200))",
+          400: "hsl(var(--primary-400))",
+          500: "hsl(var(--primary-500))",
+          600: "hsl(var(--primary-600))",
         },
         secondary: {
-          DEFAULT: '#F4F6F8',
-          foreground: '#1E293B',
-          50: '#F8FAFC',
-          100: '#F1F5F9',
-          200: '#E2E8F0',
-          300: '#CBD5E1',
-          400: '#94A3B8',
-          500: '#64748B',
-          600: '#475569',
-          700: '#334155',
-          800: '#1E293B',
-          900: '#0F172A',
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         destructive: {
-          DEFAULT: '#EF4444',
-          foreground: '#FFFFFF',
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: '#E9EEF4',
-          foreground: '#64748B',
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: '#71AFFF',
-          foreground: '#263159',
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
-          DEFAULT: '#FFFFFF',
-          foreground: '#1E293B',
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
         },
         card: {
-          DEFAULT: '#FFFFFF',
-          foreground: '#1E293B',
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
-        // Enhanced vibrant color palette
+        // Custom design system colors
         "vibrant-blue": {
-          50: '#EBF4FF',
-          100: '#DBEAFE', 
-          200: '#BFDBFE',
-          300: '#93C5FD',
-          400: '#71AFFF',
-          500: '#63A4FF',
-          600: '#3B82F6',
-          700: '#2563EB',
-          800: '#1E40AF',
-          900: '#1E3A8A',
+          50: "hsl(var(--vibrant-blue-50))",
+          100: "hsl(var(--vibrant-blue-100))",
+          200: "hsl(var(--vibrant-blue-200))",
+          300: "hsl(var(--vibrant-blue-300))",
+          400: "hsl(var(--vibrant-blue-400))",
+          500: "hsl(var(--vibrant-blue-500))",
+          600: "hsl(var(--vibrant-blue-600))",
+          700: "hsl(var(--vibrant-blue-700))",
         },
         "deep-navy": {
-          DEFAULT: '#1A2B50',
-          light: '#263159',
-          dark: '#15213D',
+          DEFAULT: "hsl(var(--deep-navy))",
+          light: "hsl(var(--deep-navy-light))",
         },
-        "neutral-base": {
-          DEFAULT: '#F4F6F8',
-          light: '#FFFFFF',
-          medium: '#E9EEF4',
+        "soft-blue": {
+          50: "hsl(var(--soft-blue-50))",
+          100: "hsl(var(--soft-blue-100))",
+          200: "hsl(var(--soft-blue-200))",
         },
+        "sky-blue": "hsl(var(--sky-blue))",
       },
       borderRadius: {
-        lg: '1rem',
-        md: '0.75rem',
-        sm: '0.5rem',
-        xl: '1.5rem',
-        '2xl': '2rem',
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        'vibrant-float': {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-8px)' }
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
-        'strong-pulse': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.7' }
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
-        'engaging-scale': {
-          '0%': { transform: 'scale(0.95)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' }
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
         },
-        'slide-up-vibrant': {
-          '0%': { transform: 'translateY(20px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' }
+        "slide-up": {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-up-vibrant": {
+          "0%": { opacity: "0", transform: "translateY(40px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "vibrant-float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
         },
       },
       animation: {
-        'vibrant-float': 'vibrant-float 3s ease-in-out infinite',
-        'strong-pulse': 'strong-pulse 2s ease-in-out infinite',
-        'engaging-scale': 'engaging-scale 0.3s ease-out',
-        'slide-up-vibrant': 'slide-up-vibrant 0.5s ease-out',
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.5s ease-out forwards",
+        "slide-up": "slide-up 0.75s ease-out forwards",
+        "slide-up-vibrant": "slide-up-vibrant 0.75s ease-out forwards",
+        "vibrant-float": "vibrant-float 6s ease-in-out infinite",
       },
-      boxShadow: {
-        'vibrant': '0 4px 6px -1px rgb(99 164 255 / 0.15)',
-        'vibrant-lg': '0 10px 25px -3px rgb(99 164 255 / 0.2)',
-        'vibrant-xl': '0 25px 50px -12px rgb(99 164 255 / 0.25)',
-        'deep': '0 8px 30px -8px rgb(26 43 80 / 0.3)',
-      },
-      backgroundImage: {
-        'vibrant-gradient': 'linear-gradient(135deg, #EBF4FF 0%, #DBEAFE 100%)',
-        'hero-gradient': 'linear-gradient(135deg, #EBF4FF 0%, #71AFFF 50%, #DBEAFE 100%)',
-        'card-gradient': 'linear-gradient(145deg, #FFFFFF 0%, #F4F6F8 100%)',
-        'cta-gradient': 'linear-gradient(135deg, #63A4FF 0%, #3B82F6 50%, #6366F1 100%)',
-        'cta-gradient-hover': 'linear-gradient(135deg, #71AFFF 0%, #2563EB 50%, #4F46E5 100%)',
-      }
-    }
+    },
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+
+export default config;

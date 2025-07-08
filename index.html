@@ -10,11 +10,41 @@
     <!-- Critical CSS inlined -->
     <style>
       /* Critical above-the-fold styles */
-      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
-      .hero-section { min-height: 100vh; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
-      .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
-      .hero-headline { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }
-      .strong-cta { background: #0055FF; color: white; font-weight: bold; padding: 1rem 2rem; border-radius: 0.5rem; border: 2px solid #0044DD; }
+      body { 
+        margin: 0; 
+        font-family: system-ui, -apple-system, sans-serif;
+        background: hsl(210 40% 96.1%);
+        color: hsl(222.2 47.4% 11.2%);
+      }
+      .hero-section { 
+        min-height: 100vh; 
+        background: linear-gradient(135deg, hsl(210 40% 98%) 0%, hsl(210 40% 96.1%) 100%); 
+      }
+      .container { 
+        max-width: 1200px; 
+        margin: 0 auto; 
+        padding: 0 1rem; 
+      }
+      .hero-headline { 
+        font-size: 3.5rem; 
+        font-weight: 800; 
+        line-height: 1.1; 
+        margin-bottom: 1.5rem;
+        color: hsl(222.2 47.4% 11.2%);
+      }
+      .strong-cta { 
+        background: #0055FF; 
+        color: white; 
+        font-weight: bold; 
+        padding: 1rem 2rem; 
+        border-radius: 0.5rem; 
+        border: 2px solid #0044DD;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .bg-gradient-to-br {
+        background: linear-gradient(to bottom right, hsl(210 40% 98%), hsl(210 40% 96.1%), hsl(210 40% 94%));
+      }
       @media (max-width: 768px) {
         .hero-headline { font-size: 2.5rem; }
         input, textarea { padding: 16px !important; min-height: 44px; }
@@ -49,8 +79,8 @@
   <body>
     <div id="root"></div>
     
-    <!-- Defer non-critical JavaScript -->
-    <script type="module" src="/src/main.tsx" defer></script>
+    <!-- Main application script -->
+    <script type="module" src="/src/main.tsx"></script>
     
     <!-- Load analytics after page interaction -->
     <script>
@@ -59,7 +89,6 @@
       function loadAnalytics() {
         if (!analyticsLoaded) {
           analyticsLoaded = true;
-          // Analytics loading code would go here
           console.log('Analytics loaded on interaction');
         }
       }
