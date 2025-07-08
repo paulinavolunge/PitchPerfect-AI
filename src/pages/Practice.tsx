@@ -8,7 +8,9 @@ import { Mic, Play, Square, RotateCcw, Zap, Trophy, Target } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { trackEvent } from '@/utils/analytics';
-import { Helmet } from 'react-helmet-async';
+import { ProgressIndicator } from '@/components/ui/progress-indicator';
+import { MetaTags } from '@/components/shared/MetaTags';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 
 const Practice = () => {
   const { user, creditsRemaining, deductUserCredits } = useAuth();
@@ -19,6 +21,13 @@ const Practice = () => {
   const [feedback, setFeedback] = useState('');
   const [score, setScore] = useState<number | null>(null);
   const [streakCount, setStreakCount] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const progressSteps = [
+    { id: 'setup', title: 'Setup Practice', description: 'Choose your scenario' },
+    { id: 'record', title: 'Record Pitch', description: 'Practice your delivery' },
+    { id: 'analyze', title: 'Get Analysis', description: 'Review AI feedback' }
+  ];
 
   // Mock streak data since user_streaks table doesn't exist
   useEffect(() => {
@@ -43,6 +52,7 @@ const Practice = () => {
 
     try {
       setIsRecording(true);
+      setCurrentStep(2);
       trackEvent('practice_recording_started');
       
       // Mock recording logic
@@ -71,6 +81,8 @@ const Practice = () => {
     if (!user?.id) return;
 
     try {
+      setCurrentStep(3);
+      
       // Deduct credits for analysis
       const success = await deductUserCredits('pitch_analysis', 1);
       
@@ -127,15 +139,17 @@ const Practice = () => {
     setTranscript('');
     setFeedback('');
     setScore(null);
+    setCurrentStep(1);
     trackEvent('practice_reset');
   };
 
   return (
     <ResponsiveLayout>
-      <Helmet>
-        <title>Practice Your Pitch - PitchPerfect AI</title>
-        <meta name="description" content="Practice your sales pitch with AI-powered feedback and analysis." />
-      </Helmet>
+      <MetaTags
+        title="Practice Your Pitch - PitchPerfect AI"
+        description="Practice your sales pitch with AI-powered feedback and analysis. Improve your delivery, pacing, and effectiveness."
+        keywords="sales pitch practice, AI feedback, pitch analysis, sales training, objection handling, roleplay training"
+      />
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
@@ -145,34 +159,41 @@ const Practice = () => {
           </p>
         </div>
 
+        {/* Progress Indicator */}
+        <ProgressIndicator 
+          steps={progressSteps} 
+          currentStep={currentStep} 
+          className="mb-8"
+        />
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardContent className="p-4 flex items-center">
-              <Zap className="h-8 w-8 text-brand-green mr-3" />
+              <Zap className="h-8 w-8 text-brand-green mr-3" aria-hidden="true" />
               <div>
                 <p className="text-sm text-brand-dark/70">Credits Remaining</p>
-                <p className="text-2xl font-bold text-brand-dark">{creditsRemaining}</p>
+                <p className="text-2xl font-bold text-brand-dark" aria-label={`${creditsRemaining} credits remaining`}>{creditsRemaining}</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4 flex items-center">
-              <Trophy className="h-8 w-8 text-yellow-500 mr-3" />
+              <Trophy className="h-8 w-8 text-yellow-500 mr-3" aria-hidden="true" />
               <div>
                 <p className="text-sm text-brand-dark/70">Current Streak</p>
-                <p className="text-2xl font-bold text-brand-dark">{streakCount}</p>
+                <p className="text-2xl font-bold text-brand-dark" aria-label={`${streakCount} day practice streak`}>{streakCount}</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4 flex items-center">
-              <Target className="h-8 w-8 text-brand-blue mr-3" />
+              <Target className="h-8 w-8 text-brand-blue mr-3" aria-hidden="true" />
               <div>
                 <p className="text-sm text-brand-dark/70">Best Score</p>
-                <p className="text-2xl font-bold text-brand-dark">{score || '--'}</p>
+                <p className="text-2xl font-bold text-brand-dark" aria-label={`Best score: ${score || 'No score yet'}`}>{score || '--'}</p>
               </div>
             </CardContent>
           </Card>
@@ -182,7 +203,7 @@ const Practice = () => {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Mic className="h-5 w-5 mr-2" />
+              <Mic className="h-5 w-5 mr-2" aria-hidden="true" />
               Record Your Pitch
             </CardTitle>
           </CardHeader>
@@ -192,39 +213,42 @@ const Practice = () => {
                 <>
                   <div className="flex justify-center">
                     {!isRecording ? (
-                      <Button 
+                      <EnhancedButton 
                         onClick={handleStartRecording}
                         size="lg"
-                        className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-4 text-lg"
+                        enhanced={true}
                         disabled={creditsRemaining < 1}
+                        icon={Play}
+                        className="px-8 py-4 text-lg"
+                        aria-label="Start recording your sales pitch"
                       >
-                        <Play className="h-5 w-5 mr-2" />
                         Start Recording
-                      </Button>
+                      </EnhancedButton>
                     ) : (
-                      <Button 
+                      <EnhancedButton 
                         onClick={handleStopRecording}
                         size="lg"
-                        variant="destructive"
-                        className="px-8 py-4 text-lg"
+                        variant="secondary"
+                        icon={Square}
+                        className="px-8 py-4 text-lg bg-red-500 hover:bg-red-600 text-white"
+                        aria-label="Stop recording your sales pitch"
                       >
-                        <Square className="h-5 w-5 mr-2" />
                         Stop Recording
-                      </Button>
+                      </EnhancedButton>
                     )}
                   </div>
 
                   {isRecording && (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <div className="flex items-center justify-center space-x-2" role="status" aria-live="polite">
+                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" aria-hidden="true"></div>
                       <span className="text-brand-dark">Recording in progress...</span>
                     </div>
                   )}
 
                   {creditsRemaining < 1 && (
-                    <p className="text-red-600 text-sm">
+                    <div className="text-red-600 text-sm" role="alert">
                       You need at least 1 credit to analyze a pitch. Please purchase more credits to continue.
-                    </p>
+                    </div>
                   )}
                 </>
               ) : (
@@ -233,10 +257,14 @@ const Practice = () => {
                     Analysis Complete!
                   </Badge>
                   
-                  <Button onClick={resetPractice} className="bg-brand-blue hover:bg-brand-blue/90">
-                    <RotateCcw className="h-4 w-4 mr-2" />
+                  <EnhancedButton 
+                    onClick={resetPractice} 
+                    icon={RotateCcw}
+                    className="bg-brand-blue hover:bg-brand-blue/90"
+                    aria-label="Start a new practice session"
+                  >
                     Practice Again
-                  </Button>
+                  </EnhancedButton>
                 </div>
               )}
             </div>
@@ -245,7 +273,7 @@ const Practice = () => {
 
         {/* Results */}
         {analysisComplete && (
-          <div className="space-y-6">
+          <div className="space-y-6" role="region" aria-label="Practice results">
             {/* Score */}
             {score && (
               <Card>
@@ -254,7 +282,7 @@ const Practice = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-brand-green mb-2">{score}/100</div>
+                    <div className="text-4xl font-bold text-brand-green mb-2" aria-label={`Your score is ${score} out of 100`}>{score}/100</div>
                     <p className="text-brand-dark/70">
                       {score >= 90 ? 'Excellent!' : 
                        score >= 80 ? 'Great job!' : 

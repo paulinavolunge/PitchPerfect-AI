@@ -18,6 +18,9 @@ import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import DemoNavigation from '@/components/demo/DemoNavigation';
+import { ProgressIndicator } from '@/components/ui/progress-indicator';
+import { MetaTags } from '@/components/shared/MetaTags';
+import { useLazyComponent } from '@/hooks/use-lazy-loading';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
@@ -27,9 +30,22 @@ const Demo = () => {
   const [objectionScenario, setObjectionScenario] = useState("Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less.");
   const [hasError, setHasError] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
   const { isGuestMode } = useGuestMode();
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
+
+  const progressSteps = [
+    { id: 'scenario', title: 'Select Scenario', description: 'Choose your practice scenario' },
+    { id: 'practice', title: 'Practice Pitch', description: 'Record your response' },
+    { id: 'feedback', title: 'View Feedback', description: 'Get AI analysis' }
+  ];
+
+  // Lazy load heavy demo components
+  const { Component: LazyDemoSandbox } = useLazyComponent(
+    () => import('@/components/demo/DemoSandbox'),
+    { threshold: 0.3 }
+  );
 
   useEffect(() => {
     console.log("Demo component mounted");
@@ -39,6 +55,8 @@ const Demo = () => {
   
   const handleDemoComplete = (data?: any) => {
     console.log("Demo completed with data:", data);
+    setCurrentStep(3);
+    
     // Save session data
     if (data) {
       setSessionData(data);
@@ -75,6 +93,7 @@ const Demo = () => {
     
     try {
       setHasError(false);
+      setCurrentStep(2);
       
       // Show immediate feedback that we're processing
       toast({
@@ -93,7 +112,6 @@ const Demo = () => {
         const deducted = await deductUserCredits(featureType, creditsToDeduct);
         if (!deducted) {
           console.log('Credit deduction failed - stopping demo');
-          // The deductUserCredits function already shows appropriate toast
           return;
         }
         
@@ -164,19 +182,16 @@ const Demo = () => {
     setHasError(false);
     setFeedback(null);
     setSessionData(null);
+    setCurrentStep(1);
   };
   
   return (
     <>
-      <Helmet>
-        <title>Try PitchPerfect AI Demo | Free Sales Practice Session</title>
-        <meta name="description" content="Experience PitchPerfect AI with our free interactive demo. Practice handling sales objections and get instant AI-powered feedback on your pitch delivery." />
-        <meta name="keywords" content="sales demo, AI pitch practice, free trial, objection handling, sales training demo" />
-        <meta property="og:title" content="Free PitchPerfect AI Demo - Try AI Sales Training" />
-        <meta property="og:description" content="Test drive our AI-powered sales training platform. Practice objection handling and get instant feedback." />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href={`${window.location.origin}/demo`} />
-      </Helmet>
+      <MetaTags
+        title="Try PitchPerfect AI Demo | Free Sales Practice Session"
+        description="Experience PitchPerfect AI with our free interactive demo. Practice handling sales objections and get instant AI-powered feedback on your pitch delivery."
+        keywords="sales demo, AI pitch practice, free trial, objection handling, sales training demo, sales pitch practice, roleplay training"
+      />
       
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -190,6 +205,13 @@ const Demo = () => {
         <main className="flex-grow pt-24 pb-12">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
+              {/* Progress Indicator */}
+              <ProgressIndicator 
+                steps={progressSteps} 
+                currentStep={currentStep} 
+                className="mb-8"
+              />
+              
               <AIDisclosure 
                 title="AI-Powered Demo"
                 description="This demo features AI-generated feedback based on your speech. The analysis and suggestions are created by artificial intelligence and should be considered illustrative."
@@ -204,8 +226,9 @@ const Demo = () => {
                     size="sm" 
                     onClick={() => setShowWebhookSettings(true)}
                     className="flex items-center gap-1"
+                    aria-label="Open CRM integration settings"
                   >
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-4 w-4" aria-hidden="true" />
                     <span>CRM Settings</span>
                   </Button>
                 </div>
@@ -216,11 +239,15 @@ const Demo = () => {
                 
                 {hasError ? (
                   <div className="text-center py-8">
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4" role="alert">
                       <h3 className="text-lg font-medium text-red-800 mb-2">Something went wrong</h3>
                       <p className="text-red-600 mb-4">We encountered an issue processing your response. This could be a temporary problem.</p>
-                      <Button onClick={handleRetry} className="flex items-center gap-2">
-                        <RefreshCw className="h-4 w-4" />
+                      <Button 
+                        onClick={handleRetry} 
+                        className="flex items-center gap-2"
+                        aria-label="Retry demo practice session"
+                      >
+                        <RefreshCw className="h-4 w-4" aria-hidden="true" />
                         Try Again
                       </Button>
                     </div>
@@ -235,7 +262,7 @@ const Demo = () => {
                 )}
 
                 {feedback && (
-                  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg" role="region" aria-label="AI feedback results">
                     <h3 className="font-medium text-green-800 mb-2">AI Feedback</h3>
                     <p className="text-green-700">{feedback}</p>
                   </div>
@@ -252,6 +279,7 @@ const Demo = () => {
                     <Button 
                       onClick={handleTryMoreFeatures}
                       className="bg-brand-blue hover:bg-brand-blue/90"
+                      aria-label="Try role-playing feature"
                     >
                       Try Role-Playing
                     </Button>
@@ -259,11 +287,19 @@ const Demo = () => {
                       variant="outline"
                       onClick={() => navigate('/signup')}
                       className="flex items-center gap-2"
+                      aria-label="Sign up for free account"
                     >
-                      <UserPlus className="h-4 w-4" />
+                      <UserPlus className="h-4 w-4" aria-hidden="true" />
                       Sign Up Free
                     </Button>
                   </div>
+                </div>
+              )}
+
+              {/* Lazy load demo sandbox if scrolled */}
+              {LazyDemoSandbox && (
+                <div className="mt-8">
+                  <LazyDemoSandbox />
                 </div>
               )}
             </div>

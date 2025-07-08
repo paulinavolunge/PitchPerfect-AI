@@ -13,7 +13,9 @@ import Testimonials from '@/components/Testimonials';
 import TrustBadges from '@/components/TrustBadges';
 import CompanyLogos from '@/components/CompanyLogos';
 import { SkipLink } from '@/components/accessibility/SkipLink';
-import { Helmet } from 'react-helmet-async';
+import { MetaTags } from '@/components/shared/MetaTags';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
+import { AccessibleImage } from '@/components/ui/accessible-image';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -45,19 +47,19 @@ const Index = () => {
 
   const features = [
     {
-      icon: <Zap className="h-8 w-8 text-vibrant-blue-500" />,
+      icon: <Zap className="h-8 w-8 text-vibrant-blue-500" aria-hidden="true" />,
       title: "AI-Powered Practice",
       description: "Practice with intelligent AI that adapts to your industry and responds like real prospects.",
       onClick: handleVoiceTrainingClick
     },
     {
-      icon: <BarChart className="h-8 w-8 text-primary-600" />,
+      icon: <BarChart className="h-8 w-8 text-primary-600" aria-hidden="true" />,
       title: "Instant Feedback", 
       description: "Get detailed analysis of your pitch delivery, pacing, and effectiveness immediately after each session.",
       onClick: handleAnalyticsClick
     },
     {
-      icon: <Users className="h-8 w-8 text-vibrant-blue-500" />,
+      icon: <Users className="h-8 w-8 text-vibrant-blue-500" aria-hidden="true" />,
       title: "Real Scenarios",
       description: "Train with realistic objection handling scenarios based on actual sales situations.",
       onClick: handleAIRoleplayClick
@@ -66,13 +68,11 @@ const Index = () => {
 
   return (
     <>
-      <Helmet>
-        <title>PitchPerfect AI - Master Your Sales Pitch with AI Practice</title>
-        <meta name="description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills." />
-        <meta name="keywords" content="sales training, pitch practice, AI roleplay, objection handling, sales skills" />
-        <meta property="og:title" content="PitchPerfect AI - Master Your Sales Pitch" />
-        <meta property="og:description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios." />
-      </Helmet>
+      <MetaTags
+        title="PitchPerfect AI - Master Your Sales Pitch with AI Practice"
+        description="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills."
+        keywords="sales pitch practice, objection handling, AI coaching, sales enablement, roleplay training, sales training, pitch improvement, sales skills development"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200">
         <SkipLink href="#main-content">Skip to main content</SkipLink>
@@ -84,12 +84,12 @@ const Index = () => {
         <main>
         <section id="main-content" className="pt-24 pb-16 relative overflow-hidden" role="main" aria-labelledby="hero-heading">
           {/* Enhanced floating background elements */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-vibrant-blue-500/20 rounded-full blur-3xl animate-vibrant-float"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary-600/15 rounded-full blur-3xl animate-vibrant-float" style={{animationDelay: '1s'}}></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-vibrant-blue-500/20 rounded-full blur-3xl animate-vibrant-float" aria-hidden="true"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary-600/15 rounded-full blur-3xl animate-vibrant-float" style={{animationDelay: '1s'}} aria-hidden="true"></div>
           
           <div className="container mx-auto px-4 text-center relative z-10">
             <Badge className="mb-6 bg-white/90 text-deep-navy border-vibrant-blue-500/30 backdrop-blur-sm shadow-vibrant font-semibold">
-              <Sparkles className="h-4 w-4 mr-1" />
+              <Sparkles className="h-4 w-4 mr-1" aria-hidden="true" />
               AI-Powered Sales Training
             </Badge>
             
@@ -104,40 +104,43 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up-vibrant" style={{animationDelay: '0.4s'}}>
-              <Button 
+              <EnhancedButton 
                 size="lg" 
-                className="bg-gradient-to-r from-primary-600 via-primary-500 to-vibrant-blue-500 hover:from-primary-700 hover:via-primary-600 hover:to-vibrant-blue-600 text-white text-xl font-bold px-8 py-4 h-16 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 transform hover:scale-105 animate-pulse border-0 ring-4 ring-primary-200 hover:ring-primary-300 md:text-lg md:h-14 md:px-6 sm:text-base sm:h-12 sm:px-4"
+                enhanced={true}
                 onClick={handleGetStartedClick}
+                icon={Play}
+                className="text-xl px-8 py-4 h-16 md:text-lg md:h-14 md:px-6 sm:text-base sm:h-12 sm:px-4"
+                aria-label="Start practicing your sales pitch for free"
               >
-                <Play className="h-6 w-6 mr-3 group-hover:scale-110 transition-transform md:h-5 md:w-5 md:mr-2 sm:h-4 sm:w-4" aria-hidden="true" />
                 <span className="hidden sm:inline">Start Practicing Now - Free!</span>
                 <span className="sm:hidden">Start Free!</span>
                 <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform md:h-4 md:w-4 sm:ml-1" aria-hidden="true" />
-              </Button>
+              </EnhancedButton>
               
-              <Button 
+              <EnhancedButton 
                 variant="outline" 
                 size="lg"
-                className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 text-lg font-semibold px-6 py-4 h-16 hover:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm md:text-base md:h-14 md:px-4 sm:text-sm sm:h-12"
                 onClick={handleWatchDemoClick}
+                icon={Play}
+                className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 text-lg font-semibold px-6 py-4 h-16 hover:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm md:text-base md:h-14 md:px-4 sm:text-sm sm:h-12"
+                aria-label="Watch a 2-minute demo of PitchPerfect AI"
               >
-                <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform md:h-4 md:w-4 sm:mr-1" aria-hidden="true" />
                 <span className="hidden sm:inline">Watch 2-Min Demo</span>
                 <span className="sm:hidden">Demo</span>
-              </Button>
+              </EnhancedButton>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-deep-navy/70 animate-slide-up-vibrant font-medium" style={{animationDelay: '0.6s'}}>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-vibrant-blue-500" />
+                <CheckCircle className="h-4 w-4 text-vibrant-blue-500" aria-hidden="true" />
                 No credit card required
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-vibrant-blue-500" />
+                <CheckCircle className="h-4 w-4 text-vibrant-blue-500" aria-hidden="true" />
                 Instant setup
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-vibrant-blue-500" />
+                <CheckCircle className="h-4 w-4 text-vibrant-blue-500" aria-hidden="true" />
                 Free trial included
               </div>
             </div>
@@ -203,7 +206,7 @@ const Index = () => {
         </section>
 
         {/* Trust Badges Section */}
-        <section className="py-12 bg-gradient-to-r from-gray-50 to-gray-100">
+        <section className="py-12 bg-gradient-to-r from-gray-50 to-gray-100" aria-label="Security and trust indicators">
           <div className="container mx-auto px-4">
             <TrustBadges variant="horizontal" />
           </div>
@@ -216,7 +219,7 @@ const Index = () => {
         <VideoWalkthrough />
 
         {/* CTA Section */}
-        <section className="py-16">
+        <section className="py-16" aria-label="Get started call-to-action">
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="mb-8">
               <TrustBadges variant="compact" className="justify-center mb-6" />

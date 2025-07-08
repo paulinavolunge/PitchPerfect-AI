@@ -1,238 +1,394 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Reset and Base Styles */
-* {
-  box-sizing: border-box;
-}
-
-html {
-  line-height: 1.15;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #EBF4FF 0%, #DBEAFE 100%);
-}
-
-#root {
-  min-height: 100vh;
-}
-
-/* Enhanced CSS Custom Properties */
 @layer base {
   :root {
-    /* Vibrant Color Palette */
-    --vibrant-blue-50: #EBF4FF;
-    --vibrant-blue-500: #63A4FF;
-    --deep-navy: #1A2B50;
-    --neutral-base: #F4F6F8;
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
 
-    /* Light theme colors with stronger contrast */
-    --background: 235 100% 97%;
-    --foreground: 30 41% 15%;
-    --card: 0 0% 100%;
-    --card-foreground: 30 41% 15%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 30 41% 15%;
-    --primary: 217 100% 70%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 17% 95%;
-    --secondary-foreground: 30 41% 15%;
-    --muted: 210 29% 91%;
-    --muted-foreground: 215 25% 27%;
-    --accent: 217 100% 70%;
-    --accent-foreground: 216 87% 24%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 29% 91%;
-    --input: 210 29% 91%;
-    --ring: 217 100% 70%;
-    --radius: 1rem;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+ 
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+ 
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 216 34% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 217.2 32.6% 17.5%;
+
+    --radius: 0.5rem;
   }
 }
 
-/* Enhanced Component Styles with Better Contrast */
-@layer components {
-  .vibrant-card {
-    @apply bg-white rounded-xl shadow-vibrant-lg border border-vibrant-blue-100/30 backdrop-blur-sm;
+@layer base {
+  * {
+    @apply border-border;
   }
-  
-  .hero-text {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-deep-navy to-vibrant-blue-500 bg-clip-text text-transparent;
-  }
-  
-  .vibrant-button {
-    @apply bg-gradient-to-r from-vibrant-blue-500 via-primary-600 to-indigo-600 hover:from-vibrant-blue-600 hover:via-primary-700 hover:to-indigo-700 text-white rounded-lg px-6 py-3 font-semibold transition-all duration-300 shadow-vibrant hover:shadow-vibrant-xl hover:scale-105;
-  }
-  
-  .outline-button {
-    @apply border-2 border-vibrant-blue-500 text-vibrant-blue-600 hover:bg-gradient-to-r hover:from-vibrant-blue-500 hover:to-primary-600 hover:text-white rounded-lg px-6 py-3 font-semibold transition-all duration-300 shadow-sm hover:shadow-vibrant;
-  }
-  
-  .card-hover {
-    @apply hover:shadow-vibrant-xl hover:-translate-y-2 transition-all duration-300;
-  }
-  
-  .gradient-bg {
-    @apply bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200;
-  }
-
-  .strong-cta {
-    @apply bg-cta-gradient hover:bg-cta-gradient-hover text-white font-bold shadow-deep hover:shadow-vibrant-xl transition-all duration-300 transform hover:scale-105;
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
-/* Enhanced Animations with More Impact */
-@keyframes strong-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+/* Enhanced CTA Button Styling */
+.strong-cta {
+  @apply bg-[#0055FF] text-white font-bold border-2 border-[#0044DD] hover:bg-[#0044DD] hover:border-[#0033BB] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
 }
 
+.conversion-button {
+  @apply bg-[#0055FF] hover:bg-[#0044DD] text-white font-bold px-8 py-4 rounded-lg border-2 border-[#0044DD] hover:border-[#0033BB] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105;
+}
+
+/* Enhanced Mobile Touch Targets */
+@media (max-width: 599px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    @apply px-4 py-3 min-h-[44px];
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  
+  button:not(.icon-only) {
+    @apply min-h-[44px] px-6 py-3;
+  }
+  
+  .mobile-cta {
+    @apply min-h-[48px] px-6 text-lg font-bold;
+  }
+}
+
+/* Progress Indicator Styles */
+.progress-indicator {
+  @apply flex items-center justify-center w-full max-w-2xl mx-auto mb-8 px-4;
+}
+
+.progress-step {
+  @apply flex items-center text-sm font-medium;
+}
+
+.progress-step.active {
+  @apply text-[#0055FF];
+}
+
+.progress-step.completed {
+  @apply text-green-600;
+}
+
+.progress-step.inactive {
+  @apply text-gray-400;
+}
+
+.progress-connector {
+  @apply flex-1 h-0.5 mx-4 bg-gray-200;
+}
+
+.progress-connector.completed {
+  @apply bg-green-500;
+}
+
+.progress-connector.active {
+  @apply bg-[#0055FF];
+}
+
+/* Vibrant Card Styles */
+.vibrant-card {
+  @apply rounded-lg shadow-md bg-white;
+}
+
+/* Hover effect for cards */
+.card-hover:hover {
+  @apply shadow-lg transform scale-105 transition-transform duration-300;
+}
+
+/* Floating animation */
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.5rem);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 4s infinite ease-in-out;
+}
+
+/* Pulse animation for electric effect */
+@keyframes electric-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.animate-electric-pulse {
+  animation: electric-pulse 2s infinite ease-in-out;
+}
+
+/* Slide up animation */
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.75s ease-out forwards;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Scale in animation */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s ease-out forwards;
+}
+
+/* Hero text animation */
+@keyframes hero-text-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-vibrant {
+  animation: hero-text-slide-up 0.75s ease-out forwards;
+}
+
+/* Button glow animation */
+@keyframes conversion-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 85, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 85, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(0, 85, 255, 0.5);
+  }
+}
+
+.animate-conversion-glow {
+  animation: conversion-glow 2s infinite;
+}
+
+/* Professional fade in animation */
+@keyframes professional-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-professional-fade-in {
+  animation: professional-fade-in 0.75s ease-out forwards;
+}
+
+/* Professional scale in animation */
+@keyframes scale-in-professional {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in-professional {
+  animation: scale-in-professional 0.6s ease-out forwards;
+}
+
+/* Strong pulse animation */
+@keyframes strong-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+.animate-strong-pulse {
+  animation: strong-pulse 1.5s infinite ease-in-out;
+}
+
+/* Vibrant glow animation */
 @keyframes vibrant-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(99, 164, 255, 0.2); }
-  50% { box-shadow: 0 0 30px rgba(99, 164, 255, 0.4); }
-}
-
-.animate-strong-bounce {
-  animation: strong-bounce 2s ease-in-out infinite;
+  0% {
+    box-shadow: 0 0 8px rgba(0, 85, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 85, 255, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(0, 85, 255, 0.4);
+  }
 }
 
 .animate-vibrant-glow {
-  animation: vibrant-glow 3s ease-in-out infinite;
+  animation: vibrant-glow 2s infinite;
 }
 
-/* Enhanced Focus styles for accessibility */
-:focus-visible {
-  outline: 2px solid var(--vibrant-blue-500);
-  outline-offset: 2px;
+/* Text styles */
+.hero-text {
+  @apply text-5xl md:text-6xl lg:text-7xl font-extrabold text-deep-navy leading-tight;
 }
 
-/* Responsive utilities */
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Primary text color */
+.primary-text {
+  @apply text-deep-navy;
 }
 
-/* Safe area for mobile devices */
-.safe-area-pb {
-  padding-bottom: env(safe-area-inset-bottom);
+/* Navy highlight */
+.navy-highlight {
+  @apply text-navy-700;
 }
 
-/* Enhanced Accessibility Enhancements */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+/* Electric highlight */
+.electric-highlight {
+  @apply text-electric-blue-500;
 }
 
-/* High contrast mode */
-.high-contrast {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 0%;
-  --muted: 0 0% 95%;
-  --muted-foreground: 0 0% 10%;
-  --border: 0 0% 40%;
-  --primary: 220 100% 25%;
-  --primary-foreground: 0 0% 100%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 0%;
+/* Button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-electric-blue-500 to-navy-600 hover:from-electric-blue-600 hover:to-navy-700 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300;
 }
 
-.high-contrast * {
-  text-shadow: none !important;
-  box-shadow: 0 0 0 2px currentColor !important;
+.btn-secondary {
+  @apply bg-white text-electric-blue-600 border border-electric-blue-300 hover:bg-electric-blue-50 hover:text-electric-blue-700 transition-all duration-300 px-6 py-3 rounded-full;
 }
 
-.high-contrast button,
-.high-contrast [role="button"] {
-  border: 3px solid currentColor !important;
-  font-weight: bold !important;
+/* Trust indicator styles */
+.trust-indicator {
+  @apply flex items-center gap-2 text-sm text-navy-600 font-medium;
 }
 
-/* Font size adjustments */
-.font-large {
-  font-size: 1.125rem !important;
+/* Professional card styles */
+.professional-card {
+  @apply bg-white rounded-lg shadow-md border border-gray-100;
 }
 
-.font-xl {
-  font-size: 1.25rem !important;
+/* Feature highlight styles */
+.feature-highlight {
+  @apply border-l-4 border-electric-blue-400 pl-4 py-2;
 }
 
-/* Reduced motion */
-.reduce-motion *,
-.reduce-motion *::before,
-.reduce-motion *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
+/* Outline button styles */
+.outline-button {
+  @apply border-2 border-vibrant-blue-500 text-vibrant-blue-600 hover:bg-vibrant-blue-50 hover:border-vibrant-blue-600 transition-colors duration-300;
 }
 
-/* Enhanced focus styles */
-*:focus-visible {
-  outline: 3px solid hsl(var(--primary)) !important;
-  outline-offset: 2px !important;
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px hsl(var(--background)), 0 0 0 4px hsl(var(--primary)) !important;
-}
-
-/* Improved button focus states */
-button:focus-visible,
-[role="button"]:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: 0 0 0 1px hsl(var(--background)), 0 0 0 4px hsl(var(--primary)), 0 4px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Touch targets */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-/* Skip links */
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 6px;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  padding: 12px 16px;
-  text-decoration: none;
-  border-radius: 4px;
-  z-index: 1000;
-  transition: top 0.3s ease;
-  font-weight: 600;
-  border: 2px solid transparent;
-}
-
-.skip-link:focus {
-  top: 6px;
-  border-color: hsl(var(--ring));
-}
-
-/* Improved link focus */
-a:focus-visible {
-  outline: 2px solid hsl(var(--primary)) !important;
-  outline-offset: 2px !important;
-  border-radius: 2px;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
+/* Vibrant button styles */
+.vibrant-button {
+  @apply bg-vibrant-blue-500 text-white font-bold hover:bg-vibrant-blue-600 transition-colors duration-300;
 }
