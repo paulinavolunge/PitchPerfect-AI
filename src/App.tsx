@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
+import SecurityHeaders from '@/components/security/SecurityHeaders';
 
 // Critical components loaded immediately (only homepage)
 import Index from '@/pages/Index';
@@ -48,12 +49,13 @@ function App() {
   
   return (
     <ErrorBoundary>
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <GuestModeProvider>
-            <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-              <TooltipProvider>
+      <SecurityHeaders>
+        <HelmetProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <GuestModeProvider>
+              <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+                <TooltipProvider>
                 <Router>
                   <div className="min-h-screen bg-background font-sans antialiased">
                     <Suspense fallback={
@@ -83,10 +85,11 @@ function App() {
                 </Router>
               </TooltipProvider>
             </ThemeProvider>
-            </GuestModeProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </HelmetProvider>
+              </GuestModeProvider>
+            </AuthProvider>
+          </QueryClientProvider>
+        </HelmetProvider>
+      </SecurityHeaders>
     </ErrorBoundary>
   );
 }

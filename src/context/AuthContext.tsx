@@ -169,20 +169,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // Simplified credit deduction to avoid RPC issues
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ credits_remaining: creditsRemaining - credits })
-        .eq('id', user.id);
+      // Use atomic credit deduction for better security and race condition protection
+      const { data, error } = await supabase.rpc('atomic_deduct_credits', {
+        p_user_id: user.id,
+        p_feature_used: featureType,
+        p_credits_to_deduct: credits
+      });
 
       if (error) {
         console.error('Error deducting credits:', error);
         return false;
       }
 
-      // Update local state
-      setCreditsRemaining(creditsRemaining - credits);
-      return true;
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        const result = data as any;
+        if (result.success) {
+          // Update local state with actual remaining credits from database
+          setCreditsRemaining(result.remaining_credits || 0);
+          return true;
+        }
+      }
+
+      return false;
     } catch (error) {
       console.error('Failed to deduct credits:', error);
       return false;

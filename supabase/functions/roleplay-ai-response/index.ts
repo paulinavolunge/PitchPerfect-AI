@@ -28,10 +28,22 @@ serve(async (req) => {
       conversationHistory 
     } = await req.json();
 
-    // Validate required fields
+    // Enhanced input validation and sanitization
     if (!userInput || !scenario) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: userInput and scenario' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Sanitize inputs to prevent injection attacks
+    const sanitizedUserInput = sanitizeInput(userInput);
+    const sanitizedScenario = sanitizeScenario(scenario);
+    
+    // Validate input length
+    if (sanitizedUserInput.length > 2000) {
+      return new Response(
+        JSON.stringify({ error: 'Input too long (max 2000 characters)' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -44,14 +56,14 @@ serve(async (req) => {
       );
     }
 
-    // Build the system prompt based on the scenario and voice style
-    const systemPrompt = buildSystemPrompt(scenario, voiceStyle);
+    // Build the system prompt based on the sanitized scenario and voice style
+    const systemPrompt = buildSystemPrompt(sanitizedScenario, voiceStyle);
     
-    // Build conversation context
+    // Build conversation context with sanitized inputs
     const messages = [
       { role: 'system', content: systemPrompt },
       ...buildConversationContext(conversationHistory, userScript),
-      { role: 'user', content: userInput }
+      { role: 'user', content: sanitizedUserInput }
     ];
 
     console.log('Making OpenAI API request with scenario:', scenario);
@@ -63,7 +75,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: messages,
         max_tokens: 300,
         temperature: 0.8,
@@ -94,10 +106,14 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in roleplay-ai-response function:', error);
+    
+    // Sanitize error message to prevent information disclosure
+    const sanitizedError = sanitizeErrorMessage(error instanceof Error ? error.message : 'Unknown error');
+    
     return new Response(
       JSON.stringify({ 
         error: 'Failed to generate AI response',
-        details: error.message 
+        details: sanitizedError
       }),
       {
         status: 500,
@@ -166,4 +182,41 @@ function buildConversationContext(conversationHistory: any[], userScript: string
   }
 
   return context;
+}
+
+// Security helper functions
+function sanitizeInput(input: string): string {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  
+  // Remove HTML tags and dangerous content
+  let sanitized = input.replace(/<[^>]*>/g, '');
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  sanitized = sanitized.replace(/data:/gi, '');
+  sanitized = sanitized.replace(/vbscript:/gi, '');
+  
+  return sanitized.trim().substring(0, 2000); // Limit length
+}
+
+function sanitizeScenario(scenario: any): any {
+  if (!scenario || typeof scenario !== 'object') {
+    return { industry: 'general', objection: 'price', difficulty: 'medium' };
+  }
+  
+  return {
+    industry: sanitizeInput(scenario.industry || 'general'),
+    objection: sanitizeInput(scenario.objection || 'price'),
+    difficulty: sanitizeInput(scenario.difficulty || 'medium'),
+    custom: scenario.custom ? sanitizeInput(scenario.custom) : null
+  };
+}
+
+function sanitizeErrorMessage(message: string): string {
+  // Remove sensitive information from error messages
+  return message
+    .replace(/api[_-]?key|token|secret|password/gi, '[REDACTED]')
+    .replace(/\b\d{4,}\b/g, '[ID]')
+    .replace(/https?:\/\/[^\s]+/gi, '[URL]')
+    .substring(0, 100); // Limit error message length
 }

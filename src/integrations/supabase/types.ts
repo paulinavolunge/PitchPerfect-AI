@@ -436,6 +436,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      atomic_deduct_credits: {
+        Args: {
+          p_user_id: string
+          p_feature_used: string
+          p_credits_to_deduct?: number
+        }
+        Returns: Json
+      }
       check_user_permission: {
         Args: { p_user_id: string; p_required_role?: string }
         Returns: boolean
@@ -472,8 +480,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      sanitize_error_message: {
+        Args: { p_error_message: string }
+        Returns: string
+      }
       secure_deduct_credits_and_log_usage: {
         Args: { p_user_id: string; p_feature_used: string }
+        Returns: Json
+      }
+      secure_validate_file_upload: {
+        Args: {
+          p_file_name: string
+          p_file_size: number
+          p_file_type: string
+          p_user_id?: string
+        }
         Returns: Json
       }
       security_health_check: {
