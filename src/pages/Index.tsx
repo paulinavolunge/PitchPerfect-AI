@@ -5,10 +5,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 import Hero from '@/components/Hero';
 import CompanyLogos from '@/components/CompanyLogos';
+import InteractiveDemo from '@/components/InteractiveDemo';
 // import Testimonials from '@/components/Testimonials';
 // import Footer from '@/components/Footer';
 // import PricingCTA from '@/components/PricingCTA';
-// import InteractiveDemo from '@/components/InteractiveDemo';
 // import VideoWalkthrough from '@/components/VideoWalkthrough';
 
 const Index = () => {
@@ -24,7 +24,7 @@ const Index = () => {
       <main>
         <Hero />
         <CompanyLogos />
-        {/* <InteractiveDemo /> */}
+        <InteractiveDemo />
         {/* <VideoWalkthrough isMobile={isMobile} /> */}
         {/* <Testimonials isMobile={isMobile} /> */}
         {/* <PricingCTA /> */}
