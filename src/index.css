@@ -83,32 +83,38 @@
   }
 }
 
-/* Enhanced CTA Button Styling */
+/* Enhanced CTA Button Styling with improved contrast */
 .strong-cta {
-  @apply bg-[#0055FF] text-white font-bold border-2 border-[#0044DD] hover:bg-[#0044DD] hover:border-[#0033BB] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
+  @apply bg-[#0044DD] text-white font-bold border-2 border-[#002B99] hover:bg-[#002B99] hover:border-[#001A66] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-h-[44px] min-w-[44px];
 }
 
 .conversion-button {
-  @apply bg-[#0055FF] hover:bg-[#0044DD] text-white font-bold px-8 py-4 rounded-lg border-2 border-[#0044DD] hover:border-[#0033BB] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105;
+  @apply bg-[#0044DD] hover:bg-[#002B99] text-white font-bold px-8 py-4 rounded-lg border-2 border-[#002B99] hover:border-[#001A66] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 min-h-[44px] min-w-[44px];
 }
 
-/* Enhanced Mobile Touch Targets */
+/* Enhanced Mobile Touch Targets with accessibility */
 @media (max-width: 599px) {
   input[type="text"],
   input[type="email"],
   input[type="password"],
   textarea {
-    @apply px-4 py-3 min-h-[44px];
+    @apply px-4 py-3 min-h-[44px] min-w-[44px];
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
   
   button:not(.icon-only) {
-    @apply min-h-[44px] px-6 py-3;
+    @apply min-h-[44px] min-w-[44px] px-6 py-3;
   }
   
   .mobile-cta {
-    @apply min-h-[48px] px-6 text-lg font-bold;
+    @apply min-h-[48px] min-w-[48px] px-6 text-lg font-bold;
+  }
+  
+  /* Improve touch targets for all interactive elements */
+  [role="button"], a, input, textarea, select, button {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
@@ -392,4 +398,83 @@
 /* Vibrant button styles */
 .vibrant-button {
   @apply bg-vibrant-blue-500 text-white font-bold hover:bg-vibrant-blue-600 transition-colors duration-300;
+}
+
+/* Enhanced Accessibility Styles */
+/* Improved focus indicators with high contrast */
+*:focus-visible {
+  outline: 3px solid #0044DD !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* High contrast focus for buttons */
+button:focus-visible, [role="button"]:focus-visible {
+  outline: 3px solid #0044DD !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 1px white, 0 0 0 4px #0044DD !important;
+}
+
+/* Skip link styles */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #0044DD;
+  color: white;
+  padding: 8px;
+  z-index: 1000;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .strong-cta {
+    @apply bg-black text-white border-black;
+  }
+  
+  .strong-cta:hover {
+    @apply bg-gray-800 border-gray-800;
+  }
+  
+  button, [role="button"] {
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Better text contrast */
+.text-high-contrast {
+  color: #000000 !important;
+}
+
+.text-high-contrast-inverse {
+  color: #ffffff !important;
 }

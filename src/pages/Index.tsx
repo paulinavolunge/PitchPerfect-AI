@@ -8,6 +8,7 @@ import { MetaTags } from '@/components/shared/MetaTags';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { useLazyLoading } from '@/hooks/use-lazy-loading';
 import { OptimizedImage } from '@/components/ui/optimized-image';
+import AccessibilityEnhancements from '@/components/accessibility/AccessibilityEnhancements';
 
 // Critical components loaded immediately
 import Navbar from '@/components/Navbar';
@@ -72,14 +73,16 @@ const Index = () => {
   ];
 
   return (
-    <>
+    <AccessibilityEnhancements>
       <MetaTags
         title="PitchPerfect AI - Master Your Sales Pitch with AI Practice"
         description="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills."
         keywords="sales pitch practice, objection handling, AI coaching, sales enablement, roleplay training, sales training, pitch improvement, sales skills development"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200">
+      <div className="min-h-screen bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200"
+           role="application" 
+           aria-label="PitchPerfect AI - Sales Training Platform">
         <SkipLink href="#main-content">Skip to main content</SkipLink>
         <SkipLink href="#features">Skip to features</SkipLink>
         <SkipLink href="#testimonials">Skip to testimonials</SkipLink>
@@ -114,8 +117,10 @@ const Index = () => {
                 enhanced={true}
                 onClick={handleGetStartedClick}
                 icon={Play}
-                className="text-xl px-8 py-4 h-16 md:text-lg md:h-14 md:px-6 sm:text-base sm:h-12 sm:px-4"
-                aria-label="Start practicing your sales pitch for free"
+                className="text-xl px-8 py-4 h-16 md:text-lg md:h-14 md:px-6 sm:text-base sm:h-12 sm:px-4 min-h-[44px] min-w-[44px] focus:ring-4 focus:ring-blue-300 focus:outline-none"
+                aria-label="Start practicing your sales pitch for free - opens signup page"
+                role="button"
+                tabIndex={0}
               >
                 <span className="hidden sm:inline">Start Practicing Now - Free!</span>
                 <span className="sm:hidden">Start Free!</span>
@@ -127,8 +132,10 @@ const Index = () => {
                 size="lg"
                 onClick={handleWatchDemoClick}
                 icon={Play}
-                className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 text-lg font-semibold px-6 py-4 h-16 hover:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm md:text-base md:h-14 md:px-4 sm:text-sm sm:h-12"
-                aria-label="Watch a 2-minute demo of PitchPerfect AI"
+                className="border-2 border-[#002B99] text-[#002B99] hover:bg-[#002B99] hover:text-white text-lg font-semibold px-6 py-4 h-16 transition-all duration-300 bg-white backdrop-blur-sm md:text-base md:h-14 md:px-4 sm:text-sm sm:h-12 min-h-[44px] min-w-[44px] focus:ring-4 focus:ring-blue-300 focus:outline-none"
+                aria-label="Watch a 2-minute demo of PitchPerfect AI - opens demo page"
+                role="button"
+                tabIndex={0}
               >
                 <span className="hidden sm:inline">Watch 2-Min Demo</span>
                 <span className="sm:hidden">Demo</span>
@@ -173,11 +180,11 @@ const Index = () => {
               {features.map((feature, index) => (
                 <div 
                   key={index} 
-                  className="vibrant-card p-8 text-center cursor-pointer card-hover group md:p-6 sm:p-4"
+                  className="vibrant-card p-8 text-center cursor-pointer card-hover group md:p-6 sm:p-4 min-h-[44px] min-w-[44px] focus:ring-4 focus:ring-blue-300 focus:outline-none"
                   onClick={feature.onClick}
                   role="button"
                   tabIndex={0}
-                  aria-label={`Learn more about ${feature.title}`}
+                  aria-label={`Learn more about ${feature.title} - ${feature.description}`}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -241,7 +248,7 @@ const Index = () => {
         )}
         </main>
       </div>
-    </>
+    </AccessibilityEnhancements>
   );
 };
 

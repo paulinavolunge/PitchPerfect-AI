@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import './styles/mobile-fixes.css';
 
 // Initialize polyfills and performance optimizations asynchronously
 Promise.resolve().then(() => {
