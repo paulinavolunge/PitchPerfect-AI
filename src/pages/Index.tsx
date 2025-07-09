@@ -29,18 +29,18 @@ const Index = () => {
   });
 
   const handleVoiceTrainingClick = () => {
-    console.log("Voice Training button clicked - navigating to /voice-training");
-    navigate('/voice-training');
+    console.log("Voice Training button clicked - navigating to /practice");
+    navigate('/practice');
   };
 
   const handleAnalyticsClick = () => {
-    console.log("Analytics button clicked - navigating to /analytics");
-    navigate('/analytics');
+    console.log("Analytics button clicked - navigating to /progress");
+    navigate('/progress');
   };
 
   const handleAIRoleplayClick = () => {
-    console.log("AI Roleplay button clicked - navigating to /ai-roleplay");
-    navigate('/ai-roleplay');
+    console.log("AI Roleplay button clicked - navigating to /roleplay");
+    navigate('/roleplay');
   };
 
   const handleGetStartedClick = () => {

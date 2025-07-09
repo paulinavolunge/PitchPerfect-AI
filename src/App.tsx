@@ -6,10 +6,25 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/AuthContext';
+import { GuestModeProvider } from '@/context/GuestModeContext';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 // Critical components loaded immediately (only homepage)
 import Index from '@/pages/Index';
+
+// Lazy load other pages
+const Demo = lazy(() => import('@/pages/Demo'));
+const Practice = lazy(() => import('@/pages/Practice'));
+const RolePlay = lazy(() => import('@/pages/RolePlay'));
+const Progress = lazy(() => import('@/pages/Progress'));
+const Signup = lazy(() => import('@/pages/Signup'));
+const Login = lazy(() => import('@/pages/Login'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Pricing = lazy(() => import('@/pages/Pricing'));
+const About = lazy(() => import('@/pages/About'));
+const Compare = lazy(() => import('@/pages/Compare'));
+const Tips = lazy(() => import('@/pages/Tips'));
+const CallRecordings = lazy(() => import('@/pages/CallRecordings'));
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -36,6 +51,7 @@ function App() {
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
+            <GuestModeProvider>
             <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
               <TooltipProvider>
                 <Router>
@@ -47,13 +63,27 @@ function App() {
                     }>
                       <Routes>
                         <Route path="/" element={<Index />} />
-                        <Route path="*" element={<div>Page Not Found</div>} />
+                        <Route path="/demo" element={<Demo />} />
+                        <Route path="/practice" element={<Practice />} />
+                        <Route path="/roleplay" element={<RolePlay />} />
+                        <Route path="/progress" element={<Progress />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/pricing" element={<Pricing />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/compare" element={<Compare />} />
+                        <Route path="/tips" element={<Tips />} />
+                        <Route path="/call-recordings" element={<CallRecordings />} />
+                        <Route path="*" element={<div className="flex items-center justify-center min-h-screen"><div className="text-center"><h1 className="text-2xl font-bold mb-4">Page Not Found</h1><p>The page you're looking for doesn't exist.</p></div></div>} />
                       </Routes>
+                      <Toaster />
                     </Suspense>
                   </div>
                 </Router>
               </TooltipProvider>
             </ThemeProvider>
+            </GuestModeProvider>
           </AuthProvider>
         </QueryClientProvider>
       </HelmetProvider>
