@@ -7,8 +7,6 @@ import { SkipLink } from '@/components/accessibility/SkipLink';
 import { MetaTags } from '@/components/shared/MetaTags';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { useInteractionBasedLoading } from '@/hooks/use-interaction-loading';
-import { StructuredData } from '@/components/seo/StructuredData';
-import { OptimizedImage } from '@/components/ui/optimized-image';
 import AccessibilityEnhancements from '@/components/accessibility/AccessibilityEnhancements';
 
 // Critical components loaded immediately
@@ -76,22 +74,6 @@ const Index = () => {
     }
   ];
 
-  // FAQ data for structured data
-  const faqData = [
-    {
-      question: "What is PitchPerfect AI?",
-      answer: "PitchPerfect AI is an AI-powered sales training platform that helps sales professionals practice their pitch delivery and objection handling through realistic simulations."
-    },
-    {
-      question: "How does the AI feedback work?",
-      answer: "Our AI analyzes your pitch delivery, pacing, tone, and content to provide instant, actionable feedback that helps you improve your sales performance."
-    },
-    {
-      question: "Is there a free trial?",
-      answer: "Yes, we offer a free trial that includes access to practice scenarios and basic feedback features. No credit card required to get started."
-    }
-  ];
-
   return (
     <AccessibilityEnhancements>
       <MetaTags
@@ -100,14 +82,6 @@ const Index = () => {
         keywords="sales pitch practice, objection handling, AI coaching, sales enablement, roleplay training, sales training, pitch improvement, sales skills development"
         canonical="https://pitchperfectai.ai"
       />
-      
-      <StructuredData type="organization" data={{}} />
-      <StructuredData type="product" data={{ 
-        name: "PitchPerfect AI", 
-        description: "AI-powered sales training platform",
-        price: "29"
-      }} />
-      <StructuredData type="faq" data={faqData} />
 
 
       <div className="min-h-screen bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200"
