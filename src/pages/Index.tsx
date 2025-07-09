@@ -1,5 +1,5 @@
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Play, CheckCircle, Users, Zap, BarChart, Sparkles } from 'lucide-react';
@@ -13,13 +13,13 @@ import AccessibilityEnhancements from '@/components/accessibility/AccessibilityE
 import Navbar from '@/components/Navbar';
 import TrustBadges from '@/components/TrustBadges';
 
-// Lazy load ALL non-critical components
-const Footer = lazy(() => import('@/components/Footer'));
-const PricingCTA = lazy(() => import('@/components/PricingCTA'));
-const InteractiveDemo = lazy(() => import('@/components/InteractiveDemo'));
-const VideoWalkthrough = lazy(() => import('@/components/VideoWalkthrough'));
+// All components loaded immediately
+import Footer from '@/components/Footer';
+import PricingCTA from '@/components/PricingCTA';
+import InteractiveDemo from '@/components/InteractiveDemo';
+import VideoWalkthrough from '@/components/VideoWalkthrough';
 import Testimonials from '@/components/Testimonials';
-const CompanyLogos = lazy(() => import('@/components/CompanyLogos'));
+import CompanyLogos from '@/components/CompanyLogos';
 
 const Index = () => {
   const navigate = useNavigate();
