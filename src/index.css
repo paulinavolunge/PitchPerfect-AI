@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -339,7 +340,7 @@
   animation: vibrant-glow 2s infinite;
 }
 
-/* Text styles */
+/* Text styles - using correct color classes */
 .hero-text {
   @apply text-5xl md:text-6xl lg:text-7xl font-extrabold text-deep-navy leading-tight;
 }
@@ -349,28 +350,28 @@
   @apply text-deep-navy;
 }
 
-/* Navy highlight */
+/* Navy highlight - using available colors */
 .navy-highlight {
-  @apply text-navy-700;
+  @apply text-secondary-700;
 }
 
 /* Electric highlight */
 .electric-highlight {
-  @apply text-electric-blue-500;
+  @apply text-vibrant-blue-500;
 }
 
 /* Button styles */
 .btn-primary {
-  @apply bg-gradient-to-r from-electric-blue-500 to-navy-600 hover:from-electric-blue-600 hover:to-navy-700 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300;
+  @apply bg-gradient-to-r from-vibrant-blue-500 to-secondary-600 hover:from-vibrant-blue-600 hover:to-secondary-700 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300;
 }
 
 .btn-secondary {
-  @apply bg-white text-electric-blue-600 border border-electric-blue-300 hover:bg-electric-blue-50 hover:text-electric-blue-700 transition-all duration-300 px-6 py-3 rounded-full;
+  @apply bg-white text-vibrant-blue-600 border border-vibrant-blue-300 hover:bg-vibrant-blue-50 hover:text-vibrant-blue-700 transition-all duration-300 px-6 py-3 rounded-full;
 }
 
 /* Trust indicator styles */
 .trust-indicator {
-  @apply flex items-center gap-2 text-sm text-navy-600 font-medium;
+  @apply flex items-center gap-2 text-sm text-secondary-600 font-medium;
 }
 
 /* Professional card styles */
@@ -380,7 +381,7 @@
 
 /* Feature highlight styles */
 .feature-highlight {
-  @apply border-l-4 border-electric-blue-400 pl-4 py-2;
+  @apply border-l-4 border-vibrant-blue-400 pl-4 py-2;
 }
 
 /* Outline button styles */
