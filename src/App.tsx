@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider } from '@/context/AuthContext';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 // Critical components loaded immediately (only homepage)
@@ -34,24 +35,26 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-            <TooltipProvider>
-              <Router>
-                <div className="min-h-screen bg-background font-sans antialiased">
-                  <Suspense fallback={
-                    <div className="min-h-screen flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  }>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="*" element={<div>Page Not Found</div>} />
-                    </Routes>
-                  </Suspense>
-                </div>
-              </Router>
-            </TooltipProvider>
-          </ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+              <TooltipProvider>
+                <Router>
+                  <div className="min-h-screen bg-background font-sans antialiased">
+                    <Suspense fallback={
+                      <div className="min-h-screen flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    }>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="*" element={<div>Page Not Found</div>} />
+                      </Routes>
+                    </Suspense>
+                  </div>
+                </Router>
+              </TooltipProvider>
+            </ThemeProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>
