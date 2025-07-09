@@ -40,42 +40,21 @@ export default defineConfig(({ mode }) => {
       reportCompressedSize: false, // Faster builds
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Vendor chunk for React and core libraries
-            if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'react-vendor';
-              }
-              if (id.includes('@radix-ui') || id.includes('lucide-react')) {
-                return 'ui-vendor';
-              }
-              if (id.includes('framer-motion')) {
-                return 'animations';
-              }
-              if (id.includes('recharts')) {
-                return 'charts';
-              }
-              if (id.includes('@supabase')) {
-                return 'supabase';
-              }
-              if (id.includes('@tanstack')) {
-                return 'query';
-              }
-              return 'vendor';
-            }
-            
-            // Component chunks for lazy loading
-            if (id.includes('/components/')) {
-              if (id.includes('Testimonials') || id.includes('CompanyLogos')) {
-                return 'social-proof';
-              }
-              if (id.includes('InteractiveDemo') || id.includes('VideoWalkthrough')) {
-                return 'demo-components';
-              }
-              if (id.includes('PricingCTA') || id.includes('Footer')) {
-                return 'marketing-components';
-              }
-            }
+          manualChunks: {
+            // Core vendor libraries
+            vendor: ['react', 'react-dom'],
+            // Router and navigation
+            router: ['react-router-dom'],
+            // UI libraries
+            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', 'lucide-react'],
+            // Backend integration
+            supabase: ['@supabase/supabase-js'],
+            // Analytics and tracking
+            analytics: ['@tanstack/react-query'],
+            // Animation libraries
+            animations: ['framer-motion'],
+            // Charts and data visualization
+            charts: ['recharts'],
           },
           // Optimize chunk file names
           chunkFileNames: (chunkInfo) => {
@@ -113,15 +92,6 @@ export default defineConfig(({ mode }) => {
         'lucide-react',
       ],
       exclude: ['@supabase/supabase-js'],
-    },
-    
-    // CSS optimization
-    css: {
-      postcss: {
-        plugins: [
-          // CSS purging will be handled by build process
-        ],
-      },
     },
   };
 });

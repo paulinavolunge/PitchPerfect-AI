@@ -7,9 +7,6 @@ import { SkipLink } from '@/components/accessibility/SkipLink';
 import { MetaTags } from '@/components/shared/MetaTags';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { useLazyLoading } from '@/hooks/use-lazy-loading';
-import { OptimizedImage } from '@/components/ui/optimized-image';
-import { ResponsiveImage } from '@/components/ui/responsive-image';
-import { StructuredData } from '@/components/seo/StructuredData';
 import AccessibilityEnhancements from '@/components/accessibility/AccessibilityEnhancements';
 
 // Critical components loaded immediately
@@ -83,14 +80,6 @@ const Index = () => {
         canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com"
       />
 
-      {/* Structured Data for SEO - simplified */}
-      <StructuredData 
-        type="WebSite" 
-        data={{
-          name: "PitchPerfect AI",
-          description: "AI-powered sales training platform"
-        }} 
-      />
 
       <div className="min-h-screen bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200"
            role="application" 
