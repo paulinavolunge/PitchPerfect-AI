@@ -7,10 +7,7 @@ import './styles/mobile-fixes.css';
 
 // Initialize polyfills and performance optimizations asynchronously
 Promise.resolve().then(() => {
-  Promise.all([
-    import('./utils/polyfills').then(({ initializePolyfills }) => initializePolyfills()),
-    import('./utils/performance').then(({ optimizeForWebVitals }) => optimizeForWebVitals())
-  ]);
+  import('./utils/polyfills').then(({ initializePolyfills }) => initializePolyfills());
 });
 
 // Global error boundary for root

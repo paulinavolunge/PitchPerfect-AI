@@ -83,19 +83,12 @@ const Index = () => {
         canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com"
       />
 
-      {/* Structured Data for SEO */}
+      {/* Structured Data for SEO - simplified */}
       <StructuredData 
         type="WebSite" 
         data={{
           name: "PitchPerfect AI",
-          description: "AI-powered sales training platform for pitch practice and objection handling"
-        }} 
-      />
-      <StructuredData 
-        type="SoftwareApplication" 
-        data={{
-          name: "PitchPerfect AI",
-          description: "Practice and perfect your sales pitch with AI-powered roleplay scenarios"
+          description: "AI-powered sales training platform"
         }} 
       />
 

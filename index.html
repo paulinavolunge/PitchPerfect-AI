@@ -19,8 +19,6 @@
     
     <!-- PWA Support -->
     <meta name="theme-color" content="#0055FF" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="PitchPerfect AI" />
     
     <!-- Open Graph -->
@@ -31,22 +29,16 @@
     
     <title>PitchPerfect AI - Master Your Sales Pitch with AI Practice</title>
     
-    <!-- Preload critical resources -->
-    <link rel="preload" href="/assets/logo-pitchperfectai.webp" as="image" type="image/webp">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style">
+    <!-- DNS prefetch for better performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     
-    <!-- Inline critical CSS for above-the-fold content -->
+    <!-- Simplified critical CSS -->
     <style>
-      body{background:linear-gradient(135deg,#EBF4FF 0%,#DBEAFE 100%);margin:0;font-family:system-ui,-apple-system,sans-serif;line-height:1.5}
-      .hero-text{font-size:3rem;font-weight:800;color:#1A2B50;line-height:1.1;text-align:center}
-      .strong-cta{background:#0044DD;color:white;font-weight:bold;border:2px solid #002B99;transition:all 0.3s;min-height:44px;min-width:44px;padding:12px 24px;border-radius:8px;cursor:pointer}
-      .strong-cta:hover{background:#002B99;border-color:#001A66;transform:scale(1.05)}
-      .strong-cta:focus{outline:3px solid #0044DD;outline-offset:2px}
-      *:focus-visible{outline:3px solid #0044DD !important;outline-offset:2px !important}
+      body{margin:0;font-family:system-ui,-apple-system,sans-serif;line-height:1.5}
+      .strong-cta{background:#0044DD;color:white;font-weight:bold;border:2px solid #002B99;min-height:44px;min-width:44px;padding:12px 24px;border-radius:8px}
       button,a,[role="button"]{min-height:44px;min-width:44px}
-      @media(min-width:768px){.hero-text{font-size:4rem}}
-      @media(min-width:1024px){.hero-text{font-size:5rem}}
-      @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms !important;transition-duration:0.01ms !important}}
+      *:focus-visible{outline:3px solid #0044DD !important;outline-offset:2px !important}
     </style>
   </head>
   <body>
@@ -56,7 +48,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
     
-    <!-- Main script loaded asynchronously -->
-    <script type="module" src="/src/main.tsx" async></script>
+    <!-- Main script loaded normally (remove async to prevent loading issues) -->
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
