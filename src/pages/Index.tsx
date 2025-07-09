@@ -3,7 +3,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-import HeroSection from '@/components/HeroSection';
+import Hero from '@/components/Hero';
 // import Testimonials from '@/components/Testimonials';
 // import Footer from '@/components/Footer';
 // import PricingCTA from '@/components/PricingCTA';
@@ -22,7 +22,7 @@ const Index = () => {
       </Helmet>
 
       <main>
-        <HeroSection isMobile={isMobile} />
+        <Hero />
         {/* <CompanyLogos /> */}
         {/* <InteractiveDemo /> */}
         {/* <VideoWalkthrough isMobile={isMobile} /> */}
