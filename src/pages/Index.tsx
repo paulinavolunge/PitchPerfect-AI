@@ -1,13 +1,15 @@
+
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-import Testimonials from '@/components/Testimonials';
-import Footer from '@/components/Footer';
-import PricingCTA from '@/components/PricingCTA';
-import InteractiveDemo from '@/components/InteractiveDemo';
-import CompanyLogos from '@/components/CompanyLogos';
-import VideoWalkthrough from '@/components/VideoWalkthrough';
+// import HeroSection from '@/components/HeroSection';
+// import Testimonials from '@/components/Testimonials';
+// import Footer from '@/components/Footer';
+// import PricingCTA from '@/components/PricingCTA';
+// import InteractiveDemo from '@/components/InteractiveDemo';
+// import CompanyLogos from '@/components/CompanyLogos';
+// import VideoWalkthrough from '@/components/VideoWalkthrough';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -20,14 +22,18 @@ const Index = () => {
       </Helmet>
 
       <main>
-        <CompanyLogos />
-        <InteractiveDemo />
-        <VideoWalkthrough isMobile={isMobile} />
-        <Testimonials isMobile={isMobile} />
-        <PricingCTA />
+        <div className="min-h-screen flex items-center justify-center">
+          <h1 className="text-4xl font-bold text-center">Testing Page Load</h1>
+        </div>
+        {/* <HeroSection isMobile={isMobile} /> */}
+        {/* <CompanyLogos /> */}
+        {/* <InteractiveDemo /> */}
+        {/* <VideoWalkthrough isMobile={isMobile} /> */}
+        {/* <Testimonials isMobile={isMobile} /> */}
+        {/* <PricingCTA /> */}
       </main>
 
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };
