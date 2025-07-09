@@ -6,33 +6,33 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    --foreground: 224 15% 15%; /* Darker for better contrast */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 15% 35%; /* Darker for better contrast */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 224 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 224 15% 15%;
  
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 214 20% 85%;
+    --input: 214 20% 85%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 221 83% 53%; /* #2563EB - Higher contrast blue */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 15% 92%;
+    --secondary-foreground: 224 15% 15%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 221 83% 53%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --ring: 222.2 84% 4.9%;
+    --ring: 221 83% 53%;
 
     --radius: 0.5rem;
   }
@@ -83,38 +83,43 @@
   }
 }
 
-/* Enhanced CTA Button Styling with improved contrast */
+/* Enhanced CTA Button Styling with WCAG AA contrast */
 .strong-cta {
-  @apply bg-[#0044DD] text-white font-bold border-2 border-[#002B99] hover:bg-[#002B99] hover:border-[#001A66] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-h-[44px] min-w-[44px];
+  @apply bg-[#2563EB] text-white font-semibold border-2 border-[#1E40AF] hover:bg-[#1E40AF] hover:border-[#1D4ED8] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-h-[48px] min-w-[48px];
+  padding: 16px 24px;
 }
 
 .conversion-button {
-  @apply bg-[#0044DD] hover:bg-[#002B99] text-white font-bold px-8 py-4 rounded-lg border-2 border-[#002B99] hover:border-[#001A66] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 min-h-[44px] min-w-[44px];
+  @apply bg-[#2563EB] hover:bg-[#1E40AF] text-white font-semibold px-8 py-4 rounded-lg border-2 border-[#1E40AF] hover:border-[#1D4ED8] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 min-h-[48px] min-w-[48px];
+  padding: 16px 24px;
 }
 
-/* Enhanced Mobile Touch Targets with accessibility */
+/* Enhanced Mobile Touch Targets with 48px minimum for accessibility */
 @media (max-width: 599px) {
   input[type="text"],
   input[type="email"],
   input[type="password"],
   textarea {
-    @apply px-4 py-3 min-h-[44px] min-w-[44px];
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    @apply min-h-[48px] min-w-[48px];
+    padding: 16px !important;
+    font-size: 16px !important; /* Prevent zoom on iOS */
   }
   
   button:not(.icon-only) {
-    @apply min-h-[44px] min-w-[44px] px-6 py-3;
+    @apply min-h-[48px] min-w-[48px];
+    padding: 16px 24px !important;
   }
   
   .mobile-cta {
-    @apply min-h-[48px] min-w-[48px] px-6 text-lg font-bold;
+    @apply min-h-[48px] min-w-[48px] text-lg font-semibold;
+    padding: 16px 24px !important;
   }
   
-  /* Improve touch targets for all interactive elements */
+  /* Ensure all interactive elements meet 48px touch target */
   [role="button"], a, input, textarea, select, button {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 48px !important;
+    min-width: 48px !important;
+    padding: 16px !important;
   }
 }
 

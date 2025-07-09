@@ -7,6 +7,8 @@ import { SkipLink } from '@/components/accessibility/SkipLink';
 import { MetaTags } from '@/components/shared/MetaTags';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { useInteractionBasedLoading } from '@/hooks/use-interaction-loading';
+import { StructuredData } from '@/components/seo/StructuredData';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import AccessibilityEnhancements from '@/components/accessibility/AccessibilityEnhancements';
 
 // Critical components loaded immediately
@@ -74,14 +76,38 @@ const Index = () => {
     }
   ];
 
+  // FAQ data for structured data
+  const faqData = [
+    {
+      question: "What is PitchPerfect AI?",
+      answer: "PitchPerfect AI is an AI-powered sales training platform that helps sales professionals practice their pitch delivery and objection handling through realistic simulations."
+    },
+    {
+      question: "How does the AI feedback work?",
+      answer: "Our AI analyzes your pitch delivery, pacing, tone, and content to provide instant, actionable feedback that helps you improve your sales performance."
+    },
+    {
+      question: "Is there a free trial?",
+      answer: "Yes, we offer a free trial that includes access to practice scenarios and basic feedback features. No credit card required to get started."
+    }
+  ];
+
   return (
     <AccessibilityEnhancements>
       <MetaTags
         title="PitchPerfect AI - Master Your Sales Pitch with AI Practice"
         description="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills."
         keywords="sales pitch practice, objection handling, AI coaching, sales enablement, roleplay training, sales training, pitch improvement, sales skills development"
-        canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com"
+        canonical="https://pitchperfectai.ai"
       />
+      
+      <StructuredData type="organization" data={{}} />
+      <StructuredData type="product" data={{ 
+        name: "PitchPerfect AI", 
+        description: "AI-powered sales training platform",
+        price: "29"
+      }} />
+      <StructuredData type="faq" data={faqData} />
 
 
       <div className="min-h-screen bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200"
@@ -90,7 +116,9 @@ const Index = () => {
         <SkipLink href="#main-content">Skip to main content</SkipLink>
         <SkipLink href="#features">Skip to features</SkipLink>
         <SkipLink href="#testimonials">Skip to testimonials</SkipLink>
-        <Navbar />
+        <nav role="navigation" aria-label="Main navigation">
+          <Navbar />
+        </nav>
         
         {/* Hero Section with Enhanced Contrast */}
         <main>
@@ -121,7 +149,7 @@ const Index = () => {
                 enhanced={true}
                 onClick={handleGetStartedClick}
                 icon={Play}
-                className="text-xl px-8 py-4 h-16 md:text-lg md:h-14 md:px-6 sm:text-base sm:h-12 sm:px-4 min-h-[44px] min-w-[44px] focus:ring-4 focus:ring-blue-300 focus:outline-none"
+                className="strong-cta text-xl min-h-[48px] min-w-[48px] focus:ring-4 focus:ring-blue-500 focus:outline-none"
                 aria-label="Start practicing your sales pitch for free - opens signup page"
                 role="button"
                 tabIndex={0}
@@ -136,7 +164,7 @@ const Index = () => {
                 size="lg"
                 onClick={handleWatchDemoClick}
                 icon={Play}
-                className="border-2 border-[#002B99] text-[#002B99] hover:bg-[#002B99] hover:text-white text-lg font-semibold px-6 py-4 h-16 transition-all duration-300 bg-white backdrop-blur-sm md:text-base md:h-14 md:px-4 sm:text-sm sm:h-12 min-h-[44px] min-w-[44px] focus:ring-4 focus:ring-blue-300 focus:outline-none"
+                className="border-2 border-[hsl(221_83%_53%)] text-[hsl(221_83%_53%)] hover:bg-[hsl(221_83%_53%)] hover:text-white text-lg font-semibold min-h-[48px] min-w-[48px] transition-all duration-300 bg-white backdrop-blur-sm focus:ring-4 focus:ring-blue-500 focus:outline-none"
                 aria-label="Watch a 2-minute demo of PitchPerfect AI - opens demo page"
                 role="button"
                 tabIndex={0}

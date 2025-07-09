@@ -4,11 +4,11 @@
 /* Only critical base styles */
 :root {
   --background: 0 0% 100%;
-  --foreground: 222.2 47.4% 11.2%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --vibrant-blue-500: #63A4FF;
-  --deep-navy: #1A2B50;
+  --foreground: 224 15% 15%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+  --vibrant-blue-500: hsl(221 83% 53%);
+  --deep-navy: hsl(224 15% 15%);
 }
 
 .dark {
@@ -32,21 +32,24 @@ body {
 .hero-text {
   font-size: 3rem;
   font-weight: 800;
-  color: var(--deep-navy);
+  color: hsl(224 15% 15%);
   line-height: 1.1;
 }
 
 .strong-cta {
-  background-color: var(--vibrant-blue-500);
+  background-color: hsl(221 83% 53%);
   color: white;
-  font-weight: bold;
-  border: 2px solid #0044DD;
+  font-weight: 600;
+  border: 2px solid hsl(221 83% 48%);
   transition: all 0.3s ease;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 16px 24px;
 }
 
 .strong-cta:hover {
-  background-color: #0044DD;
-  border-color: #0033BB;
+  background-color: hsl(221 83% 48%);
+  border-color: hsl(221 83% 43%);
   transform: scale(1.05);
 }
 

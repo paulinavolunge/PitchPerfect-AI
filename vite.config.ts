@@ -31,84 +31,50 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_LOVABLE': JSON.stringify(isDevelopment ? 'true' : 'false'),
     },
     build: {
-      // Use esbuild for minification instead of terser (no additional dependency required)
+      // Use esbuild for minification with ES6+ target
       minify: isProduction ? 'esbuild' : false,
-      sourcemap: true, // Always generate source maps for better debugging
-      target: 'es2020',
+      sourcemap: isProduction, // Only in production for debugging
+      target: 'es2022', // Modern browsers only
       cssCodeSplit: true,
       cssMinify: isProduction,
       reportCompressedSize: false, // Faster builds
+      // Purge unused CSS
       rollupOptions: {
+        external: [], // Remove unused external deps
         output: {
+          // Optimized chunking for critical path
           manualChunks: (id) => {
-            // Aggressive chunking for smaller initial bundles
             if (id.includes('node_modules')) {
-              // Core React bundle
+              // Critical React bundle
               if (id.includes('react') || id.includes('react-dom')) {
-                return 'react-core';
+                return 'react';
               }
-              // UI libraries chunk
-              if (id.includes('@radix-ui') || id.includes('lucide-react')) {
-                return 'ui-lib';
+              // UI essentials only
+              if (id.includes('@radix-ui') && (id.includes('dialog') || id.includes('button') || id.includes('tooltip'))) {
+                return 'ui-core';
               }
-              // Router chunk
+              // Router
               if (id.includes('react-router')) {
                 return 'router';
               }
-              // Heavy analytics/charts
-              if (id.includes('recharts') || id.includes('@tanstack/react-query')) {
-                return 'analytics';
+              // Defer heavy libraries
+              if (id.includes('recharts') || id.includes('@tanstack/react-query') || id.includes('framer-motion')) {
+                return 'heavy-libs';
               }
-              // Heavy animation libraries
-              if (id.includes('framer-motion')) {
-                return 'animations';
-              }
-              // Supabase chunk
+              // Supabase
               if (id.includes('@supabase')) {
                 return 'supabase';
               }
-              // Other vendor libraries
               return 'vendor';
             }
-            
-            // Split pages into separate chunks
-            if (id.includes('/pages/')) {
-              if (id.includes('Analytics') || id.includes('Progress') || id.includes('Dashboard')) {
-                return 'analytics-pages';
-              }
-              if (id.includes('Demo') || id.includes('Practice') || id.includes('RolePlay')) {
-                return 'demo-pages';
-              }
-              if (id.includes('Auth') || id.includes('Login') || id.includes('Signup')) {
-                return 'auth-pages';
-              }
-              return 'other-pages';
-            }
-            
-            // Split heavy components
-            if (id.includes('/components/')) {
-              if (id.includes('Charts') || id.includes('Analytics') || id.includes('Progress')) {
-                return 'chart-components';
-              }
-              if (id.includes('Demo') || id.includes('Interactive') || id.includes('Video')) {
-                return 'demo-components';
-              }
-              if (id.includes('Testimonials') || id.includes('Pricing') || id.includes('Footer')) {
-                return 'marketing-components';
-              }
-            }
           },
-          // Optimize chunk file names
-          chunkFileNames: (chunkInfo) => {
-            if (chunkInfo.name === 'vendor') return 'assets/vendor-[hash].js';
-            if (chunkInfo.name === 'ui') return 'assets/ui-[hash].js';
-            return 'assets/[name]-[hash].js';
-          },
+          // Cache-friendly file names
+          chunkFileNames: 'assets/js/[name]-[hash].js',
           assetFileNames: (assetInfo) => {
             if (assetInfo.name?.endsWith('.css')) {
-              return 'assets/styles-[hash].css';
+              return 'assets/css/[name]-[hash].css';
             }
-            return 'assets/[name]-[hash][extname]';
+            return 'assets/[ext]/[name]-[hash][extname]';
           },
         },
       },

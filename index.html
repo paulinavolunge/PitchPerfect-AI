@@ -11,6 +11,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     
+    <!-- Preload LCP hero image -->
+    <link rel="preload" as="image" href="/assets/hero-image.webp" fetchpriority="high">
+    <link rel="preload" as="image" href="/assets/hero-image.jpg" fetchpriority="high">
+    
     <!-- Enhanced Favicon Support -->
     <link rel="icon" type="image/png" sizes="32x32" href="/lovable-uploads/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/lovable-uploads/favicon-192x192.png" />
@@ -33,20 +37,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     
-    <!-- Simplified critical CSS -->
+    <!-- Critical above-the-fold CSS only -->
     <style>
-      body{margin:0;font-family:system-ui,-apple-system,sans-serif;line-height:1.5}
-      .strong-cta{background:#0044DD;color:white;font-weight:bold;border:2px solid #002B99;min-height:44px;min-width:44px;padding:12px 24px;border-radius:8px}
-      button,a,[role="button"]{min-height:44px;min-width:44px}
-      *:focus-visible{outline:3px solid #0044DD !important;outline-offset:2px !important}
+      body{margin:0;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;background:#fff}
+      .hero-text{font-size:3rem;font-weight:800;color:#1A2B50;line-height:1.1}
+      .strong-cta{background:#2563EB;color:white;font-weight:600;border:2px solid #1E40AF;min-height:48px;min-width:48px;padding:16px 24px;border-radius:8px;transition:all 0.3s ease}
+      .strong-cta:hover{background:#1E40AF;border-color:#1D4ED8;transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,0.4)}
+      button,a,[role="button"]{min-height:48px;min-width:48px;padding:16px}
+      *:focus-visible{outline:3px solid #2563EB !important;outline-offset:2px !important;box-shadow:0 0 0 1px white,0 0 0 4px #2563EB !important}
+      .hero-section{background:linear-gradient(135deg,#EBF4FF 0%,#DBEAFE 100%);padding:6rem 1rem 4rem}
+      @media (max-width:599px){button,a,[role="button"]{min-height:48px;min-width:48px;padding:16px;font-size:16px}}
+      @media (min-width:768px){.hero-text{font-size:4rem}}
+      @media (min-width:1024px){.hero-text{font-size:5rem}}
     </style>
   </head>
   <body>
     <div id="root"></div>
     
-    <!-- Load fonts asynchronously -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+    <!-- Load only essential font weights -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"></noscript>
     
     <!-- Main script loaded normally (remove async to prevent loading issues) -->
     <script type="module" src="/src/main.tsx"></script>

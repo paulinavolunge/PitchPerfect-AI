@@ -20,18 +20,21 @@ export const MetaTags: React.FC<MetaTagsProps> = ({
 }) => {
   const fullTitle = title.includes('PitchPerfect AI') ? title : `${title} - PitchPerfect AI`;
   
-  // Get proper base URL and clean up the path
+  // Use single canonical URL for all pages
   const getCanonicalUrl = (): string => {
     if (canonical) return canonical;
     
+    // Always use production domain for canonical
+    const baseUrl = 'https://pitchperfectai.ai';
+    
     if (typeof window !== 'undefined') {
-      const { protocol, host, pathname } = window.location;
+      const { pathname } = window.location;
       const cleanPath = pathname === '/' ? '' : pathname.replace(/\/$/, ''); // Remove trailing slash except for root
-      return `${protocol}//${host}${cleanPath}`;
+      return `${baseUrl}${cleanPath}`;
     }
     
     // Fallback for SSR
-    return 'https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com';
+    return baseUrl;
   };
   
   const canonicalUrl = getCanonicalUrl();
