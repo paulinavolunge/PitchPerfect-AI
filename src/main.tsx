@@ -32,6 +32,7 @@ class RootErrorBoundary extends React.Component<{
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, info: any) {
+    // eslint-disable-next-line no-console
     console.error('[RootErrorBoundary] App failed to load:', error, info);
   }
   render() {
@@ -53,3 +54,4 @@ root.render(
     </React.StrictMode>
   </RootErrorBoundary>
 );
+

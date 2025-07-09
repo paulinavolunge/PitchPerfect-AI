@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_LOVABLE': JSON.stringify(isDevelopment ? 'true' : 'false'),
     },
     build: {
-      // Use esbuild for minification (faster than terser)
+      // Use esbuild for minification instead of terser (no additional dependency required)
       minify: isProduction ? 'esbuild' : false,
       sourcemap: isDevelopment,
       target: 'es2020',
@@ -39,42 +39,30 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            // Core vendor libraries (critical)
+            // Core vendor libraries
             vendor: ['react', 'react-dom'],
-            // Router and navigation (critical)
+            // Router and navigation
             router: ['react-router-dom'],
-            // UI libraries (load early)
+            // UI libraries
             ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', 'lucide-react'],
-            // Backend integration (defer)
+            // Backend integration
             supabase: ['@supabase/supabase-js'],
-            // Analytics and tracking (lazy load)
+            // Analytics and tracking
             analytics: ['@tanstack/react-query'],
-            // Animation libraries (defer)
+            // Animation libraries
             animations: ['framer-motion'],
-            // Charts and data visualization (lazy load)
+            // Charts and data visualization
             charts: ['recharts'],
-            // Heavy components (lazy load)
-            dashboard: ['/src/pages/Dashboard.tsx'],
-            practice: ['/src/pages/Practice.tsx', '/src/pages/AIRoleplay.tsx'],
           },
-          // Optimize chunk file names with cache busting
+          // Optimize chunk file names
           chunkFileNames: (chunkInfo) => {
             if (chunkInfo.name === 'vendor') return 'assets/vendor-[hash].js';
             if (chunkInfo.name === 'ui') return 'assets/ui-[hash].js';
-            if (chunkInfo.name === 'charts') return 'assets/charts-[hash].js';
-            if (chunkInfo.name === 'analytics') return 'assets/analytics-[hash].js';
             return 'assets/[name]-[hash].js';
           },
           assetFileNames: (assetInfo) => {
-            // Organize assets with cache-friendly names
             if (assetInfo.name?.endsWith('.css')) {
               return 'assets/styles-[hash].css';
-            }
-            if (assetInfo.name?.match(/\.(png|jpg|jpeg|gif|svg|webp|avif)$/)) {
-              return 'assets/images/[name]-[hash][extname]';
-            }
-            if (assetInfo.name?.match(/\.(woff|woff2|ttf|eot)$/)) {
-              return 'assets/fonts/[name]-[hash][extname]';
             }
             return 'assets/[name]-[hash][extname]';
           },
@@ -83,14 +71,13 @@ export default defineConfig(({ mode }) => {
       // Ensure clean builds
       emptyOutDir: true,
       // Optimize chunk size warnings
-      chunkSizeWarningLimit: 500, // Smaller chunks for better caching
+      chunkSizeWarningLimit: 1000,
     },
     // Production optimizations
     ...(isProduction && {
       esbuild: {
         drop: ['console', 'debugger'],
         legalComments: 'none',
-        treeShaking: true,
       },
     }),
     // Optimize dependencies pre-bundling
@@ -99,30 +86,10 @@ export default defineConfig(({ mode }) => {
         'react',
         'react-dom',
         'react-router-dom',
+        '@tanstack/react-query',
         'lucide-react',
       ],
-      exclude: [
-        '@supabase/supabase-js',
-        '@tanstack/react-query',
-        'recharts',
-        'framer-motion'
-      ],
-    },
-    // CSS optimization
-    css: {
-      devSourcemap: isDevelopment,
-      postcss: {
-        plugins: isProduction ? [
-          require('cssnano')({
-            preset: ['default', {
-              discardComments: { removeAll: true },
-              normalizeWhitespace: true,
-              mergeLonghand: true,
-              mergeRules: true,
-            }]
-          })
-        ] : [],
-      },
+      exclude: ['@supabase/supabase-js'],
     },
   };
 });

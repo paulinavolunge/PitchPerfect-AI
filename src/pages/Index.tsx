@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play, CheckCircle, Zap, BarChart, Users, Sparkles } from 'lucide-react';
+import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PricingCTA from '@/components/PricingCTA';
@@ -15,6 +15,7 @@ import CompanyLogos from '@/components/CompanyLogos';
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { MetaTags } from '@/components/shared/MetaTags';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
+import { AccessibleImage } from '@/components/ui/accessible-image';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -79,9 +80,13 @@ const Index = () => {
         <SkipLink href="#testimonials">Skip to testimonials</SkipLink>
         <Navbar />
         
-        {/* Hero Section */}
+        {/* Hero Section with Enhanced Contrast */}
         <main>
         <section id="main-content" className="pt-24 pb-16 relative overflow-hidden" role="main" aria-labelledby="hero-heading">
+          {/* Enhanced floating background elements */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-vibrant-blue-500/20 rounded-full blur-3xl animate-vibrant-float" aria-hidden="true"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary-600/15 rounded-full blur-3xl animate-vibrant-float" style={{animationDelay: '1s'}} aria-hidden="true"></div>
+          
           <div className="container mx-auto px-4 text-center relative z-10">
             <Badge className="mb-6 bg-white/90 text-deep-navy border-vibrant-blue-500/30 backdrop-blur-sm shadow-vibrant font-semibold">
               <Sparkles className="h-4 w-4 mr-1" aria-hidden="true" />
@@ -140,13 +145,14 @@ const Index = () => {
               </div>
             </div>
             
+            {/* Trust indicators */}
             <div className="mt-8 animate-slide-up-vibrant" style={{animationDelay: '0.8s'}}>
               <TrustBadges variant="compact" className="justify-center" />
             </div>
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Features Section with Enhanced Cards */}
         <section id="features" className="py-16 bg-white/70 backdrop-blur-sm" aria-labelledby="features-heading">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -191,21 +197,28 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Company Logos Section */}
         <CompanyLogos />
-        
+
+        {/* Enhanced Testimonials */}
         <section id="testimonials">
           <Testimonials />
         </section>
 
+        {/* Trust Badges Section */}
         <section className="py-12 bg-gradient-to-r from-gray-50 to-gray-100" aria-label="Security and trust indicators">
           <div className="container mx-auto px-4">
             <TrustBadges variant="horizontal" />
           </div>
         </section>
 
+        {/* Interactive Demo Section */}
         <InteractiveDemo />
+
+        {/* Video Walkthrough Alternative */}
         <VideoWalkthrough />
 
+        {/* CTA Section */}
         <section className="py-16" aria-label="Get started call-to-action">
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="mb-8">
