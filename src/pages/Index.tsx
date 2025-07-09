@@ -23,7 +23,7 @@ const Index = () => {
         <CompanyLogos />
         <InteractiveDemo />
         <VideoWalkthrough />
-        <Testimonials />
+        <Testimonials isMobile={isMobile} />
         <PricingCTA />
       </main>
 

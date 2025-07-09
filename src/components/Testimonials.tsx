@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Rocket } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const testimonials = [
@@ -52,51 +51,48 @@ const testimonials = [
   }
 ];
 
-const Testimonials = () => {
+const Testimonials = ({ isMobile }: { isMobile: boolean }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [autoRotate, setAutoRotate] = useState(true);
-  const isMobile = useIsMobile();
-  
-  // Calculate how many testimonials to display based on screen size
+
   const displayCount = isMobile ? 1 : 3;
-  
-  // Automatically rotate testimonials
+
   useEffect(() => {
     let intervalId: number | undefined;
-    
+
     if (autoRotate) {
       intervalId = window.setInterval(() => {
-        setCurrentIndex(prevIndex => 
+        setCurrentIndex((prevIndex) =>
           (prevIndex + 1) % (testimonials.length - displayCount + 1)
         );
       }, 5000);
     }
-    
+
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [autoRotate, displayCount]);
-  
-  // Pause rotation when user interacts
+
   const handleNavigation = (direction: 'prev' | 'next') => {
     setAutoRotate(false);
-    
+
     if (direction === 'prev') {
-      setCurrentIndex(prev => 
+      setCurrentIndex((prev) =>
         prev === 0 ? testimonials.length - displayCount : prev - 1
       );
     } else {
-      setCurrentIndex(prev => 
+      setCurrentIndex((prev) =>
         (prev + 1) % (testimonials.length - displayCount + 1)
       );
     }
-    
-    // Resume auto-rotation after a period of inactivity
+
     setTimeout(() => setAutoRotate(true), 10000);
   };
-  
-  // Get visible testimonials
-  const visibleTestimonials = testimonials.slice(currentIndex, currentIndex + displayCount);
+
+  const visibleTestimonials = testimonials.slice(
+    currentIndex,
+    currentIndex + displayCount
+  );
 
   return (
     <section className="py-20 bg-white">
@@ -106,9 +102,9 @@ const Testimonials = () => {
           <p className="text-lg text-deep-navy/70 mb-10">
             Don't just take our word for it - hear from sales professionals who have transformed their pitches
           </p>
-          
+
           <Link to="/signup" className="inline-block mb-6">
-            <Button 
+            <Button
               className="bg-primary-600 hover:bg-primary-700 text-white font-medium shadow-lg hover:shadow-xl flex items-center gap-2 group px-5 py-6 h-auto text-base md:text-lg touch-target"
               aria-label="Start your free trial now"
             >
@@ -116,7 +112,7 @@ const Testimonials = () => {
             </Button>
           </Link>
         </div>
-        
+
         <div className="relative">
           <div className="flex justify-between items-center absolute top-1/2 left-0 right-0 -translate-y-1/2 z-10 px-2">
             <Button
@@ -138,10 +134,10 @@ const Testimonials = () => {
               <ArrowRight size={24} aria-hidden="true" />
             </Button>
           </div>
-          
+
           <div className="overflow-hidden">
             <AnimatePresence mode="wait">
-              <motion.div 
+              <motion.div
                 key={currentIndex}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -149,52 +145,52 @@ const Testimonials = () => {
                 transition={{ duration: 0.5 }}
                 className="grid grid-cols-1 md:grid-cols-3 gap-8"
               >
-                 {visibleTestimonials.map((testimonial, index) => (
-                    <Card key={index} className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300" role="article" aria-labelledby={`testimonial-${index}-author`}>
-                      <CardContent className="p-8">
-                        <div className="flex items-center mb-6">
-                          <Avatar className="h-14 w-14 border-3 border-primary-200 shadow-md">
-                            <AvatarImage 
-                              src={testimonial.avatar} 
-                              alt={`Profile photo of ${testimonial.author}`}
-                              className="object-cover"
-                            />
-                            <AvatarFallback className="bg-primary-100 text-primary-700 font-semibold text-lg">
-                              {testimonial.author.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="ml-4">
-                            <div className="flex items-center gap-2">
-                              <div className="flex text-yellow-400">
-                                {[...Array(5)].map((_, i) => (
-                                  <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                  </svg>
-                                ))}
-                              </div>
-                              <span className="text-xs text-primary-600 font-medium bg-primary-50 px-2 py-1 rounded-full">
-                                {testimonial.results}
-                              </span>
+                {visibleTestimonials.map((testimonial, index) => (
+                  <Card key={index} className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300" role="article" aria-labelledby={`testimonial-${index}-author`}>
+                    <CardContent className="p-8">
+                      <div className="flex items-center mb-6">
+                        <Avatar className="h-14 w-14 border-3 border-primary-200 shadow-md">
+                          <AvatarImage
+                            src={testimonial.avatar}
+                            alt={`Profile photo of ${testimonial.author}`}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="bg-primary-100 text-primary-700 font-semibold text-lg">
+                            {testimonial.author.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="ml-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex text-yellow-400">
+                              {[...Array(5)].map((_, i) => (
+                                <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                </svg>
+                              ))}
                             </div>
+                            <span className="text-xs text-primary-600 font-medium bg-primary-50 px-2 py-1 rounded-full">
+                              {testimonial.results}
+                            </span>
                           </div>
                         </div>
-                        
-                        <div className="mb-6 text-4xl text-primary-600" aria-hidden="true">"</div>
-                        <blockquote className="mb-6 text-deep-navy/80 italic text-base leading-relaxed">
-                          {testimonial.quote}
-                        </blockquote>
-                        <div>
-                          <p id={`testimonial-${index}-author`} className="font-semibold text-deep-navy text-lg">{testimonial.author}</p>
-                          <p className="text-sm text-deep-navy/70 font-medium">{testimonial.role}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+
+                      <div className="mb-6 text-4xl text-primary-600" aria-hidden="true">"</div>
+                      <blockquote className="mb-6 text-deep-navy/80 italic text-base leading-relaxed">
+                        {testimonial.quote}
+                      </blockquote>
+                      <div>
+                        <p id={`testimonial-${index}-author`} className="font-semibold text-deep-navy text-lg">{testimonial.author}</p>
+                        <p className="text-sm text-deep-navy/70 font-medium">{testimonial.role}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
-        
+
         <div className="flex justify-center mt-8">
           {Array.from({ length: testimonials.length - displayCount + 1 }).map((_, idx) => (
             <button
