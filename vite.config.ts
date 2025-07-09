@@ -99,11 +99,8 @@ export default defineConfig(({ mode }) => {
         'react-dom',
         'react-router-dom',
       ],
-      exclude: [
-        '@tanstack/react-query',
-        'framer-motion',
-        'recharts'
-      ],
+      exclude: [],
+      force: true, // Force re-bundling to fix React conflicts
     },
   };
 });
