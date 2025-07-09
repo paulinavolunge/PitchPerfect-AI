@@ -82,34 +82,28 @@ function App() {
   
   return (
     <ErrorBoundary>
-      {/* <HelmetProvider> */}
-        {/* <QueryClientProvider client={queryClient}> */}
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
             <TooltipProvider>
-              {/* <AccessibilityProvider> */}
-                {/* <Router> */}
-                  {/* <AuthProvider> */}
-                    {/* <GuestModeProvider> */}
-                      {/* <PageTrackingProvider> */}
-                        {/* Initialize analytics lazily after user interaction */}
-                        {/* <LazyAnalytics /> */}
-                        
-                        <div className="min-h-screen bg-background font-sans antialiased">
-                          <div className="flex items-center justify-center h-64">
-                            <div className="text-2xl font-bold text-primary">
-                              🧪 Testing App.tsx - Only ThemeProvider and TooltipProvider loaded
-                            </div>
-                          </div>
-                        </div>
-                      {/* </PageTrackingProvider> */}
-                    {/* </GuestModeProvider> */}
-                  {/* </AuthProvider> */}
-                {/* </Router> */}
-              {/* </AccessibilityProvider> */}
+              <Router>
+                <div className="min-h-screen bg-background font-sans antialiased">
+                  <Suspense fallback={
+                    <div className="min-h-screen flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  }>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="*" element={<div>Page Not Found</div>} />
+                    </Routes>
+                  </Suspense>
+                </div>
+              </Router>
             </TooltipProvider>
           </ThemeProvider>
-        {/* </QueryClientProvider> */}
-      {/* </HelmetProvider> */}
+        </QueryClientProvider>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 }
