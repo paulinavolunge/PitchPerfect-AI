@@ -98,8 +98,6 @@ export default defineConfig(({ mode }) => {
         'react',
         'react-dom',
         'react-router-dom',
-        '@supabase/supabase-js',
-        '@supabase/postgrest-js',
       ],
       exclude: [
         '@tanstack/react-query',
