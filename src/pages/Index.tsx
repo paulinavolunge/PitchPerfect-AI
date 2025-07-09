@@ -1,24 +1,29 @@
 
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React, { Suspense, lazy } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles } from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import PricingCTA from '@/components/PricingCTA';
-import InteractiveDemo from '@/components/InteractiveDemo';
-import VideoWalkthrough from '@/components/VideoWalkthrough';
-import Testimonials from '@/components/Testimonials';
-import TrustBadges from '@/components/TrustBadges';
-import CompanyLogos from '@/components/CompanyLogos';
+import { ArrowRight, Play, CheckCircle, Users, Zap, BarChart, Sparkles } from 'lucide-react';
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { MetaTags } from '@/components/shared/MetaTags';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
-import { AccessibleImage } from '@/components/ui/accessible-image';
+import { useLazyLoading } from '@/hooks/use-lazy-loading';
+import { OptimizedImage } from '@/components/ui/optimized-image';
+
+// Critical components loaded immediately
+import Navbar from '@/components/Navbar';
+import TrustBadges from '@/components/TrustBadges';
+
+// Lazy load non-critical components
+const Footer = lazy(() => import('@/components/Footer'));
+const PricingCTA = lazy(() => import('@/components/PricingCTA'));
+const InteractiveDemo = lazy(() => import('@/components/InteractiveDemo'));
+const VideoWalkthrough = lazy(() => import('@/components/VideoWalkthrough'));
+const Testimonials = lazy(() => import('@/components/Testimonials'));
+const CompanyLogos = lazy(() => import('@/components/CompanyLogos'));
 
 const Index = () => {
   const navigate = useNavigate();
+  const shouldLoadSections = useLazyLoading({ threshold: 0.3 });
 
   const handleVoiceTrainingClick = () => {
     console.log("Voice Training button clicked - navigating to /voice-training");
@@ -197,38 +202,43 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Company Logos Section */}
-        <CompanyLogos />
+        {/* Lazy loaded sections */}
+        {shouldLoadSections && (
+          <Suspense fallback={<div className="py-8 text-center">Loading...</div>}>
+            {/* Company Logos Section */}
+            <CompanyLogos />
 
-        {/* Enhanced Testimonials */}
-        <section id="testimonials">
-          <Testimonials />
-        </section>
+            {/* Enhanced Testimonials */}
+            <section id="testimonials">
+              <Testimonials />
+            </section>
 
-        {/* Trust Badges Section */}
-        <section className="py-12 bg-gradient-to-r from-gray-50 to-gray-100" aria-label="Security and trust indicators">
-          <div className="container mx-auto px-4">
-            <TrustBadges variant="horizontal" />
-          </div>
-        </section>
+            {/* Trust Badges Section */}
+            <section className="py-12 bg-gradient-to-r from-gray-50 to-gray-100" aria-label="Security and trust indicators">
+              <div className="container mx-auto px-4">
+                <TrustBadges variant="horizontal" />
+              </div>
+            </section>
 
-        {/* Interactive Demo Section */}
-        <InteractiveDemo />
+            {/* Interactive Demo Section */}
+            <InteractiveDemo />
 
-        {/* Video Walkthrough Alternative */}
-        <VideoWalkthrough />
+            {/* Video Walkthrough Alternative */}
+            <VideoWalkthrough />
 
-        {/* CTA Section */}
-        <section className="py-16" aria-label="Get started call-to-action">
-          <div className="container mx-auto px-4 max-w-3xl">
-            <div className="mb-8">
-              <TrustBadges variant="compact" className="justify-center mb-6" />
-            </div>
-            <PricingCTA />
-          </div>
-        </section>
+            {/* CTA Section */}
+            <section className="py-16" aria-label="Get started call-to-action">
+              <div className="container mx-auto px-4 max-w-3xl">
+                <div className="mb-8">
+                  <TrustBadges variant="compact" className="justify-center mb-6" />
+                </div>
+                <PricingCTA />
+              </div>
+            </section>
 
-        <Footer />
+            <Footer />
+          </Suspense>
+        )}
         </main>
       </div>
     </>

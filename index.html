@@ -7,6 +7,10 @@
     <meta name="description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills." />
     <meta name="keywords" content="sales pitch practice, objection handling, AI coaching, sales enablement, roleplay training" />
     
+    <!-- Performance Critical Resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    
     <!-- Enhanced Favicon Support -->
     <link rel="icon" type="image/png" sizes="32x32" href="/lovable-uploads/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/lovable-uploads/favicon-192x192.png" />
@@ -26,9 +30,24 @@
     <meta property="og:type" content="website" />
     
     <title>PitchPerfect AI - Master Your Sales Pitch with AI Practice</title>
+    
+    <!-- Inline critical CSS for above-the-fold content -->
+    <style>
+      body{background:linear-gradient(135deg,#EBF4FF 0%,#DBEAFE 100%);margin:0;font-family:system-ui,-apple-system,sans-serif}
+      .hero-text{font-size:3rem;font-weight:800;color:#1A2B50;line-height:1.1}
+      .strong-cta{background:#63A4FF;color:white;font-weight:bold;border:2px solid #0044DD;transition:all 0.3s}
+      @media(min-width:768px){.hero-text{font-size:4rem}}
+      @media(min-width:1024px){.hero-text{font-size:5rem}}
+    </style>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Defer non-critical JavaScript -->
+    <script type="module" src="/src/main.tsx" async></script>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
   </body>
 </html>

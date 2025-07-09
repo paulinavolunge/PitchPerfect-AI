@@ -1,0 +1,63 @@
+/* Critical CSS for above-the-fold content */
+@tailwind base;
+
+/* Only critical base styles */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 47.4% 11.2%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --vibrant-blue-500: #63A4FF;
+  --deep-navy: #1A2B50;
+}
+
+.dark {
+  --background: 224 71% 4%;
+  --foreground: 213 31% 91%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Critical hero styles only */
+.hero-text {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--deep-navy);
+  line-height: 1.1;
+}
+
+.strong-cta {
+  background-color: var(--vibrant-blue-500);
+  color: white;
+  font-weight: bold;
+  border: 2px solid #0044DD;
+  transition: all 0.3s ease;
+}
+
+.strong-cta:hover {
+  background-color: #0044DD;
+  border-color: #0033BB;
+  transform: scale(1.05);
+}
+
+@media (min-width: 768px) {
+  .hero-text {
+    font-size: 4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-text {
+    font-size: 5rem;
+  }
+}
