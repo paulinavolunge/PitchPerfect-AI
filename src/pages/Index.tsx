@@ -18,7 +18,7 @@ const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
 const InteractiveDemo = lazy(() => import('@/components/InteractiveDemo'));
 const VideoWalkthrough = lazy(() => import('@/components/VideoWalkthrough'));
-const Testimonials = lazy(() => import('@/components/Testimonials'));
+import Testimonials from '@/components/Testimonials';
 const CompanyLogos = lazy(() => import('@/components/CompanyLogos'));
 
 const Index = () => {
