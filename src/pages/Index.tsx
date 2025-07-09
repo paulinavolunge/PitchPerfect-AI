@@ -6,14 +6,14 @@ import { ArrowRight, Play, CheckCircle, Users, Zap, BarChart, Sparkles } from 'l
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { MetaTags } from '@/components/shared/MetaTags';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
-import { useLazyLoading } from '@/hooks/use-lazy-loading';
+import { useInteractionBasedLoading } from '@/hooks/use-interaction-loading';
 import AccessibilityEnhancements from '@/components/accessibility/AccessibilityEnhancements';
 
 // Critical components loaded immediately
 import Navbar from '@/components/Navbar';
 import TrustBadges from '@/components/TrustBadges';
 
-// Lazy load non-critical components
+// Lazy load ALL non-critical components
 const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
 const InteractiveDemo = lazy(() => import('@/components/InteractiveDemo'));
@@ -23,7 +23,10 @@ const CompanyLogos = lazy(() => import('@/components/CompanyLogos'));
 
 const Index = () => {
   const navigate = useNavigate();
-  const shouldLoadSections = useLazyLoading({ threshold: 0.3 });
+  const shouldLoadSections = useInteractionBasedLoading({ 
+    scrollThreshold: 0.2, 
+    delay: 2000 
+  });
 
   const handleVoiceTrainingClick = () => {
     console.log("Voice Training button clicked - navigating to /voice-training");

@@ -40,21 +40,63 @@ export default defineConfig(({ mode }) => {
       reportCompressedSize: false, // Faster builds
       rollupOptions: {
         output: {
-          manualChunks: {
-            // Core vendor libraries
-            vendor: ['react', 'react-dom'],
-            // Router and navigation
-            router: ['react-router-dom'],
-            // UI libraries
-            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', 'lucide-react'],
-            // Backend integration
-            supabase: ['@supabase/supabase-js'],
-            // Analytics and tracking
-            analytics: ['@tanstack/react-query'],
-            // Animation libraries
-            animations: ['framer-motion'],
-            // Charts and data visualization
-            charts: ['recharts'],
+          manualChunks: (id) => {
+            // Aggressive chunking for smaller initial bundles
+            if (id.includes('node_modules')) {
+              // Core React bundle
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'react-core';
+              }
+              // UI libraries chunk
+              if (id.includes('@radix-ui') || id.includes('lucide-react')) {
+                return 'ui-lib';
+              }
+              // Router chunk
+              if (id.includes('react-router')) {
+                return 'router';
+              }
+              // Heavy analytics/charts
+              if (id.includes('recharts') || id.includes('@tanstack/react-query')) {
+                return 'analytics';
+              }
+              // Heavy animation libraries
+              if (id.includes('framer-motion')) {
+                return 'animations';
+              }
+              // Supabase chunk
+              if (id.includes('@supabase')) {
+                return 'supabase';
+              }
+              // Other vendor libraries
+              return 'vendor';
+            }
+            
+            // Split pages into separate chunks
+            if (id.includes('/pages/')) {
+              if (id.includes('Analytics') || id.includes('Progress') || id.includes('Dashboard')) {
+                return 'analytics-pages';
+              }
+              if (id.includes('Demo') || id.includes('Practice') || id.includes('RolePlay')) {
+                return 'demo-pages';
+              }
+              if (id.includes('Auth') || id.includes('Login') || id.includes('Signup')) {
+                return 'auth-pages';
+              }
+              return 'other-pages';
+            }
+            
+            // Split heavy components
+            if (id.includes('/components/')) {
+              if (id.includes('Charts') || id.includes('Analytics') || id.includes('Progress')) {
+                return 'chart-components';
+              }
+              if (id.includes('Demo') || id.includes('Interactive') || id.includes('Video')) {
+                return 'demo-components';
+              }
+              if (id.includes('Testimonials') || id.includes('Pricing') || id.includes('Footer')) {
+                return 'marketing-components';
+              }
+            }
           },
           // Optimize chunk file names
           chunkFileNames: (chunkInfo) => {
@@ -75,23 +117,28 @@ export default defineConfig(({ mode }) => {
       // Optimize chunk size warnings
       chunkSizeWarningLimit: 1000,
     },
-    // Production optimizations
+    // Production optimizations with tree shaking
     ...(isProduction && {
       esbuild: {
         drop: ['console', 'debugger'],
         legalComments: 'none',
+        treeShaking: true,
       },
     }),
-    // Optimize dependencies pre-bundling
+    
+    // Optimize dependencies pre-bundling for smaller bundles
     optimizeDeps: {
       include: [
         'react',
         'react-dom',
         'react-router-dom',
-        '@tanstack/react-query',
-        'lucide-react',
       ],
-      exclude: ['@supabase/supabase-js'],
+      exclude: [
+        '@supabase/supabase-js',
+        '@tanstack/react-query',
+        'framer-motion',
+        'recharts'
+      ],
     },
   };
 });
