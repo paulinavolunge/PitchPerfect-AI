@@ -1,18 +1,17 @@
 
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import { MetaTags } from '@/components/shared/MetaTags';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const Terms = () => {
   return (
     <>
-      <Helmet>
-        <title>Terms of Service - PitchPerfect AI</title>
-        <meta name="description" content="Read the terms of service for PitchPerfect AI platform. Understand your rights and responsibilities when using our AI-powered sales training platform." />
-        <meta name="robots" content="noindex, follow" />
-        <link rel="canonical" href={`${window.location.origin}/terms`} />
-      </Helmet>
+      <MetaTags
+        title="Terms of Service - PitchPerfect AI"
+        description="Read the terms of service for PitchPerfect AI platform. Understand your rights and responsibilities when using our AI-powered sales training platform."
+        canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com/terms"
+      />
       
       <div className="min-h-screen flex flex-col">
         <Navbar />

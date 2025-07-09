@@ -78,6 +78,7 @@ const Index = () => {
         title="PitchPerfect AI - Master Your Sales Pitch with AI Practice"
         description="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills."
         keywords="sales pitch practice, objection handling, AI coaching, sales enablement, roleplay training, sales training, pitch improvement, sales skills development"
+        canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com"
       />
 
       <div className="min-h-screen bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200"

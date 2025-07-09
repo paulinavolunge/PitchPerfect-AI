@@ -191,6 +191,7 @@ const Demo = () => {
         title="Try PitchPerfect AI Demo | Free Sales Practice Session"
         description="Experience PitchPerfect AI with our free interactive demo. Practice handling sales objections and get instant AI-powered feedback on your pitch delivery."
         keywords="sales demo, AI pitch practice, free trial, objection handling, sales training demo, sales pitch practice, roleplay training"
+        canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com/demo"
       />
       
       <div className="min-h-screen flex flex-col">

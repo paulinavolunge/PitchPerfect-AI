@@ -19,8 +19,22 @@ export const MetaTags: React.FC<MetaTagsProps> = ({
   ogImage = "/lovable-uploads/og-image.png"
 }) => {
   const fullTitle = title.includes('PitchPerfect AI') ? title : `${title} - PitchPerfect AI`;
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const canonicalUrl = canonical || currentUrl;
+  
+  // Get proper base URL and clean up the path
+  const getCanonicalUrl = (): string => {
+    if (canonical) return canonical;
+    
+    if (typeof window !== 'undefined') {
+      const { protocol, host, pathname } = window.location;
+      const cleanPath = pathname === '/' ? '' : pathname.replace(/\/$/, ''); // Remove trailing slash except for root
+      return `${protocol}//${host}${cleanPath}`;
+    }
+    
+    // Fallback for SSR
+    return 'https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com';
+  };
+  
+  const canonicalUrl = getCanonicalUrl();
 
   return (
     <Helmet>
