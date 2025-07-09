@@ -114,5 +114,14 @@ export default defineConfig(({ mode }) => {
       ],
       exclude: ['@supabase/supabase-js'],
     },
+    
+    // CSS optimization
+    css: {
+      postcss: {
+        plugins: [
+          // CSS purging will be handled by build process
+        ],
+      },
+    },
   };
 });
