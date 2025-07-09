@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
     build: {
       // Use esbuild for minification instead of terser (no additional dependency required)
       minify: isProduction ? 'esbuild' : false,
-      sourcemap: isDevelopment,
+      sourcemap: true, // Always generate source maps for better debugging
       target: 'es2020',
       cssCodeSplit: true,
       cssMinify: isProduction,

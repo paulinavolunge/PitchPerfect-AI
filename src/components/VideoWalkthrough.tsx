@@ -21,8 +21,8 @@ const VideoWalkthrough: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
 
-  // Demo video placeholder - replace with actual video URL
-  const videoSrc = "/placeholder-demo-video.mp4"; // This would be your actual demo video
+  // Replace with embedded video or remove component if no video available
+  const videoSrc = "https://www.youtube.com/embed/dQw4w9WgXcQ"; // Replace with actual demo video URL
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -124,24 +124,7 @@ const VideoWalkthrough: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* This would be your actual video element */}
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full object-cover hidden"
-                    onTimeUpdate={handleTimeUpdate}
-                    onLoadedMetadata={handleLoadedMetadata}
-                    onEnded={() => setIsPlaying(false)}
-                    aria-label="PitchPerfect AI product demonstration video"
-                  >
-                    <source src={videoSrc} type="video/mp4" />
-                    <track
-                      kind="captions"
-                      src="/demo-captions.vtt"
-                      srcLang="en"
-                      label="English captions"
-                    />
-                    Your browser does not support the video element.
-                  </video>
+                   {/* Video element removed to prevent 404 errors - replace when actual video is available */}
                   
                   {/* Video Controls Overlay */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
