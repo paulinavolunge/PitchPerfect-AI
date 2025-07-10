@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -80,7 +79,6 @@ const Index = () => {
         <SkipLink href="#testimonials">Skip to testimonials</SkipLink>
         <Navbar />
         
-        {/* Hero Section - Optimized for mobile */}
         <main>
         <section id="main-content" className="pt-16 sm:pt-24 pb-12 sm:pb-16 relative overflow-hidden" role="main" aria-labelledby="hero-heading">
           <div className="container mx-auto px-4 text-center relative z-10">
@@ -136,14 +134,12 @@ const Index = () => {
               </div>
             </div>
             
-            {/* Trust indicators */}
             <div className="mt-6 sm:mt-8">
               <TrustBadges variant="compact" className="justify-center" />
             </div>
           </div>
         </section>
 
-        {/* Features Section - Mobile optimized */}
         <section id="features" className="py-12 sm:py-16 bg-secondary-50" aria-labelledby="features-heading">
           <div className="container mx-auto px-4">
             <div className="text-center mb-8 sm:mb-12">
@@ -188,25 +184,20 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Company Logos Section */}
         <CompanyLogos />
 
-        {/* Testimonials */}
         <section id="testimonials">
           <Testimonials />
         </section>
 
-        {/* Trust Badges Section */}
         <section className="py-8 sm:py-12 bg-secondary-100">
           <div className="container mx-auto px-4">
             <TrustBadges variant="horizontal" />
           </div>
         </section>
 
-        {/* Video Walkthrough */}
         <VideoWalkthrough />
 
-        {/* CTA Section */}
         <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="mb-6 sm:mb-8">
