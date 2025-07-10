@@ -3,18 +3,58 @@ import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Bot, MessageCircle, Play } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const AIRoleplay = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     console.log('AI Roleplay page loaded');
   }, []);
 
   const scenarios = [
-    { title: "Price Objection", difficulty: "Beginner", description: "Customer thinks your product is too expensive" },
-    { title: "Competitor Comparison", difficulty: "Intermediate", description: "Customer is comparing you to a competitor" },
-    { title: "Decision Maker Access", difficulty: "Advanced", description: "Need to reach the actual decision maker" },
+    { 
+      id: 'price-objection',
+      title: "Price Objection", 
+      difficulty: "Beginner", 
+      description: "Customer thinks your product is too expensive",
+      objectionType: "Price",
+      industry: "General"
+    },
+    { 
+      id: 'competitor-comparison',
+      title: "Competitor Comparison", 
+      difficulty: "Intermediate", 
+      description: "Customer is comparing you to a competitor",
+      objectionType: "Competition",
+      industry: "Technology"
+    },
+    { 
+      id: 'decision-maker',
+      title: "Decision Maker Access", 
+      difficulty: "Advanced", 
+      description: "Need to reach the actual decision maker",
+      objectionType: "Authority",
+      industry: "Business"
+    },
   ];
+
+  const handleStartPractice = (scenario: typeof scenarios[0]) => {
+    console.log(`Starting scenario: ${scenario.title}`);
+    
+    // Navigate to the roleplay page with scenario parameters
+    navigate('/roleplay', { 
+      state: { 
+        autoStart: true,
+        scenario: {
+          difficulty: scenario.difficulty,
+          objection: scenario.objectionType,
+          industry: scenario.industry,
+          custom: scenario.description
+        }
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -45,7 +85,7 @@ const AIRoleplay = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {scenarios.map((scenario, index) => (
-                <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
+                <Card key={scenario.id} className="cursor-pointer hover:shadow-md transition-shadow">
                   <CardHeader>
                     <CardTitle className="text-lg">{scenario.title}</CardTitle>
                     <div className="text-sm text-brand-blue font-medium">{scenario.difficulty}</div>
@@ -55,7 +95,7 @@ const AIRoleplay = () => {
                     <Button 
                       size="sm" 
                       className="w-full"
-                      onClick={() => console.log(`Starting scenario: ${scenario.title}`)}
+                      onClick={() => handleStartPractice(scenario)}
                     >
                       <Play className="h-4 w-4 mr-2" />
                       Start Practice

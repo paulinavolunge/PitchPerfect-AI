@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Mic, MessageSquare, Volume2, Play, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
 import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
 
 const RolePlay = () => {
+  const location = useLocation();
   const [mode, setMode] = useState<'voice' | 'text' | 'hybrid'>('text');
   const [scenario, setScenario] = useState({
     difficulty: 'Beginner',
@@ -24,6 +25,15 @@ const RolePlay = () => {
   const [volume, setVolume] = useState([75]);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [userScript, setUserScript] = useState<string | null>(null);
+
+  // Handle auto-start from AI Roleplay page
+  useEffect(() => {
+    if (location.state?.autoStart && location.state?.scenario) {
+      console.log('Auto-starting roleplay with scenario:', location.state.scenario);
+      setScenario(location.state.scenario);
+      setSessionStarted(true);
+    }
+  }, [location.state]);
 
   const handleStartSession = () => {
     setSessionStarted(true);
