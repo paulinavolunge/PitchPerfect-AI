@@ -1,22 +1,22 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Accessibility } from 'lucide-react';
-import { AccessibilityMenu } from './AccessibilityMenu';  // ← FIXED!
+import { Settings } from 'lucide-react';
+import AccessibilityMenu from './AccessibilityMenu';
 
 const AccessibilityButton: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <>
       <Button
         variant="outline"
         size="icon"
+        className="fixed bottom-4 left-4 z-50 bg-white shadow-lg border-2 border-primary-200 hover:bg-primary-50"
         onClick={() => setIsMenuOpen(true)}
-        className="fixed bottom-4 right-4 z-40 bg-white shadow-lg border-2 border-primary-200 hover:bg-primary-50"
-        aria-label="Open accessibility options"
-        title="Accessibility Options"
+        aria-label="Open accessibility settings"
       >
-        <Accessibility className="h-4 w-4" aria-hidden="true" />
+        <Settings className="h-4 w-4" />
       </Button>
       
       <AccessibilityMenu 
