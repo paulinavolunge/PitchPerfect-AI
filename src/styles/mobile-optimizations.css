@@ -1,0 +1,68 @@
+
+/* Mobile-first optimizations for better performance */
+
+/* Reduce motion for better performance on low-end devices */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Optimize touch targets for mobile */
+@media (max-width: 768px) {
+  button,
+  [role="button"],
+  a,
+  input,
+  textarea,
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent horizontal scrolling */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Optimize font rendering */
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeSpeed;
+  }
+  
+  /* Reduce GPU usage on mobile */
+  * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  /* Optimize images for mobile */
+  img {
+    height: auto;
+    max-width: 100%;
+  }
+}
+
+/* Critical CSS for above-the-fold content */
+.hero-critical {
+  font-display: swap;
+  contain: layout style paint;
+}
+
+/* Optimize animations for better FPS */
+.smooth-animation {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Reduce repaints */
+.static-content {
+  contain: layout style;
+}

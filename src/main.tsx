@@ -3,10 +3,19 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import './styles/mobile-optimizations.css';
 
 // Initialize polyfills
 import { initializePolyfills } from './utils/polyfills';
+import { preloadCriticalResources, measureWebVitals } from './utils/performance';
+
 initializePolyfills();
+preloadCriticalResources();
+
+// Measure Web Vitals in development
+if (process.env.NODE_ENV === 'development') {
+  measureWebVitals();
+}
 
 // Global error boundary for root
 function RootErrorFallback({ error }: { error: Error }) {
@@ -32,7 +41,6 @@ class RootErrorBoundary extends React.Component<{
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, info: any) {
-    // eslint-disable-next-line no-console
     console.error('[RootErrorBoundary] App failed to load:', error, info);
   }
   render() {
@@ -54,4 +62,3 @@ root.render(
     </React.StrictMode>
   </RootErrorBoundary>
 );
-
