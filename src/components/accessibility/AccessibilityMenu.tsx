@@ -15,13 +15,11 @@ interface AccessibilityMenuProps {
 const AccessibilityMenu: React.FC<AccessibilityMenuProps> = ({ isOpen, onClose }) => {
   const {
     highContrast,
-    setHighContrast,
-    largeText,
-    setLargeText,
+    toggleHighContrast,
+    fontSize,
+    setFontSize,
     reducedMotion,
-    setReducedMotion,
-    keyboardNavigation,
-    setKeyboardNavigation,
+    toggleReducedMotion,
   } = useAccessibility();
 
   return (
@@ -45,17 +43,35 @@ const AccessibilityMenu: React.FC<AccessibilityMenuProps> = ({ isOpen, onClose }
             <Switch
               id="high-contrast"
               checked={highContrast}
-              onCheckedChange={setHighContrast}
+              onCheckedChange={toggleHighContrast}
             />
           </div>
           
-          <div className="flex items-center justify-between">
-            <Label htmlFor="large-text">Large Text</Label>
-            <Switch
-              id="large-text"
-              checked={largeText}
-              onCheckedChange={setLargeText}
-            />
+          <div className="space-y-2">
+            <Label htmlFor="font-size">Font Size</Label>
+            <div className="flex space-x-2">
+              <Button
+                variant={fontSize === 'normal' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFontSize('normal')}
+              >
+                Normal
+              </Button>
+              <Button
+                variant={fontSize === 'large' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFontSize('large')}
+              >
+                Large
+              </Button>
+              <Button
+                variant={fontSize === 'xl' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFontSize('xl')}
+              >
+                Extra Large
+              </Button>
+            </div>
           </div>
           
           <div className="flex items-center justify-between">
@@ -63,16 +79,7 @@ const AccessibilityMenu: React.FC<AccessibilityMenuProps> = ({ isOpen, onClose }
             <Switch
               id="reduced-motion"
               checked={reducedMotion}
-              onCheckedChange={setReducedMotion}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="keyboard-nav">Enhanced Keyboard Navigation</Label>
-            <Switch
-              id="keyboard-nav"
-              checked={keyboardNavigation}
-              onCheckedChange={setKeyboardNavigation}
+              onCheckedChange={toggleReducedMotion}
             />
           </div>
         </div>
