@@ -1,7 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useTheme as useNextTheme } from 'next-themes';
 
 export function useTheme() {
+  const { theme } = useNextTheme();
   const [mounted, setMounted] = useState(false);
 
   // Fix hydration mismatch by only rendering theme-dependent UI after mount

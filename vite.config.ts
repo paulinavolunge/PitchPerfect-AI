@@ -31,50 +31,40 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_LOVABLE': JSON.stringify(isDevelopment ? 'true' : 'false'),
     },
     build: {
-      // Use esbuild for minification with ES6+ target
+      // Use esbuild for minification instead of terser (no additional dependency required)
       minify: isProduction ? 'esbuild' : false,
-      sourcemap: isProduction, // Only in production for debugging
-      target: 'es2022', // Modern browsers only
+      sourcemap: isDevelopment,
+      target: 'es2020',
       cssCodeSplit: true,
-      cssMinify: isProduction,
-      reportCompressedSize: false, // Faster builds
-      // Purge unused CSS
       rollupOptions: {
-        external: [], // Remove unused external deps
         output: {
-          // Optimized chunking for critical path
-          manualChunks: (id) => {
-            if (id.includes('node_modules')) {
-              // Critical React bundle
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'react';
-              }
-              // UI essentials only
-              if (id.includes('@radix-ui') && (id.includes('dialog') || id.includes('button') || id.includes('tooltip'))) {
-                return 'ui-core';
-              }
-              // Router
-              if (id.includes('react-router')) {
-                return 'router';
-              }
-              // Defer heavy libraries
-              if (id.includes('recharts') || id.includes('@tanstack/react-query') || id.includes('framer-motion')) {
-                return 'heavy-libs';
-              }
-              // Supabase
-              if (id.includes('@supabase')) {
-                return 'supabase';
-              }
-              return 'vendor';
-            }
+          manualChunks: {
+            // Core vendor libraries
+            vendor: ['react', 'react-dom'],
+            // Router and navigation
+            router: ['react-router-dom'],
+            // UI libraries
+            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', 'lucide-react'],
+            // Backend integration
+            supabase: ['@supabase/supabase-js'],
+            // Analytics and tracking
+            analytics: ['@tanstack/react-query'],
+            // Animation libraries
+            animations: ['framer-motion'],
+            // Charts and data visualization
+            charts: ['recharts'],
           },
-          // Cache-friendly file names
-          chunkFileNames: 'assets/js/[name]-[hash].js',
+          // Optimize chunk file names
+          chunkFileNames: (chunkInfo) => {
+            if (chunkInfo.name === 'vendor') return 'assets/vendor-[hash].js';
+            if (chunkInfo.name === 'ui') return 'assets/ui-[hash].js';
+            return 'assets/[name]-[hash].js';
+          },
           assetFileNames: (assetInfo) => {
             if (assetInfo.name?.endsWith('.css')) {
-              return 'assets/css/[name]-[hash].css';
+              return 'assets/styles-[hash].css';
             }
-            return 'assets/[ext]/[name]-[hash][extname]';
+            return 'assets/[name]-[hash][extname]';
           },
         },
       },
@@ -83,24 +73,23 @@ export default defineConfig(({ mode }) => {
       // Optimize chunk size warnings
       chunkSizeWarningLimit: 1000,
     },
-    // Production optimizations with tree shaking
+    // Production optimizations
     ...(isProduction && {
       esbuild: {
         drop: ['console', 'debugger'],
         legalComments: 'none',
-        treeShaking: true,
       },
     }),
-    
-    // Optimize dependencies pre-bundling for smaller bundles
+    // Optimize dependencies pre-bundling
     optimizeDeps: {
       include: [
         'react',
         'react-dom',
         'react-router-dom',
+        '@tanstack/react-query',
+        'lucide-react',
       ],
-      exclude: [],
-      force: true, // Force re-bundling to fix React conflicts
+      exclude: ['@supabase/supabase-js'],
     },
   };
 });

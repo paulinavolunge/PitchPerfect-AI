@@ -1,13 +1,22 @@
 
-import React from "react";
+"use client"
 
-interface ThemeProviderProps {
-  children: React.ReactNode;
-  defaultTheme?: string;
-  storageKey?: string;
-}
+import * as React from "react"
+import { ThemeProvider as NextThemesProvider } from "next-themes"
+import { type ThemeProviderProps } from "next-themes/dist/types"
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  // Simplified theme provider - light mode only
-  return <>{children}</>;
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  // Force light mode only, no theme switching
+  return (
+    <NextThemesProvider 
+      attribute="class" 
+      defaultTheme="light" 
+      enableSystem={false}
+      forcedTheme="light" 
+      disableTransitionOnChange={false} 
+      {...props}
+    >
+      {children}
+    </NextThemesProvider>
+  )
 }

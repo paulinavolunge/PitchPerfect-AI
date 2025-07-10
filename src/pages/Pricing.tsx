@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { SkipLink } from '@/components/accessibility/SkipLink';
-import { MetaTags } from '@/components/shared/MetaTags';
+import { Helmet } from 'react-helmet-async';
 import MobilePricingCard from '@/components/mobile/MobilePricingCard';
 import CollapsibleSection from '@/components/mobile/CollapsibleSection';
 import TrustBadges from '@/components/TrustBadges';
@@ -167,11 +167,10 @@ const Pricing = () => {
 
   return (
     <>
-      <MetaTags
-        title="Pricing - PitchPerfect AI"
-        description="Choose the perfect plan for your sales training needs. Get started with AI-powered pitch practice today."
-        canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com/pricing"
-      />
+      <Helmet>
+        <title>Pricing - PitchPerfect AI</title>
+        <meta name="description" content="Choose the perfect plan for your sales training needs. Get started with AI-powered pitch practice today." />
+      </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-soft-blue-50 via-soft-blue-100 to-sky-blue">
         <SkipLink href="#main-content">Skip to main content</SkipLink>

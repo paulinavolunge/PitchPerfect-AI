@@ -1,18 +1,21 @@
 
 import React from 'react';
-import { MetaTags } from '@/components/shared/MetaTags';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const About = () => {
   return (
     <>
-      <MetaTags
-        title="About Us - PitchPerfect AI | AI-Powered Sales Training"
-        description="Learn about PitchPerfect AI - the revolutionary platform that helps sales professionals practice and perfect their pitch delivery through AI-powered feedback and realistic simulations."
-        keywords="sales training, AI coaching, pitch practice, sales skills, objection handling"
-        canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com/about"
-      />
+      <Helmet>
+        <title>About Us - PitchPerfect AI | AI-Powered Sales Training</title>
+        <meta name="description" content="Learn about PitchPerfect AI - the revolutionary platform that helps sales professionals practice and perfect their pitch delivery through AI-powered feedback and realistic simulations." />
+        <meta name="keywords" content="sales training, AI coaching, pitch practice, sales skills, objection handling" />
+        <meta property="og:title" content="About PitchPerfect AI - AI Sales Training Platform" />
+        <meta property="og:description" content="Discover how PitchPerfect AI empowers sales professionals to practice and perfect their pitch delivery in a real-world simulation environment." />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href={`${window.location.origin}/about`} />
+      </Helmet>
       
       <div className="min-h-screen flex flex-col">
         <Navbar />

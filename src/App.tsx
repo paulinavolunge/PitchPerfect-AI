@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
@@ -7,25 +7,48 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
+import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
+import AccessibilityButton from '@/components/accessibility/AccessibilityButton';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
-import SecurityHeaders from '@/components/security/SecurityHeaders';
+import MobileNavBar from '@/components/MobileNavBar';
+import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
+import { usePageTracking } from '@/hooks/usePageTracking';
 
-// Critical components loaded immediately (only homepage)
+// Page imports
 import Index from '@/pages/Index';
+import About from '@/pages/About';
+import Compare from '@/pages/Compare';
+import Pricing from '@/pages/Pricing';
+import Demo from '@/pages/Demo';
+import Login from '@/pages/Login';
+import Signup from '@/pages/Signup';
+import Dashboard from '@/pages/Dashboard';
+import Practice from '@/pages/Practice';
+import RolePlay from '@/pages/RolePlay';
+import Progress from '@/pages/Progress';
+import Tips from '@/pages/Tips';
+import CallRecordings from '@/pages/CallRecordings';
+import PasswordReset from '@/pages/PasswordReset';
+import UpdatePassword from '@/pages/UpdatePassword';
+import EmailConfirmed from '@/pages/EmailConfirmed';
+import Terms from '@/pages/Terms';
+import Privacy from '@/pages/Privacy';
+import DataSafety from '@/pages/DataSafety';
+import AccountDelete from '@/pages/AccountDelete';
+import Subscription from '@/pages/Subscription';
+import SubscriptionManagement from '@/pages/SubscriptionManagement';
+import Success from '@/pages/Success';
+import Cancel from '@/pages/Cancel';
+import TeamDashboard from '@/pages/TeamDashboard';
+import NotFound from '@/pages/NotFound';
 
-// Lazy load other pages
-const Demo = lazy(() => import('@/pages/Demo'));
-const Practice = lazy(() => import('@/pages/Practice'));
-const RolePlay = lazy(() => import('@/pages/RolePlay'));
-const Progress = lazy(() => import('@/pages/Progress'));
-const Signup = lazy(() => import('@/pages/Signup'));
-const Login = lazy(() => import('@/pages/Login'));
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const Pricing = lazy(() => import('@/pages/Pricing'));
-const About = lazy(() => import('@/pages/About'));
-const Compare = lazy(() => import('@/pages/Compare'));
-const Tips = lazy(() => import('@/pages/Tips'));
-const CallRecordings = lazy(() => import('@/pages/CallRecordings'));
+// Add new page imports
+import VoiceTraining from '@/pages/VoiceTraining';
+import Analytics from '@/pages/Analytics';
+import AIRoleplay from '@/pages/AIRoleplay';
+
+// Placeholder page imports
+import { VoiceTrainingPage, AnalyticsPage, RoleplayPage } from '@/components/PlaceholderPages';
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -43,53 +66,104 @@ const queryClient = new QueryClient({
   },
 });
 
+// Component to handle page tracking
+const PageTrackingProvider = ({ children }: { children: React.ReactNode }) => {
+  usePageTracking();
+  return <>{children}</>;
+};
 
 function App() {
   console.log('App component rendering - routes should be available');
   
   return (
     <ErrorBoundary>
-      <SecurityHeaders>
-        <HelmetProvider>
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <GuestModeProvider>
-              <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-                <TooltipProvider>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+            <TooltipProvider>
+              <AccessibilityProvider>
                 <Router>
-                  <div className="min-h-screen bg-background font-sans antialiased">
-                    <Suspense fallback={
-                      <div className="min-h-screen flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      </div>
-                    }>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/demo" element={<Demo />} />
-                        <Route path="/practice" element={<Practice />} />
-                        <Route path="/roleplay" element={<RolePlay />} />
-                        <Route path="/progress" element={<Progress />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/pricing" element={<Pricing />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="/compare" element={<Compare />} />
-                        <Route path="/tips" element={<Tips />} />
-                        <Route path="/call-recordings" element={<CallRecordings />} />
-                        <Route path="*" element={<div className="flex items-center justify-center min-h-screen"><div className="text-center"><h1 className="text-2xl font-bold mb-4">Page Not Found</h1><p>The page you're looking for doesn't exist.</p></div></div>} />
-                      </Routes>
-                      <Toaster />
-                    </Suspense>
-                  </div>
+                  <AuthProvider>
+                    <GuestModeProvider>
+                      <PageTrackingProvider>
+                        {/* Initialize analytics */}
+                        <PrivacyCompliantAnalytics />
+                        
+                        <div className="min-h-screen bg-background font-sans antialiased">
+                          <Routes>
+                            {/* Public routes */}
+                            <Route path="/" element={<Index />} />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/compare" element={<Compare />} />
+                            <Route path="/pricing" element={<Pricing />} />
+                            <Route path="/demo" element={<Demo />} />
+                            
+                            {/* New functional routes */}
+                            <Route path="/voice-training" element={<VoiceTraining />} />
+                            <Route path="/analytics" element={<Analytics />} />
+                            <Route path="/ai-roleplay" element={<AIRoleplay />} />
+                            
+                            {/* Placeholder routes for testing (keeping as backup) */}
+                            <Route path="/voice-training-old" element={<VoiceTrainingPage />} />
+                            <Route path="/analytics-old" element={<AnalyticsPage />} />
+                            <Route path="/ai-roleplay-old" element={<RoleplayPage />} />
+                            
+                            {/* Authentication routes */}
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<Signup />} />
+                            <Route path="/password-reset" element={<PasswordReset />} />
+                            <Route path="/update-password" element={<UpdatePassword />} />
+                            <Route path="/email-confirmed" element={<EmailConfirmed />} />
+                            
+                            {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/practice" element={<Practice />} />
+                            <Route path="/roleplay" element={<RolePlay />} />
+                            <Route path="/progress" element={<Progress />} />
+                            <Route path="/tips" element={<Tips />} />
+                            <Route path="/call-recordings" element={<CallRecordings />} />
+                            <Route path="/recordings" element={<CallRecordings />} />
+                            <Route path="/team" element={<TeamDashboard />} />
+                            
+                            {/* Subscription routes */}
+                            <Route path="/subscription" element={<Subscription />} />
+                            <Route path="/subscription-management" element={<SubscriptionManagement />} />
+                            <Route path="/success" element={<Success />} />
+                            <Route path="/cancel" element={<Cancel />} />
+                            
+                            {/* Legal routes */}
+                            <Route path="/terms" element={<Terms />} />
+                            <Route path="/privacy" element={<Privacy />} />
+                            <Route path="/data-safety" element={<DataSafety />} />
+                            <Route path="/account-delete" element={<AccountDelete />} />
+                            
+                            {/* Fallback route - IMPORTANT: This catches all unmatched routes */}
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                          
+                          {/* Mobile navigation bar */}
+                          <MobileNavBar />
+                          
+                          {/* Accessibility floating button */}
+                          <AccessibilityButton />
+                          
+                          {/* Global toast notifications */}
+                          <Toaster 
+                            position="top-right"
+                            expand={false}
+                            richColors
+                            closeButton
+                          />
+                        </div>
+                      </PageTrackingProvider>
+                    </GuestModeProvider>
+                  </AuthProvider>
                 </Router>
-              </TooltipProvider>
-            </ThemeProvider>
-              </GuestModeProvider>
-            </AuthProvider>
-          </QueryClientProvider>
-        </HelmetProvider>
-      </SecurityHeaders>
+              </AccessibilityProvider>
+            </TooltipProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 }

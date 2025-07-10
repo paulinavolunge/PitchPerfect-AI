@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -9,8 +8,6 @@ import { trackEvent } from '@/utils/analytics';
 import ParallaxSection from '@/components/animations/ParallaxSection';
 import TiltCard from '@/components/animations/TiltCard';
 import FadeTransition from '@/components/animations/FadeTransition';
-import { AccessibleImage } from '@/components/ui/accessible-image';
-import { EnhancedButton } from '@/components/ui/enhanced-button';
 
 const Hero: React.FC = () => {
   const { user } = useAuth();
@@ -80,31 +77,17 @@ const Hero: React.FC = () => {
               <div className="space-y-8 animate-professional-fade-in">
                 <div className="space-y-6">
                   <div className="inline-flex items-center space-x-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full border border-electric-blue-200 shadow-sm">
-                    <div className="w-2 h-2 bg-electric-blue-500 rounded-full animate-electric-pulse" aria-hidden="true" />
+                    <div className="w-2 h-2 bg-electric-blue-500 rounded-full animate-electric-pulse" />
                     <span className="text-sm font-semibold text-navy-700">AI-Powered Sales Training</span>
                   </div>
                   
-                  {/* Enhanced Logo with 2x resolution */}
-                  <div className="flex items-center mb-6">
-                    <AccessibleImage
-                      src="/assets/logo-pitchperfectai.png"
-                      srcSet="/assets/logo-pitchperfectai@2x.png 2x"
-                      alt="PitchPerfect AI Logo - AI-powered sales training platform"
-                      className="h-16 w-auto mr-4"
-                      errorFallback={
-                        <div className="h-16 w-16 bg-electric-blue-500 rounded-lg flex items-center justify-center mr-4">
-                          <span className="text-white font-bold text-xl">PA</span>
-                        </div>
-                      }
-                    />
-                    <h1 className="hero-headline">
-                      <span className="primary-text">Perfect Your </span>
-                      <span className="navy-highlight">Sales</span>
-                      <br />
-                      <span className="electric-highlight">Pitch </span>
-                      <span className="primary-text">with AI</span>
-                    </h1>
-                  </div>
+                  <h1 className="hero-headline">
+                    <span className="primary-text">Perfect Your </span>
+                    <span className="navy-highlight">Sales</span>
+                    <br />
+                    <span className="electric-highlight">Pitch </span>
+                    <span className="primary-text">with AI</span>
+                  </h1>
                   
                   <p className="text-xl text-navy-600 leading-relaxed max-w-xl font-medium">
                     Train your sales team with AI-powered role-play scenarios. Get instant feedback, 
@@ -114,34 +97,28 @@ const Hero: React.FC = () => {
 
                 {/* Enhanced CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <EnhancedButton 
+                  <button 
                     onClick={handleGetStarted}
-                    size="lg"
-                    enhanced={true}
-                    icon={ArrowRight}
-                    className="text-lg animate-conversion-glow"
-                    aria-label="Start practicing your sales pitch for free"
+                    className="btn-primary group flex items-center justify-center text-lg animate-conversion-glow"
                   >
                     Get Started Free
-                  </EnhancedButton>
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
                   
-                  <EnhancedButton 
-                    variant="outline"
+                  <button 
                     onClick={handleTryDemo}
-                    size="lg"
-                    icon={Play}
-                    className="text-lg"
-                    aria-label="Watch a demo of PitchPerfect AI"
+                    className="btn-secondary group flex items-center justify-center text-lg"
                   >
+                    <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
                     Watch Demo
-                  </EnhancedButton>
+                  </button>
                 </div>
 
                 {/* Professional Trust Indicators */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
                   {trustIndicators.map((indicator, index) => (
                     <div key={index} className="trust-indicator flex items-center gap-2">
-                      <indicator.icon className="h-4 w-4 text-electric-blue-600" aria-hidden="true" />
+                      <indicator.icon className="h-4 w-4 text-electric-blue-600" />
                       <span>{indicator.text}</span>
                     </div>
                   ))}
@@ -150,20 +127,19 @@ const Hero: React.FC = () => {
                 {/* Enhanced Social Proof */}
                 <div className="flex items-center space-x-6 pt-4">
                   <div className="flex items-center space-x-3">
-                    <div className="flex -space-x-2" aria-label="Customer avatars">
+                    <div className="flex -space-x-2">
                       {[1, 2, 3, 4].map((i) => (
                         <div 
                           key={i} 
                           className="w-8 h-8 rounded-full bg-gradient-to-br from-electric-blue-500 to-navy-600 border-2 border-white shadow-sm" 
-                          aria-hidden="true"
                         />
                       ))}
                     </div>
                     <span className="text-navy-600 font-medium">Trusted by 10,000+ professionals</span>
                   </div>
-                  <div className="hidden sm:block w-px h-5 bg-navy-200" aria-hidden="true" />
+                  <div className="hidden sm:block w-px h-5 bg-navy-200" />
                   <div className="hidden sm:flex items-center space-x-2">
-                    <Star className="h-5 w-5 text-yellow-500 fill-current" aria-hidden="true" />
+                    <Star className="h-5 w-5 text-yellow-500 fill-current" />
                     <span className="text-navy-600 font-medium">4.9/5 rating</span>
                   </div>
                 </div>
@@ -178,7 +154,7 @@ const Hero: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold text-navy-900">Live Practice Session</h3>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" aria-hidden="true" />
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                         <span className="text-sm text-navy-600 font-medium">Recording</span>
                       </div>
                     </div>
@@ -198,16 +174,16 @@ const Hero: React.FC = () => {
                     {/* Enhanced mock feedback */}
                     <div className="feature-highlight border-electric-blue-200">
                       <h4 className="text-sm font-bold text-navy-900 mb-3 flex items-center">
-                        <Zap className="h-4 w-4 text-electric-blue-600 mr-2" aria-hidden="true" />
+                        <Zap className="h-4 w-4 text-electric-blue-600 mr-2" />
                         AI Feedback
                       </h4>
                       <div className="space-y-3">
                         <div className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-electric-blue-500 rounded-full mt-2" aria-hidden="true" />
+                          <div className="w-2 h-2 bg-electric-blue-500 rounded-full mt-2" />
                           <span className="text-sm text-navy-600 font-medium">Excellent use of specific metrics</span>
                         </div>
                         <div className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2" aria-hidden="true" />
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2" />
                           <span className="text-sm text-navy-600 font-medium">Consider addressing objections earlier</span>
                         </div>
                         <div className="mt-4 bg-electric-blue-50 rounded-lg p-3">
@@ -220,8 +196,8 @@ const Hero: React.FC = () => {
                 </TiltCard>
 
                 {/* Enhanced floating elements */}
-                <div className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-electric-blue-400 to-electric-blue-600 rounded-full opacity-20 animate-float" aria-hidden="true" />
-                <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-navy-400 to-navy-600 rounded-full opacity-15 animate-float delay-1000" aria-hidden="true" />
+                <div className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-electric-blue-400 to-electric-blue-600 rounded-full opacity-20 animate-float" />
+                <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-navy-400 to-navy-600 rounded-full opacity-15 animate-float delay-1000" />
               </div>
             </FadeTransition>
           </div>
@@ -233,7 +209,7 @@ const Hero: React.FC = () => {
                 {statistics.map((stat, index) => (
                   <div key={index} className="text-center animate-scale-in-professional" style={{ animationDelay: `${index * 0.2}s` }}>
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-electric-blue-500 to-navy-600 rounded-xl mb-6 shadow-lg">
-                      <stat.icon className="h-8 w-8 text-white" aria-hidden="true" />
+                      <stat.icon className="h-8 w-8 text-white" />
                     </div>
                     <div className="text-4xl font-bold text-navy-900 mb-3">{stat.value}</div>
                     <div className="text-navy-600 font-medium">{stat.label}</div>
@@ -258,7 +234,7 @@ const Hero: React.FC = () => {
                   <TiltCard key={index}>
                     <div className="professional-card p-8 group hover:border-electric-blue-200 transition-all duration-300">
                       <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-electric-blue-500 to-navy-600 rounded-xl mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                        <feature.icon className="h-8 w-8 text-white" aria-hidden="true" />
+                        <feature.icon className="h-8 w-8 text-white" />
                       </div>
                       <h3 className="text-xl font-bold text-navy-900 mb-4">{feature.title}</h3>
                       <p className="text-navy-600 leading-relaxed font-medium">{feature.description}</p>

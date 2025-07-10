@@ -1,3 +1,4 @@
+
 export const FOCUS_TRAP_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
 export const trapFocus = (container: HTMLElement) => {
@@ -89,14 +90,14 @@ export const setFocusableWhenVisible = (element: HTMLElement, isVisible: boolean
 export const handleEscapeKey = (callback: () => void) => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
-      callback();
+      callback()
     }
   }
   
-  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('keydown', handleKeyDown)
   
   return () => {
-    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('keydown', handleKeyDown)
   }
 }
 

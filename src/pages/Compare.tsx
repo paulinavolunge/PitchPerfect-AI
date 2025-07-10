@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MetaTags } from '@/components/shared/MetaTags';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
@@ -49,12 +49,14 @@ const Compare = () => {
 
   return (
     <>
-      <MetaTags
-        title="Compare PitchPerfect AI vs Competitors | Feature Comparison"
-        description="See how PitchPerfect AI compares to other AI sales development tools. Compare features, capabilities, and benefits of our AI-powered sales training platform."
-        keywords="sales training comparison, AI SDR tools, pitch practice software, sales coaching platforms"
-        canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com/compare"
-      />
+      <Helmet>
+        <title>Compare PitchPerfect AI vs Competitors | Feature Comparison</title>
+        <meta name="description" content="See how PitchPerfect AI compares to other AI sales development tools. Compare features, capabilities, and benefits of our AI-powered sales training platform." />
+        <meta name="keywords" content="sales training comparison, AI SDR tools, pitch practice software, sales coaching platforms" />
+        <meta property="og:title" content="PitchPerfect AI vs Competition - Feature Comparison" />
+        <meta property="og:description" content="Discover why PitchPerfect AI outperforms other sales training platforms with superior AI coaching and real-time feedback." />
+        <link rel="canonical" href={`${window.location.origin}/compare`} />
+      </Helmet>
       
       <div className="min-h-screen flex flex-col">
         <Navbar />

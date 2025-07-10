@@ -1,17 +1,18 @@
 
 import React from 'react';
-import { MetaTags } from '@/components/shared/MetaTags';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const Privacy = () => {
   return (
     <>
-      <MetaTags
-        title="Privacy Policy - PitchPerfect AI"
-        description="Learn how PitchPerfect AI protects your privacy and handles your personal data. Read our comprehensive privacy policy for transparency on data collection and usage."
-        canonical="https://ac4815ee-3287-4227-becd-7ec7f5c2d508.lovableproject.com/privacy"
-      />
+      <Helmet>
+        <title>Privacy Policy - PitchPerfect AI</title>
+        <meta name="description" content="Learn how PitchPerfect AI protects your privacy and handles your personal data. Read our comprehensive privacy policy for transparency on data collection and usage." />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href={`${window.location.origin}/privacy`} />
+      </Helmet>
       
       <div className="min-h-screen flex flex-col">
         <Navbar />

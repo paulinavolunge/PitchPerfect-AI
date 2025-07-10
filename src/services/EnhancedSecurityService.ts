@@ -31,7 +31,7 @@ export interface FileValidationResult {
 
 export class EnhancedSecurityService {
   /**
-   * Securely deduct credits using the atomic database function
+   * Securely deduct credits using the database function
    */
   static async secureDeductCredits(
     userId: string, 
@@ -39,14 +39,13 @@ export class EnhancedSecurityService {
     creditsToDeduct: number = 1
   ): Promise<CreditDeductionResult> {
     try {
-      const { data, error } = await supabase.rpc('atomic_deduct_credits', {
+      const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
         p_user_id: userId,
-        p_feature_used: featureType,
-        p_credits_to_deduct: creditsToDeduct
+        p_feature_used: featureType
       });
 
       if (error) {
-        console.error('Atomic credit deduction error:', error);
+        console.error('Credit deduction error:', error);
         return { 
           success: false, 
           error: error.message 
@@ -75,7 +74,7 @@ export class EnhancedSecurityService {
         error: 'Invalid response from server' 
       };
     } catch (error) {
-      console.error('Atomic credit deduction failed:', error);
+      console.error('Credit deduction failed:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -192,17 +191,18 @@ export class EnhancedSecurityService {
   }
 
   /**
-   * Validate audio file uploads with enhanced security
+   * Validate audio file uploads
    */
   static validateAudioFile(file: File): FileValidationResult {
-    const maxSize = 25 * 1024 * 1024; // Reduced to 25MB for security
+    const maxSize = 10 * 1024 * 1024; // 10MB
     const allowedTypes = [
       'audio/wav',
       'audio/mp3',
       'audio/mpeg',
       'audio/m4a',
-      'audio/aac'
-    ]; // Removed potentially risky formats
+      'audio/webm',
+      'audio/ogg'
+    ];
 
     if (!file) {
       return { valid: false, error: 'No file provided' };
@@ -224,79 +224,11 @@ export class EnhancedSecurityService {
       };
     }
 
-    // Additional file name validation
-    if (file.name.length > 255) {
-      return {
-        valid: false,
-        error: 'File name too long (max 255 characters)'
-      };
-    }
-
-    // Check for dangerous file name patterns
-    const dangerousPatterns = [
-      /\.\./,
-      /[<>:"/\\|?*]/,
-      /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i
-    ];
-
-    if (dangerousPatterns.some(pattern => pattern.test(file.name))) {
-      return {
-        valid: false,
-        error: 'Invalid file name contains dangerous characters'
-      };
-    }
-
     return { 
       valid: true, 
       fileType: file.type, 
       fileSize: file.size 
     };
-  }
-
-  /**
-   * Server-side file validation using enhanced function
-   */
-  static async validateFileUploadSecure(
-    fileName: string,
-    fileSize: number,
-    fileType: string,
-    userId?: string
-  ): Promise<FileValidationResult> {
-    try {
-      const { data, error } = await supabase.rpc('secure_validate_file_upload', {
-        p_file_name: fileName,
-        p_file_size: fileSize,
-        p_file_type: fileType,
-        p_user_id: userId || null
-      });
-
-      if (error) {
-        console.error('Server-side file validation error:', error);
-        return {
-          valid: false,
-          error: 'Server validation failed'
-        };
-      }
-
-      if (typeof data === 'object' && data !== null) {
-        const result = data as any;
-        return {
-          valid: result.valid,
-          error: result.error
-        };
-      }
-
-      return {
-        valid: false,
-        error: 'Invalid server response'
-      };
-    } catch (error) {
-      console.error('File validation service error:', error);
-      return {
-        valid: false,
-        error: 'Validation service unavailable'
-      };
-    }
   }
 
   /**

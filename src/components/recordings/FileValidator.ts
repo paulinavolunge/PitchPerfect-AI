@@ -1,5 +1,5 @@
 
-import { EnhancedSecurityService } from '@/services/EnhancedSecurityService';
+import { ServerSideValidationService } from '@/services/ServerSideValidationService';
 
 export interface FileValidationResult {
   isValid: boolean;
@@ -44,7 +44,7 @@ export class FileValidator {
     // Server-side validation if enabled
     if (this.config.enableServerSideValidation) {
       try {
-        const serverValidation = await EnhancedSecurityService.validateFileUploadSecure(
+        const serverValidation = await ServerSideValidationService.validateFileUpload(
           file.name,
           file.size,
           file.type,

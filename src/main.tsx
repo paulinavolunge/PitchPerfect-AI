@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Initialize polyfills synchronously to avoid timing issues
+// Initialize polyfills
 import { initializePolyfills } from './utils/polyfills';
 initializePolyfills();
 
@@ -46,19 +46,6 @@ class RootErrorBoundary extends React.Component<{
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
-
-// Service worker disabled temporarily to avoid loading issues
-// if ('serviceWorker' in navigator && import.meta.env.PROD) {
-//   window.addEventListener('load', () => {
-//     navigator.serviceWorker.register('/sw.js')
-//       .then((registration) => {
-//         console.log('SW registered: ', registration);
-//       })
-//       .catch((registrationError) => {
-//         console.log('SW registration failed: ', registrationError);
-//       });
-//   });
-// }
 
 root.render(
   <RootErrorBoundary>

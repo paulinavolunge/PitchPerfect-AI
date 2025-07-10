@@ -1,59 +1,91 @@
 
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback and improve your objection handling skills." />
-    <meta name="keywords" content="sales pitch practice, objection handling, AI coaching, sales enablement, roleplay training" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" href="/favicon.ico" />
+    <title>PitchPerfect AI</title>
     
-    <!-- Performance Critical Resources -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <!-- Basic font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
-    <!-- Enhanced Favicon Support -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/public/placeholder.svg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/public/placeholder.svg" />
-    
-    <!-- PWA Support -->
-    <meta name="theme-color" content="#0055FF" />
-    <meta name="apple-mobile-web-app-title" content="PitchPerfect AI" />
-    
-    <!-- Open Graph -->
-    <meta property="og:title" content="PitchPerfect AI - Master Your Sales Pitch" />
-    <meta property="og:description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios." />
-    <meta property="og:image" content="/lovable-uploads/og-image.png" />
-    <meta property="og:type" content="website" />
-    
-    <title>PitchPerfect AI - Master Your Sales Pitch with AI Practice</title>
-    
-    <!-- DNS prefetch for better performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    
-    <!-- Critical above-the-fold CSS only -->
-    <style>
-      body{margin:0;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;background:#fff}
-      .hero-text{font-size:3rem;font-weight:800;color:#1A2B50;line-height:1.1}
-      .strong-cta{background:#2563EB;color:white;font-weight:600;border:2px solid #1E40AF;min-height:48px;min-width:48px;padding:16px 24px;border-radius:8px;transition:all 0.3s ease}
-      .strong-cta:hover{background:#1E40AF;border-color:#1D4ED8;transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,0.4)}
-      button,a,[role="button"]{min-height:48px;min-width:48px;padding:16px}
-      *:focus-visible{outline:3px solid #2563EB !important;outline-offset:2px !important;box-shadow:0 0 0 1px white,0 0 0 4px #2563EB !important}
-      .hero-section{background:linear-gradient(135deg,#EBF4FF 0%,#DBEAFE 100%);padding:6rem 1rem 4rem}
-      @media (max-width:599px){button,a,[role="button"]{min-height:48px;min-width:48px;padding:16px;font-size:16px}}
-      @media (min-width:768px){.hero-text{font-size:4rem}}
-      @media (min-width:1024px){.hero-text{font-size:5rem}}
-    </style>
+    <!-- Improved Google Analytics with proper consent logic -->
+    <script>
+      const hasConsent = localStorage.getItem('analytics-consent') === 'true';
+      console.log('Analytics consent status:', hasConsent);
+
+      if (hasConsent) {
+        console.log('Loading Google Tag Manager and Google Analytics');
+
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+
+        const gaScript = document.createElement('script');
+        gaScript.async = true;
+        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y';
+        document.head.appendChild(gaScript);
+
+        (function(w,d,s,l,i){
+          w[l]=w[l]||[];
+          w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
+          const f=d.getElementsByTagName(s)[0];
+          const j=d.createElement(s);
+          const dl=l!='dataLayer'?'&l='+l:'';
+          j.async=true;
+          j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+          f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-XXXXXXX');
+
+        gtag('js', new Date());
+        gtag('config', 'G-HVCRJT504Y', {
+          debug_mode: true,
+          send_page_view: true
+        });
+      } else {
+        console.log('Analytics consent not given, skipping tracking setup');
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
     
-    <!-- Load only essential font weights -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"></noscript>
+    <div id="root">
+      <!-- Fallback content while JavaScript loads -->
+      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif;">
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <h2 style="color: #1f2937; font-size: 18px; margin: 0;">PitchPerfect AI</h2>
+          <p style="color: #6b7280; font-size: 14px; margin: 8px 0 0;">Loading JavaScript...</p>
+          <p style="color: #9ca3af; font-size: 12px; margin: 16px 0 0;">
+            If this message persists, check the console for errors or 
+            <a href="/test.html" style="color: #2563eb;">test the basic HTML version</a>
+          </p>
+        </div>
+      </div>
+      
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
     
-    <!-- Main script loaded normally (remove async to prevent loading issues) -->
+    <script>
+      console.log('index.html: Script tag executed');
+      console.log('index.html: About to load main.tsx');
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
