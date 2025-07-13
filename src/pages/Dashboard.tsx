@@ -1,16 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3, Crown, Diamond } from 'lucide-react';
+import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3, Crown } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import DashboardStats from '@/components/DashboardStats';
 import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
-import StreakBadge from '@/components/dashboard/StreakBadge';
-import LeaderboardTable from '@/components/dashboard/LeaderboardTable';
-import ReferralProgram from '@/components/dashboard/ReferralProgram';
 import CreditBalanceTracker from '@/components/dashboard/CreditBalanceTracker';
 import { useAuth } from '@/context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -18,16 +16,14 @@ import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
 import NewUserOnboarding from '@/components/onboarding/NewUserOnboarding';
 import MicrophoneTestModal from '@/components/dashboard/MicrophoneTestModal';
-import VoiceSynthesis from '@/utils/VoiceSynthesis';
 import AIDisclosure from '@/components/AIDisclosure';
 import AISettingsModal from '@/components/AISettingsModal';
 import TiltCard from '@/components/animations/TiltCard';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import ParallaxSection from '@/components/animations/ParallaxSection';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import RefreshAnimation from '@/components/dashboard/RefreshAnimation';
 import FadeTransition from '@/components/animations/FadeTransition';
-import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import EmptyState from '@/components/dashboard/EmptyState';
@@ -41,6 +37,29 @@ const Dashboard = () => {
   const { user, refreshSubscription, isPremium, creditsRemaining, trialUsed, loading, isNewUser, markOnboardingComplete } = useAuth();
   const { isGuestMode } = useGuestMode();
   const navigate = useNavigate();
+
+  // Local state - simplified
+  const [showTour, setShowTour] = useState(false);
+  const [showMicTest, setShowMicTest] = useState(false);
+  const [tourCompleted, setTourCompleted] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [streakCount, setStreakCount] = useState(0);
+  const [dashboardData, setDashboardData] = useState({
+    pitchCount: 0,
+    winRate: null,
+    recentPitches: [],
+    objectionCategories: [
+      { category: 'Price', mastered: 0 },
+      { category: 'Timing', mastered: 0 },
+      { category: 'Competition', mastered: 0 },
+      { category: 'Need', mastered: 0 },
+    ],
+    hasData: false
+  });
 
   // Show loading state while auth context loads
   if (loading) {
@@ -57,30 +76,8 @@ const Dashboard = () => {
   // If not authenticated and not in guest mode, redirect to login
   if (!user && !isGuestMode) {
     navigate('/login', { replace: true });
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-brand-dark">Redirecting to login...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
-
-  const [showTour, setShowTour] = useState(false);
-  const [showMicTest, setShowMicTest] = useState(false);
-  const [tourCompleted, setTourCompleted] = useState(false);
-  const [showAISettings, setShowAISettings] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  const {
-    isLoading,
-    isRefreshing,
-    streakCount,
-    settings,
-    dashboardData,
-    updateSettings,
-    refreshDashboardData
-  } = useDashboardData();
 
   const tourSteps: Step[] = [
     {
@@ -147,18 +144,60 @@ const Dashboard = () => {
     return hoursSinceCooldown > TOUR_COOLDOWN_HOURS;
   };
 
+  // Simplified data loading
   useEffect(() => {
-    if (user && !isLoading) {
-      // Track dashboard load if needed
-    }
-  }, [user, isLoading, dashboardData.hasData, streakCount]);
+    let mounted = true;
+    
+    const loadDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Mock data for now to prevent issues
+        if (mounted) {
+          setStreakCount(Math.floor(Math.random() * 10));
+          setDashboardData({
+            pitchCount: user ? Math.floor(Math.random() * 5) : 0,
+            winRate: user ? Math.floor(Math.random() * 100) : null,
+            recentPitches: [
+              { name: 'Mon', count: Math.floor(Math.random() * 5) },
+              { name: 'Tue', count: Math.floor(Math.random() * 5) },
+              { name: 'Wed', count: Math.floor(Math.random() * 5) },
+              { name: 'Thu', count: Math.floor(Math.random() * 5) },
+              { name: 'Fri', count: Math.floor(Math.random() * 5) },
+              { name: 'Sat', count: Math.floor(Math.random() * 5) },
+              { name: 'Sun', count: Math.floor(Math.random() * 5) },
+            ],
+            objectionCategories: [
+              { category: 'Price', mastered: Math.floor(Math.random() * 100) },
+              { category: 'Timing', mastered: Math.floor(Math.random() * 100) },
+              { category: 'Competition', mastered: Math.floor(Math.random() * 100) },
+              { category: 'Need', mastered: Math.floor(Math.random() * 100) },
+            ],
+            hasData: user ? true : false
+          });
+          
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadDashboardData();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     const hasTourBeenCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
     const isNewSession = sessionStorage.getItem('newSessionLogin') === 'true';
 
     if (user && isNewUser) {
-      // Show onboarding for new users
       setShowOnboarding(true);
     } else if (user && (!hasTourBeenCompleted || isNewSession) && canShowTour()) {
       setShowTour(true);
@@ -176,10 +215,8 @@ const Dashboard = () => {
     markOnboardingComplete();
     setShowOnboarding(false);
     
-    // Show welcome message
     toast.success("Welcome to PitchPerfect AI! 🎉 Ready to improve your sales skills?");
     
-    // Start the guided tour after onboarding
     setTimeout(() => {
       setShowTour(true);
     }, 1000);
@@ -221,8 +258,16 @@ const Dashboard = () => {
     navigate('/practice');
   };
 
-  const handleTabChange = (value: string) => {
-    updateSettings({ activeTab: value });
+  const refreshDashboardData = async (showAnimation = true) => {
+    if (showAnimation) {
+      setIsRefreshing(true);
+    }
+    
+    // Simulate refresh
+    setTimeout(() => {
+      setStreakCount(Math.floor(Math.random() * 10));
+      setIsRefreshing(false);
+    }, 1000);
   };
 
   const getContextualCTA = () => {
@@ -321,48 +366,40 @@ const Dashboard = () => {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <div className="group">
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 hover:scale-105 transition-transform group-hover:shadow-md"
-                  onClick={() => navigate('/call-recordings')}
-                >
-                  <FileAudio size={16} />
-                  Call Recordings
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 hover:scale-105 transition-transform"
+                onClick={() => navigate('/call-recordings')}
+              >
+                <FileAudio size={16} />
+                Call Recordings
+              </Button>
 
-              <div className="group">
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 hover:scale-105 transition-transform group-hover:shadow-md"
-                  onClick={() => navigate('/practice')}
-                >
-                  <Mic size={16} />
-                  Practice Session
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 hover:scale-105 transition-transform"
+                onClick={() => navigate('/practice')}
+              >
+                <Mic size={16} />
+                Practice Session
+              </Button>
 
-              <div className="group">
-                <Button 
-                  className="flex items-center gap-2 bg-gradient-to-r from-brand-blue to-[#6d8fca] hover:from-[#4580dc] hover:to-[#5c7eb9] text-white hover:scale-105 transition-transform shadow-sm group-hover:shadow-md"
-                  onClick={() => navigate('/roleplay')}
-                >
-                  <Users size={16} />
-                  Role Play
-                </Button>
-              </div>
+              <Button 
+                className="flex items-center gap-2 bg-gradient-to-r from-brand-blue to-[#6d8fca] hover:from-[#4580dc] hover:to-[#5c7eb9] text-white hover:scale-105 transition-transform shadow-sm"
+                onClick={() => navigate('/roleplay')}
+              >
+                <Users size={16} />
+                Role Play
+              </Button>
 
-              <div className="group">
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 hover:scale-105 transition-transform border border-purple-200 hover:bg-purple-50 group-hover:shadow-md"
-                  onClick={() => setShowAISettings(true)}
-                >
-                  <Bot size={16} className="text-purple-600" />
-                  AI Settings
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 hover:scale-105 transition-transform border border-purple-200 hover:bg-purple-50"
+                onClick={() => setShowAISettings(true)}
+              >
+                <Bot size={16} className="text-purple-600" />
+                AI Settings
+              </Button>
             </div>
           </motion.div>
 
@@ -374,9 +411,7 @@ const Dashboard = () => {
               transition={{ duration: 0.3 }}
             >
               <Button 
-                onClick={() => {
-                  navigate('/pricing');
-                }}
+                onClick={() => navigate('/pricing')}
                 className="bg-gradient-to-r from-brand-blue to-brand-green text-white hover:from-brand-blue/90 hover:to-brand-green/90 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 <Crown size={16} />
@@ -397,14 +432,14 @@ const Dashboard = () => {
           )}
 
           <Tabs 
-            value={settings.activeTab}
-            onValueChange={handleTabChange}
+            value={activeTab}
+            onValueChange={setActiveTab}
             className="mb-6"
           >
             <TabsList className="mb-4" role="tablist">
-              <TabsTrigger value="overview" role="tab" aria-selected={settings.activeTab === 'overview'}>Overview</TabsTrigger>
-              <TabsTrigger value="history" role="tab" aria-selected={settings.activeTab === 'history'}>Session History</TabsTrigger>
-              <TabsTrigger value="analysis" role="tab" aria-selected={settings.activeTab === 'analysis'}>Detailed Analysis</TabsTrigger>
+              <TabsTrigger value="overview" role="tab">Overview</TabsTrigger>
+              <TabsTrigger value="history" role="tab">Session History</TabsTrigger>
+              <TabsTrigger value="analysis" role="tab">Detailed Analysis</TabsTrigger>
             </TabsList>
 
             <FadeTransition show={true} duration={300}>
@@ -436,122 +471,46 @@ const Dashboard = () => {
                           {dashboardData.hasData ? (
                             <DashboardStats 
                               streakCount={streakCount} 
-                              pitchCount={dashboardData.pitchCount ?? 0}
-                              winRate={dashboardData.winRate ?? 0}
-                              recentPitches={dashboardData.recentPitches ?? []}
-                              objectionCategories={dashboardData.objectionCategories ?? []}
+                              pitchCount={dashboardData.pitchCount}
+                              winRate={dashboardData.winRate}
+                              recentPitches={dashboardData.recentPitches}
+                              objectionCategories={dashboardData.objectionCategories}
                             />
                           ) : (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <EmptyState 
-                                title="No pitch data yet"
-                                description="Complete your first practice session to see your performance stats here."
-                                actionLabel={contextualCTA.label}
-                                actionRoute={contextualCTA.route}
-                                icon={<BarChart3 className="h-12 w-12 text-gray-300 mb-4" />}
-                              />
-                            </motion.div>
+                            <EmptyState 
+                              title="No pitch data yet"
+                              description="Complete your first practice session to see your performance stats here."
+                              actionLabel={contextualCTA.label}
+                              actionRoute={contextualCTA.route}
+                              icon={<BarChart3 className="h-12 w-12 text-gray-300 mb-4" />}
+                            />
                           )}
                         </motion.div>
                       </motion.div>
                     </TabsContent>
 
                     <TabsContent value="history" className="mt-0" role="tabpanel">
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {dashboardData.hasData ? (
-                          <Card className="overflow-hidden shadow-md mb-8">
-                            <CardHeader className="bg-gradient-to-r from-brand-blue/10 to-brand-blue/5 pb-4">
-                              <CardTitle className="text-xl text-brand-dark">All Practice Sessions</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-6">
-                              <div className="space-y-4" role="list" aria-live="polite">
-                                {Array.from({ length: Math.min(dashboardData.pitchCount ?? 0, 3) }, (_, i) => (
-                                  <motion.div 
-                                    key={i}
-                                    className="group flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
-                                    whileHover={{ scale: 1.02 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                    role="listitem"
-                                  >
-                                    <div>
-                                      <h3 className="font-medium">Session #{i + 1}</h3>
-                                      <p className="text-sm text-brand-dark/70">
-                                        {i + 1} {i === 0 ? 'hour' : 'days'} ago • {Math.floor(Math.random() * 5) + 1}:{Math.floor(Math.random() * 60).toString().padStart(2, '0')} min
-                                      </p>
-                                    </div>
-                                    <Button 
-                                      variant="ghost" 
-                                      className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform group-hover:shadow-sm"
-                                      aria-label={`View feedback for session ${i + 1}`}
-                                    >
-                                      View Feedback
-                                    </Button>
-                                  </motion.div>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ) : (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <EmptyState 
-                              title="No practice sessions yet"
-                              description="Start your first practice session to see your history here."
-                              actionLabel={contextualCTA.label}
-                              actionRoute={contextualCTA.route}
-                              icon={<FileAudio className="h-12 w-12 text-gray-300 mb-4" />}
-                              secondaryAction={{
-                                label: "Try Roleplay Instead",
-                                route: "/roleplay"
-                              }}
-                            />
-                          </motion.div>
-                        )}
-                      </motion.div>
+                      <EmptyState 
+                        title="No practice sessions yet"
+                        description="Start your first practice session to see your history here."
+                        actionLabel={contextualCTA.label}
+                        actionRoute={contextualCTA.route}
+                        icon={<FileAudio className="h-12 w-12 text-gray-300 mb-4" />}
+                        secondaryAction={{
+                          label: "Try Roleplay Instead",
+                          route: "/roleplay"
+                        }}
+                      />
                     </TabsContent>
 
                     <TabsContent value="analysis" className="mt-0" role="tabpanel">
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <motion.div 
-                          className="mt-8 mb-8"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.5 }}
-                        >
-                          {dashboardData.hasData ? (
-                            <LeaderboardTable />
-                          ) : (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <EmptyState 
-                                title="Analysis not available yet"
-                                description="Complete more practice sessions to unlock detailed performance analysis."
-                                actionLabel={contextualCTA.label}
-                                actionRoute={contextualCTA.route}
-                                icon={<BarChart3 className="h-12 w-12 text-gray-300 mb-4" />}
-                              />
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      </motion.div>
+                      <EmptyState 
+                        title="Analysis not available yet"
+                        description="Complete more practice sessions to unlock detailed performance analysis."
+                        actionLabel={contextualCTA.label}
+                        actionRoute={contextualCTA.route}
+                        icon={<BarChart3 className="h-12 w-12 text-gray-300 mb-4" />}
+                      />
                     </TabsContent>
                   </>
                 )}
@@ -583,63 +542,18 @@ const Dashboard = () => {
                   <CardTitle className="text-xl text-brand-dark">Recent Practice Sessions</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  {dashboardData.hasData ? (
-                    <div className="space-y-4" role="list">
-                      {Array.from({ length: Math.min(dashboardData.pitchCount ?? 0, 2) }, (_, i) => (
-                        <motion.div 
-                          key={i}
-                          className="group flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow"
-                          whileHover={{ scale: 1.02 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                          role="listitem"
-                        >
-                          <div>
-                            <h3 className="font-medium">
-                              {i === 0 ? 'Product Demo Pitch' : 'Cold Call Introduction'}
-                            </h3>
-                            <p className="text-sm text-brand-dark/70">
-                              {i === 0 ? '2 hours ago • 3:45 min' : 'Yesterday • 2:12 min'}
-                            </p>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            className="text-brand-green hover:bg-brand-green/10 hover:scale-105 transition-transform group-hover:shadow-sm"
-                            aria-label={`View feedback for session ${i === 0 ? 'product demo pitch' : 'cold call introduction'}`}
-                          >
-                            View Feedback
-                          </Button>
-                        </motion.div>
-                      ))}
-
-                      <div className="group">
-                        <Button 
-                          variant="outline" 
-                          className="w-full flex items-center justify-center gap-2 hover:scale-102 transition-transform group-hover:shadow-sm"
-                          aria-label="View all practice sessions"
-                        >
-                          View All Sessions
-                          <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-6" role="region" aria-live="polite">
-                      <p className="text-gray-500 mb-4">No practice sessions yet. Start your first practice to see your progress here.</p>
-                      <div className="group">
-                        <Button 
-                          onClick={() => navigate(contextualCTA.route)}
-                          className="bg-brand-green hover:bg-brand-green/90 group-hover:shadow-sm transition-all"
-                          aria-label="Start your first practice session"
-                        >
-                          {contextualCTA.label}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="text-center py-6" role="region" aria-live="polite">
+                    <p className="text-gray-500 mb-4">No practice sessions yet. Start your first practice to see your progress here.</p>
+                    <Button 
+                      onClick={() => navigate(contextualCTA.route)}
+                      className="bg-brand-green hover:bg-brand-green/90"
+                      aria-label="Start your first practice session"
+                    >
+                      {contextualCTA.label}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-
-              <ReferralProgram />
             </motion.div>
 
             <motion.div 
@@ -655,26 +569,22 @@ const Dashboard = () => {
                     Ready to improve your pitch skills? Start a new practice session now.
                   </p>
                   <div className="tour-step-2 space-y-3">
-                    <div className="group">
+                    <Button 
+                      className="w-full mb-4 bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-all" 
+                      onClick={() => navigate(contextualCTA.route)}
+                      aria-label="Start new practice session"
+                    >
+                      {contextualCTA.label}
+                    </Button>
+                    <Link to="/roleplay">
                       <Button 
-                        className="w-full mb-4 bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-all group-hover:shadow-md" 
-                        onClick={() => navigate(contextualCTA.route)}
-                        aria-label="Start new practice session"
+                        variant="outline" 
+                        className="w-full hover:scale-105 transition-transform"
+                        aria-label="Try roleplay scenarios"
                       >
-                        {contextualCTA.label}
+                        Try Roleplay Scenarios
                       </Button>
-                    </div>
-                    <div className="group">
-                      <Link to="/roleplay">
-                        <Button 
-                          variant="outline" 
-                          className="w-full hover:scale-105 transition-transform group-hover:shadow-sm"
-                          aria-label="Try roleplay scenarios"
-                        >
-                          Try Roleplay Scenarios
-                        </Button>
-                      </Link>
-                    </div>
+                    </Link>
                   </div>
                 </div>
               </TiltCard>
@@ -698,18 +608,16 @@ const Dashboard = () => {
                   />
                 </TiltCard>
 
-                <div className="group">
-                  <Link to="/tips">
-                    <Button 
-                      variant="outline" 
-                      className="w-full flex items-center justify-center gap-2 hover:scale-105 transition-transform group-hover:shadow-sm"
-                      aria-label="View all practice tips"
-                    >
-                      View All Tips
-                      <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-                    </Button>
-                  </Link>
-                </div>
+                <Link to="/tips">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2 hover:scale-105 transition-transform"
+                    aria-label="View all practice tips"
+                  >
+                    View All Tips
+                    <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           </div>

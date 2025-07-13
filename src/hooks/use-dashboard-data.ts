@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -33,17 +34,17 @@ export function useDashboardData() {
   
   // Get settings from localStorage or use defaults
   const getStoredSettings = useCallback((): DashboardSettings => {
-    if (typeof localStorage === 'undefined') {
+    if (typeof window === 'undefined') {
       return { activeTab: 'overview', timeRange: 'month', showTeamStats: true };
     }
     
-    const storedSettings = localStorage.getItem('dashboardSettings');
-    if (storedSettings) {
-      try {
+    try {
+      const storedSettings = localStorage.getItem('dashboardSettings');
+      if (storedSettings) {
         return JSON.parse(storedSettings);
-      } catch (e) {
-        console.error('Error parsing dashboard settings from localStorage', e);
       }
+    } catch (e) {
+      console.error('Error parsing dashboard settings from localStorage', e);
     }
     
     return { activeTab: 'overview', timeRange: 'month', showTeamStats: true };
@@ -57,7 +58,9 @@ export function useDashboardData() {
     setSettings(updatedSettings);
     
     try {
-      localStorage.setItem('dashboardSettings', JSON.stringify(updatedSettings));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('dashboardSettings', JSON.stringify(updatedSettings));
+      }
     } catch (e) {
       console.error('Error saving dashboard settings to localStorage', e);
     }
@@ -71,7 +74,10 @@ export function useDashboardData() {
 
   // Function to refresh dashboard data
   const refreshDashboardData = useCallback(async (showAnimation = true) => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
     
     if (showAnimation) {
       setIsRefreshing(true);
@@ -80,21 +86,11 @@ export function useDashboardData() {
     setIsLoading(true);
     
     try {
-      // Mock streak data since user_streaks table doesn't exist
+      // Simplified data loading - just set mock data for now
       setStreakCount(Math.floor(Math.random() * 10));
-
-      // Use existing pitch_recordings table instead of non-existent pitch_sessions
-      const { data: pitchData, error: pitchError } = await supabase
-        .from('pitch_recordings')
-        .select('*')
-        .eq('user_id', user.id);
-        
-      if (pitchError) {
-        console.error('Error fetching pitch data:', pitchError);
-      }
       
-      // Default empty data
-      let newDashboardData = {
+      // Default data structure
+      const newDashboardData = {
         pitchCount: 0,
         winRate: null,
         recentPitches: [
@@ -115,39 +111,27 @@ export function useDashboardData() {
         hasData: false
       };
       
-      // If we have pitch data, populate the dashboard
-      if (pitchData && pitchData.length > 0) {
-        // Calculate pitch count
-        newDashboardData.pitchCount = pitchData.length;
-        
-        // Calculate win rate based on score (if available)
-        const scoredPitches = pitchData.filter(p => p.score !== null);
-        if (scoredPitches.length > 0) {
-          const highScorePitches = scoredPitches.filter(p => p.score && p.score >= 70);
-          newDashboardData.winRate = Math.round((highScorePitches.length / scoredPitches.length) * 100);
-        }
-        
-        // Calculate recent pitch activity
-        const today = new Date();
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const dayCount = new Array(7).fill(0);
-        
-        pitchData.forEach(pitch => {
-          const pitchDate = new Date(pitch.created_at);
-          const dayDiff = Math.floor((today.getTime() - pitchDate.getTime()) / (24 * 60 * 60 * 1000));
-          if (dayDiff < 7) {
-            const dayIndex = (today.getDay() - dayDiff + 7) % 7;
-            dayCount[dayIndex]++;
+      // Try to load actual data if possible
+      try {
+        const { data: pitchData, error: pitchError } = await supabase
+          .from('pitch_recordings')
+          .select('*')
+          .eq('user_id', user.id)
+          .limit(10);
+          
+        if (!pitchError && pitchData?.length > 0) {
+          newDashboardData.pitchCount = pitchData.length;
+          newDashboardData.hasData = true;
+          
+          // Calculate win rate if scores available
+          const scoredPitches = pitchData.filter(p => p.score !== null);
+          if (scoredPitches.length > 0) {
+            const highScorePitches = scoredPitches.filter(p => p.score && p.score >= 70);
+            newDashboardData.winRate = Math.round((highScorePitches.length / scoredPitches.length) * 100);
           }
-        });
-        
-        newDashboardData.recentPitches = dayNames.map((name, index) => ({
-          name,
-          count: dayCount[(index + today.getDay() + 1) % 7]
-        }));
-        
-        // Flag that we have data
-        newDashboardData.hasData = true;
+        }
+      } catch (dataError) {
+        console.log('Could not load pitch data, using defaults:', dataError);
       }
       
       setDashboardData(newDashboardData);
@@ -158,7 +142,6 @@ export function useDashboardData() {
       setIsLoading(false);
       
       if (showAnimation) {
-        // Keep the refreshing state visible for at least 500ms so the animation is noticeable
         setTimeout(() => {
           setIsRefreshing(false);
         }, 500);
@@ -168,18 +151,19 @@ export function useDashboardData() {
 
   // Initialize data when dashboard loads
   useEffect(() => {
-    // Check if we're returning from a practice session
-    const returningFromPractice = sessionStorage.getItem('completedPractice');
+    let mounted = true;
     
-    if (returningFromPractice) {
-      // Clear the flag
-      sessionStorage.removeItem('completedPractice');
-      // Refresh with animation
-      refreshDashboardData(true);
-    } else {
-      // Normal load without animation
-      refreshDashboardData(false);
-    }
+    const loadData = async () => {
+      if (mounted) {
+        await refreshDashboardData(false);
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      mounted = false;
+    };
   }, [refreshDashboardData]);
 
   return {
