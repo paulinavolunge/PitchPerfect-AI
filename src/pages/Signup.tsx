@@ -104,16 +104,30 @@ const Signup = () => {
     setGoogleError(null);
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Starting Google OAuth signup...');
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
 
+      console.log('Google OAuth response:', { data, error });
+
       if (error) {
+        console.error('Google OAuth error:', error);
         throw error;
       }
+
+      // Note: For OAuth, the user will be redirected to Google
+      // The page redirect happens automatically
+      console.log('Google OAuth initiated successfully');
+      
     } catch (error: any) {
       console.error('Google signup error:', error);
       setGoogleError(error.message || 'Google authentication is temporarily unavailable. Please try email signup instead.');
@@ -123,9 +137,9 @@ const Signup = () => {
         description: "Please try email signup or contact support if the problem persists.",
         variant: "destructive",
       });
-    } finally {
       setIsGoogleLoading(false);
     }
+    // Note: Don't set loading to false here as the page will redirect
   };
 
   return (
