@@ -63,7 +63,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: messages,
         max_tokens: 300,
         temperature: 0.8,
@@ -158,9 +158,9 @@ function buildConversationContext(conversationHistory: any[], userScript: string
     const recentHistory = conversationHistory.slice(-4);
     recentHistory.forEach(msg => {
       if (msg.sender === 'user') {
-        context.push({ role: 'assistant', content: msg.text });
-      } else if (msg.sender === 'ai') {
         context.push({ role: 'user', content: msg.text });
+      } else if (msg.sender === 'ai') {
+        context.push({ role: 'assistant', content: msg.text.replace(/^[^:]+:\s*/, '') }); // Remove persona prefix
       }
     });
   }

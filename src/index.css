@@ -32,8 +32,8 @@ body {
 @layer base {
   :root {
     /* Vibrant Color Palette */
-    --vibrant-blue-50: #EBF4FF;
-    --vibrant-blue-500: #63A4FF;
+    --primary-50: #EBF4FF;
+    --primary-500: #63A4FF;
     --deep-navy: #1A2B50;
     --neutral-base: #F4F6F8;
 
@@ -64,19 +64,19 @@ body {
 /* Enhanced Component Styles with Better Contrast */
 @layer components {
   .vibrant-card {
-    @apply bg-white rounded-xl shadow-vibrant-lg border border-vibrant-blue-100/30 backdrop-blur-sm;
+    @apply bg-white rounded-xl shadow-vibrant-lg border border-primary-200/30 backdrop-blur-sm;
   }
   
   .hero-text {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-deep-navy to-vibrant-blue-500 bg-clip-text text-transparent;
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-deep-navy to-primary-500 bg-clip-text text-transparent;
   }
   
   .vibrant-button {
-    @apply bg-gradient-to-r from-vibrant-blue-500 via-primary-600 to-indigo-600 hover:from-vibrant-blue-600 hover:via-primary-700 hover:to-indigo-700 text-white rounded-lg px-6 py-3 font-semibold transition-all duration-300 shadow-vibrant hover:shadow-vibrant-xl hover:scale-105;
+    @apply bg-gradient-to-r from-primary-500 via-primary-600 to-indigo-600 hover:from-primary-600 hover:via-primary-700 hover:to-indigo-700 text-white rounded-lg px-6 py-3 font-semibold transition-all duration-300 shadow-vibrant hover:shadow-vibrant-xl hover:scale-105;
   }
   
   .outline-button {
-    @apply border-2 border-vibrant-blue-500 text-vibrant-blue-600 hover:bg-gradient-to-r hover:from-vibrant-blue-500 hover:to-primary-600 hover:text-white rounded-lg px-6 py-3 font-semibold transition-all duration-300 shadow-sm hover:shadow-vibrant;
+    @apply border-2 border-primary-500 text-primary-600 hover:bg-gradient-to-r hover:from-primary-500 hover:to-primary-600 hover:text-white rounded-lg px-6 py-3 font-semibold transition-all duration-300 shadow-sm hover:shadow-vibrant;
   }
   
   .card-hover {
@@ -84,7 +84,7 @@ body {
   }
   
   .gradient-bg {
-    @apply bg-gradient-to-br from-vibrant-blue-50 via-vibrant-blue-100 to-vibrant-blue-200;
+    @apply bg-gradient-to-br from-primary-50 via-primary-100 to-primary-200;
   }
 
   .strong-cta {
