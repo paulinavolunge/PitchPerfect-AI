@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Search, Bot } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import AIDisclosure from '@/components/AIDisclosure';
 
 const Tips = () => {

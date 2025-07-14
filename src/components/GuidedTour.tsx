@@ -32,6 +32,7 @@ const GuidedTour = ({
   });
 
   useEffect(() => {
+    // TODO: Remove console.log statements for production
     console.log('GuidedTour useEffect - run:', run, 'stepIndex:', stepIndex, 'steps length:', steps.length);
     setTourState(prevState => ({
       ...prevState,

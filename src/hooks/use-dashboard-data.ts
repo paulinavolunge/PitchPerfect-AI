@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/utils/analytics";
 
 export interface DashboardSettings {

@@ -1,7 +1,7 @@
 
 import { whisperTranscribe } from '../lib/whisper-api';
 import { VoiceInputSecurity } from './voiceInputSecurity';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 const nativeSpeechRecognition = async (audioBlob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {

@@ -22,6 +22,7 @@ export const PrivacyCompliantAnalytics = () => {
     
     // Set up debug check
     setTimeout(() => {
+      // TODO: Consider environment-based logging for production
       console.log('🔍 PrivacyCompliantAnalytics: Running connection check...');
       checkAnalyticsConnection();
     }, 3000);
