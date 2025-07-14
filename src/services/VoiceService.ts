@@ -66,8 +66,13 @@ export class VoiceService {
     if (typeof window === 'undefined') return;
     
     const SpeechRecognitionConstructor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognitionConstructor) {
-      this.recognition = new SpeechRecognitionConstructor();
+    if (SpeechRecognitionConstructor && typeof SpeechRecognitionConstructor === 'function') {
+      try {
+        this.recognition = new SpeechRecognitionConstructor();
+      } catch (error) {
+        console.warn('Failed to initialize SpeechRecognition:', error);
+        this.recognition = null;
+      }
     }
   }
 
@@ -135,6 +140,11 @@ export class VoiceService {
     config: VoiceServiceConfig = {},
     callbacks: VoiceRecognitionCallbacks
   ): Promise<void> {
+    // Lazy initialize recognition if it failed during construction
+    if (!this.recognition) {
+      this.initializeSpeechRecognition();
+    }
+    
     if (!this.isSupported || !this.recognition) {
       const error = new Error('Speech recognition not supported') as VoiceServiceError;
       error.code = 'NOT_SUPPORTED';
