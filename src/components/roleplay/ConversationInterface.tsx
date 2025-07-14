@@ -1,29 +1,40 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
-import { MessageList } from './chat/MessageList';
+import MessageList from './chat/MessageList';
 import { generateAIResponse } from './chat/ChatLogic';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
-  content: string;
+  text: string;
   sender: 'user' | 'ai';
   timestamp: Date;
 }
 
 interface ConversationInterfaceProps {
+  mode?: 'voice' | 'text' | 'hybrid';
   scenario?: {
     difficulty: string;
     objection: string;
     industry: string;
     custom?: string;
   };
+  voiceStyle?: 'friendly' | 'assertive' | 'skeptical' | 'rushed';
+  volume?: number;
+  userScript?: string | null;
 }
 
-const ConversationInterface = ({ scenario }: ConversationInterfaceProps) => {
+const ConversationInterface = ({ 
+  mode = 'text',
+  scenario,
+  voiceStyle = 'friendly',
+  volume = 75,
+  userScript
+}: ConversationInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -54,7 +65,7 @@ const ConversationInterface = ({ scenario }: ConversationInterfaceProps) => {
           recognitionRef.current.interimResults = false;
           recognitionRef.current.lang = 'en-US';
 
-          recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          recognitionRef.current.onresult = (event: any) => {
             const transcript = event.results[0]?.transcript || '';
             if (transcript.trim()) {
               setInputText(transcript);
@@ -62,7 +73,7 @@ const ConversationInterface = ({ scenario }: ConversationInterfaceProps) => {
             setIsListening(false);
           };
 
-          recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+          recognitionRef.current.onerror = (event: any) => {
             console.error('Speech recognition error:', event.error);
             setIsListening(false);
             toast({
@@ -147,12 +158,22 @@ const ConversationInterface = ({ scenario }: ConversationInterfaceProps) => {
     }
   }, []);
 
+  const getAIPersona = useCallback(() => {
+    const personas = {
+      'friendly': 'Alex',
+      'assertive': 'Jordan',
+      'skeptical': 'Morgan',
+      'rushed': 'Taylor'
+    };
+    return personas[voiceStyle] || 'Alex';
+  }, [voiceStyle]);
+
   const handleSendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: inputText,
+      text: inputText,
       sender: 'user',
       timestamp: new Date(),
     };
@@ -165,12 +186,27 @@ const ConversationInterface = ({ scenario }: ConversationInterfaceProps) => {
       console.log('Sending message to AI:', inputText);
       console.log('Current scenario:', scenario);
       
-      const aiResponse = await generateAIResponse(inputText, messages, scenario);
+      // Convert messages to the expected format for ChatLogic
+      const chatMessages = messages.map(msg => ({
+        id: msg.id,
+        text: msg.text,
+        sender: msg.sender,
+        timestamp: msg.timestamp
+      }));
+      
+      const aiResponse = await generateAIResponse(
+        inputText, 
+        scenario || { difficulty: 'Beginner', objection: 'General', industry: 'Technology' }, 
+        userScript, 
+        getAIPersona,
+        chatMessages
+      );
+      
       console.log('AI Response received:', aiResponse);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: aiResponse,
+        text: aiResponse,
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -184,7 +220,7 @@ const ConversationInterface = ({ scenario }: ConversationInterfaceProps) => {
       console.error('Error getting AI response:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I apologize, but I'm having trouble responding right now. Please try again.",
+        text: "I apologize, but I'm having trouble responding right now. Please try again.",
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -215,7 +251,7 @@ const ConversationInterface = ({ scenario }: ConversationInterfaceProps) => {
     <div className="flex flex-col h-full max-w-4xl mx-auto p-4">
       <Card className="flex-1 mb-4">
         <CardContent className="p-4 h-full">
-          <MessageList messages={messages} isLoading={isLoading} />
+          <MessageList messages={messages} isAISpeaking={isLoading} />
         </CardContent>
       </Card>
 
