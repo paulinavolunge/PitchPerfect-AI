@@ -1,708 +1,285 @@
-import React, { useState, useEffect, useRef } from 'react';
-import MessageList from './chat/MessageList';
-import ChatInput from './chat/ChatInput';
-import { useToast } from "@/components/ui/use-toast";
-import { getScenarioIntro, generateAIResponse } from './chat/ChatLogic';
-import { useAuth } from '@/context/AuthContext';
-import PremiumModal from '@/components/PremiumModal';
-import VoiceSynthesis from '@/utils/VoiceSynthesis';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import ProgressSummary from '../gamification/ProgressSummary';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Flag, CheckCircle } from 'lucide-react';
-import LoadingIndicator from '@/components/ui/loading-indicator';
-import FeedbackPrompt from '@/components/feedback/FeedbackPrompt';
-import { useGuestMode } from "@/context/GuestModeContext";
-import { useNavigate } from 'react-router-dom';
-import MicrophonePermissionCheck from '@/components/voice/MicrophonePermissionCheck';
-import { AIErrorHandler } from '@/utils/aiErrorHandler';
-import { showAIErrorToast, showServiceUnavailableToast } from '@/components/ui/ai-error-toast';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
+import { MessageList } from './chat/MessageList';
+import { generateAIResponse } from './chat/ChatLogic';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
-  text: string;
+  content: string;
   sender: 'user' | 'ai';
   timestamp: Date;
 }
 
 interface ConversationInterfaceProps {
-  mode: 'voice' | 'text' | 'hybrid';
-  scenario: {
+  scenario?: {
     difficulty: string;
     objection: string;
     industry: string;
     custom?: string;
   };
-  voiceStyle: 'friendly' | 'assertive' | 'skeptical' | 'rushed';
-  volume: number;
-  userScript?: string | null;
-  onProcessingStateChange?: (isProcessing: boolean) => void;
-  onFirstAIReply?: () => void;
 }
 
-const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
-  mode,
-  scenario,
-  voiceStyle,
-  volume,
-  userScript,
-  onProcessingStateChange,
-  onFirstAIReply
-}) => {
+const ConversationInterface = ({ scenario }: ConversationInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isAISpeaking, setIsAISpeaking] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [actualMode, setActualMode] = useState<'voice' | 'text' | 'hybrid'>('text');
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [sessionComplete, setSessionComplete] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [userIdleTime, setUserIdleTime] = useState(0);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [firstAIReplyTriggered, setFirstAIReplyTriggered] = useState(false);
-  const [micPermissionGranted, setMicPermissionGranted] = useState<boolean | null>(null);
-  const [browserSupportsSpeech, setBrowserSupportsSpeech] = useState<boolean | null>(null);
-  const [aiServiceError, setAiServiceError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [inputText, setInputText] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [speechEnabled, setSpeechEnabled] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
   const { toast } = useToast();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  // Destructure new auth values
-  const { user, isPremium, creditsRemaining, trialUsed, startFreeTrial, deductUserCredits } = useAuth();
-  const { isGuestMode } = useGuestMode();
-  const navigate = useNavigate();
 
-  const voiceSynthRef = useRef<VoiceSynthesis | null>(null);
-  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [sessionStats, setSessionStats] = useState({
-    responseTime: 0,
-    clarity: 0,
-    relevance: 0,
-    effectiveness: 0,
-  });
+  const examplePrompts = [
+    "Hi, I'm calling to introduce our new software for teams.",
+    "Objection: I don't have the budget right now.",
+    "We already work with someone else."
+  ];
 
-  // Suggested responses based on the scenario
-  const suggestedResponses = {
-    'Price': [
-      "I understand price is a concern. Let's look at the ROI our solution provides...",
-      "Our pricing reflects the value we deliver. For example...",
-      "What specific budget constraints are you working within?"
-    ],
-    'Timing': [
-      "I understand timing is important. When would be ideal to implement?",
-      "What timeline would work better for your organization?",
-      "The implementation can be phased to accommodate your schedule."
-    ],
-    'Competition': [
-      "I'd like to understand what you appreciate about their solution.",
-      "Our differentiator is actually in how we handle...",
-      "What specific features are most important to your team?"
-    ],
-    'Need': [
-      "What specific challenges is your team currently facing?",
-      "How are you currently addressing this problem?",
-      "Would it be helpful if I shared how other companies in your industry use our solution?"
-    ],
-    'Default': [
-      "Could you tell me more about your specific concerns?",
-      "What aspects of this solution are most important to you?",
-      "How does your team currently handle this process?"
-    ]
-  };
-
-  // Get the appropriate suggestions based on scenario
-  const getRelevantSuggestions = () => {
-    if (scenario.objection in suggestedResponses) {
-      return suggestedResponses[scenario.objection as keyof typeof suggestedResponses];
-    }
-    return suggestedResponses.Default;
-  };
-
-  useEffect(() => {
-    // Lazy initialization - only check support without initializing services
-    if (typeof window !== 'undefined') {
-      const hasSpeechSynthesis = 'speechSynthesis' in window;
-      const hasSpeechRecognition = !!(window.SpeechRecognition || (window as any).webkitSpeechRecognition);
-      setBrowserSupportsSpeech(hasSpeechSynthesis && hasSpeechRecognition);
-    }
-
-    return () => {
-      // Stop speaking when component unmounts
-      if (voiceSynthRef.current) {
-        voiceSynthRef.current.stop();
-      }
-
-      // Clear idle timer
-      if (idleTimerRef.current) {
-        clearTimeout(idleTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    // Voice features (voice/hybrid modes) now require premium or credits
-    if (mode !== 'text' && !isPremium && creditsRemaining <= 0) {
-      setActualMode('text'); // Fallback to text mode if not premium/no credits for voice features
-      if (mode === 'voice' || mode === 'hybrid') {
-        setShowPremiumModal(true); // Prompt upgrade
-      }
-    } else {
-      setActualMode(mode);
-      // Default voice to enabled when premium user or user with credits selects voice/hybrid mode
-      if ((isPremium || creditsRemaining > 0) && (mode === 'voice' || mode === 'hybrid')) {
-        setVoiceEnabled(true);
-      }
-    }
-  }, [mode, isPremium, creditsRemaining]); // Added creditsRemaining to dependencies
-
-  useEffect(() => {
-    // Initialize with AI greeting
-    const greeting = getScenarioIntro(scenario, getAIPersona);
-    const initialMessage: Message = {
-      id: `ai-${Date.now()}`,
-      text: greeting,
-      sender: 'ai',
-      timestamp: new Date(),
-    };
-
-    setMessages([initialMessage]);
-    setSessionComplete(false);
-    setShowFeedback(false);
-    setFirstAIReplyTriggered(false);
-
-    // Speak the initial greeting if voice is enabled and mode allows
-    if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
-      speakMessage(initialMessage.text);
-    }
-
-    // Scroll to bottom when messages change
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Reset idle timer
-    resetIdleTimer();
-  }, [scenario]); // Removed voiceEnabled, isPremium, actualMode, volume, voiceSynthRef to prevent re-runs
-
-  useEffect(() => {
-    // Scroll to bottom when messages change
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  // Update parent component with processing state
-  useEffect(() => {
-    if (onProcessingStateChange) {
-      onProcessingStateChange(isProcessing);
-    }
-  }, [isProcessing, onProcessingStateChange]);
-
-  const getAIPersona = () => {
-    const styles = {
-      friendly: 'Alex',
-      assertive: 'Jordan',
-      skeptical: 'Morgan',
-      rushed: 'Taylor',
-    };
-    return styles[voiceStyle] || 'Customer';
-  };
-
-  const speakMessage = async (text: string) => {
-    // Lazy initialize voice synthesis only when needed
-    if (!voiceSynthRef.current) {
-      voiceSynthRef.current = VoiceSynthesis.getInstance();
-    }
+  const initializeVoiceServices = useCallback(() => {
+    if (isInitialized) return;
     
-    if (!voiceSynthRef.current || !voiceEnabled) return;
-
-    setIsAISpeaking(true);
-
     try {
-      const voiceVolume = volume / 100;
-      const persona = voiceStyle || 'friendly';
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        
+        if (recognitionRef.current) {
+          recognitionRef.current.continuous = false;
+          recognitionRef.current.interimResults = false;
+          recognitionRef.current.lang = 'en-US';
 
-      await AIErrorHandler.withRetry(
-        async () => {
-          if (!voiceSynthRef.current) {
-            throw new Error('Voice synthesis not available');
-          }
-          
-          await voiceSynthRef.current.speak({
-            text: text,
-            volume: voiceVolume,
-            rate: persona === 'rushed' ? 1.2 : 1,
-            pitch: persona === 'skeptical' ? 0.9 : persona === 'friendly' ? 1.1 : 1,
-            voice: persona
-          });
-        },
-        `speak-message-${Date.now()}`,
-        { maxRetries: 2 }
-      );
+          recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+            const transcript = event.results[0]?.transcript || '';
+            if (transcript.trim()) {
+              setInputText(transcript);
+            }
+            setIsListening(false);
+          };
+
+          recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+            console.error('Speech recognition error:', event.error);
+            setIsListening(false);
+            toast({
+              title: "Voice Recognition Error",
+              description: `Failed to recognize speech: ${event.error}`,
+              variant: "destructive",
+            });
+          };
+
+          recognitionRef.current.onend = () => {
+            setIsListening(false);
+          };
+        }
+      }
+
+      if ('speechSynthesis' in window) {
+        synthRef.current = window.speechSynthesis;
+        setSpeechEnabled(true);
+      }
+
+      setIsInitialized(true);
     } catch (error) {
-      console.error('Error speaking:', error);
-      AIErrorHandler.handleError({
-        name: 'VoiceSynthesisError',
-        message: 'Could not play AI voice',
-        code: 'VOICE_SYNTHESIS_ERROR',
-        retryable: true,
-      }, 'conversation');
-      
-      // Fallback to text-only mode temporarily
+      console.error('Error initializing voice services:', error);
       toast({
-        title: "Voice Error",
-        description: "AI voice is temporarily unavailable. Continuing with text responses.",
+        title: "Voice Services Error",
+        description: "Failed to initialize voice services",
         variant: "destructive",
       });
-    } finally {
-      setIsAISpeaking(false);
     }
-  };
+  }, [isInitialized, toast]);
 
-  const resetIdleTimer = () => {
-    // Clear existing timer
-    if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
-    }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      initializeVoiceServices();
+    }, 100);
 
-    setUserIdleTime(0);
-    setShowSuggestions(false);
+    return () => clearTimeout(timer);
+  }, [initializeVoiceServices]);
 
-    // Set new timer - check every 5 seconds
-    idleTimerRef.current = setInterval(() => {
-      setUserIdleTime(prev => {
-        const newTime = prev + 5;
-        // Show suggestions after 15 seconds of inactivity
-        if (newTime >= 15 && !showSuggestions && messages.length > 0) {
-          setShowSuggestions(true);
-        }
-        return newTime;
-      });
-    }, 5000);
-  };
-
-  const handleSendMessage = async (text: string) => {
-    console.log("📝 User sent message:", text);
-    
-    // Reset idle timer when user sends a message
-    resetIdleTimer();
-    setShowSuggestions(false);
-    setAiServiceError(null);
-
-    // Check rate limiting
-    const userId = user?.id || 'guest';
-    if (!AIErrorHandler.checkRateLimit(userId, 'roleplay-message', 15)) {
+  const startListening = useCallback(() => {
+    if (!isInitialized) {
+      initializeVoiceServices();
       return;
     }
 
-    // Add user message immediately for responsiveness
+    if (recognitionRef.current && !isListening) {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        toast({
+          title: "Voice Recognition Error",
+          description: "Failed to start voice recognition",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [isListening, isInitialized, initializeVoiceServices, toast]);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  }, [isListening]);
+
+  const speakText = useCallback((text: string) => {
+    if (synthRef.current && speechEnabled) {
+      synthRef.current.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      synthRef.current.speak(utterance);
+    }
+  }, [speechEnabled]);
+
+  const toggleSpeech = useCallback(() => {
+    setSpeechEnabled(prev => !prev);
+    if (synthRef.current) {
+      synthRef.current.cancel();
+    }
+  }, []);
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || isLoading) return;
+
     const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      text: text,
+      id: Date.now().toString(),
+      content: inputText,
       sender: 'user',
       timestamp: new Date(),
     };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
 
-    // Stop any ongoing AI speech when user speaks
-    if (voiceSynthRef.current && isAISpeaking) {
-      voiceSynthRef.current.stop();
-      setIsAISpeaking(false);
-    }
-
-    // --- Credit Deduction Logic ---
-    let creditsToDeduct = 0;
-    let featureType = '';
-
-    if (!isGuestMode) { // Credits only apply to authenticated users
-      if (actualMode === 'text') {
-        creditsToDeduct = 1;
-        featureType = 'roleplay_text_analysis';
-      } else if (actualMode === 'voice' || actualMode === 'hybrid') {
-        creditsToDeduct = 5; // Placeholder for 3-10 credits, adjust as needed
-        featureType = `roleplay_voice_analysis_${scenario.difficulty.toLowerCase()}`;
-      }
-
-      if (creditsToDeduct > 0) {
-        try {
-          const deducted = await deductUserCredits(featureType, creditsToDeduct);
-          if (!deducted) {
-            // deductUserCredits already shows a toast on failure
-            setIsProcessing(false); // Stop processing state if deduction failed
-            return; // Stop execution if credits couldn't be deducted
-          }
-        } catch (error) {
-          console.error('Credit deduction failed:', error);
-          AIErrorHandler.handleError({
-            name: 'CreditDeductionError',
-            message: 'Failed to deduct credits',
-            code: 'CREDIT_ERROR',
-          }, 'conversation');
-          setIsProcessing(false);
-          return;
-        }
-      }
-    }
-    // --- End Credit Deduction Logic ---
-
-    // Show processing state after successful deduction
-    setIsProcessing(true);
-    console.log("⏳ Processing AI response...");
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
+    setIsLoading(true);
 
     try {
-      // Generate AI response using the secure OpenAI integration
-      console.log("🎯 Calling generateAIResponse with:", {
-        userInput: text,
-        scenario,
-        persona: getAIPersona(),
-        historyLength: updatedMessages.length
-      });
-
-      const aiResponseText = await generateAIResponse(
-        text, 
-        scenario, 
-        userScript || null, 
-        getAIPersona,
-        updatedMessages // Pass conversation history
-      );
-
-      console.log("🎉 AI response generated:", aiResponseText);
+      console.log('Sending message to AI:', inputText);
+      console.log('Current scenario:', scenario);
+      
+      const aiResponse = await generateAIResponse(inputText, messages, scenario);
+      console.log('AI Response received:', aiResponse);
 
       const aiMessage: Message = {
-        id: `ai-${Date.now()}`,
-        text: aiResponseText,
+        id: (Date.now() + 1).toString(),
+        content: aiResponse,
         sender: 'ai',
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      console.log("💬 AI message added to conversation");
 
-      // Trigger first AI reply callback for guest mode prompts
-      if (!firstAIReplyTriggered && onFirstAIReply) {
-        setFirstAIReplyTriggered(true);
-        onFirstAIReply();
+      if (speechEnabled && aiResponse) {
+        speakText(aiResponse);
       }
-
-      // Speak the AI response if voice is enabled
-      if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text') {
-        console.log("🔊 Speaking AI response...");
-        await speakMessage(aiResponseText);
-      }
-
-      // Set session complete after a certain number of exchanges (e.g., 4 AI responses)
-      const aiMessagesCount = messages.filter(msg => msg.sender === 'ai').length + 1; // +1 for the current AI response
-      const shouldCompleteSession = aiMessagesCount >= 4; // Complete after 4 AI responses (5 total messages including intro)
-
-      if (shouldCompleteSession) {
-        // Generate random stats for demo
-        const stats = {
-          responseTime: Math.floor(Math.random() * 30) + 70, // 70-100%
-          clarity: Math.floor(Math.random() * 40) + 60, // 60-100%
-          relevance: Math.floor(Math.random() * 30) + 70, // 70-100%
-          effectiveness: Math.floor(Math.random() * 35) + 65, // 65-100%
-        };
-        setSessionStats(stats);
-        setSessionComplete(true);
-
-        toast({
-          title: "Session Complete",
-          description: "Great job! You've completed this practice session and can now view your detailed feedback.",
-          duration: 5000,
-        });
-      }
-
     } catch (error) {
-      console.error('💥 Error in conversation flow:', error);
-      setAiServiceError('AI service temporarily unavailable');
+      console.error('Error getting AI response:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I apologize, but I'm having trouble responding right now. Please try again.",
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
       
-      // Show user-friendly error message
       toast({
         title: "AI Response Error",
-        description: "Sorry, I'm having trouble responding right now. Please try again in a moment.",
+        description: "Failed to get AI response. Please try again.",
         variant: "destructive",
-        duration: 5000,
-      });
-      
-      showServiceUnavailableToast(() => {
-        setRetryCount(prev => prev + 1);
-        setAiServiceError(null);
       });
     } finally {
-      setIsProcessing(false);
-      console.log("✅ Processing complete");
+      setIsLoading(false);
     }
   };
 
-  const toggleVoice = () => {
-    // If not premium and not enough credits, show modal
-    if (!isPremium && creditsRemaining <= 0 && !voiceEnabled) {
-      setShowPremiumModal(true);
-      return;
-    }
-
-    // Lazy initialize and check if speech synthesis is supported
-    if (!voiceSynthRef.current) {
-      voiceSynthRef.current = VoiceSynthesis.getInstance();
-    }
-    
-    if (!voiceSynthRef.current?.isVoiceSupported() && !voiceEnabled) {
-      toast({
-        title: "Voice Not Supported",
-        description: "Your browser does not support AI voice. Please try using Chrome, Edge, or Safari.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setVoiceEnabled(!voiceEnabled);
-
-    // Stop speaking if turning off
-    if (voiceEnabled && voiceSynthRef.current && isAISpeaking) {
-      voiceSynthRef.current.stop();
-      setIsAISpeaking(false);
-    }
-
-    toast({
-      title: voiceEnabled ? "AI Voice disabled" : "AI Voice enabled",
-      description: voiceEnabled ? "AI will respond with text only." : "AI will respond with voice and text.",
-      duration: 3000,
-    });
-  };
-
-  const handleFinishSession = () => {
-    // Generate random stats for demo
-    const stats = {
-      responseTime: Math.floor(Math.random() * 30) + 70, // 70-100%
-      clarity: Math.floor(Math.random() * 40) + 60, // 60-100%
-      relevance: Math.floor(Math.random() * 30) + 70, // 70-100%
-      effectiveness: Math.floor(Math.random() * 35) + 65, // 65-100%
-    };
-    setSessionStats(stats);
-    setSessionComplete(true);
-
-    toast({
-      title: "Session Complete",
-      description: "You've marked this session as complete.",
-      duration: 3000,
-    });
-  };
-
-  const handleShowFeedback = () => {
-    setShowFeedback(true);
-  };
-
-  const handleCloseFeedback = () => {
-    setShowFeedback(false);
-    // Reset session
-    const greeting = getScenarioIntro(scenario, getAIPersona);
-    const initialMessage: Message = {
-      id: `ai-${Date.now()}`,
-      text: greeting,
-      sender: 'ai',
-      timestamp: new Date(),
-    };
-
-    setMessages([initialMessage]);
-    setSessionComplete(false);
-    setFirstAIReplyTriggered(false);
-
-    // Speak the initial greeting if voice is enabled
-    if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
-      speakMessage(initialMessage.text);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
-  const handleUseSuggestion = (suggestion: string) => {
-    handleSendMessage(suggestion);
-  };
-
-  // Handle microphone permission changes
-  const handleMicPermissionChange = (hasPermission: boolean) => {
-    setMicPermissionGranted(hasPermission);
-  };
-
-  // If speech recognition not supported, provide a warning
-  const renderSpeechSupportWarning = () => {
-    if (browserSupportsSpeech === false && (actualMode === 'voice' || actualMode === 'hybrid')) {
-      return (
-        <div className="px-4 py-2 bg-amber-50 border-amber-200 border rounded-md text-sm text-amber-700 mb-2">
-          <p>Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari for voice features, or switch to text mode.</p>
-        </div>
-      );
-    }
-    return null;
+  const handlePromptClick = (prompt: string) => {
+    setInputText(prompt);
   };
 
   return (
-    <>
-      <div className="flex flex-col h-[500px] border rounded-lg overflow-hidden relative">
-        <div className="bg-white p-2 flex justify-between items-center border-b">
-          <div className="flex items-center">
-            {!isGuestMode && user && (
-              <span className="text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mr-2">
-                Credits: {creditsRemaining}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 text-xs h-8 min-w-[100px] group"
-              onClick={handleFinishSession}
-              aria-label="End current practice session"
-            >
-              <Flag className="h-3 w-3" />
-              End Session
-            </Button>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="voice-mode" className="text-sm">AI Voice</Label>
-              <Switch
-                id="voice-mode"
-                checked={voiceEnabled}
-                onCheckedChange={toggleVoice}
-                aria-label="Toggle voice responses"
-                // Disable voice toggle if not premium and no credits
-                disabled={!isPremium && creditsRemaining <= 0 || !browserSupportsSpeech}
-              />
-            </div>
-          </div>
-        </div>
+    <div className="flex flex-col h-full max-w-4xl mx-auto p-4">
+      <Card className="flex-1 mb-4">
+        <CardContent className="p-4 h-full">
+          <MessageList messages={messages} isLoading={isLoading} />
+        </CardContent>
+      </Card>
 
-        {aiServiceError && (
-          <div className="px-4 py-2 bg-amber-50 border-amber-200 border-b text-sm text-amber-700">
-            <p className="font-medium">Service Notice:</p>
-            <p>{aiServiceError} - Responses may be limited.</p>
-          </div>
-        )}
-
-        <MessageList messages={messages} isAISpeaking={isAISpeaking} />
-
-        {isProcessing && (
-          <div className="p-4 bg-white border-t" aria-live="polite">
-            <LoadingIndicator size="small" />
-          </div>
-        )}
-
-        {showSuggestions && !sessionComplete && !isProcessing && (
-          <div className="bg-blue-50 p-3 border-t">
-            <p className="text-xs text-brand-dark/70 mb-2">Need help with your response? Try one of these:</p>
-            <div className="flex flex-wrap gap-2">
-              {getRelevantSuggestions().map((suggestion, index) => (
-                <Button 
-                  key={index} 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleUseSuggestion(suggestion)}
-                  className="text-xs py-1 h-auto group"
-                  aria-label={`Use suggested response: ${suggestion}`}
+      <div className="space-y-4">
+        {/* Example Prompts */}
+        {messages.length === 0 && (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground text-center">Try these examples:</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {examplePrompts.map((prompt, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePromptClick(prompt)}
+                  className="text-xs px-3 py-1 h-auto whitespace-normal text-left max-w-xs"
                 >
-                  {suggestion.length > 40 ? suggestion.substring(0, 37) + '...' : suggestion}
+                  "{prompt}"
                 </Button>
               ))}
             </div>
           </div>
         )}
 
-        {sessionComplete && !showFeedback ? (
-          <div className="bg-brand-green/10 p-4 flex flex-col items-center justify-center">
-            <p className="text-brand-dark mb-2">Session complete! Ready to see your feedback?</p>
-            <Button 
-              onClick={handleShowFeedback}
-              className="bg-brand-green hover:bg-brand-green/90 flex items-center gap-2 group"
-              size="lg"
-              aria-label="View session feedback and performance summary"
-            >
-              <CheckCircle size={16} />
-              View Session Feedback
-            </Button>
-          </div>
-        ) : !showFeedback && !isProcessing && (
-          <>
-            {renderSpeechSupportWarning()}
-            <MicrophonePermissionCheck onPermissionChange={handleMicPermissionChange}>
-              <ChatInput 
-                mode={actualMode} 
-                onSendMessage={handleSendMessage}
-                disabled={isProcessing}
-                userId={user?.id}
-              />
-            </MicrophonePermissionCheck>
-          </>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Session Feedback */}
-      {showFeedback && (
-        <div className="mt-4">
-          <div className="bg-blue-50 border-l-4 border-blue-300 rounded-lg p-4 mb-4">
-            <FeedbackPrompt 
-              feedbackType="roleplay"
-              sessionId={messages[0]?.id} 
+        {/* Input Area */}
+        <div className="flex gap-2 items-end">
+          <div className="flex-1">
+            <Input
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type your message or use the microphone..."
+              disabled={isLoading}
+              className="pr-4"
             />
           </div>
-          <ProgressSummary
-            sessionName={`${scenario.industry} - ${scenario.objection} Objection Handling`}
-            stats={[
-              { label: "Response Time", value: sessionStats.responseTime },
-              { label: "Clarity", value: sessionStats.clarity },
-              { label: "Relevance", value: sessionStats.relevance },
-              { label: "Effectiveness", value: sessionStats.effectiveness },
-            ]}
-            feedback={[
-              { 
-                text: "Excellent handling of price comparison questions", 
-                type: "strength" 
-              },
-              { 
-                text: "Good use of benefit-focused language", 
-                type: "strength" 
-              },
-              { 
-                text: "Try using more concrete examples with numbers", 
-                type: "improvement" 
-              },
-              { 
-                text: "Consider addressing ROI concerns more directly", 
-                type: "improvement" 
-              },
-            ]}
-            earnedBadges={[
-              { 
-                id: "quick-response",
-                name: "Quick Responder", 
-                description: "Respond to objections quickly and confidently",
-                icon: "bolt", 
-                progress: 100,
-                unlocked: true,
-                colorClass: "amber"
-              }
-            ]}
-            nextMilestone={{
-              name: "Objection Master",
-              progress: 4,
-              total: 10
-            }}
-            onClose={handleCloseFeedback}
-          />
+          
+          <Button
+            onClick={isListening ? stopListening : startListening}
+            variant={isListening ? "destructive" : "outline"}
+            size="icon"
+            disabled={isLoading}
+          >
+            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
+          
+          <Button
+            onClick={toggleSpeech}
+            variant={speechEnabled ? "default" : "outline"}
+            size="icon"
+          >
+            {speechEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+          </Button>
+          
+          <Button
+            onClick={handleSendMessage}
+            disabled={!inputText.trim() || isLoading}
+            size="icon"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
         </div>
-      )}
-
-      {/* Premium Modal - Updated to be credit-aware */}
-      <PremiumModal 
-        isOpen={showPremiumModal} 
-        onClose={() => setShowPremiumModal(false)}
-        feature={
-          user && creditsRemaining === 0 ?
-          "voice roleplay (no credits remaining)" :
-          "voice roleplay"
-        }
-      />
-    </>
+      </div>
+    </div>
   );
 };
 
