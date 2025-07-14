@@ -7,6 +7,7 @@ import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
 import MessageList from './chat/MessageList';
 import { generateAIResponse } from './chat/ChatLogic';
 import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 interface Message {
   id: string;
@@ -41,6 +42,7 @@ const ConversationInterface = ({
   const [isLoading, setIsLoading] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState<'idle' | 'listening' | 'processing' | 'complete'>('idle');
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -69,6 +71,13 @@ const ConversationInterface = ({
             const transcript = event.results[0]?.transcript || '';
             if (transcript.trim()) {
               setInputText(transcript);
+              setVoiceStatus('complete');
+              // Auto-trigger message sending after receiving transcript
+              setTimeout(() => {
+                if (transcript.trim()) {
+                  // The message will be sent and status will be managed in handleSendMessage
+                }
+              }, 500);
             }
             setIsListening(false);
           };
@@ -76,6 +85,7 @@ const ConversationInterface = ({
           recognitionRef.current.onerror = (event: any) => {
             console.error('Speech recognition error:', event.error);
             setIsListening(false);
+            setVoiceStatus('idle');
             toast({
               title: "Voice Recognition Error",
               description: `Failed to recognize speech: ${event.error}`,
@@ -85,6 +95,9 @@ const ConversationInterface = ({
 
           recognitionRef.current.onend = () => {
             setIsListening(false);
+            if (voiceStatus === 'listening') {
+              setVoiceStatus('processing');
+            }
           };
         }
       }
@@ -103,7 +116,7 @@ const ConversationInterface = ({
         variant: "destructive",
       });
     }
-  }, [isInitialized, toast]);
+  }, [isInitialized, toast, voiceStatus]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -123,6 +136,7 @@ const ConversationInterface = ({
       try {
         recognitionRef.current.start();
         setIsListening(true);
+        setVoiceStatus('listening');
       } catch (error) {
         console.error('Error starting speech recognition:', error);
         toast({
@@ -130,6 +144,7 @@ const ConversationInterface = ({
           description: "Failed to start voice recognition",
           variant: "destructive",
         });
+        setVoiceStatus('idle');
       }
     }
   }, [isListening, isInitialized, initializeVoiceServices, toast]);
@@ -138,6 +153,7 @@ const ConversationInterface = ({
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
+      setVoiceStatus('processing');
     }
   }, [isListening]);
 
@@ -181,6 +197,12 @@ const ConversationInterface = ({
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsLoading(true);
+    
+    // Update voice status if this was triggered by voice input
+    if (voiceStatus === 'complete') {
+      // Brief delay to show the "AI is generating feedback" message
+      setTimeout(() => setVoiceStatus('idle'), 2000);
+    }
 
     try {
       console.log('Sending message to AI:', inputText);
@@ -247,6 +269,33 @@ const ConversationInterface = ({
     setInputText(prompt);
   };
 
+  // Voice status display
+  const getVoiceStatusDisplay = () => {
+    switch (voiceStatus) {
+      case 'listening':
+        return (
+          <div className="text-center py-2 text-blue-600 font-medium">
+            🎙 Listening...
+          </div>
+        );
+      case 'processing':
+        return (
+          <div className="text-center py-2 text-orange-600 font-medium flex items-center justify-center gap-2">
+            <LoadingSpinner size="sm" />
+            Analyzing audio...
+          </div>
+        );
+      case 'complete':
+        return (
+          <div className="text-center py-2 text-green-600 font-medium">
+            ✅ Response received. AI is generating feedback...
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto p-4">
       <Card className="flex-1 mb-4">
@@ -256,6 +305,9 @@ const ConversationInterface = ({
       </Card>
 
       <div className="space-y-4">
+        {/* Voice Status Display */}
+        {voiceStatus !== 'idle' && getVoiceStatusDisplay()}
+
         {/* Example Prompts */}
         {messages.length === 0 && (
           <div className="space-y-2">
