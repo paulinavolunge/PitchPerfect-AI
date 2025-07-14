@@ -119,13 +119,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   useEffect(() => {
-    // Initialize voice synthesis
+    // Lazy initialization - only check support without initializing services
     if (typeof window !== 'undefined') {
-      voiceSynthRef.current = VoiceSynthesis.getInstance();
-      setBrowserSupportsSpeech(
-        voiceSynthRef.current.isVoiceSupported() && 
-        (window.SpeechRecognition || (window as any).webkitSpeechRecognition)
-      );
+      const hasSpeechSynthesis = 'speechSynthesis' in window;
+      const hasSpeechRecognition = !!(window.SpeechRecognition || (window as any).webkitSpeechRecognition);
+      setBrowserSupportsSpeech(hasSpeechSynthesis && hasSpeechRecognition);
     }
 
     return () => {
@@ -211,6 +209,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const speakMessage = async (text: string) => {
+    // Lazy initialize voice synthesis only when needed
+    if (!voiceSynthRef.current) {
+      voiceSynthRef.current = VoiceSynthesis.getInstance();
+    }
+    
     if (!voiceSynthRef.current || !voiceEnabled) return;
 
     setIsAISpeaking(true);
@@ -416,7 +419,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       return;
     }
 
-    // Check if speech synthesis is supported
+    // Lazy initialize and check if speech synthesis is supported
+    if (!voiceSynthRef.current) {
+      voiceSynthRef.current = VoiceSynthesis.getInstance();
+    }
+    
     if (!voiceSynthRef.current?.isVoiceSupported() && !voiceEnabled) {
       toast({
         title: "Voice Not Supported",
