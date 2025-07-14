@@ -70,7 +70,7 @@ const Index = () => {
         <meta name="keywords" content="sales training, pitch practice, AI roleplay, objection handling, sales skills" />
         <meta property="og:title" content="PitchPerfect AI - Master Your Sales Pitch" />
         <meta property="og:description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios." />
-        <link rel="preload" href="/fonts/Inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        
       </Helmet>
 
       <div className="min-h-screen bg-background">
