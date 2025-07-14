@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Bot, MessageCircle, Play } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { OnboardingTooltip } from '@/components/onboarding/OnboardingTooltip';
 
 const AIRoleplay = () => {
   const navigate = useNavigate();
@@ -67,9 +68,16 @@ const AIRoleplay = () => {
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-brand-dark mb-4">
-            🤖 AI Roleplay Page
-          </h1>
+          <OnboardingTooltip
+            content="🎙 Ready to roleplay? Type a sales pitch or hit the mic to start practicing. We'll give instant feedback."
+            side="bottom"
+            showOnFirstVisit={true}
+            storageKey="ai-roleplay-welcome"
+          >
+            <h1 className="text-4xl font-bold text-brand-dark mb-4">
+              🤖 AI Roleplay Page
+            </h1>
+          </OnboardingTooltip>
           <p className="text-xl text-brand-dark/70">
             Practice objection handling with realistic AI scenarios
           </p>
