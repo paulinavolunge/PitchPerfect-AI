@@ -46,22 +46,22 @@ const RolePlay = () => {
   if (sessionStarted) {
     return (
       <ResponsiveLayout>
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="mb-6">
+        <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
+          <div className="mb-4 sm:mb-6">
             <Link 
               to="/roleplay" 
-              className="inline-flex items-center text-brand-blue hover:text-brand-blue-dark mb-4"
+              className="inline-flex items-center text-brand-blue hover:text-brand-blue-dark mb-3 sm:mb-4"
               onClick={() => setSessionStarted(false)}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Setup
             </Link>
             
-            <div className="bg-blue-50 border-l-4 border-blue-300 rounded-lg p-4 mb-6">
-              <h2 className="font-semibold text-brand-dark mb-2">
+            <div className="bg-blue-50 border-l-4 border-blue-300 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+              <h2 className="font-semibold text-brand-dark mb-1 sm:mb-2 text-sm sm:text-base">
                 Practice Session: {scenario.industry} - {scenario.objection} Objection
               </h2>
-              <p className="text-sm text-brand-dark/70">
+              <p className="text-xs sm:text-sm text-brand-dark/70">
                 Difficulty: {scenario.difficulty} | Mode: {mode} | Voice Style: {voiceStyle}
               </p>
             </div>
@@ -81,33 +81,33 @@ const RolePlay = () => {
 
   return (
     <ResponsiveLayout>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-brand-dark mb-4">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-dark mb-3 sm:mb-4">
             🎭 AI Roleplay Practice
           </h1>
-          <p className="text-xl text-brand-dark/70">
+          <p className="text-base sm:text-lg lg:text-xl text-brand-dark/70">
             Practice handling objections with realistic AI scenarios
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Configuration Panel */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Practice Mode */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
+              <CardHeader className="pb-3 sm:pb-4">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
                   Practice Mode
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-3">
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 gap-2 sm:gap-3">
                   <Button
                     variant={mode === 'text' ? 'default' : 'outline'}
                     onClick={() => setMode('text')}
-                    className="justify-start"
+                    className="justify-start text-sm sm:text-base h-10 sm:h-11"
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Text Only
@@ -115,7 +115,7 @@ const RolePlay = () => {
                   <Button
                     variant={mode === 'voice' ? 'default' : 'outline'}
                     onClick={() => setMode('voice')}
-                    className="justify-start"
+                    className="justify-start text-sm sm:text-base h-10 sm:h-11"
                   >
                     <Mic className="h-4 w-4 mr-2" />
                     Voice Only
@@ -123,7 +123,7 @@ const RolePlay = () => {
                   <Button
                     variant={mode === 'hybrid' ? 'default' : 'outline'}
                     onClick={() => setMode('hybrid')}
-                    className="justify-start"
+                    className="justify-start text-sm sm:text-base h-10 sm:h-11"
                   >
                     <Mic className="h-4 w-4 mr-2" />
                     <MessageSquare className="h-4 w-4 mr-2" />
@@ -136,17 +136,17 @@ const RolePlay = () => {
             {/* Voice Settings */}
             {(mode === 'voice' || mode === 'hybrid') && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Volume2 className="h-5 w-5" />
+                <CardHeader className="pb-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" />
                     Voice Settings
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="pt-0 space-y-3 sm:space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="voice-style">AI Voice Style</Label>
+                    <Label htmlFor="voice-style" className="text-sm sm:text-base">AI Voice Style</Label>
                     <Select value={voiceStyle} onValueChange={(value: any) => setVoiceStyle(value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10 sm:h-11">
                         <SelectValue placeholder="Select voice style" />
                       </SelectTrigger>
                       <SelectContent>
@@ -159,7 +159,7 @@ const RolePlay = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="volume">Volume: {volume[0]}%</Label>
+                    <Label htmlFor="volume" className="text-sm sm:text-base">Volume: {volume[0]}%</Label>
                     <Slider
                       id="volume"
                       min={0}
@@ -179,24 +179,24 @@ const RolePlay = () => {
           </div>
 
           {/* Scenario Selection */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <ScenarioSelector scenario={scenario} onScenarioChange={setScenario} />
 
             {/* Start Session */}
             <Card>
-              <CardHeader>
-                <CardTitle>Ready to Practice?</CardTitle>
+              <CardHeader className="pb-3 sm:pb-4">
+                <CardTitle className="text-base sm:text-lg">Ready to Practice?</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <Button 
                   onClick={handleStartSession} 
                   size="lg" 
-                  className="w-full"
+                  className="w-full text-sm sm:text-base h-11 sm:h-12"
                 >
                   <Play className="h-4 w-4 mr-2" />
                   Start Roleplay Session
                 </Button>
-                <p className="text-sm text-brand-dark/60 mt-2 text-center">
+                <p className="text-xs sm:text-sm text-brand-dark/60 mt-2 text-center">
                   Your AI conversation partner is ready when you are!
                 </p>
               </CardContent>
