@@ -17,6 +17,7 @@ const getSecurityHeaders = () => ({
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Content-Security-Policy': "default-src 'self'",
+  'Permissions-Policy': 'microphone=(), camera=(), geolocation=(), payment=()'
 });
 
 const logSecurityEvent = async (supabase: any, eventType: string, details: any) => {

@@ -43,8 +43,9 @@ export const checkVoiceRateLimit = async (
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Rate limit check error:', error);
-      return true; // Fail open to allow processing
+      // Log error securely without exposing details
+      await logSecurityEvent('rate_limit_check_failed', { error_code: error.code }, userId);
+      return false; // Fail closed for security
     }
 
     // Check if user is currently blocked
@@ -79,8 +80,9 @@ export const checkVoiceRateLimit = async (
 
     return true;
   } catch (error) {
-    console.error('Rate limit check failed:', error);
-    return true; // Fail open
+    // Log error securely and fail closed
+    await logSecurityEvent('rate_limit_system_error', { error: 'Rate limit check failed' }, userId);
+    return false; // Fail closed for security
   }
 };
 
@@ -128,8 +130,8 @@ export const logSecurityEvent = async (
       p_user_id: userId || null
     });
   } catch (error) {
-    console.error('Failed to log security event:', error);
-    // Don't throw - security logging should not break functionality
+    // Silently fail - security logging should not break functionality
+    // In production, this could be sent to external monitoring
   }
 };
 

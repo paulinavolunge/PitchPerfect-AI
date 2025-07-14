@@ -74,7 +74,7 @@ const PageTrackingProvider = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   // TODO: Remove debug logging for production
-  console.log('App component rendering - routes should be available');
+  // TODO: Remove in production
   
   return (
     <ErrorBoundary>

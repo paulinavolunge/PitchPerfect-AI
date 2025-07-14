@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { createSafeStyleProps, validateConfettiKeyframes } from '@/utils/htmlSanitizer';
 
 interface ConfettiEffectProps {
   active: boolean;
@@ -103,8 +104,8 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({
             {/* Custom confetti shape instead of using a Lucide icon */}
             <div className="w-5 h-5 rounded-sm" style={{ backgroundColor: particle.color }}></div>
             
-            {/* Add the keyframe styles in a regular style tag */}
-            <style dangerouslySetInnerHTML={{ __html: keyframeStyles }} />
+            {/* Add the keyframe styles in a regular style tag - validated for security */}
+            <style dangerouslySetInnerHTML={createSafeStyleProps(keyframeStyles, (css) => validateConfettiKeyframes(css, particle.id))} />
           </div>
         );
       })}

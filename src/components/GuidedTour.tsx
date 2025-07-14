@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Joyride, { STATUS, Step, ACTIONS, CallBackProps, EVENTS, TooltipRenderProps, Placement } from 'react-joyride';
+import { devLog } from '@/utils/secureLogging';
 
 interface GuidedTourProps {
   steps: Step[];
@@ -32,8 +33,7 @@ const GuidedTour = ({
   });
 
   useEffect(() => {
-    // TODO: Remove console.log statements for production
-    console.log('GuidedTour useEffect - run:', run, 'stepIndex:', stepIndex, 'steps length:', steps.length);
+    devLog('GuidedTour useEffect - run:', run, 'stepIndex:', stepIndex, 'steps length:', steps.length);
     setTourState(prevState => ({
       ...prevState,
       run,
@@ -46,21 +46,21 @@ const GuidedTour = ({
     const { status, action, index, type } = data;
     
     // For debugging
-    console.log('Tour callback:', { status, action, index, type, stepsLength: steps.length });
+    devLog('Tour callback:', { status, action, index, type, stepsLength: steps.length });
     
     // Handle tour step navigation
     if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
       if (action === ACTIONS.NEXT) {
         // Only advance if we're not already on the last step
         if (index < steps.length - 1) {
-          console.log(`Moving from step ${index} to step ${index + 1}`);
+          devLog(`Moving from step ${index} to step ${index + 1}`);
           setTourState(prevState => ({
             ...prevState,
             stepIndex: index + 1
           }));
         } else {
           // This is the last step, handle completion
-          console.log('Last step reached, completing tour');
+          devLog('Last step reached, completing tour');
           setTourState(prevState => ({ ...prevState, run: false }));
           onComplete();
         }
@@ -72,7 +72,7 @@ const GuidedTour = ({
       const prevStepIndex = index - 1;
       
       if (prevStepIndex >= 0) {
-        console.log(`Moving back from step ${index} to step ${prevStepIndex}`);
+        devLog(`Moving back from step ${index} to step ${prevStepIndex}`);
         setTourState(prevState => ({
           ...prevState,
           stepIndex: prevStepIndex
@@ -82,7 +82,7 @@ const GuidedTour = ({
     
     // Handle when close button is clicked or tour is skipped
     if (action === ACTIONS.CLOSE || status === STATUS.SKIPPED) {
-      console.log('Tour closed or skipped');
+      devLog('Tour closed or skipped');
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
@@ -90,14 +90,14 @@ const GuidedTour = ({
     // Handle tour completion
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       // Tour is complete
-      console.log('Tour finished or skipped, status:', status);
+      devLog('Tour finished or skipped, status:', status);
       setTourState(prevState => ({ ...prevState, run: false }));
       onComplete();
     }
   };
 
   // Add debug message to see if component renders correctly
-  console.log('GuidedTour rendering:', { 
+  devLog('GuidedTour rendering:', { 
     tourState, 
     run: tourState.run,
     stepIndex: tourState.stepIndex,

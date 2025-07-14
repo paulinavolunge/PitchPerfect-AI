@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/components/ui/navigation-menu';
+import { devLog } from '@/utils/secureLogging';
 
 const Navbar: React.FC = () => {
   const { user, signOut, isPremium, creditsRemaining, trialUsed } = useAuth();
@@ -25,7 +26,7 @@ const Navbar: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    console.log('Auth state in Navbar:', {
+    devLog('Auth state in Navbar:', {
       user,
       isGuestMode,
       user_is_null: user === null,
@@ -47,7 +48,7 @@ const Navbar: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      console.log('Navbar: Starting sign out process...');
+      devLog('Navbar: Starting sign out process...');
       await signOut();
     } catch (error) {
       console.error('Error during sign out:', error);
