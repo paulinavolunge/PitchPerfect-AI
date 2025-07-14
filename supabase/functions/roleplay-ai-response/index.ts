@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -53,7 +54,7 @@ serve(async (req) => {
     }
 
     // Build the system prompt based on the scenario and voice style
-    const systemPrompt = buildSystemPrompt(scenario, voiceStyle, isReversedRole);
+    const systemPrompt = buildSystemPrompt(scenario, voiceStyle, isReversedRole, conversationHistory);
     
     // Build conversation context
     const messages = [
@@ -126,15 +127,16 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(scenario: any, voiceStyle: string, isReversedRole: boolean): string {
+function buildSystemPrompt(scenario: any, voiceStyle: string, isReversedRole: boolean, conversationHistory: any[]): string {
   const persona = getPersonaFromVoiceStyle(voiceStyle);
+  const isFirstMessage = !conversationHistory || conversationHistory.length <= 1;
   
   if (isReversedRole) {
     // AI acts as a prospect presenting objections, then providing feedback
     const basePrompt = `You are ${persona}, playing a dual role in a sales roleplay scenario:
 
 1. PRIMARY ROLE - Potential Customer: Present realistic objections and concerns
-2. SECONDARY ROLE - Sales Coach: Provide feedback on the salesperson's responses
+2. SECONDARY ROLE - Sales Coach: Analyze user responses and provide contextual feedback
 
 Key details about your character as a prospect:
 - Industry: ${scenario.industry}
@@ -142,28 +144,36 @@ Key details about your character as a prospect:
 - Difficulty level: ${scenario.difficulty}
 - Personality: ${voiceStyle}
 
-Your behavior pattern:
-1. FIRST: Present objections as a realistic potential customer with genuine concerns
-2. THEN: After the salesperson responds, evaluate their objection handling and either:
-   - Continue with follow-up objections if they handled it well
-   - Provide constructive feedback on their approach
-   - Show signs of being convinced if they did exceptionally well
+CRITICAL: You must analyze the user's actual response and provide contextual feedback based on what they specifically said.
 
-Guidelines for objection presentation:
+${isFirstMessage ? 
+  `Since this is the first interaction, present your initial objection as a realistic ${scenario.objection.toLowerCase()} concern in the ${scenario.industry} industry.` :
+  `The user has responded to your objection. Analyze their response for:
+   - Empathy/acknowledgment of your concern
+   - Specificity (examples, case studies, data)
+   - Value proposition clarity
+   - Use of discovery questions
+   - Length and depth of response
+   
+   Based on your analysis, respond as the prospect would:
+   - If they showed empathy + specifics: Be more receptive, maybe present a follow-up concern
+   - If they were generic/short: Push back and ask for concrete evidence
+   - If they jumped to pitch without acknowledgment: Feel unheard and resistant
+   - If they asked good questions: Be more open and provide helpful context
+   
+   Make your response realistic to how a ${voiceStyle} prospect in ${scenario.industry} would actually react to their specific approach.`
+}
+
+Guidelines:
 - Be realistic and challenging but not impossible to overcome
-- Base objections on real concerns prospects have in ${scenario.industry}
-- Match the ${scenario.difficulty} difficulty level
+- Base responses on the user's actual words and approach
+- Match the ${scenario.difficulty} difficulty level appropriately
 - Stay in character as a ${voiceStyle} prospect
-
-Guidelines for feedback:
-- Acknowledge what they did well first
-- Point out specific areas for improvement
-- Suggest better approaches when appropriate
-- Keep feedback constructive and encouraging
+- Vary your responses based on the quality of their objection handling
 
 ${scenario.custom ? `Additional context: ${scenario.custom}` : ''}
 
-Keep responses conversational and under 2-3 sentences. Focus on realistic objection handling practice.`;
+Keep responses conversational and under 2-3 sentences. Always respond as the prospect character, not as a coach giving meta-feedback.`;
 
     return basePrompt;
   } else {

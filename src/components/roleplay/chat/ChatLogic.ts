@@ -142,27 +142,8 @@ function generateFallbackResponse(userInput: string, scenario: Scenario, persona
   
   // If this is early in conversation, provide feedback on their objection handling
   if (!isFirstExchange) {
-    // Analyze their objection handling response
-    const feedbackResponses = {
-      Beginner: [
-        `${persona}: That's a good start! I appreciate that you acknowledged my concern. However, I'd like to see more specific examples of how your solution addresses my objection. Can you give me concrete proof?`,
-        `${persona}: I hear what you're saying, but I'm still not fully convinced. You made some good points, but I need more details about the value proposition.`,
-        `${persona}: That's helpful information. I'm starting to see the benefits, but I still have some reservations about moving forward right now.`
-      ],
-      Intermediate: [
-        `${persona}: You handled that well by addressing my concern directly. But now I'm wondering - what happens if this doesn't work out as promised? What guarantees do you offer?`,
-        `${persona}: I appreciate the detailed explanation. You're making me reconsider, but I need to understand the implementation process better before I can commit.`,
-        `${persona}: That was a solid response. You've addressed some of my concerns, but let me throw another objection at you - what about the learning curve for my team?`
-      ],
-      Advanced: [
-        `${persona}: Excellent objection handling! You used evidence and addressed my specific concern. However, I'm still comparing you to competitors who offer similar value at a lower price point.`,
-        `${persona}: That was very persuasive. You've clearly done your homework. But I'm curious - how do you handle clients who aren't seeing the ROI you promised after 6 months?`,
-        `${persona}: Well done! You turned my objection into a selling point. Now I'm interested, but I need to understand your onboarding process and what support looks like long-term.`
-      ]
-    };
-    
-    const responses = feedbackResponses[scenario.difficulty as keyof typeof feedbackResponses] || feedbackResponses.Beginner;
-    return responses[Math.floor(Math.random() * responses.length)];
+    // Analyze their objection handling response based on actual input
+    return analyzeUserResponse(userInput, scenario, persona, conversationHistory);
   }
   
   // If this is the first exchange, present the initial objection
@@ -195,6 +176,81 @@ function generateFallbackResponse(userInput: string, scenario: Scenario, persona
   
   const objections = initialObjections[scenario.objection as keyof typeof initialObjections] || initialObjections.Need;
   return objections[Math.floor(Math.random() * objections.length)];
+}
+
+// New function to analyze user response and provide contextual feedback
+function analyzeUserResponse(userInput: string, scenario: Scenario, persona: string, conversationHistory: Message[]): string {
+  const lowerInput = userInput.toLowerCase();
+  const inputLength = userInput.trim().length;
+  
+  // Analyze response characteristics
+  const hasEmpathy = lowerInput.includes('understand') || lowerInput.includes('hear') || lowerInput.includes('appreciate');
+  const hasSpecifics = lowerInput.includes('example') || lowerInput.includes('specifically') || lowerInput.includes('case study');
+  const hasValue = lowerInput.includes('value') || lowerInput.includes('benefit') || lowerInput.includes('roi');
+  const hasQuestions = userInput.includes('?');
+  const isVeryShort = inputLength < 20;
+  const isGeneric = lowerInput.includes('great question') || lowerInput.includes('good point');
+  
+  // Get the last AI message to understand context
+  const lastAIMessage = conversationHistory.filter(msg => msg.sender === 'ai').pop();
+  const objectionType = scenario.objection;
+  
+  // Provide contextual feedback based on user's actual response
+  if (isVeryShort && lowerInput.includes('understand')) {
+    return `${persona}: Thanks for acknowledging that. What might help me feel more confident about moving forward is understanding how this specifically addresses my ${objectionType.toLowerCase()} concern. Can you walk me through that?`;
+  }
+  
+  if (isGeneric || isVeryShort) {
+    return `${persona}: I appreciate that, but I need more than just reassurance. Can you give me something concrete that addresses my specific concern about ${objectionType.toLowerCase()}?`;
+  }
+  
+  if (hasEmpathy && hasSpecifics) {
+    const positiveResponses = [
+      `${persona}: That's helpful - I can see you understand my position and you've given me something concrete to consider. Let me think about this... Actually, I have another concern: what about the implementation timeline?`,
+      `${persona}: You've made a good point there, and I appreciate the specific example. That does help address my concern. However, I'm still wondering about the long-term support - what happens if things go wrong?`,
+      `${persona}: Okay, that's more convincing. You've shown you understand my situation and provided real evidence. I'm starting to see the value, but I need to understand the next steps better.`
+    ];
+    return positiveResponses[Math.floor(Math.random() * positiveResponses.length)];
+  }
+  
+  if (hasEmpathy && !hasSpecifics) {
+    return `${persona}: I can tell you're listening to my concerns, which I appreciate. But I still need to see some concrete evidence or examples of how this has worked for others in similar situations. Can you share something specific?`;
+  }
+  
+  if (hasSpecifics && !hasEmpathy) {
+    return `${persona}: The information you've shared is useful, but I feel like you jumped straight into your pitch without really acknowledging my concern. I need to feel heard before I can consider the solution.`;
+  }
+  
+  if (hasQuestions) {
+    return `${persona}: Good - you're asking the right questions to understand my situation better. ${generateDiscoveryResponse(objectionType, scenario.difficulty)}`;
+  }
+  
+  // Default contextual response based on objection type
+  const objectionSpecificResponses = {
+    Price: `${persona}: You haven't really addressed why I should pay more when I have cheaper options. I need to see clear ROI or unique value that justifies the premium.`,
+    Timing: `${persona}: You haven't convinced me why this can't wait. What's the urgency? What am I missing out on by waiting six months?`,
+    Trust: `${persona}: I still don't know enough about your company's track record. Can you share some references or case studies from similar clients?`,
+    Authority: `${persona}: That doesn't help me with my boss. I need ammunition - specific benefits and ROI data that will convince the decision maker.`,
+    Competition: `${persona}: You still haven't differentiated yourself from the competition. What makes you worth considering over the other options I'm evaluating?`,
+    Need: `${persona}: I'm still not convinced this is a priority. You need to help me see what problems this solves that I might not be aware of.`
+  };
+  
+  return objectionSpecificResponses[objectionType as keyof typeof objectionSpecificResponses] || 
+         `${persona}: I need more information to feel comfortable moving forward. Can you help me understand this better?`;
+}
+
+// Helper function for discovery responses
+function generateDiscoveryResponse(objectionType: string, difficulty: string): string {
+  const responses = {
+    Price: "Tell me more about your current budget constraints and what ROI you'd need to see to justify this investment.",
+    Timing: "Help me understand what other priorities you're managing right now and what would need to change for this to become urgent.",
+    Trust: "What would you need to see from us to feel confident in our ability to deliver and support you long-term?",
+    Authority: "Walk me through your decision-making process - who else needs to be involved and what concerns might they have?",
+    Competition: "What criteria are you using to evaluate your options, and what's most important to you in making this decision?",
+    Need: "Tell me more about your current process and what challenges, if any, you're experiencing with it."
+  };
+  
+  return responses[objectionType as keyof typeof responses] || "What questions do you have about how this might work for your specific situation?";
 }
 
 /**
