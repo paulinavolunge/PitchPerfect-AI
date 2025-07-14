@@ -282,6 +282,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const handleSendMessage = async (text: string) => {
+    console.log("📝 User sent message:", text);
+    
     // Reset idle timer when user sends a message
     resetIdleTimer();
     setShowSuggestions(false);
@@ -346,9 +348,17 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
     // Show processing state after successful deduction
     setIsProcessing(true);
+    console.log("⏳ Processing AI response...");
 
     try {
       // Generate AI response using the secure OpenAI integration
+      console.log("🎯 Calling generateAIResponse with:", {
+        userInput: text,
+        scenario,
+        persona: getAIPersona(),
+        historyLength: updatedMessages.length
+      });
+
       const aiResponseText = await generateAIResponse(
         text, 
         scenario, 
@@ -356,6 +366,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         getAIPersona,
         updatedMessages // Pass conversation history
       );
+
+      console.log("🎉 AI response generated:", aiResponseText);
 
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
@@ -365,6 +377,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      console.log("💬 AI message added to conversation");
 
       // Trigger first AI reply callback for guest mode prompts
       if (!firstAIReplyTriggered && onFirstAIReply) {
@@ -373,7 +386,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       }
 
       // Speak the AI response if voice is enabled
-      if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text' && voiceSynthRef.current) {
+      if (voiceEnabled && (isPremium || creditsRemaining > 0) && volume > 0 && actualMode !== 'text') {
+        console.log("🔊 Speaking AI response...");
         await speakMessage(aiResponseText);
       }
 
@@ -400,8 +414,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       }
 
     } catch (error) {
-      console.error('Error in conversation flow:', error);
+      console.error('💥 Error in conversation flow:', error);
       setAiServiceError('AI service temporarily unavailable');
+      
+      // Show user-friendly error message
+      toast({
+        title: "AI Response Error",
+        description: "Sorry, I'm having trouble responding right now. Please try again in a moment.",
+        variant: "destructive",
+        duration: 5000,
+      });
       
       showServiceUnavailableToast(() => {
         setRetryCount(prev => prev + 1);
@@ -409,6 +431,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       });
     } finally {
       setIsProcessing(false);
+      console.log("✅ Processing complete");
     }
   };
 

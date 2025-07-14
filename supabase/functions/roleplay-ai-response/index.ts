@@ -5,7 +5,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 if (!openAIApiKey) {
-  console.error('OPENAI_API_KEY is not configured');
+  console.error('❌ OPENAI_API_KEY is not configured');
 }
 
 const corsHeaders = {
@@ -20,16 +20,22 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🚀 Roleplay AI Response function called');
+    
+    const requestBody = await req.json();
+    console.log('📝 Request body:', requestBody);
+    
     const { 
       userInput, 
       scenario, 
       voiceStyle, 
       userScript,
       conversationHistory 
-    } = await req.json();
+    } = requestBody;
 
     // Validate required fields
     if (!userInput || !scenario) {
+      console.error('❌ Missing required fields:', { userInput: !!userInput, scenario: !!scenario });
       return new Response(
         JSON.stringify({ error: 'Missing required fields: userInput and scenario' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -38,6 +44,7 @@ serve(async (req) => {
 
     // Check if OpenAI API key is configured
     if (!openAIApiKey) {
+      console.error('❌ OpenAI API key not configured');
       return new Response(
         JSON.stringify({ error: 'OpenAI API is not configured. Please contact support.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -54,7 +61,8 @@ serve(async (req) => {
       { role: 'user', content: userInput }
     ];
 
-    console.log('Making OpenAI API request with scenario:', scenario);
+    console.log('🤖 Making OpenAI API request with scenario:', scenario);
+    console.log('💬 Messages to send:', messages.length);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -70,16 +78,25 @@ serve(async (req) => {
       }),
     });
 
+    console.log('📡 OpenAI response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('❌ OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    console.log('✅ OpenAI response data:', data);
+    
+    const aiResponse = data.choices?.[0]?.message?.content;
+    
+    if (!aiResponse) {
+      console.error('❌ No AI response content found in:', data);
+      throw new Error('No response content from OpenAI');
+    }
 
-    console.log('OpenAI response generated successfully');
+    console.log('🎉 AI response generated successfully:', aiResponse);
 
     return new Response(
       JSON.stringify({ 
@@ -93,7 +110,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in roleplay-ai-response function:', error);
+    console.error('💥 Error in roleplay-ai-response function:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Failed to generate AI response',
@@ -128,7 +145,7 @@ Your role:
 
 ${scenario.custom ? `Additional context: ${scenario.custom}` : ''}
 
-Keep responses conversational, realistic, and focused on the ${scenario.objection} objection type. Respond as if you're a real customer in this situation.`;
+Keep responses conversational, realistic, and focused on the ${scenario.objection} objection type. Respond as if you're a real customer in this situation. Keep responses under 2-3 sentences to maintain natural conversation flow.`;
 
   return basePrompt;
 }

@@ -55,7 +55,9 @@ export const generateAIResponse = async (
 ): Promise<string> => {
   const persona = getAIPersona();
   
-  console.log("Generating AI response using OpenAI API for input:", userInput);
+  console.log("🤖 Generating AI response for input:", userInput);
+  console.log("📝 Scenario:", scenario);
+  console.log("🎭 Persona:", persona);
   
   // Content safety check for user input
   const safetyAnalysis = ContentSafetyAnalyzer.analyzeContent(userInput, 'USER_MESSAGE');
@@ -68,6 +70,8 @@ export const generateAIResponse = async (
   const safeUserInput = safetyAnalysis.sanitizedContent || userInput;
   
   try {
+    console.log("🚀 Calling roleplay-ai-response edge function...");
+    
     // Call the secure Supabase Edge Function
     const { data, error } = await supabase.functions.invoke('roleplay-ai-response', {
       body: {
@@ -79,15 +83,19 @@ export const generateAIResponse = async (
       }
     });
 
+    console.log("📡 Edge function response:", { data, error });
+
     if (error) {
-      console.error('Error calling roleplay AI function:', error);
+      console.error('❌ Error calling roleplay AI function:', error);
       throw new Error(error.message);
     }
 
     if (!data || !data.response) {
+      console.error('❌ No response received from AI service');
       throw new Error('No response received from AI service');
     }
 
+    console.log("✅ AI response received:", data.response);
     const aiResponse = `${persona}: ${data.response}`;
     
     // Safety check for AI output
@@ -99,9 +107,9 @@ export const generateAIResponse = async (
     return outputSafety.sanitizedContent || aiResponse;
 
   } catch (error) {
-    console.error('Failed to generate AI response:', error);
+    console.error('💥 Failed to generate AI response:', error);
     
-    // Fallback to local response generation
+    // Enhanced fallback response with more context
     return generateFallbackResponse(userInput, scenario, persona);
   }
 };
@@ -124,41 +132,71 @@ function getVoiceStyleFromPersona(persona: string): string {
   return 'friendly'; // default
 }
 
-// Fallback response generation for when API fails
+// Enhanced fallback response generation
 function generateFallbackResponse(userInput: string, scenario: Scenario, persona: string): string {
-  console.log("Using fallback response generation");
+  console.log("🔄 Using fallback response generation");
   
   const lowerInput = userInput.toLowerCase();
   
+  // Price objection responses
   if (lowerInput.includes('price') || lowerInput.includes('cost') || lowerInput.includes('expensive')) {
     if (scenario.objection === 'Price') {
-      return `${persona}: I understand your concern about the price. Our solution costs more because we deliver 30% more value through our advanced features. Many customers find they recoup the investment within 6 months through increased efficiency. Would you like me to show you how the ROI calculation works for businesses like yours?`;
+      return `${persona}: I understand your concern about the price. Our solution costs more because we deliver 30% more value through our advanced features. Many customers find they recoup the investment within 6 months through increased efficiency. What specific budget range are you working within?`;
     }
     return `${persona}: The pricing is competitive for what we offer. We find most customers see significant value that outweighs the initial investment. What specific budget constraints are you working within?`;
   }
   
-  if (lowerInput.includes('competitor') || lowerInput.includes('alternative')) {
+  // Competition objection responses
+  if (lowerInput.includes('competitor') || lowerInput.includes('alternative') || lowerInput.includes('compare')) {
     if (scenario.objection === 'Competition') {
       return `${persona}: I'm glad you're exploring options. We regularly win against our competitors because of our unique approach to customer success. In fact, 40% of our new customers switched from those exact alternatives. What specific competitor features are you most impressed by?`;
     }
     return `${persona}: We respect our competitors, but there are key differences in our approach. Our solution includes features that others don't offer. Have you had a chance to evaluate those specific differences?`;
   }
   
-  if (lowerInput.includes('time') || lowerInput.includes('urgent') || lowerInput.includes('wait')) {
+  // Timing objection responses
+  if (lowerInput.includes('time') || lowerInput.includes('urgent') || lowerInput.includes('wait') || lowerInput.includes('later')) {
     if (scenario.objection === 'Timing') {
-      return `${persona}: I appreciate you being upfront about timing. Many of our clients initially felt the same way, but found that delaying implementation actually cost them more in the long run. What would need to happen for this to become a priority now?`;
+      return `${persona}: I appreciate you being upfront about timing. Many of our clients initially felt the same way, but found that delaying implementation actually cost them more in the long run. What would need to happen for this to become a priority right now?`;
     }
     return `${persona}: Timing is definitely important. When would you anticipate being ready to move forward? We could use that timeframe to prepare a smooth implementation plan.`;
   }
   
-  const defaultResponses = [
-    `${persona}: That's an interesting perspective. Can you tell me more about how you're handling this challenge currently?`,
-    `${persona}: I see where you're coming from. Many of our customers had similar concerns before they discovered how our solution addresses that exact issue.`,
-    `${persona}: Let me clarify something important about that. Our approach is unique because we focus on the long-term results, not just the quick fix.`,
-    `${persona}: That's a common question. The short answer is yes, but there's actually more value in how we implement it compared to others in the market.`
-  ];
+  // Authority objection responses
+  if (lowerInput.includes('decision') || lowerInput.includes('boss') || lowerInput.includes('manager')) {
+    if (scenario.objection === 'Authority') {
+      return `${persona}: I understand you need to get approval. Who else would be involved in this decision? I'd be happy to provide materials that would help you present this to your team.`;
+    }
+  }
   
-  return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  // Need objection responses
+  if (lowerInput.includes('need') || lowerInput.includes('necessary') || lowerInput.includes('require')) {
+    if (scenario.objection === 'Need') {
+      return `${persona}: That's a fair question. Let me ask you this - what challenges are you currently facing that brought you to look at solutions like ours? Understanding your pain points will help me explain the value better.`;
+    }
+  }
+  
+  // Generic responses based on scenario difficulty
+  const genericResponses = {
+    Beginner: [
+      `${persona}: That's an interesting point. Can you tell me more about your current situation?`,
+      `${persona}: I see where you're coming from. Many of our customers had similar thoughts initially.`,
+      `${persona}: Let me address that concern. What specifically would you like to know more about?`
+    ],
+    Intermediate: [
+      `${persona}: I appreciate your directness. Let me share how we've helped similar companies address that exact issue.`,
+      `${persona}: That's a common concern in the ${scenario.industry} industry. Here's what sets us apart...`,
+      `${persona}: I understand your hesitation. What would it take to move this forward?`
+    ],
+    Advanced: [
+      `${persona}: You raise an excellent point. Before I respond, help me understand - what's driving this evaluation process?`,
+      `${persona}: That's exactly the kind of strategic thinking I'd expect. Let me show you how this aligns with your objectives.`,
+      `${persona}: I respect your thorough approach. What criteria are most important in your decision-making process?`
+    ]
+  };
+  
+  const responses = genericResponses[scenario.difficulty as keyof typeof genericResponses] || genericResponses.Beginner;
+  return responses[Math.floor(Math.random() * responses.length)];
 }
 
 /**
