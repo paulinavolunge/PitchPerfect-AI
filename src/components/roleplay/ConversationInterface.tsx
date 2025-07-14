@@ -1,11 +1,10 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
 import MessageList from './chat/MessageList';
-import { generateAIResponse } from './chat/ChatLogic';
+import { generateAIResponse, getScenarioIntro } from './chat/ChatLogic';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 
@@ -49,10 +48,27 @@ const ConversationInterface = ({
   const { toast } = useToast();
 
   const examplePrompts = [
-    "Hi, I'm calling to introduce our new software for teams.",
-    "Objection: I don't have the budget right now.",
-    "We already work with someone else."
+    "I understand your concern about the budget. Let me show you the ROI...",
+    "That's a valid point about timing. Many of our clients felt the same way initially...",
+    "I appreciate you being upfront about that. Can you tell me more about your current situation?"
   ];
+
+  // Initialize with AI objection when component mounts
+  useEffect(() => {
+    if (scenario && messages.length === 0) {
+      const introMessage: Message = {
+        id: Date.now().toString(),
+        text: getScenarioIntro(scenario, getAIPersona),
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+      setMessages([introMessage]);
+      
+      if (speechEnabled) {
+        speakText(introMessage.text);
+      }
+    }
+  }, [scenario, speechEnabled]);
 
   const initializeVoiceServices = useCallback(() => {
     if (isInitialized) return;
@@ -221,7 +237,7 @@ const ConversationInterface = ({
         scenario || { difficulty: 'Beginner', objection: 'General', industry: 'Technology' }, 
         userScript, 
         getAIPersona,
-        chatMessages
+        [...chatMessages, userMessage] // Include the user message we just added
       );
       
       console.log('AI Response received:', aiResponse);
@@ -288,7 +304,7 @@ const ConversationInterface = ({
       case 'complete':
         return (
           <div className="text-center py-2 text-green-600 font-medium">
-            ✅ Response received. AI is generating feedback...
+            ✅ Response received. AI is analyzing your objection handling...
           </div>
         );
       default:
@@ -308,10 +324,10 @@ const ConversationInterface = ({
         {/* Voice Status Display */}
         {voiceStatus !== 'idle' && getVoiceStatusDisplay()}
 
-        {/* Example Prompts */}
-        {messages.length === 0 && (
+        {/* Example Prompts - Updated for objection handling responses */}
+        {messages.length <= 1 && (
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground text-center">Try these examples:</p>
+            <p className="text-sm text-muted-foreground text-center">Try these objection handling examples:</p>
             <div className="flex flex-wrap gap-2 justify-center">
               {examplePrompts.map((prompt, index) => (
                 <Button
@@ -335,7 +351,7 @@ const ConversationInterface = ({
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message or use the microphone..."
+              placeholder="Respond to overcome the objection..."
               disabled={isLoading}
               className="pr-4"
             />

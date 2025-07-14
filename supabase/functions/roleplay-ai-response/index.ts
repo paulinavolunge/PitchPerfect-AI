@@ -30,7 +30,8 @@ serve(async (req) => {
       scenario, 
       voiceStyle, 
       userScript,
-      conversationHistory 
+      conversationHistory,
+      isReversedRole = true
     } = requestBody;
 
     // Validate required fields
@@ -52,17 +53,18 @@ serve(async (req) => {
     }
 
     // Build the system prompt based on the scenario and voice style
-    const systemPrompt = buildSystemPrompt(scenario, voiceStyle);
+    const systemPrompt = buildSystemPrompt(scenario, voiceStyle, isReversedRole);
     
     // Build conversation context
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...buildConversationContext(conversationHistory, userScript),
+      ...buildConversationContext(conversationHistory, userScript, isReversedRole),
       { role: 'user', content: userInput }
     ];
 
     console.log('🤖 Making OpenAI API request with scenario:', scenario);
     console.log('💬 Messages to send:', messages.length);
+    console.log('🔄 Reversed role mode:', isReversedRole);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -124,30 +126,51 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(scenario: any, voiceStyle: string): string {
+function buildSystemPrompt(scenario: any, voiceStyle: string, isReversedRole: boolean): string {
   const persona = getPersonaFromVoiceStyle(voiceStyle);
   
-  const basePrompt = `You are ${persona}, a potential customer in a ${scenario.industry} sales roleplay scenario. You will be practicing objection handling with a salesperson.
+  if (isReversedRole) {
+    // AI acts as a prospect presenting objections, then providing feedback
+    const basePrompt = `You are ${persona}, playing a dual role in a sales roleplay scenario:
 
-Key details about your character:
+1. PRIMARY ROLE - Potential Customer: Present realistic objections and concerns
+2. SECONDARY ROLE - Sales Coach: Provide feedback on the salesperson's responses
+
+Key details about your character as a prospect:
 - Industry: ${scenario.industry}
 - Primary objection type: ${scenario.objection}
 - Difficulty level: ${scenario.difficulty}
 - Personality: ${voiceStyle}
 
-Your role:
-1. Act as a realistic potential customer with genuine concerns
-2. Present objections naturally based on the scenario type (${scenario.objection})
-3. Be ${voiceStyle} in your responses
-4. Challenge the salesperson appropriately for ${scenario.difficulty} difficulty level
-5. Stay in character throughout the conversation
-6. Give thoughtful responses that help the salesperson practice
+Your behavior pattern:
+1. FIRST: Present objections as a realistic potential customer with genuine concerns
+2. THEN: After the salesperson responds, evaluate their objection handling and either:
+   - Continue with follow-up objections if they handled it well
+   - Provide constructive feedback on their approach
+   - Show signs of being convinced if they did exceptionally well
+
+Guidelines for objection presentation:
+- Be realistic and challenging but not impossible to overcome
+- Base objections on real concerns prospects have in ${scenario.industry}
+- Match the ${scenario.difficulty} difficulty level
+- Stay in character as a ${voiceStyle} prospect
+
+Guidelines for feedback:
+- Acknowledge what they did well first
+- Point out specific areas for improvement
+- Suggest better approaches when appropriate
+- Keep feedback constructive and encouraging
 
 ${scenario.custom ? `Additional context: ${scenario.custom}` : ''}
 
-Keep responses conversational, realistic, and focused on the ${scenario.objection} objection type. Respond as if you're a real customer in this situation. Keep responses under 2-3 sentences to maintain natural conversation flow.`;
+Keep responses conversational and under 2-3 sentences. Focus on realistic objection handling practice.`;
 
-  return basePrompt;
+    return basePrompt;
+  } else {
+    // Original behavior (kept for compatibility)
+    const basePrompt = `You are ${persona}, a potential customer in a ${scenario.industry} sales roleplay scenario...`;
+    return basePrompt;
+  }
 }
 
 function getPersonaFromVoiceStyle(voiceStyle: string): string {
@@ -160,13 +183,13 @@ function getPersonaFromVoiceStyle(voiceStyle: string): string {
   return personas[voiceStyle as keyof typeof personas] || 'a potential customer';
 }
 
-function buildConversationContext(conversationHistory: any[], userScript: string | null): any[] {
+function buildConversationContext(conversationHistory: any[], userScript: string | null, isReversedRole: boolean): any[] {
   const context = [];
   
   if (userScript) {
     context.push({
       role: 'system',
-      content: `The salesperson is following this script/approach: ${userScript.substring(0, 500)}. Use this context to provide more targeted responses and objections.`
+      content: `The salesperson is following this script/approach: ${userScript.substring(0, 500)}. Use this context to provide more targeted objections and feedback.`
     });
   }
 

@@ -19,31 +19,31 @@ interface Message {
 
 export const getScenarioIntro = (scenario: Scenario, getAIPersona: () => string): string => {
   if (scenario.custom) {
-    return `${getAIPersona()}: Hello! I'm ready to roleplay your custom scenario. I'll respond to your script points as a potential client. Let's begin!`;
+    return `${getAIPersona()}: Hello! I'm ready to roleplay your custom scenario. I'll present objections as a potential client, and you can practice overcoming them. Let's begin!`;
   }
   
   const intros = {
-    Technology: "Hi there! I'm considering a new software solution for my team. I've heard about your product, but I'm not convinced it's worth the investment.",
-    Retail: "Hello, I'm browsing today and noticed your product. I'm interested but have a few concerns before making a purchase.",
-    Healthcare: "Hi, our medical practice is looking to upgrade our systems. I've been tasked with reviewing options.",
-    Finance: "Hello, I'm looking to possibly switch financial services. What makes your offering different?",
-    Manufacturing: "Good day, I'm the procurement manager at our manufacturing company. We're evaluating several options in your space.",
-    Education: "Hi there, our educational institution is looking for new solutions. I'm interested to learn more about what you offer."
+    Technology: "Hi there! I've been looking at your software solution, but I'm not convinced it's worth the investment right now.",
+    Retail: "Hello, I'm interested in your product, but I have some concerns before making a purchase.",
+    Healthcare: "Hi, our medical practice is considering new systems, but I'm not sure this is the right fit for us.",
+    Finance: "Hello, I'm evaluating financial services, but I'm not ready to make any changes yet.",
+    Manufacturing: "Good day, I'm reviewing options for our manufacturing company, but we're not in a hurry to decide.",
+    Education: "Hi there, our educational institution is looking at solutions, but budget is a major concern for us."
   };
   
-  const objectionHints = {
-    Price: "though I'm concerned about the cost",
-    Timing: "but I don't see why we need to decide quickly", 
-    Trust: "though I'm not familiar with your company's track record",
-    Authority: "but I'm not the final decision maker",
-    Competition: "and I'm also talking to your competitors",
-    Need: "though I'm not convinced we need this solution"
+  const objectionStatements = {
+    Price: "The cost seems too high for what we're getting. I can find cheaper alternatives elsewhere.",
+    Timing: "This isn't a priority right now. We have other things to focus on first.", 
+    Trust: "I've never heard of your company before. How do I know you'll be around in a year?",
+    Authority: "I'm not the decision maker here. My boss would never approve this.",
+    Competition: "I'm already talking to your competitors and they're offering better deals.",
+    Need: "I'm not convinced we actually need this solution. We're doing fine without it."
   };
   
-  let intro = intros[scenario.industry as keyof typeof intros] || intros.Technology;
-  intro += ` I'm interested to learn more, ${objectionHints[scenario.objection as keyof typeof objectionHints] || objectionHints.Need}.`;
+  const intro = intros[scenario.industry as keyof typeof intros] || intros.Technology;
+  const objection = objectionStatements[scenario.objection as keyof typeof objectionStatements] || objectionStatements.Need;
   
-  return `${getAIPersona()}: ${intro}`;
+  return `${getAIPersona()}: ${intro} ${objection} What do you have to say about that?`;
 };
 
 export const generateAIResponse = async (
@@ -79,7 +79,8 @@ export const generateAIResponse = async (
         scenario: scenario,
         voiceStyle: getVoiceStyleFromPersona(persona),
         userScript: userScript,
-        conversationHistory: conversationHistory.slice(-6) // Last 6 messages for context
+        conversationHistory: conversationHistory.slice(-6), // Last 6 messages for context
+        isReversedRole: true // New flag to indicate reversed roles
       }
     });
 
@@ -110,7 +111,7 @@ export const generateAIResponse = async (
     console.error('💥 Failed to generate AI response:', error);
     
     // Enhanced fallback response with more context
-    return generateFallbackResponse(userInput, scenario, persona);
+    return generateFallbackResponse(userInput, scenario, persona, conversationHistory);
   }
 };
 
@@ -132,71 +133,68 @@ function getVoiceStyleFromPersona(persona: string): string {
   return 'friendly'; // default
 }
 
-// Enhanced fallback response generation
-function generateFallbackResponse(userInput: string, scenario: Scenario, persona: string): string {
-  console.log("🔄 Using fallback response generation");
+// Enhanced fallback response generation for reversed roles
+function generateFallbackResponse(userInput: string, scenario: Scenario, persona: string, conversationHistory: Message[] = []): string {
+  console.log("🔄 Using fallback response generation for reversed roles");
   
   const lowerInput = userInput.toLowerCase();
+  const isFirstExchange = conversationHistory.length <= 1;
   
-  // Price objection responses
-  if (lowerInput.includes('price') || lowerInput.includes('cost') || lowerInput.includes('expensive')) {
-    if (scenario.objection === 'Price') {
-      return `${persona}: I understand your concern about the price. Our solution costs more because we deliver 30% more value through our advanced features. Many customers find they recoup the investment within 6 months through increased efficiency. What specific budget range are you working within?`;
-    }
-    return `${persona}: The pricing is competitive for what we offer. We find most customers see significant value that outweighs the initial investment. What specific budget constraints are you working within?`;
+  // If this is early in conversation, provide feedback on their objection handling
+  if (!isFirstExchange) {
+    // Analyze their objection handling response
+    const feedbackResponses = {
+      Beginner: [
+        `${persona}: That's a good start! I appreciate that you acknowledged my concern. However, I'd like to see more specific examples of how your solution addresses my objection. Can you give me concrete proof?`,
+        `${persona}: I hear what you're saying, but I'm still not fully convinced. You made some good points, but I need more details about the value proposition.`,
+        `${persona}: That's helpful information. I'm starting to see the benefits, but I still have some reservations about moving forward right now.`
+      ],
+      Intermediate: [
+        `${persona}: You handled that well by addressing my concern directly. But now I'm wondering - what happens if this doesn't work out as promised? What guarantees do you offer?`,
+        `${persona}: I appreciate the detailed explanation. You're making me reconsider, but I need to understand the implementation process better before I can commit.`,
+        `${persona}: That was a solid response. You've addressed some of my concerns, but let me throw another objection at you - what about the learning curve for my team?`
+      ],
+      Advanced: [
+        `${persona}: Excellent objection handling! You used evidence and addressed my specific concern. However, I'm still comparing you to competitors who offer similar value at a lower price point.`,
+        `${persona}: That was very persuasive. You've clearly done your homework. But I'm curious - how do you handle clients who aren't seeing the ROI you promised after 6 months?`,
+        `${persona}: Well done! You turned my objection into a selling point. Now I'm interested, but I need to understand your onboarding process and what support looks like long-term.`
+      ]
+    };
+    
+    const responses = feedbackResponses[scenario.difficulty as keyof typeof feedbackResponses] || feedbackResponses.Beginner;
+    return responses[Math.floor(Math.random() * responses.length)];
   }
   
-  // Competition objection responses
-  if (lowerInput.includes('competitor') || lowerInput.includes('alternative') || lowerInput.includes('compare')) {
-    if (scenario.objection === 'Competition') {
-      return `${persona}: I'm glad you're exploring options. We regularly win against our competitors because of our unique approach to customer success. In fact, 40% of our new customers switched from those exact alternatives. What specific competitor features are you most impressed by?`;
-    }
-    return `${persona}: We respect our competitors, but there are key differences in our approach. Our solution includes features that others don't offer. Have you had a chance to evaluate those specific differences?`;
-  }
-  
-  // Timing objection responses
-  if (lowerInput.includes('time') || lowerInput.includes('urgent') || lowerInput.includes('wait') || lowerInput.includes('later')) {
-    if (scenario.objection === 'Timing') {
-      return `${persona}: I appreciate you being upfront about timing. Many of our clients initially felt the same way, but found that delaying implementation actually cost them more in the long run. What would need to happen for this to become a priority right now?`;
-    }
-    return `${persona}: Timing is definitely important. When would you anticipate being ready to move forward? We could use that timeframe to prepare a smooth implementation plan.`;
-  }
-  
-  // Authority objection responses
-  if (lowerInput.includes('decision') || lowerInput.includes('boss') || lowerInput.includes('manager')) {
-    if (scenario.objection === 'Authority') {
-      return `${persona}: I understand you need to get approval. Who else would be involved in this decision? I'd be happy to provide materials that would help you present this to your team.`;
-    }
-  }
-  
-  // Need objection responses
-  if (lowerInput.includes('need') || lowerInput.includes('necessary') || lowerInput.includes('require')) {
-    if (scenario.objection === 'Need') {
-      return `${persona}: That's a fair question. Let me ask you this - what challenges are you currently facing that brought you to look at solutions like ours? Understanding your pain points will help me explain the value better.`;
-    }
-  }
-  
-  // Generic responses based on scenario difficulty
-  const genericResponses = {
-    Beginner: [
-      `${persona}: That's an interesting point. Can you tell me more about your current situation?`,
-      `${persona}: I see where you're coming from. Many of our customers had similar thoughts initially.`,
-      `${persona}: Let me address that concern. What specifically would you like to know more about?`
+  // If this is the first exchange, present the initial objection
+  const initialObjections = {
+    Price: [
+      `${persona}: Your solution costs more than I budgeted for. I can get similar features elsewhere for 30% less. Why should I pay extra?`,
+      `${persona}: The pricing seems steep for a company our size. We're a small business and every dollar counts. Can you justify this investment?`
     ],
-    Intermediate: [
-      `${persona}: I appreciate your directness. Let me share how we've helped similar companies address that exact issue.`,
-      `${persona}: That's a common concern in the ${scenario.industry} industry. Here's what sets us apart...`,
-      `${persona}: I understand your hesitation. What would it take to move this forward?`
+    Timing: [
+      `${persona}: This isn't a good time for us. We just implemented a new system last year and aren't ready for another change.`,
+      `${persona}: I don't see the urgency. Our current process works fine, even if it's not perfect. Why do I need to act now?`
     ],
-    Advanced: [
-      `${persona}: You raise an excellent point. Before I respond, help me understand - what's driving this evaluation process?`,
-      `${persona}: That's exactly the kind of strategic thinking I'd expect. Let me show you how this aligns with your objectives.`,
-      `${persona}: I respect your thorough approach. What criteria are most important in your decision-making process?`
+    Trust: [
+      `${persona}: I've never heard of your company before today. How do I know you'll still be in business next year to support this?`,
+      `${persona}: Your company is too small for us to take a risk on. We need a proven vendor with a long track record.`
+    ],
+    Authority: [
+      `${persona}: I'm interested, but I don't make these decisions alone. My boss will never approve this without more justification.`,
+      `${persona}: This looks good, but I'll need to run it by our procurement team and they're very particular about vendors.`
+    ],
+    Competition: [
+      `${persona}: I'm already talking to [Competitor] and they're offering me a better deal. What makes you different?`,
+      `${persona}: Your competitor just quoted me 25% less for the same features. Can you match their price?`
+    ],
+    Need: [
+      `${persona}: I'm not convinced we actually need this. We've been doing fine without it for years. Why change now?`,
+      `${persona}: This seems like a nice-to-have, not a must-have. We have bigger priorities right now.`
     ]
   };
   
-  const responses = genericResponses[scenario.difficulty as keyof typeof genericResponses] || genericResponses.Beginner;
-  return responses[Math.floor(Math.random() * responses.length)];
+  const objections = initialObjections[scenario.objection as keyof typeof initialObjections] || initialObjections.Need;
+  return objections[Math.floor(Math.random() * objections.length)];
 }
 
 /**
