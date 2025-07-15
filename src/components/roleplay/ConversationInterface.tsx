@@ -213,7 +213,10 @@ const ConversationInterface = ({
   const saveSessionToDatabase = useCallback(async (finalMessages: Message[], feedback: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.error('No authenticated user found');
+        return;
+      }
 
       const duration = sessionStartTime ? 
         Math.round((new Date().getTime() - sessionStartTime.getTime()) / 1000) : 0;
@@ -225,25 +228,42 @@ const ConversationInterface = ({
         industry: scenario?.industry || 'Technology',
         duration_seconds: duration,
         score: feedback?.score || 0,
-        transcript: JSON.stringify(finalMessages),
-        feedback_data: JSON.stringify(feedback),
+        transcript: finalMessages,
+        feedback_data: feedback,
         completed_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      console.log('Saving session data:', sessionData);
+
+      const { data, error } = await supabase
         .from('practice_sessions')
-        .insert(sessionData);
+        .insert(sessionData)
+        .select();
 
       if (error) {
         console.error('Error saving session:', error);
+        toast({
+          title: "Session Save Error",
+          description: "Failed to save practice session",
+          variant: "destructive",
+        });
       } else {
-        console.log('Session saved successfully');
+        console.log('Session saved successfully:', data);
         markPracticeComplete();
+        toast({
+          title: "Session Saved",
+          description: "Your practice session has been recorded",
+        });
       }
     } catch (error) {
       console.error('Error saving session to database:', error);
+      toast({
+        title: "Database Error",
+        description: "Failed to connect to database",
+        variant: "destructive",
+      });
     }
-  }, [scenario, sessionStartTime]);
+  }, [scenario, sessionStartTime, toast]);
 
   useEffect(() => {
     if (scenario && messages.length === 0) {

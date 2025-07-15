@@ -125,6 +125,51 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_sessions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          difficulty: string
+          duration_seconds: number
+          feedback_data: Json | null
+          id: string
+          industry: string
+          scenario_type: string
+          score: number | null
+          transcript: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          difficulty: string
+          duration_seconds?: number
+          feedback_data?: Json | null
+          id?: string
+          industry: string
+          scenario_type: string
+          score?: number | null
+          transcript?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          difficulty?: string
+          duration_seconds?: number
+          feedback_data?: Json | null
+          id?: string
+          industry?: string
+          scenario_type?: string
+          score?: number | null
+          transcript?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       role_change_log: {
         Row: {
           action: string
