@@ -13,8 +13,8 @@ const nativeSpeechRecognition = async (audioBlob: Blob): Promise<string> => {
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        // Sanitize the transcript before returning
         const sanitizedTranscript = VoiceInputSecurity.sanitizeTranscription(transcript);
+        console.log('Native speech recognition result:', sanitizedTranscript);
         resolve(sanitizedTranscript);
       };
 
@@ -32,6 +32,8 @@ const nativeSpeechRecognition = async (audioBlob: Blob): Promise<string> => {
 
 export const processVoiceInput = async (audioBlob: Blob) => {
   try {
+    console.log('Processing voice input, blob size:', audioBlob.size);
+    
     // Get current user for rate limiting
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -50,16 +52,30 @@ export const processVoiceInput = async (audioBlob: Blob) => {
 
     let transcript: string;
 
-    // Use native speech recognition if available, otherwise fallback to Whisper
+    // Try native speech recognition first if available
     if (typeof (window as any).webkitSpeechRecognition !== 'undefined') {
-      transcript = await nativeSpeechRecognition(audioBlob);
+      console.log('Using native speech recognition');
+      try {
+        transcript = await nativeSpeechRecognition(audioBlob);
+      } catch (error) {
+        console.warn('Native speech recognition failed, falling back to Whisper:', error);
+        const rawTranscript = await whisperTranscribe(audioBlob);
+        transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
+      }
     } else {
+      console.log('Using Whisper API fallback');
       const rawTranscript = await whisperTranscribe(audioBlob);
       transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
     }
 
+    console.log('Voice processing complete, transcript:', transcript);
+
     // Secure cleanup
     VoiceInputSecurity.secureCleanup(audioBlob);
+
+    if (!transcript || transcript.trim().length === 0) {
+      throw new Error('No speech detected in audio');
+    }
 
     return transcript;
   } catch (error) {

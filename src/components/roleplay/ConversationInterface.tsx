@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,9 @@ import { generateStructuredFeedback } from './chat/FeedbackGenerator';
 import FeedbackPanel from './FeedbackPanel';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import { processVoiceInput } from '@/utils/voiceInput';
+import { markPracticeComplete } from '@/utils/practiceCompletionHandler';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -47,8 +51,11 @@ const ConversationInterface = ({
   const [currentFeedback, setCurrentFeedback] = useState<any>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [waitingForUserResponse, setWaitingForUserResponse] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [hasProcessedInput, setHasProcessedInput] = useState(false);
   
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const { toast } = useToast();
 
@@ -62,54 +69,10 @@ const ConversationInterface = ({
     if (isInitialized) return;
     
     try {
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        recognitionRef.current = new SpeechRecognition();
-        
-        if (recognitionRef.current) {
-          recognitionRef.current.continuous = false;
-          recognitionRef.current.interimResults = false;
-          recognitionRef.current.lang = 'en-US';
-
-          recognitionRef.current.onresult = (event: any) => {
-            const transcript = event.results[0]?.transcript || '';
-            if (transcript.trim()) {
-              setInputText(transcript);
-              setVoiceStatus('complete');
-              setTimeout(() => {
-                if (transcript.trim()) {
-                  // Auto-send after voice input
-                }
-              }, 500);
-            }
-            setIsListening(false);
-          };
-
-          recognitionRef.current.onerror = (event: any) => {
-            console.error('Speech recognition error:', event.error);
-            setIsListening(false);
-            setVoiceStatus('idle');
-            toast({
-              title: "Voice Recognition Error",
-              description: `Failed to recognize speech: ${event.error}`,
-              variant: "destructive",
-            });
-          };
-
-          recognitionRef.current.onend = () => {
-            setIsListening(false);
-            if (voiceStatus === 'listening') {
-              setVoiceStatus('processing');
-            }
-          };
-        }
-      }
-
       if ('speechSynthesis' in window) {
         synthRef.current = window.speechSynthesis;
         setSpeechEnabled(true);
       }
-
       setIsInitialized(true);
     } catch (error) {
       console.error('Error initializing voice services:', error);
@@ -119,44 +82,103 @@ const ConversationInterface = ({
         variant: "destructive",
       });
     }
-  }, [isInitialized, toast, voiceStatus]);
+  }, [isInitialized, toast]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       initializeVoiceServices();
+      if (!sessionStartTime) {
+        setSessionStartTime(new Date());
+      }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [initializeVoiceServices]);
+  }, [initializeVoiceServices, sessionStartTime]);
 
-  const startListening = useCallback(() => {
-    if (!isInitialized) {
-      initializeVoiceServices();
-      return;
+  const startRecording = useCallback(async () => {
+    try {
+      console.log('Starting voice recording...');
+      setVoiceStatus('listening');
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        console.log('Recording stopped, processing audio...');
+        setVoiceStatus('processing');
+        
+        try {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          console.log('Created audio blob, size:', audioBlob.size);
+          
+          const transcript = await processVoiceInput(audioBlob);
+          console.log('Voice transcription result:', transcript);
+          
+          if (transcript && transcript.trim()) {
+            setInputText(transcript);
+            setVoiceStatus('complete');
+            toast({
+              title: "Voice Captured",
+              description: `Transcribed: "${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`,
+            });
+            
+            // Auto-send the transcribed message
+            setTimeout(() => {
+              handleSendMessage(transcript);
+            }, 500);
+          } else {
+            throw new Error('No speech detected');
+          }
+        } catch (error) {
+          console.error('Voice processing error:', error);
+          setVoiceStatus('idle');
+          toast({
+            title: "Voice Processing Error",
+            description: error instanceof Error ? error.message : "Failed to process voice input",
+            variant: "destructive",
+          });
+        }
+        
+        // Clean up stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start();
+      setIsListening(true);
+      
+      toast({
+        title: "Recording Started",
+        description: "Speak now, click again to stop",
+      });
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setVoiceStatus('idle');
+      toast({
+        title: "Recording Error",
+        description: "Failed to access microphone",
+        variant: "destructive",
+      });
     }
+  }, [toast]);
 
-    if (recognitionRef.current && !isListening) {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-        setVoiceStatus('listening');
-      } catch (error) {
-        console.error('Error starting speech recognition:', error);
-        toast({
-          title: "Voice Recognition Error",
-          description: "Failed to start voice recognition",
-          variant: "destructive",
-        });
-        setVoiceStatus('idle');
-      }
-    }
-  }, [isListening, isInitialized, initializeVoiceServices, toast]);
-
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isListening) {
+      mediaRecorderRef.current.stop();
       setIsListening(false);
-      setVoiceStatus('processing');
     }
   }, [isListening]);
 
@@ -166,9 +188,10 @@ const ConversationInterface = ({
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.9;
       utterance.pitch = 1;
+      utterance.volume = volume / 100;
       synthRef.current.speak(utterance);
     }
-  }, [speechEnabled]);
+  }, [speechEnabled, volume]);
 
   const toggleSpeech = useCallback(() => {
     setSpeechEnabled(prev => !prev);
@@ -187,6 +210,41 @@ const ConversationInterface = ({
     return personas[voiceStyle] || 'Alex';
   }, [voiceStyle]);
 
+  const saveSessionToDatabase = useCallback(async (finalMessages: Message[], feedback: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const duration = sessionStartTime ? 
+        Math.round((new Date().getTime() - sessionStartTime.getTime()) / 1000) : 0;
+
+      const sessionData = {
+        user_id: user.id,
+        scenario_type: scenario?.objection || 'General',
+        difficulty: scenario?.difficulty || 'Beginner',
+        industry: scenario?.industry || 'Technology',
+        duration_seconds: duration,
+        score: feedback?.score || 0,
+        transcript: JSON.stringify(finalMessages),
+        feedback_data: JSON.stringify(feedback),
+        completed_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('practice_sessions')
+        .insert(sessionData);
+
+      if (error) {
+        console.error('Error saving session:', error);
+      } else {
+        console.log('Session saved successfully');
+        markPracticeComplete();
+      }
+    } catch (error) {
+      console.error('Error saving session to database:', error);
+    }
+  }, [scenario, sessionStartTime]);
+
   useEffect(() => {
     if (scenario && messages.length === 0) {
       const introMessage: Message = {
@@ -196,28 +254,29 @@ const ConversationInterface = ({
         timestamp: new Date(),
       };
       setMessages([introMessage]);
-      setWaitingForUserResponse(true); // AI has presented objection, waiting for user
+      setWaitingForUserResponse(true);
       
       if (speechEnabled) {
         speakText(introMessage.text);
       }
     }
-  }, [scenario, speechEnabled, getAIPersona]);
+  }, [scenario, speechEnabled, getAIPersona, speakText]);
 
-  const handleSendMessage = async () => {
-    if (!inputText.trim() || isLoading) return;
+  const handleSendMessage = async (messageText?: string) => {
+    const textToSend = messageText || inputText;
+    if (!textToSend.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputText,
+      text: textToSend,
       sender: 'user',
       timestamp: new Date(),
     };
 
     setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputText;
     setInputText('');
     setIsLoading(true);
+    setHasProcessedInput(true);
     
     // Hide any existing feedback
     setShowFeedback(false);
@@ -228,8 +287,7 @@ const ConversationInterface = ({
     }
 
     try {
-      console.log('Sending message to AI:', currentInput);
-      console.log('Current scenario:', scenario);
+      console.log('Sending message to AI:', textToSend);
       
       // Convert messages to the expected format for ChatLogic
       const chatMessages = messages.map(msg => ({
@@ -240,14 +298,12 @@ const ConversationInterface = ({
       }));
       
       const aiResponse = await generateAIResponse(
-        currentInput, 
+        textToSend, 
         scenario || { difficulty: 'Beginner', objection: 'General', industry: 'Technology' }, 
         userScript, 
         getAIPersona,
         [...chatMessages, userMessage]
       );
-      
-      console.log('AI Response received:', aiResponse);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -256,25 +312,29 @@ const ConversationInterface = ({
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      const updatedMessages = [...messages, userMessage, aiMessage];
+      setMessages(updatedMessages);
 
       // Generate feedback if user was responding to an objection
-      if (waitingForUserResponse && scenario) {
-        console.log('Generating feedback for user response:', currentInput);
+      if (waitingForUserResponse && scenario && hasProcessedInput) {
+        console.log('Generating feedback for user response:', textToSend);
         const feedback = generateStructuredFeedback(
-          currentInput,
+          textToSend,
           scenario.objection,
           [...chatMessages, userMessage]
         );
         
         setCurrentFeedback(feedback);
         
+        // Save session with feedback
+        await saveSessionToDatabase(updatedMessages, feedback);
+        
         // Show feedback after a brief delay
         setTimeout(() => {
           setShowFeedback(true);
         }, 1000);
         
-        setWaitingForUserResponse(false); // Reset after feedback
+        setWaitingForUserResponse(false);
       } else {
         // AI has given a new objection, now waiting for user response
         setWaitingForUserResponse(true);
@@ -324,20 +384,20 @@ const ConversationInterface = ({
       case 'listening':
         return (
           <div className="text-center py-2 text-blue-600 font-medium">
-            🎙 Listening...
+            🎙 Listening... (click mic to stop)
           </div>
         );
       case 'processing':
         return (
           <div className="text-center py-2 text-orange-600 font-medium flex items-center justify-center gap-2">
             <LoadingSpinner size="sm" />
-            Analyzing audio...
+            Processing audio...
           </div>
         );
       case 'complete':
         return (
           <div className="text-center py-2 text-green-600 font-medium">
-            ✅ Response received. AI is analyzing your objection handling...
+            ✅ Audio processed successfully
           </div>
         );
       default:
@@ -366,7 +426,7 @@ const ConversationInterface = ({
         {/* Voice Status Display */}
         {voiceStatus !== 'idle' && getVoiceStatusDisplay()}
 
-        {/* Example Prompts - Updated for objection handling responses */}
+        {/* Example Prompts */}
         {messages.length <= 1 && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground text-center">Try these objection handling examples:</p>
@@ -399,14 +459,16 @@ const ConversationInterface = ({
             />
           </div>
           
-          <Button
-            onClick={isListening ? stopListening : startListening}
-            variant={isListening ? "destructive" : "outline"}
-            size="icon"
-            disabled={isLoading}
-          >
-            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
+          {(mode === 'voice' || mode === 'hybrid') && (
+            <Button
+              onClick={isListening ? stopRecording : startRecording}
+              variant={isListening ? "destructive" : "outline"}
+              size="icon"
+              disabled={isLoading}
+            >
+              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
+          )}
           
           <Button
             onClick={toggleSpeech}
@@ -417,7 +479,7 @@ const ConversationInterface = ({
           </Button>
           
           <Button
-            onClick={handleSendMessage}
+            onClick={() => handleSendMessage()}
             disabled={!inputText.trim() || isLoading}
             size="icon"
           >
