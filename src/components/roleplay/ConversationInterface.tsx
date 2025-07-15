@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -221,6 +220,14 @@ const ConversationInterface = ({
       const duration = sessionStartTime ? 
         Math.round((new Date().getTime() - sessionStartTime.getTime()) / 1000) : 0;
 
+      // Convert messages to JSON-compatible format
+      const serializedMessages = finalMessages.map(msg => ({
+        id: msg.id,
+        text: msg.text,
+        sender: msg.sender,
+        timestamp: msg.timestamp.toISOString()
+      }));
+
       const sessionData = {
         user_id: user.id,
         scenario_type: scenario?.objection || 'General',
@@ -228,7 +235,7 @@ const ConversationInterface = ({
         industry: scenario?.industry || 'Technology',
         duration_seconds: duration,
         score: feedback?.score || 0,
-        transcript: finalMessages,
+        transcript: serializedMessages,
         feedback_data: feedback,
         completed_at: new Date().toISOString()
       };
