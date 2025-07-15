@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
 import MessageList from './chat/MessageList';
 import { generateAIResponse, getScenarioIntro } from './chat/ChatLogic';
+import { generateStructuredFeedback } from './chat/FeedbackGenerator';
+import FeedbackPanel from './FeedbackPanel';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 
@@ -42,6 +44,9 @@ const ConversationInterface = ({
   const [speechEnabled, setSpeechEnabled] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState<'idle' | 'listening' | 'processing' | 'complete'>('idle');
+  const [currentFeedback, setCurrentFeedback] = useState<any>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [waitingForUserResponse, setWaitingForUserResponse] = useState(false);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -52,23 +57,6 @@ const ConversationInterface = ({
     "That's a valid point about timing. Many of our clients felt the same way initially...",
     "I appreciate you being upfront about that. Can you tell me more about your current situation?"
   ];
-
-  // Initialize with AI objection when component mounts
-  useEffect(() => {
-    if (scenario && messages.length === 0) {
-      const introMessage: Message = {
-        id: Date.now().toString(),
-        text: getScenarioIntro(scenario, getAIPersona),
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages([introMessage]);
-      
-      if (speechEnabled) {
-        speakText(introMessage.text);
-      }
-    }
-  }, [scenario, speechEnabled]);
 
   const initializeVoiceServices = useCallback(() => {
     if (isInitialized) return;
@@ -88,10 +76,9 @@ const ConversationInterface = ({
             if (transcript.trim()) {
               setInputText(transcript);
               setVoiceStatus('complete');
-              // Auto-trigger message sending after receiving transcript
               setTimeout(() => {
                 if (transcript.trim()) {
-                  // The message will be sent and status will be managed in handleSendMessage
+                  // Auto-send after voice input
                 }
               }, 500);
             }
@@ -200,6 +187,23 @@ const ConversationInterface = ({
     return personas[voiceStyle] || 'Alex';
   }, [voiceStyle]);
 
+  useEffect(() => {
+    if (scenario && messages.length === 0) {
+      const introMessage: Message = {
+        id: Date.now().toString(),
+        text: getScenarioIntro(scenario, getAIPersona),
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+      setMessages([introMessage]);
+      setWaitingForUserResponse(true); // AI has presented objection, waiting for user
+      
+      if (speechEnabled) {
+        speakText(introMessage.text);
+      }
+    }
+  }, [scenario, speechEnabled, getAIPersona]);
+
   const handleSendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
 
@@ -211,17 +215,20 @@ const ConversationInterface = ({
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputText;
     setInputText('');
     setIsLoading(true);
     
+    // Hide any existing feedback
+    setShowFeedback(false);
+    
     // Update voice status if this was triggered by voice input
     if (voiceStatus === 'complete') {
-      // Brief delay to show the "AI is generating feedback" message
       setTimeout(() => setVoiceStatus('idle'), 2000);
     }
 
     try {
-      console.log('Sending message to AI:', inputText);
+      console.log('Sending message to AI:', currentInput);
       console.log('Current scenario:', scenario);
       
       // Convert messages to the expected format for ChatLogic
@@ -233,11 +240,11 @@ const ConversationInterface = ({
       }));
       
       const aiResponse = await generateAIResponse(
-        inputText, 
+        currentInput, 
         scenario || { difficulty: 'Beginner', objection: 'General', industry: 'Technology' }, 
         userScript, 
         getAIPersona,
-        [...chatMessages, userMessage] // Include the user message we just added
+        [...chatMessages, userMessage]
       );
       
       console.log('AI Response received:', aiResponse);
@@ -250,6 +257,28 @@ const ConversationInterface = ({
       };
 
       setMessages(prev => [...prev, aiMessage]);
+
+      // Generate feedback if user was responding to an objection
+      if (waitingForUserResponse && scenario) {
+        console.log('Generating feedback for user response:', currentInput);
+        const feedback = generateStructuredFeedback(
+          currentInput,
+          scenario.objection,
+          [...chatMessages, userMessage]
+        );
+        
+        setCurrentFeedback(feedback);
+        
+        // Show feedback after a brief delay
+        setTimeout(() => {
+          setShowFeedback(true);
+        }, 1000);
+        
+        setWaitingForUserResponse(false); // Reset after feedback
+      } else {
+        // AI has given a new objection, now waiting for user response
+        setWaitingForUserResponse(true);
+      }
 
       if (speechEnabled && aiResponse) {
         speakText(aiResponse);
@@ -283,6 +312,10 @@ const ConversationInterface = ({
 
   const handlePromptClick = (prompt: string) => {
     setInputText(prompt);
+  };
+
+  const closeFeedback = () => {
+    setShowFeedback(false);
   };
 
   // Voice status display
@@ -319,6 +352,15 @@ const ConversationInterface = ({
           <MessageList messages={messages} isAISpeaking={isLoading} />
         </CardContent>
       </Card>
+
+      {/* Feedback Panel */}
+      {currentFeedback && (
+        <FeedbackPanel
+          feedback={currentFeedback}
+          isVisible={showFeedback}
+          onClose={closeFeedback}
+        />
+      )}
 
       <div className="space-y-4">
         {/* Voice Status Display */}
