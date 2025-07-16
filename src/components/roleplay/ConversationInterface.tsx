@@ -53,6 +53,7 @@ const ConversationInterface = ({
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [hasProcessedInput, setHasProcessedInput] = useState(false);
   const [realtimeTranscript, setRealtimeTranscript] = useState('');
+  const [userResponseCount, setUserResponseCount] = useState(0);
   
   const voiceManagerRef = useRef<VoiceRecordingManager | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -74,7 +75,6 @@ const ConversationInterface = ({
         setSpeechEnabled(true);
       }
       
-      // Initialize voice recording manager
       voiceManagerRef.current = new VoiceRecordingManager();
       
       setIsInitialized(true);
@@ -112,7 +112,6 @@ const ConversationInterface = ({
       setRealtimeTranscript('');
       setIsListening(true);
 
-      // Start real-time speech recognition if available
       if (mode === 'voice' || mode === 'hybrid') {
         const stopRealtime = startRealTimeSpeechRecognition(
           (transcript, isFinal) => {
@@ -128,13 +127,11 @@ const ConversationInterface = ({
           },
           (error) => {
             console.warn('⚠️ Real-time recognition error:', error);
-            // Continue with MediaRecorder fallback
           }
         );
         realtimeRecognitionRef.current = stopRealtime;
       }
 
-      // Start MediaRecorder for backup/processing
       await voiceManagerRef.current.startRecording();
       
       toast({
@@ -161,7 +158,6 @@ const ConversationInterface = ({
 
     console.log('🛑 Stopping recording...');
     
-    // Stop real-time recognition
     if (realtimeRecognitionRef.current) {
       realtimeRecognitionRef.current();
       realtimeRecognitionRef.current = null;
@@ -174,7 +170,6 @@ const ConversationInterface = ({
       const audioBlob = await voiceManagerRef.current.stopRecording();
       console.log('🎵 Audio blob received, size:', audioBlob.size);
 
-      // If we have real-time transcript, use it; otherwise process with Whisper
       if (realtimeTranscript.trim()) {
         console.log('✅ Using real-time transcript:', realtimeTranscript);
         setInputText(realtimeTranscript);
@@ -248,7 +243,6 @@ const ConversationInterface = ({
       const duration = sessionStartTime ? 
         Math.round((new Date().getTime() - sessionStartTime.getTime()) / 1000) : 0;
 
-      // Convert messages to JSON-compatible format
       const serializedMessages = finalMessages.map(msg => ({
         id: msg.id,
         text: msg.text,
@@ -333,11 +327,10 @@ const ConversationInterface = ({
     setRealtimeTranscript('');
     setIsLoading(true);
     setHasProcessedInput(true);
+    setUserResponseCount(prev => prev + 1);
     
-    // Hide any existing feedback
     setShowFeedback(false);
     
-    // Update voice status if this was triggered by voice input
     if (voiceStatus === 'complete') {
       setTimeout(() => setVoiceStatus('idle'), 2000);
     }
@@ -345,7 +338,6 @@ const ConversationInterface = ({
     try {
       console.log('Sending message to AI:', textToSend);
       
-      // Convert messages to the expected format for ChatLogic
       const chatMessages = messages.map(msg => ({
         id: msg.id,
         text: msg.text,
@@ -371,8 +363,8 @@ const ConversationInterface = ({
       const updatedMessages = [...messages, userMessage, aiMessage];
       setMessages(updatedMessages);
 
-      // Generate feedback if user was responding to an objection
-      if (waitingForUserResponse && scenario && hasProcessedInput) {
+      // Generate feedback for every user response after the first exchange
+      if (scenario && userResponseCount >= 1) {
         console.log('Generating feedback for user response:', textToSend);
         const feedback = generateStructuredFeedback(
           textToSend,
@@ -380,6 +372,7 @@ const ConversationInterface = ({
           [...chatMessages, userMessage]
         );
         
+        console.log('Generated feedback:', feedback);
         setCurrentFeedback(feedback);
         
         // Save session with feedback
@@ -387,13 +380,9 @@ const ConversationInterface = ({
         
         // Show feedback after a brief delay
         setTimeout(() => {
+          console.log('Showing feedback panel');
           setShowFeedback(true);
-        }, 1000);
-        
-        setWaitingForUserResponse(false);
-      } else {
-        // AI has given a new objection, now waiting for user response
-        setWaitingForUserResponse(true);
+        }, 1500);
       }
 
       if (speechEnabled && aiResponse) {
@@ -434,7 +423,6 @@ const ConversationInterface = ({
     setShowFeedback(false);
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (realtimeRecognitionRef.current) {
@@ -446,7 +434,6 @@ const ConversationInterface = ({
     };
   }, []);
 
-  // Voice status display
   const getVoiceStatusDisplay = () => {
     switch (voiceStatus) {
       case 'listening':
@@ -486,13 +473,15 @@ const ConversationInterface = ({
         </CardContent>
       </Card>
 
-      {/* Feedback Panel */}
-      {currentFeedback && (
-        <FeedbackPanel
-          feedback={currentFeedback}
-          isVisible={showFeedback}
-          onClose={closeFeedback}
-        />
+      {/* Feedback Panel - Show with higher priority */}
+      {currentFeedback && showFeedback && (
+        <div className="mb-4">
+          <FeedbackPanel
+            feedback={currentFeedback}
+            isVisible={showFeedback}
+            onClose={closeFeedback}
+          />
+        </div>
       )}
 
       <div className="space-y-4">
