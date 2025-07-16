@@ -3,7 +3,52 @@ import { whisperTranscribe } from '../lib/whisper-api';
 import { VoiceInputSecurity } from './voiceInputSecurity';
 import { supabase } from '@/integrations/supabase/client';
 
-// Native speech recognition for browsers that support it
+// Enhanced audio recording with better browser support
+const startAudioRecording = (): Promise<{ recorder: MediaRecorder; stream: MediaStream }> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log('🎤 Requesting microphone access...');
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100,
+          channelCount: 1
+        }
+      });
+
+      console.log('🎤 Microphone access granted');
+
+      // Test different MIME types for MediaRecorder
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/mp4';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/wav';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              mimeType = ''; // Let browser choose
+            }
+          }
+        }
+      }
+
+      console.log('🎤 Using MIME type:', mimeType);
+
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      
+      resolve({ recorder, stream });
+    } catch (error) {
+      console.error('🎤 Failed to get microphone access:', error);
+      reject(error);
+    }
+  });
+};
+
+// Native speech recognition with improved error handling
 const nativeSpeechRecognition = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     try {
@@ -29,7 +74,7 @@ const nativeSpeechRecognition = (): Promise<string> => {
           recognition.stop();
           reject(new Error('Speech recognition timeout'));
         }
-      }, 10000);
+      }, 8000);
 
       recognition.onresult = (event: any) => {
         hasResult = true;
@@ -38,7 +83,7 @@ const nativeSpeechRecognition = (): Promise<string> => {
         if (event.results && event.results.length > 0) {
           const transcript = event.results[0][0].transcript;
           const sanitizedTranscript = VoiceInputSecurity.sanitizeTranscription(transcript);
-          console.log('Native speech recognition result:', sanitizedTranscript);
+          console.log('🗣️ Native speech recognition result:', sanitizedTranscript);
           resolve(sanitizedTranscript);
         } else {
           reject(new Error('No speech detected'));
@@ -48,7 +93,7 @@ const nativeSpeechRecognition = (): Promise<string> => {
       recognition.onerror = (event: any) => {
         hasResult = true;
         clearTimeout(timeoutId);
-        console.error('Speech recognition error:', event.error);
+        console.error('🗣️ Speech recognition error:', event.error);
         reject(new Error('Speech recognition failed: ' + event.error));
       };
 
@@ -60,6 +105,7 @@ const nativeSpeechRecognition = (): Promise<string> => {
       };
 
       recognition.start();
+      console.log('🗣️ Native speech recognition started');
     } catch (error) {
       reject(error);
     }
@@ -68,7 +114,7 @@ const nativeSpeechRecognition = (): Promise<string> => {
 
 export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
   try {
-    console.log('Processing voice input, blob size:', audioBlob.size);
+    console.log('🎙️ Processing voice input, blob size:', audioBlob.size, 'type:', audioBlob.type);
     
     // Get current user for rate limiting
     const { data: { user } } = await supabase.auth.getUser();
@@ -86,28 +132,16 @@ export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
       throw new Error('Invalid audio format or size');
     }
 
-    let transcript: string;
-
-    // Check if we have native speech recognition support
-    const hasNativeSpeech = typeof (window as any).SpeechRecognition !== 'undefined' || 
-                           typeof (window as any).webkitSpeechRecognition !== 'undefined';
-
-    if (hasNativeSpeech && audioBlob.size < 1024 * 1024) { // Use native for smaller files
-      console.log('Attempting native speech recognition');
-      try {
-        transcript = await nativeSpeechRecognition();
-      } catch (error) {
-        console.warn('Native speech recognition failed, falling back to Whisper:', error);
-        const rawTranscript = await whisperTranscribe(audioBlob);
-        transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
-      }
-    } else {
-      console.log('Using Whisper API for transcription');
-      const rawTranscript = await whisperTranscribe(audioBlob);
-      transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
+    if (audioBlob.size === 0) {
+      throw new Error('No audio data recorded');
     }
 
-    console.log('Voice processing complete, transcript:', transcript);
+    // Always use Whisper for reliable transcription
+    console.log('🤖 Using Whisper API for transcription');
+    const rawTranscript = await whisperTranscribe(audioBlob);
+    const transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
+
+    console.log('✅ Voice processing complete, transcript:', transcript);
 
     // Secure cleanup
     VoiceInputSecurity.secureCleanup(audioBlob);
@@ -120,7 +154,7 @@ export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
   } catch (error) {
     // Secure cleanup on error
     VoiceInputSecurity.secureCleanup(audioBlob);
-    console.error('Voice input processing failed:', error);
+    console.error('❌ Voice input processing failed:', error);
     throw error;
   }
 };
@@ -134,7 +168,7 @@ export const startRealTimeSpeechRecognition = (
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-      console.warn('Native speech recognition not available');
+      console.warn('🗣️ Native speech recognition not available');
       return null;
     }
 
@@ -167,23 +201,124 @@ export const startRealTimeSpeechRecognition = (
     };
 
     recognition.onerror = (event: any) => {
-      console.error('Real-time speech recognition error:', event.error);
+      console.error('🗣️ Real-time speech recognition error:', event.error);
       onError('Speech recognition error: ' + event.error);
     };
 
     recognition.start();
+    console.log('🗣️ Real-time speech recognition started');
 
     // Return stop function
     return () => {
       try {
         recognition.stop();
+        console.log('🗣️ Real-time speech recognition stopped');
       } catch (error) {
-        console.warn('Error stopping speech recognition:', error);
+        console.warn('⚠️ Error stopping speech recognition:', error);
       }
     };
   } catch (error) {
-    console.error('Failed to start real-time speech recognition:', error);
+    console.error('❌ Failed to start real-time speech recognition:', error);
     onError('Failed to start speech recognition');
     return null;
   }
 };
+
+// Enhanced recording manager for reliable audio capture
+export class VoiceRecordingManager {
+  private recorder: MediaRecorder | null = null;
+  private stream: MediaStream | null = null;
+  private audioChunks: Blob[] = [];
+  private isRecording = false;
+
+  async startRecording(): Promise<void> {
+    if (this.isRecording) {
+      console.warn('🎤 Already recording');
+      return;
+    }
+
+    try {
+      const { recorder, stream } = await startAudioRecording();
+      
+      this.recorder = recorder;
+      this.stream = stream;
+      this.audioChunks = [];
+      this.isRecording = true;
+
+      this.recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.audioChunks.push(event.data);
+          console.log('🎵 Audio chunk received, size:', event.data.size);
+        }
+      };
+
+      this.recorder.onstop = () => {
+        console.log('🛑 Recording stopped');
+        this.isRecording = false;
+      };
+
+      this.recorder.onerror = (event) => {
+        console.error('❌ MediaRecorder error:', event);
+        this.isRecording = false;
+      };
+
+      // Start recording with data collection every second
+      this.recorder.start(1000);
+      console.log('🎤 Recording started successfully');
+
+    } catch (error) {
+      this.isRecording = false;
+      console.error('❌ Failed to start recording:', error);
+      throw error;
+    }
+  }
+
+  async stopRecording(): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      if (!this.recorder || !this.isRecording) {
+        reject(new Error('Not currently recording'));
+        return;
+      }
+
+      this.recorder.onstop = () => {
+        try {
+          if (this.audioChunks.length === 0) {
+            reject(new Error('No audio data recorded'));
+            return;
+          }
+
+          const audioBlob = new Blob(this.audioChunks, { 
+            type: this.recorder?.mimeType || 'audio/webm' 
+          });
+          
+          console.log('🎵 Audio blob created, size:', audioBlob.size, 'type:', audioBlob.type);
+          
+          // Clean up
+          this.cleanup();
+          
+          resolve(audioBlob);
+        } catch (error) {
+          this.cleanup();
+          reject(error);
+        }
+      };
+
+      this.recorder.stop();
+    });
+  }
+
+  private cleanup(): void {
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+      this.stream = null;
+    }
+    this.recorder = null;
+    this.audioChunks = [];
+    this.isRecording = false;
+    console.log('🧹 Recording cleanup complete');
+  }
+
+  isCurrentlyRecording(): boolean {
+    return this.isRecording;
+  }
+}

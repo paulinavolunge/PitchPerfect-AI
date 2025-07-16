@@ -9,7 +9,7 @@ import { generateStructuredFeedback } from './chat/FeedbackGenerator';
 import FeedbackPanel from './FeedbackPanel';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import { processVoiceInput, startRealTimeSpeechRecognition } from '@/utils/voiceInput';
+import { VoiceRecordingManager, startRealTimeSpeechRecognition, processVoiceInput } from '@/utils/voiceInput';
 import { markPracticeComplete } from '@/utils/practiceCompletionHandler';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -54,10 +54,8 @@ const ConversationInterface = ({
   const [hasProcessedInput, setHasProcessedInput] = useState(false);
   const [realtimeTranscript, setRealtimeTranscript] = useState('');
   
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const voiceManagerRef = useRef<VoiceRecordingManager | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const realtimeRecognitionRef = useRef<(() => void) | null>(null);
   const { toast } = useToast();
 
@@ -75,9 +73,14 @@ const ConversationInterface = ({
         synthRef.current = window.speechSynthesis;
         setSpeechEnabled(true);
       }
+      
+      // Initialize voice recording manager
+      voiceManagerRef.current = new VoiceRecordingManager();
+      
       setIsInitialized(true);
+      console.log('🎤 Voice services initialized');
     } catch (error) {
-      console.error('Error initializing voice services:', error);
+      console.error('❌ Error initializing voice services:', error);
       toast({
         title: "Voice Services Error",
         description: "Failed to initialize voice services",
@@ -97,66 +100,23 @@ const ConversationInterface = ({
     return () => clearTimeout(timer);
   }, [initializeVoiceServices, sessionStartTime]);
 
-  const requestMicrophonePermission = async (): Promise<boolean> => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 44100
-        }
-      });
-      
-      // Test the stream
-      const tracks = stream.getAudioTracks();
-      if (tracks.length === 0) {
-        throw new Error('No audio tracks available');
-      }
-      
-      console.log('Microphone permission granted, audio track:', tracks[0].label);
-      stream.getTracks().forEach(track => track.stop());
-      return true;
-    } catch (error) {
-      console.error('Microphone permission denied:', error);
-      toast({
-        title: "Microphone Access Required",
-        description: "Please allow microphone access to use voice features",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
   const startRecording = useCallback(async () => {
+    if (!voiceManagerRef.current) {
+      console.error('❌ Voice manager not initialized');
+      return;
+    }
+
     try {
-      console.log('Starting voice recording...');
+      console.log('🎤 Starting voice recording...');
       setVoiceStatus('listening');
       setRealtimeTranscript('');
-      
-      // Request microphone permission
-      const hasPermission = await requestMicrophonePermission();
-      if (!hasPermission) {
-        setVoiceStatus('idle');
-        return;
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 44100
-        }
-      });
-
-      streamRef.current = stream;
+      setIsListening(true);
 
       // Start real-time speech recognition if available
       if (mode === 'voice' || mode === 'hybrid') {
         const stopRealtime = startRealTimeSpeechRecognition(
           (transcript, isFinal) => {
-            console.log('Real-time transcript:', transcript, 'Final:', isFinal);
+            console.log('🗣️ Real-time transcript:', transcript, 'Final:', isFinal);
             setRealtimeTranscript(transcript);
             if (isFinal && transcript.trim()) {
               setInputText(transcript);
@@ -167,122 +127,39 @@ const ConversationInterface = ({
             }
           },
           (error) => {
-            console.warn('Real-time recognition error:', error);
+            console.warn('⚠️ Real-time recognition error:', error);
             // Continue with MediaRecorder fallback
           }
         );
         realtimeRecognitionRef.current = stopRealtime;
       }
 
-      // Set up MediaRecorder as fallback or for voice-only mode
-      const options = { mimeType: 'audio/webm' };
-      try {
-        mediaRecorderRef.current = new MediaRecorder(stream, options);
-      } catch (error) {
-        console.warn('WebM not supported, trying mp4');
-        try {
-          mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/mp4' });
-        } catch (error2) {
-          console.warn('MP4 not supported, using default');
-          mediaRecorderRef.current = new MediaRecorder(stream);
-        }
-      }
-
-      audioChunksRef.current = [];
-
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-          console.log('Audio chunk received, size:', event.data.size);
-        }
-      };
-
-      mediaRecorderRef.current.onstop = async () => {
-        console.log('Recording stopped, processing audio...');
-        setVoiceStatus('processing');
-        
-        try {
-          if (audioChunksRef.current.length === 0) {
-            throw new Error('No audio data recorded');
-          }
-
-          const audioBlob = new Blob(audioChunksRef.current, { 
-            type: mediaRecorderRef.current?.mimeType || 'audio/webm' 
-          });
-          
-          console.log('Created audio blob, size:', audioBlob.size, 'type:', audioBlob.type);
-          
-          if (audioBlob.size === 0) {
-            throw new Error('Recorded audio is empty');
-          }
-
-          // Only process with Whisper if we don't have real-time transcript
-          if (!realtimeTranscript.trim()) {
-            const transcript = await processVoiceInput(audioBlob);
-            console.log('Whisper transcription result:', transcript);
-            
-            if (transcript && transcript.trim()) {
-              setInputText(transcript);
-              setVoiceStatus('complete');
-              toast({
-                title: "Voice Captured",
-                description: `"${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`,
-              });
-            } else {
-              throw new Error('No speech detected in recording');
-            }
-          } else {
-            // Use real-time transcript
-            setVoiceStatus('complete');
-            console.log('Using real-time transcript:', realtimeTranscript);
-          }
-        } catch (error) {
-          console.error('Voice processing error:', error);
-          setVoiceStatus('idle');
-          toast({
-            title: "Voice Processing Error",
-            description: error instanceof Error ? error.message : "Failed to process voice input",
-            variant: "destructive",
-          });
-        }
-        
-        // Clean up stream
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop());
-          streamRef.current = null;
-        }
-      };
-
-      mediaRecorderRef.current.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
-        setVoiceStatus('idle');
-        toast({
-          title: "Recording Error",
-          description: "Failed to record audio",
-          variant: "destructive",
-        });
-      };
-
-      mediaRecorderRef.current.start(1000); // Collect data every second
-      setIsListening(true);
+      // Start MediaRecorder for backup/processing
+      await voiceManagerRef.current.startRecording();
       
       toast({
         title: "Recording Started",
         description: "Speak now, click the microphone again to stop",
       });
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('❌ Error starting recording:', error);
       setVoiceStatus('idle');
+      setIsListening(false);
       toast({
         title: "Recording Error",
         description: "Failed to access microphone. Please check permissions.",
         variant: "destructive",
       });
     }
-  }, [mode, toast, realtimeTranscript]);
+  }, [mode, toast]);
 
-  const stopRecording = useCallback(() => {
-    console.log('Stopping recording...');
+  const stopRecording = useCallback(async () => {
+    if (!voiceManagerRef.current) {
+      console.error('❌ Voice manager not initialized');
+      return;
+    }
+
+    console.log('🛑 Stopping recording...');
     
     // Stop real-time recognition
     if (realtimeRecognitionRef.current) {
@@ -290,25 +167,47 @@ const ConversationInterface = ({
       realtimeRecognitionRef.current = null;
     }
 
-    // Stop MediaRecorder
-    if (mediaRecorderRef.current && isListening) {
-      try {
-        if (mediaRecorderRef.current.state !== 'inactive') {
-          mediaRecorderRef.current.stop();
-        }
-      } catch (error) {
-        console.warn('Error stopping MediaRecorder:', error);
-      }
-    }
-
-    // Stop stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-
     setIsListening(false);
-  }, [isListening]);
+    setVoiceStatus('processing');
+
+    try {
+      const audioBlob = await voiceManagerRef.current.stopRecording();
+      console.log('🎵 Audio blob received, size:', audioBlob.size);
+
+      // If we have real-time transcript, use it; otherwise process with Whisper
+      if (realtimeTranscript.trim()) {
+        console.log('✅ Using real-time transcript:', realtimeTranscript);
+        setInputText(realtimeTranscript);
+        setVoiceStatus('complete');
+        toast({
+          title: "Voice Captured",
+          description: `"${realtimeTranscript.substring(0, 50)}${realtimeTranscript.length > 50 ? '...' : ''}"`,
+        });
+      } else {
+        console.log('🤖 Processing audio with Whisper...');
+        const transcript = await processVoiceInput(audioBlob);
+        
+        if (transcript && transcript.trim()) {
+          setInputText(transcript);
+          setVoiceStatus('complete');
+          toast({
+            title: "Voice Processed",
+            description: `"${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`,
+          });
+        } else {
+          throw new Error('No speech detected in recording');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Voice processing error:', error);
+      setVoiceStatus('idle');
+      toast({
+        title: "Voice Processing Error",
+        description: error instanceof Error ? error.message : "Failed to process voice input",
+        variant: "destructive",
+      });
+    }
+  }, [realtimeTranscript, toast]);
 
   const speakText = useCallback((text: string) => {
     if (synthRef.current && speechEnabled) {
@@ -538,12 +437,14 @@ const ConversationInterface = ({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopRecording();
+      if (realtimeRecognitionRef.current) {
+        realtimeRecognitionRef.current();
+      }
       if (synthRef.current) {
         synthRef.current.cancel();
       }
     };
-  }, [stopRecording]);
+  }, []);
 
   // Voice status display
   const getVoiceStatusDisplay = () => {
