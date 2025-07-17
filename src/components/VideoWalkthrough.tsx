@@ -21,8 +21,8 @@ const VideoWalkthrough: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
 
-  // Demo video placeholder - replace with actual video URL
-  const videoSrc = "/placeholder-demo-video.mp4"; // This would be your actual demo video
+  // Demo video placeholder - replace with actual video URL when available
+  const videoSrc = null; // Temporarily disabled until actual video is available
 
   const handlePlayPause = () => {
     if (videoRef.current) {

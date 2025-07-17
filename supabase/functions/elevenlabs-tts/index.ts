@@ -12,15 +12,34 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId = 'CwhRBWXzGAHq8TQ4Fs17' } = await req.json(); // Default to Roger - a natural male voice
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse request body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const { text, voiceId = 'CwhRBWXzGAHq8TQ4Fs17' } = requestBody; // Default to Roger - a natural male voice
 
     if (!text) {
-      throw new Error('Text is required');
+      console.error('❌ No text provided in request');
+      return new Response(
+        JSON.stringify({ error: 'Text is required' }),
+        { status: 400, headers: corsHeaders }
+      );
     }
 
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
     if (!ELEVENLABS_API_KEY) {
-      throw new Error('ElevenLabs API key not configured');
+      console.error('❌ ElevenLabs API key not configured');
+      return new Response(
+        JSON.stringify({ error: 'ElevenLabs API key not configured' }),
+        { status: 500, headers: corsHeaders }
+      );
     }
 
     console.log('ElevenLabs API Key present:', !!ELEVENLABS_API_KEY);
