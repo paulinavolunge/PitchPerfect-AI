@@ -538,7 +538,7 @@ const ConversationInterface = ({
               variant={isListening ? "destructive" : "outline"}
               size="icon"
               disabled={isLoading}
-              className={isListening ? "animate-pulse" : ""}
+              className={isListening ? "animate-pulse-slow" : ""}
             >
               {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>

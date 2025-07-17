@@ -125,12 +125,17 @@ export default {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' }
         },
+        'pulse-slow': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' }
+        },
       },
       animation: {
         'vibrant-float': 'vibrant-float 3s ease-in-out infinite',
         'strong-pulse': 'strong-pulse 2s ease-in-out infinite',
         'engaging-scale': 'engaging-scale 0.3s ease-out',
         'slide-up-vibrant': 'slide-up-vibrant 0.5s ease-out',
+        'pulse-slow': 'pulse-slow 3s ease-in-out infinite',
       },
       boxShadow: {
         'vibrant': '0 4px 6px -1px rgb(99 164 255 / 0.15)',
