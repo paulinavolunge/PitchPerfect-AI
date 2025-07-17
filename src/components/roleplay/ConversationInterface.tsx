@@ -208,20 +208,35 @@ const ConversationInterface = ({
   }, [realtimeTranscript, toast]);
 
   const speakText = useCallback(async (text: string) => {
-    if (!speechEnabled) return;
+    console.log('🔊 speakText called with:', { text, speechEnabled });
+    
+    if (!speechEnabled) {
+      console.log('🔇 Speech disabled, returning early');
+      return;
+    }
     
     try {
       // Stop any current speech
       if (synthRef.current) {
         synthRef.current.cancel();
+        console.log('🛑 Cancelled existing browser speech');
       }
       
       // Remove persona name prefix (like "Alex:") from speech
       const cleanText = text.replace(/^(Alex|Jordan|Morgan|Taylor):\s*/, '');
+      console.log('🧹 Cleaned text:', { original: text, cleaned: cleanText });
       
-      if (!cleanText.trim()) return;
+      if (!cleanText.trim()) {
+        console.log('❌ No text to speak after cleaning');
+        return;
+      }
       
-      console.log('🎤 Generating speech with ElevenLabs:', cleanText);
+      console.log('🚀 ATTEMPTING ELEVENLABS TTS - Starting API call...');
+      console.log('📝 Request details:', {
+        text: cleanText,
+        voiceId: 'CwhRBWXzGAHq8TQ4Fs17',
+        timestamp: new Date().toISOString()
+      });
       
       // Call ElevenLabs TTS edge function
       const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
@@ -231,48 +246,70 @@ const ConversationInterface = ({
         }
       });
       
+      console.log('📡 ElevenLabs API response:', { data, error });
+      
       if (error) {
-        console.error('❌ ElevenLabs TTS error:', error);
-        // Fallback to browser speech synthesis
+        console.error('❌ ELEVENLABS FAILED - Error:', error);
+        console.log('🔄 FALLING BACK TO BROWSER TTS');
         fallbackToWebSpeech(cleanText);
         return;
       }
       
       if (data?.audioContent) {
+        console.log('✅ ELEVENLABS SUCCESS - Converting base64 audio to blob');
+        
         // Convert base64 to audio and play
         const audioBlob = new Blob(
           [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
           { type: 'audio/mpeg' }
         );
         
+        console.log('🎵 Created audio blob:', {
+          size: audioBlob.size,
+          type: audioBlob.type
+        });
+        
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         
-        audio.onended = () => URL.revokeObjectURL(audioUrl);
-        audio.onerror = () => {
-          console.error('Audio playback failed, falling back to web speech');
+        audio.onended = () => {
+          console.log('🎵 ElevenLabs audio finished playing');
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+        audio.onerror = (audioError) => {
+          console.error('❌ Audio playback failed:', audioError);
+          console.log('🔄 FALLING BACK TO BROWSER TTS due to audio error');
           URL.revokeObjectURL(audioUrl);
           fallbackToWebSpeech(cleanText);
         };
         
         await audio.play();
-        console.log('✅ ElevenLabs audio playing');
+        console.log('🎤 ELEVENLABS AUDIO NOW PLAYING - Should be Roger\'s voice!');
       } else {
+        console.error('❌ No audioContent in response');
+        console.log('🔄 FALLING BACK TO BROWSER TTS - no audio content');
         fallbackToWebSpeech(cleanText);
       }
     } catch (error) {
-      console.error('❌ Error with ElevenLabs TTS:', error);
+      console.error('❌ ELEVENLABS EXCEPTION:', error);
+      console.log('🔄 FALLING BACK TO BROWSER TTS due to exception');
       fallbackToWebSpeech(text.replace(/^(Alex|Jordan|Morgan|Taylor):\s*/, ''));
     }
   }, [speechEnabled]);
   
   // Fallback to web speech synthesis if ElevenLabs fails
   const fallbackToWebSpeech = useCallback((cleanText: string) => {
+    console.log('🔄 USING BROWSER TTS FALLBACK');
+    console.log('⚠️ This will sound robotic - ElevenLabs failed');
+    
     if (synthRef.current && speechEnabled) {
       synthRef.current.cancel();
       const utterance = new SpeechSynthesisUtterance(cleanText);
       
       const voices = synthRef.current.getVoices();
+      console.log('🎙️ Available browser voices:', voices.map(v => ({ name: v.name, lang: v.lang })));
+      
       const maleVoice = voices.find(voice => 
         voice.name.toLowerCase().includes('male') || 
         voice.name.toLowerCase().includes('david') ||
@@ -283,12 +320,21 @@ const ConversationInterface = ({
       
       if (maleVoice) {
         utterance.voice = maleVoice;
+        console.log('🎙️ Using male voice:', maleVoice.name);
+      } else {
+        console.log('⚠️ No male voice found, using default');
       }
       
       utterance.rate = 0.9;
       utterance.pitch = 0.9;
       utterance.volume = volume / 100;
+      
+      utterance.onstart = () => console.log('🎙️ Browser TTS started');
+      utterance.onend = () => console.log('🎙️ Browser TTS finished');
+      utterance.onerror = (error) => console.error('❌ Browser TTS error:', error);
+      
       synthRef.current.speak(utterance);
+      console.log('🎙️ BROWSER TTS SPEAKING - This is the robotic voice');
     }
   }, [speechEnabled, volume]);
 
