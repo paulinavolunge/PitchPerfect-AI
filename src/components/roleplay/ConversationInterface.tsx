@@ -210,9 +210,28 @@ const ConversationInterface = ({
   const speakText = useCallback((text: string) => {
     if (synthRef.current && speechEnabled) {
       synthRef.current.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Remove persona name prefix (like "Alex:") from speech
+      const cleanText = text.replace(/^(Alex|Jordan|Morgan|Taylor):\s*/, '');
+      
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      
+      // Set more natural male voice for Alex
+      const voices = synthRef.current.getVoices();
+      const maleVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes('male') || 
+        voice.name.toLowerCase().includes('david') ||
+        voice.name.toLowerCase().includes('alex') ||
+        voice.name.toLowerCase().includes('daniel') ||
+        (voice.lang.startsWith('en') && voice.name.toLowerCase().includes('neural'))
+      );
+      
+      if (maleVoice) {
+        utterance.voice = maleVoice;
+      }
+      
       utterance.rate = 0.9;
-      utterance.pitch = 1;
+      utterance.pitch = 0.9; // Slightly lower pitch for more natural male voice
       utterance.volume = volume / 100;
       synthRef.current.speak(utterance);
     }
