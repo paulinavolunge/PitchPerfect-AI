@@ -23,8 +23,17 @@ serve(async (req) => {
   try {
     console.log('🚀 Roleplay AI Response function called');
     
-    const requestBody = await req.json();
-    console.log('📝 Request body:', requestBody);
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log('📝 Request body received successfully');
+    } catch (parseError) {
+      console.error('❌ Failed to parse request body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     const { 
       userInput, 
