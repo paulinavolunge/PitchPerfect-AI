@@ -636,6 +636,17 @@ const ConversationInterface = ({
           </div>
         )}
 
+        {/* Real-time transcript display */}
+        {realtimeTranscript && isListening && (
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <Mic className="h-4 w-4 text-blue-600 animate-pulse" />
+              <span className="text-sm font-medium text-blue-800">Speaking...</span>
+            </div>
+            <p className="text-sm text-blue-700 italic">"{realtimeTranscript}"</p>
+          </div>
+        )}
+
         {/* Input Area */}
         <div className="flex gap-2 items-end">
           <div className="flex-1">
@@ -644,7 +655,8 @@ const ConversationInterface = ({
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={
-                realtimeTranscript ? realtimeTranscript : 
+                isListening ? "Listening... speak now" :
+                realtimeTranscript ? "Voice input captured - edit if needed" :
                 "Respond to overcome the objection..."
               }
               disabled={isLoading}
