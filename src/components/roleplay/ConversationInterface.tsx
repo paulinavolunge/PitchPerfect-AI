@@ -6,7 +6,9 @@ import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
 import MessageList from './chat/MessageList';
 import { generateAIResponse, getScenarioIntro } from './chat/ChatLogic';
 import { generateStructuredFeedback } from './chat/FeedbackGenerator';
+import { generateEnhancedFeedback } from './chat/EnhancedFeedbackGenerator';
 import FeedbackPanel from './FeedbackPanel';
+import EnhancedFeedbackDisplay from './EnhancedFeedbackDisplay';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { VoiceRecordingManager, startRealTimeSpeechRecognition, processVoiceInput } from '@/utils/voiceInput';
@@ -47,8 +49,9 @@ const ConversationInterface = ({
   const [speechEnabled, setSpeechEnabled] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState<'idle' | 'listening' | 'processing' | 'complete'>('idle');
-  const [currentFeedback, setCurrentFeedback] = useState<any>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
+  const [enhancedFeedback, setEnhancedFeedback] = useState<any>(null);
+  const [showEnhancedFeedback, setShowEnhancedFeedback] = useState(false);
+  const [currentObjectionText, setCurrentObjectionText] = useState('');
   const [waitingForUserResponse, setWaitingForUserResponse] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [hasProcessedInput, setHasProcessedInput] = useState(false);
@@ -329,7 +332,7 @@ const ConversationInterface = ({
     setHasProcessedInput(true);
     setUserResponseCount(prev => prev + 1);
     
-    setShowFeedback(false);
+    setShowEnhancedFeedback(false);
     
     if (voiceStatus === 'complete') {
       setTimeout(() => setVoiceStatus('idle'), 2000);
@@ -353,6 +356,9 @@ const ConversationInterface = ({
         [...chatMessages, userMessage]
       );
 
+      // Store the objection for enhanced feedback analysis
+      setCurrentObjectionText(aiResponse);
+      
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: aiResponse,
@@ -363,25 +369,27 @@ const ConversationInterface = ({
       const updatedMessages = [...messages, userMessage, aiMessage];
       setMessages(updatedMessages);
 
-      // Generate feedback for every user response after the first exchange
+      // Generate enhanced feedback for every user response after the first exchange
       if (scenario && userResponseCount >= 1) {
-        console.log('Generating feedback for user response:', textToSend);
-        const feedback = generateStructuredFeedback(
+        console.log('🎯 Generating enhanced feedback for user response:', textToSend);
+        
+        const enhancedFeedbackData = generateEnhancedFeedback(
           textToSend,
-          scenario.objection,
-          [...chatMessages, userMessage]
+          currentObjectionText || scenario.objection,
+          [...chatMessages, userMessage],
+          userResponseCount
         );
         
-        console.log('Generated feedback:', feedback);
-        setCurrentFeedback(feedback);
+        console.log('📊 Generated enhanced feedback:', enhancedFeedbackData);
+        setEnhancedFeedback(enhancedFeedbackData);
         
-        // Save session with feedback
-        await saveSessionToDatabase(updatedMessages, feedback);
+        // Save session with enhanced feedback
+        await saveSessionToDatabase(updatedMessages, enhancedFeedbackData);
         
-        // Show feedback after a brief delay
+        // Show enhanced feedback after a brief delay
         setTimeout(() => {
-          console.log('Showing feedback panel');
-          setShowFeedback(true);
+          console.log('🚀 Showing enhanced feedback display');
+          setShowEnhancedFeedback(true);
         }, 1500);
       }
 
@@ -419,8 +427,8 @@ const ConversationInterface = ({
     setInputText(prompt);
   };
 
-  const closeFeedback = () => {
-    setShowFeedback(false);
+  const closeEnhancedFeedback = () => {
+    setShowEnhancedFeedback(false);
   };
 
   useEffect(() => {
@@ -473,15 +481,15 @@ const ConversationInterface = ({
         </CardContent>
       </Card>
 
-      {/* Feedback Panel - Show with higher priority */}
-      {currentFeedback && showFeedback && (
-        <div className="mb-4">
-          <FeedbackPanel
-            feedback={currentFeedback}
-            isVisible={showFeedback}
-            onClose={closeFeedback}
-          />
-        </div>
+      {/* Enhanced Feedback Display */}
+      {enhancedFeedback && showEnhancedFeedback && (
+        <EnhancedFeedbackDisplay
+          feedback={enhancedFeedback}
+          objectionText={currentObjectionText}
+          userResponse={messages.filter(m => m.sender === 'user').slice(-1)[0]?.text || ''}
+          isVisible={showEnhancedFeedback}
+          onClose={closeEnhancedFeedback}
+        />
       )}
 
       <div className="space-y-4">
