@@ -207,16 +207,71 @@ const ConversationInterface = ({
     }
   }, [realtimeTranscript, toast]);
 
-  const speakText = useCallback((text: string) => {
-    if (synthRef.current && speechEnabled) {
-      synthRef.current.cancel();
+  const speakText = useCallback(async (text: string) => {
+    if (!speechEnabled) return;
+    
+    try {
+      // Stop any current speech
+      if (synthRef.current) {
+        synthRef.current.cancel();
+      }
       
       // Remove persona name prefix (like "Alex:") from speech
       const cleanText = text.replace(/^(Alex|Jordan|Morgan|Taylor):\s*/, '');
       
+      if (!cleanText.trim()) return;
+      
+      console.log('🎤 Generating speech with ElevenLabs:', cleanText);
+      
+      // Call ElevenLabs TTS edge function
+      const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
+        body: {
+          text: cleanText,
+          voiceId: 'CwhRBWXzGAHq8TQ4Fs17' // Roger - natural, friendly male voice
+        }
+      });
+      
+      if (error) {
+        console.error('❌ ElevenLabs TTS error:', error);
+        // Fallback to browser speech synthesis
+        fallbackToWebSpeech(cleanText);
+        return;
+      }
+      
+      if (data?.audioContent) {
+        // Convert base64 to audio and play
+        const audioBlob = new Blob(
+          [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
+          { type: 'audio/mpeg' }
+        );
+        
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        audio.onended = () => URL.revokeObjectURL(audioUrl);
+        audio.onerror = () => {
+          console.error('Audio playback failed, falling back to web speech');
+          URL.revokeObjectURL(audioUrl);
+          fallbackToWebSpeech(cleanText);
+        };
+        
+        await audio.play();
+        console.log('✅ ElevenLabs audio playing');
+      } else {
+        fallbackToWebSpeech(cleanText);
+      }
+    } catch (error) {
+      console.error('❌ Error with ElevenLabs TTS:', error);
+      fallbackToWebSpeech(text.replace(/^(Alex|Jordan|Morgan|Taylor):\s*/, ''));
+    }
+  }, [speechEnabled]);
+  
+  // Fallback to web speech synthesis if ElevenLabs fails
+  const fallbackToWebSpeech = useCallback((cleanText: string) => {
+    if (synthRef.current && speechEnabled) {
+      synthRef.current.cancel();
       const utterance = new SpeechSynthesisUtterance(cleanText);
       
-      // Set more natural male voice for Alex
       const voices = synthRef.current.getVoices();
       const maleVoice = voices.find(voice => 
         voice.name.toLowerCase().includes('male') || 
@@ -231,7 +286,7 @@ const ConversationInterface = ({
       }
       
       utterance.rate = 0.9;
-      utterance.pitch = 0.9; // Slightly lower pitch for more natural male voice
+      utterance.pitch = 0.9;
       utterance.volume = volume / 100;
       synthRef.current.speak(utterance);
     }
