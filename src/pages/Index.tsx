@@ -13,6 +13,7 @@ import CompanyLogos from '@/components/CompanyLogos';
 
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
+import { trackEvent } from '@/utils/analytics';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -34,11 +35,13 @@ const Index = () => {
 
   const handleGetStartedClick = () => {
     console.log("Get Started button clicked - navigating to /signup");
+    trackEvent('cta_click', { button: 'get_started', location: 'homepage_hero' });
     navigate('/signup');
   };
 
   const handleWatchDemoClick = () => {
     console.log("Watch Demo button clicked - navigating to /demo");
+    trackEvent('cta_click', { button: 'watch_demo', location: 'homepage_hero' });
     navigate('/demo');
   };
 

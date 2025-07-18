@@ -7,6 +7,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { trackEvent } from '@/utils/analytics';
 
 const VideoWalkthrough: React.FC = () => {
   const navigate = useNavigate();
@@ -75,14 +76,20 @@ const VideoWalkthrough: React.FC = () => {
               
               <div className="pt-4 space-y-3">
                 <Button 
-                  onClick={() => navigate('/demo')}
+                  onClick={() => {
+                    trackEvent('cta_click', { button: 'try_demo', location: 'video_section' });
+                    navigate('/demo');
+                  }}
                   className="w-full bg-primary-600 hover:bg-primary-700"
                 >
                   Try Interactive Demo
                   <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
                 </Button>
                 <Button 
-                  onClick={() => navigate('/signup')}
+                  onClick={() => {
+                    trackEvent('cta_click', { button: 'start_trial', location: 'video_section' });
+                    navigate('/signup');
+                  }}
                   variant="outline"
                   className="w-full border-primary-200 text-primary-700 hover:bg-primary-50"
                 >

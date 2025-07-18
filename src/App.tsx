@@ -12,6 +12,7 @@ import AccessibilityButton from '@/components/accessibility/AccessibilityButton'
 import ErrorBoundary from '@/components/error/ErrorBoundary';
 import MobileNavBar from '@/components/MobileNavBar';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
+import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { usePageTracking } from '@/hooks/usePageTracking';
 
 // Page imports
@@ -89,6 +90,9 @@ function App() {
                       <PageTrackingProvider>
                         {/* Initialize analytics */}
                         <PrivacyCompliantAnalytics />
+                        
+                        {/* Consent banner for analytics */}
+                        <ConsentBanner />
                         
                         <div className="min-h-screen bg-background font-sans antialiased">
                           <Routes>
