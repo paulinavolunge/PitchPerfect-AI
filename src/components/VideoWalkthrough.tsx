@@ -21,8 +21,8 @@ const VideoWalkthrough: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
 
-  // Demo video placeholder - replace with actual video URL when available
-  const videoSrc = null; // Temporarily disabled until actual video is available
+  // Demo video - actual video file
+  const videoSrc = "/videos/final_combined_video.mp4";
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -113,21 +113,14 @@ const VideoWalkthrough: React.FC = () => {
             <div className="lg:col-span-2">
               <Card className="overflow-hidden shadow-2xl border-2 border-primary-100">
                 <div className="relative bg-black aspect-video">
-                  {/* Placeholder for video - replace with actual video */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-600 to-vibrant-blue-600 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                        <Play className="h-12 w-12" aria-hidden="true" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">Demo Video Coming Soon</h3>
-                      <p className="text-white/80">Watch our AI analyze sales pitches in real-time</p>
-                    </div>
-                  </div>
-                  
-                  {/* This would be your actual video element */}
+                  {/* Actual video element */}
                   <video
                     ref={videoRef}
-                    className="w-full h-full object-cover hidden"
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
                     onTimeUpdate={handleTimeUpdate}
                     onLoadedMetadata={handleLoadedMetadata}
                     onEnded={() => setIsPlaying(false)}

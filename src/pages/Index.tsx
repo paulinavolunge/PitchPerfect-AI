@@ -10,7 +10,7 @@ import VideoWalkthrough from '@/components/VideoWalkthrough';
 import Testimonials from '@/components/Testimonials';
 import TrustBadges from '@/components/TrustBadges';
 import CompanyLogos from '@/components/CompanyLogos';
-import DemoVideoSection from '@/components/DemoVideoSection';
+
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
 
@@ -141,7 +141,7 @@ const Index = () => {
           </div>
         </section>
 
-        <DemoVideoSection />
+        
 
         <section id="features" className="py-12 sm:py-16 bg-secondary-50" aria-labelledby="features-heading">
           <div className="container mx-auto px-4">
