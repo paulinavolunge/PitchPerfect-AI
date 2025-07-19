@@ -3,6 +3,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { SecurityMonitoringService } from '@/services/SecurityMonitoringService';
 
 interface Props {
   children: ReactNode;
@@ -38,10 +39,13 @@ class ErrorBoundary extends Component<Props, State> {
 
     console.error('Error caught by boundary:', error, errorInfo);
     
-    // In production, you would send this to an error tracking service
-    if (process.env.NODE_ENV === 'production') {
-      // logErrorToService(error, errorInfo);
-    }
+    // Log error to security monitoring service
+    SecurityMonitoringService.logSecurityEvent('error_boundary_triggered', {
+      error_message: SecurityMonitoringService.sanitizeErrorMessage(error),
+      error_stack: SecurityMonitoringService.sanitizeErrorMessage(errorInfo.componentStack),
+      error_id: this.state.errorId,
+      timestamp: new Date().toISOString()
+    });
   }
 
   handleRetry = () => {

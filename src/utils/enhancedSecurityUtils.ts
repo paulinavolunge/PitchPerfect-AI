@@ -1,6 +1,7 @@
 
 import { EnhancedSecurityService } from '@/services/EnhancedSecurityService';
 import { ServerSideValidationService } from '@/services/ServerSideValidationService';
+import { SecurityMonitoringService } from '@/services/SecurityMonitoringService';
 
 // Re-export commonly used security utilities for backward compatibility
 export const {
@@ -11,8 +12,14 @@ export const {
   secureDeductCredits
 } = EnhancedSecurityService;
 
-// Enhanced error message sanitization using server-side service
-export const sanitizeErrorMessage = ServerSideValidationService.sanitizeErrorMessage;
+// Enhanced error message sanitization using monitoring service
+export const sanitizeErrorMessage = SecurityMonitoringService.sanitizeErrorMessage;
+
+// Enhanced security monitoring utilities
+export const logSecurityEventEnhanced = SecurityMonitoringService.logSecurityEvent;
+export const performSecurityHealthCheckEnhanced = SecurityMonitoringService.performSecurityHealthCheck;
+export const validateInputEnhanced = SecurityMonitoringService.validateInput;
+export const validateFileEnhanced = SecurityMonitoringService.validateFile;
 
 // Enhanced file validation with server-side verification
 export const validateFileWithServerSideCheck = async (

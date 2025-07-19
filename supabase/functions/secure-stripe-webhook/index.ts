@@ -17,8 +17,29 @@ const getSecurityHeaders = () => ({
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Content-Security-Policy': "default-src 'self'",
-  'Permissions-Policy': 'microphone=(), camera=(), geolocation=(), payment=()'
+  'Permissions-Policy': 'microphone=(), camera=(), geolocation=(), payment=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
 });
+
+// Rate limiting for webhook requests
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function isRateLimited(ip: string, maxRequests = 30, windowMs = 60000): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    return false;
+  }
+  
+  if (record.count >= maxRequests) {
+    return true;
+  }
+  
+  record.count++;
+  return false;
+}
 
 const logSecurityEvent = async (supabase: any, eventType: string, details: any) => {
   try {
@@ -69,6 +90,18 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting check
+    const clientIP = req.headers.get('x-forwarded-for') || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+    
+    if (isRateLimited(clientIP)) {
+      return new Response("Rate limit exceeded", { 
+        status: 429, 
+        headers: securityHeaders 
+      });
+    }
+
     // Enhanced request validation
     const signature = req.headers.get("stripe-signature");
     if (!signature) {

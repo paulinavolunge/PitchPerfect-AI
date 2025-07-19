@@ -1,76 +1,71 @@
-/**
- * Security headers configuration for enhanced protection
- */
+import { SecurityMonitoringService } from '@/services/SecurityMonitoringService';
 
-export const getSecurityHeaders = () => ({
-  // Prevent page from being embedded in frames (clickjacking protection)
+// Security headers configuration
+export const SECURITY_HEADERS = {
   'X-Frame-Options': 'DENY',
-  
-  // Prevent MIME sniffing
-  'X-Content-Type-Options': 'nosniff',
-  
-  // Enable XSS filtering
+  'X-Content-Type-Options': 'nosniff', 
   'X-XSS-Protection': '1; mode=block',
-  
-  // Control referrer information
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  
-  // Content Security Policy - strict but functional
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Permissions-Policy': 'microphone=(self), camera=(), geolocation=(), payment=()',
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://www.googletagmanager.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://cdn.gpteng.co",
+    "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
-    "connect-src 'self' https://ggpodadyycvmmxifqwlp.supabase.co wss://ggpodadyycvmmxifqwlp.supabase.co",
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    "base-uri 'self'"
-  ].join('; '),
-  
-  // Permissions Policy (formerly Feature Policy)
-  'Permissions-Policy': [
-    'microphone=(self)',
-    'camera=()',
-    'geolocation=()',
-    'payment=()',
-    'usb=()',
-    'magnetometer=()',
-    'accelerometer=()',
-    'gyroscope=()'
-  ].join(', ')
-});
+    "connect-src 'self' https: wss:",
+    "media-src 'self' blob:",
+    "font-src 'self' https://fonts.gstatic.com",
+    "report-uri /api/csp-violation-report"
+  ].join('; ')
+} as const;
 
-/**
- * Apply security headers to responses in edge functions
- */
-export const applySecurityHeaders = (response: Response): Response => {
-  const headers = new Headers(response.headers);
-  
-  Object.entries(getSecurityHeaders()).forEach(([key, value]) => {
-    headers.set(key, value);
+// Initialize CSP violation reporting
+export function initCSPViolationReporting() {
+  // Add CSP violation event listener
+  document.addEventListener('securitypolicyviolation', (e) => {
+    SecurityMonitoringService.handleCSPViolation({
+      blockedURI: e.blockedURI,
+      violatedDirective: e.violatedDirective,
+      sourceFile: e.sourceFile,
+      lineNumber: e.lineNumber,
+      originalPolicy: e.originalPolicy
+    });
   });
-  
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
-};
+}
 
-/**
- * CORS headers with security considerations
- */
-export const getSecureCorsHeaders = (allowedOrigin: string = '*') => ({
-  'Access-Control-Allow-Origin': allowedOrigin,
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': [
-    'authorization',
-    'x-client-info',
-    'apikey',
-    'content-type',
-    'x-requested-with'
-  ].join(', '),
-  'Access-Control-Max-Age': '86400', // 24 hours
-  'Access-Control-Allow-Credentials': 'true'
-});
+// Apply security headers to meta tags (for client-side enforcement)
+export function applySecurityMetaTags() {
+  const head = document.head;
+  
+  // CSP meta tag
+  const cspMeta = document.createElement('meta');
+  cspMeta.httpEquiv = 'Content-Security-Policy';
+  cspMeta.content = SECURITY_HEADERS['Content-Security-Policy'];
+  head.appendChild(cspMeta);
+  
+  // X-Frame-Options
+  const frameMeta = document.createElement('meta');
+  frameMeta.httpEquiv = 'X-Frame-Options';
+  frameMeta.content = SECURITY_HEADERS['X-Frame-Options'];
+  head.appendChild(frameMeta);
+  
+  // Referrer Policy
+  const referrerMeta = document.createElement('meta');
+  referrerMeta.name = 'referrer';
+  referrerMeta.content = 'strict-origin-when-cross-origin';
+  head.appendChild(referrerMeta);
+}
+
+// Initialize all security measures
+export function initializeSecurity() {
+  applySecurityMetaTags();
+  initCSPViolationReporting();
+  
+  // Log security initialization
+  SecurityMonitoringService.logSecurityEvent('security_headers_initialized', {
+    csp_enabled: true,
+    violation_reporting: true,
+    timestamp: new Date().toISOString()
+  });
+}

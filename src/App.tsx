@@ -14,6 +14,7 @@ import MobileNavBar from '@/components/MobileNavBar';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { initializeSecurity } from '@/utils/securityHeaders';
 
 // Page imports
 import Index from '@/pages/Index';
@@ -67,9 +68,15 @@ const queryClient = new QueryClient({
   },
 });
 
-// Component to handle page tracking
+// Component to handle page tracking and security initialization
 const PageTrackingProvider = ({ children }: { children: React.ReactNode }) => {
   usePageTracking();
+  
+  // Initialize security measures on app start
+  React.useEffect(() => {
+    initializeSecurity();
+  }, []);
+  
   return <>{children}</>;
 };
 
