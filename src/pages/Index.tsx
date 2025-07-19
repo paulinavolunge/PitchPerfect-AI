@@ -90,15 +90,7 @@ const Index = () => {
               <Sparkles className="h-3 w-3 mr-1" />
               AI-Powered Sales Training
             </Badge>
-<iframe 
-  style={{ border: 'none' }}
-  src="https://cards.producthunt.com/cards/products/1088734" 
-  width="500" 
-  height="405" 
-  frameBorder="0" 
-  scrolling="no" 
-  allowFullScreen
-></iframe>
+
             <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight">
               Master Your Sales Pitch<br />
               <span className="text-primary-600">with AI Practice</span>
