@@ -144,7 +144,22 @@ const Index = () => {
           </div>
         </section>
 
-        
+        <section className="py-8 sm:py-12 bg-background">
+          <div className="container mx-auto px-4 text-center">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
+              🚀 Featured on Product Hunt
+            </h3>
+            <a href="https://www.producthunt.com/products/pitchperfect-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-pitchperfect-ai-2" target="_blank" rel="noopener noreferrer" className="inline-block">
+              <img 
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=994740&theme=neutral&t=1752904510680" 
+                alt="PitchPerfect AI - Perfect your sales objections with AI & close more deals | Product Hunt" 
+                className="w-[250px] h-[54px]" 
+                width="250" 
+                height="54" 
+              />
+            </a>
+          </div>
+        </section>
 
         <section id="features" className="py-12 sm:py-16 bg-secondary-50" aria-labelledby="features-heading">
           <div className="container mx-auto px-4">
