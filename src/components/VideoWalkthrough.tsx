@@ -11,12 +11,17 @@ import { trackEvent } from '@/utils/analytics';
 
 const VideoWalkthrough: React.FC = () => {
   const navigate = useNavigate();
+  const [videoError, setVideoError] = React.useState(false);
 
   const features = [
     { title: "Voice Practice", description: "See how AI analyzes vocal tone and pacing" },
     { title: "Real-time Feedback", description: "Watch instant scoring and suggestions appear" },
     { title: "Progress Tracking", description: "View detailed analytics and improvement charts" },
   ];
+
+  const handleVideoError = () => {
+    setVideoError(true);
+  };
 
   return (
     <section className="py-16 bg-gradient-to-br from-primary-50 to-vibrant-blue-50" aria-labelledby="video-walkthrough-heading">
@@ -40,16 +45,65 @@ const VideoWalkthrough: React.FC = () => {
             <div className="lg:col-span-2">
               <Card className="overflow-hidden shadow-2xl border-2 border-primary-100">
                 <div className="relative bg-black aspect-video">
-                  {/* YouTube video embed */}
-                  <iframe
-                    className="w-full h-full"
-                    src="https://www.youtube.com/embed/S33kpr7-ls0?rel=0&modestbranding=1&controls=1&showinfo=0"
-                    title="PitchPerfect AI product demonstration video"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    loading="lazy"
-                  />
+                  {!videoError ? (
+                    <>
+                      {/* YouTube video embed */}
+                      <iframe
+                        className="w-full h-full"
+                        src="https://www.youtube.com/embed/S33kpr7-ls0?rel=0&modestbranding=1&controls=1&showinfo=0"
+                        title="PitchPerfect AI product demonstration video"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        loading="lazy"
+                        onError={handleVideoError}
+                      />
+                      {/* Fallback for CSP issues - this will show if iframe fails to load */}
+                      <noscript>
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-600 to-primary-700 text-white">
+                          <div className="text-center p-8">
+                            <Play className="h-16 w-16 mx-auto mb-4 opacity-80" />
+                            <h3 className="text-xl font-semibold mb-2">Video Demo Available</h3>
+                            <p className="text-sm opacity-90 mb-4">Watch our product demonstration</p>
+                            <Button 
+                              onClick={() => window.open('https://www.youtube.com/watch?v=S33kpr7-ls0', '_blank')}
+                              variant="secondary"
+                              size="sm"
+                            >
+                              Watch on YouTube
+                            </Button>
+                          </div>
+                        </div>
+                      </noscript>
+                    </>
+                  ) : (
+                    /* Fallback content when video fails to load */
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-600 to-primary-700 text-white">
+                      <div className="text-center p-8">
+                        <Play className="h-16 w-16 mx-auto mb-4 opacity-80" />
+                        <h3 className="text-xl font-semibold mb-2">Product Demo Video</h3>
+                        <p className="text-sm opacity-90 mb-4">See PitchPerfect AI in action with our comprehensive demo</p>
+                        <div className="space-y-2">
+                          <Button 
+                            onClick={() => window.open('https://www.youtube.com/watch?v=S33kpr7-ls0', '_blank')}
+                            variant="secondary"
+                            size="sm"
+                            className="w-full"
+                          >
+                            Watch on YouTube
+                          </Button>
+                          <Button 
+                            onClick={() => navigate('/demo')}
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-white/20 text-white hover:bg-white/10"
+                          >
+                            Try Interactive Demo
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>
