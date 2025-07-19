@@ -358,21 +358,25 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
       )}
 
       {/* Enhanced Submit Button */}
-      <Button 
-        onClick={handleSubmit}
-        disabled={!canSubmit}
-        className="w-full strong-cta text-lg py-4"
-        size="lg"
-      >
-        {isSubmitting ? (
-          <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            Analyzing...
+      {!isSubmitting ? (
+        <Button 
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+          className="w-full strong-cta text-lg py-4"
+          size="lg"
+        >
+          Get Feedback
+        </Button>
+      ) : (
+        <div className="w-full py-4 text-lg text-center text-vibrant-blue-600 font-semibold">
+          <div className="flex items-center justify-center gap-2">
+            <span className="animate-pulse">Analyzing your pitch</span>
+            <span className="animate-pulse delay-75">.</span>
+            <span className="animate-pulse delay-150">.</span>
+            <span className="animate-pulse delay-300">.</span>
           </div>
-        ) : (
-          "Submit Response for Analysis"
-        )}
-      </Button>
+        </div>
+      )}
 
       {/* Enhanced Debug Info */}
       {process.env.NODE_ENV === 'development' && (
