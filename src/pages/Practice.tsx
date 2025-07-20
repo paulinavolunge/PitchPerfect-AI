@@ -32,7 +32,10 @@ const Practice = () => {
   }, [user?.id]);
 
   const handleStartRecording = async () => {
+    console.log('🔵 Start Recording clicked!', { creditsRemaining, user: !!user });
+    
     if (creditsRemaining < 1) {
+      console.log('🔴 Insufficient credits:', creditsRemaining);
       toast({
         title: "Insufficient Credits",
         description: "You need at least 1 credit to analyze a pitch.",
@@ -42,17 +45,19 @@ const Practice = () => {
     }
 
     try {
+      console.log('🟢 Starting recording...');
       setIsRecording(true);
       trackEvent('practice_recording_started');
       
       // Mock recording logic
       setTimeout(() => {
+        console.log('🟡 Recording timeout complete, stopping...');
         setIsRecording(false);
         handleAnalyzePitch();
       }, 3000);
       
     } catch (error) {
-      console.error('Recording error:', error);
+      console.error('🔴 Recording error:', error);
       setIsRecording(false);
       toast({
         title: "Recording Error",
