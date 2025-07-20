@@ -32,13 +32,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth =
         <div className="text-center max-w-md">
           <h1 className="text-xl font-semibold text-red-600 mb-2">Authentication Error</h1>
           <p className="text-gray-600 mb-2">{initError}</p>
-          <p className="text-sm text-gray-500 mb-4">Please try refreshing the page or contact support if the issue persists.</p>
+          <p className="text-sm text-gray-500 mb-4">
+            This might be a temporary issue. Please try:
+          </p>
+          <ul className="text-sm text-gray-500 mb-4 text-left list-disc list-inside">
+            <li>Refreshing the page</li>
+            <li>Clearing your browser cache</li>
+            <li>Checking your internet connection</li>
+            <li>Trying a different browser</li>
+          </ul>
           <div className="space-x-2">
             <Button onClick={() => window.location.reload()}>
               Refresh Page
             </Button>
             <Button variant="outline" onClick={() => window.location.href = '/'}>
               Go to Home
+            </Button>
+            <Button variant="outline" onClick={() => {
+              // Clear auth data and try again
+              localStorage.removeItem('sb-ggpodadyycvmmxifqwlp-auth-token');
+              window.location.reload();
+            }}>
+              Clear Cache & Retry
             </Button>
           </div>
         </div>

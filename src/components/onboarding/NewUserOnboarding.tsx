@@ -51,6 +51,25 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
   const navigate = useNavigate();
   const { user, startFreeTrial } = useAuth();
 
+  // Handle closing the dialog
+  const handleClose = (completed: boolean = false) => {
+    if (completed || currentStep === steps.length - 1) {
+      onComplete();
+    }
+    onOpenChange(false);
+  };
+
+  // Handle ESC key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        handleClose(true); // Allow ESC to complete onboarding
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [open]);
+
   const industries = [
     { value: 'technology', label: 'Technology' },
     { value: 'finance', label: 'Finance' },

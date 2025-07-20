@@ -252,6 +252,16 @@ const Dashboard = () => {
 
     if (user && isNewUser) {
       setShowOnboarding(true);
+      
+      // Auto-close onboarding after 60 seconds if stuck
+      const onboardingTimeout = setTimeout(() => {
+        if (showOnboarding) {
+          console.warn('Onboarding timeout - auto-closing');
+          handleOnboardingComplete();
+        }
+      }, 60000);
+      
+      return () => clearTimeout(onboardingTimeout);
     } else if (user && (!hasTourBeenCompleted || isNewSession) && canShowTour()) {
       setShowTour(true);
       sessionStorage.removeItem('newSessionLogin');
@@ -262,7 +272,7 @@ const Dashboard = () => {
     if (user) {
       refreshSubscription();
     }
-  }, [user, refreshSubscription, isNewUser]);
+  }, [user, refreshSubscription, isNewUser, showOnboarding]);
 
   const handleOnboardingComplete = () => {
     markOnboardingComplete();

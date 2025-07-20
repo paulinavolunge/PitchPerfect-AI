@@ -85,11 +85,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Add timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.error('Auth initialization timeout');
-        setInitError('Auth initialization timed out');
-        setLoading(false);
+        console.error('Auth initialization timeout - attempting recovery');
+        // Instead of just setting error, try to check session one more time
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            console.log('Session found in timeout recovery');
+            setSession(session);
+            setUser(session.user);
+            setLoading(false);
+            setInitError(null);
+            // Load profile in background
+            if (session.user?.id) {
+              loadUserProfile(session.user.id);
+            }
+          } else {
+            console.error('No session found in timeout recovery');
+            setInitError('Authentication initialization timed out. Please refresh the page.');
+            setLoading(false);
+          }
+        }).catch(err => {
+          console.error('Failed to recover from timeout:', err);
+          setInitError('Authentication initialization timed out. Please refresh the page.');
+          setLoading(false);
+        });
       }
-    }, 15000); // 15 second timeout
+    }, 30000); // Increased to 30 seconds
 
     initializeAuth();
 
