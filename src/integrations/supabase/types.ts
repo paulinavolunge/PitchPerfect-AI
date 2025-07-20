@@ -505,6 +505,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      initialize_admin_system: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
