@@ -28,17 +28,47 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import EmptyState from '@/components/dashboard/EmptyState';
 import { useGuestMode } from '@/context/GuestModeContext';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 const TOUR_STORAGE_KEY = 'pitchperfect_tour_completed';
 const TOUR_COOLDOWN_KEY = 'pitchperfect_tour_cooldown';
 const TOUR_COOLDOWN_HOURS = 24;
 
 const Dashboard = () => {
-  const { user, refreshSubscription, isPremium, creditsRemaining, trialUsed, loading, isNewUser, markOnboardingComplete } = useAuth();
+  // Add comprehensive error handling for auth context
+  let authData;
+  try {
+    authData = useAuth();
+  } catch (error) {
+    console.error('❌ Auth context error:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <h1 className="text-xl font-semibold text-red-600 mb-2">Authentication Error</h1>
+          <p className="text-gray-600 mb-4">There was an issue loading your account. Please try refreshing the page.</p>
+          <Button onClick={() => window.location.reload()}>
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { 
+    user, 
+    refreshSubscription, 
+    isPremium = false, 
+    creditsRemaining = 0, 
+    trialUsed = false, 
+    loading = true, 
+    isNewUser = false, 
+    markOnboardingComplete 
+  } = authData || {};
+
   const { isGuestMode } = useGuestMode();
   const navigate = useNavigate();
 
-  // Local state - simplified
+  // Local state - simplified with error protection
   const [showTour, setShowTour] = useState(false);
   const [showMicTest, setShowMicTest] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
@@ -61,13 +91,32 @@ const Dashboard = () => {
     hasData: false
   });
 
-  // Show loading state while auth context loads
+  // Add error logging for debugging
+  useEffect(() => {
+    try {
+      console.log('🔍 Dashboard Debug Info:', {
+        userExists: !!user,
+        userId: user?.id || 'null',
+        loading,
+        isNewUser,
+        creditsRemaining,
+        trialUsed,
+        isPremium,
+        isGuestMode
+      });
+    } catch (error) {
+      console.error('❌ Error in debug logging:', error);
+    }
+  }, [user, loading, isNewUser, creditsRemaining, trialUsed, isPremium, isGuestMode]);
+
+  // Enhanced loading state with timeout protection
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-brand-dark">Loading...</p>
+          <p className="text-brand-dark">Loading dashboard...</p>
+          <p className="text-sm text-gray-500 mt-2">Initializing your account...</p>
         </div>
       </div>
     );
@@ -144,52 +193,93 @@ const Dashboard = () => {
     return hoursSinceCooldown > TOUR_COOLDOWN_HOURS;
   };
 
-  // Simplified data loading
+  // Enhanced data loading with better error handling
   useEffect(() => {
     let mounted = true;
     
     const loadDashboardData = async () => {
       try {
+        console.log('📊 Loading dashboard data...');
         setIsLoading(true);
         
-        // Mock data for now to prevent issues
+        // Mock data for now to prevent issues - wrap in try-catch
         if (mounted) {
-          setStreakCount(Math.floor(Math.random() * 10));
-          setDashboardData({
-            pitchCount: user ? Math.floor(Math.random() * 5) : 0,
-            winRate: user ? Math.floor(Math.random() * 100) : null,
-            recentPitches: [
-              { name: 'Mon', count: Math.floor(Math.random() * 5) },
-              { name: 'Tue', count: Math.floor(Math.random() * 5) },
-              { name: 'Wed', count: Math.floor(Math.random() * 5) },
-              { name: 'Thu', count: Math.floor(Math.random() * 5) },
-              { name: 'Fri', count: Math.floor(Math.random() * 5) },
-              { name: 'Sat', count: Math.floor(Math.random() * 5) },
-              { name: 'Sun', count: Math.floor(Math.random() * 5) },
-            ],
-            objectionCategories: [
-              { category: 'Price', mastered: Math.floor(Math.random() * 100) },
-              { category: 'Timing', mastered: Math.floor(Math.random() * 100) },
-              { category: 'Competition', mastered: Math.floor(Math.random() * 100) },
-              { category: 'Need', mastered: Math.floor(Math.random() * 100) },
-            ],
-            hasData: user ? true : false
-          });
+          try {
+            const newStreakCount = Math.floor(Math.random() * 10);
+            const newDashboardData = {
+              pitchCount: user ? Math.floor(Math.random() * 5) : 0,
+              winRate: user ? Math.floor(Math.random() * 100) : null,
+              recentPitches: [
+                { name: 'Mon', count: Math.floor(Math.random() * 5) },
+                { name: 'Tue', count: Math.floor(Math.random() * 5) },
+                { name: 'Wed', count: Math.floor(Math.random() * 5) },
+                { name: 'Thu', count: Math.floor(Math.random() * 5) },
+                { name: 'Fri', count: Math.floor(Math.random() * 5) },
+                { name: 'Sat', count: Math.floor(Math.random() * 5) },
+                { name: 'Sun', count: Math.floor(Math.random() * 5) },
+              ],
+              objectionCategories: [
+                { category: 'Price', mastered: Math.floor(Math.random() * 100) },
+                { category: 'Timing', mastered: Math.floor(Math.random() * 100) },
+                { category: 'Competition', mastered: Math.floor(Math.random() * 100) },
+                { category: 'Need', mastered: Math.floor(Math.random() * 100) },
+              ],
+              hasData: user ? true : false
+            };
+            
+            setStreakCount(newStreakCount);
+            setDashboardData(newDashboardData);
+            console.log('✅ Dashboard data loaded successfully');
+          } catch (dataError) {
+            console.error('❌ Error setting dashboard data:', dataError);
+            // Set safe fallback data
+            setStreakCount(0);
+            setDashboardData({
+              pitchCount: 0,
+              winRate: null,
+              recentPitches: [],
+              objectionCategories: [
+                { category: 'Price', mastered: 0 },
+                { category: 'Timing', mastered: 0 },
+                { category: 'Competition', mastered: 0 },
+                { category: 'Need', mastered: 0 },
+              ],
+              hasData: false
+            });
+          }
           
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('Error loading dashboard data:', error);
+        console.error('❌ Error loading dashboard data:', error);
         if (mounted) {
           setIsLoading(false);
+          // Ensure we always set safe defaults
+          setStreakCount(0);
+          setDashboardData({
+            pitchCount: 0,
+            winRate: null,
+            recentPitches: [],
+            objectionCategories: [
+              { category: 'Price', mastered: 0 },
+              { category: 'Timing', mastered: 0 },
+              { category: 'Competition', mastered: 0 },
+              { category: 'Need', mastered: 0 },
+            ],
+            hasData: false
+          });
         }
       }
     };
 
-    loadDashboardData();
+    // Add slight delay to allow auth context to stabilize
+    const timeoutId = setTimeout(() => {
+      loadDashboardData();
+    }, 100);
     
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
     };
   }, [user]);
 
@@ -427,7 +517,9 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="mb-8"
             >
-              <CreditBalanceTracker />
+              <ErrorBoundary fallbackMessage="Error loading credit balance. Please refresh the page.">
+                <CreditBalanceTracker />
+              </ErrorBoundary>
             </motion.div>
           )}
 
@@ -460,7 +552,9 @@ const Dashboard = () => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5, delay: 0.3 }}
                         >
-                          <UserSubscriptionStatus />
+                          <ErrorBoundary fallbackMessage="Error loading subscription status. Please refresh the page.">
+                            <UserSubscriptionStatus />
+                          </ErrorBoundary>
                         </motion.div>
 
                         <motion.div
@@ -469,13 +563,15 @@ const Dashboard = () => {
                           transition={{ duration: 0.5, delay: 0.4 }}
                         >
                           {dashboardData.hasData ? (
-                            <DashboardStats 
-                              streakCount={streakCount} 
-                              pitchCount={dashboardData.pitchCount}
-                              winRate={dashboardData.winRate}
-                              recentPitches={dashboardData.recentPitches}
-                              objectionCategories={dashboardData.objectionCategories}
-                            />
+                            <ErrorBoundary fallbackMessage="Error loading dashboard statistics. Please refresh the page.">
+                              <DashboardStats 
+                                streakCount={streakCount} 
+                                pitchCount={dashboardData.pitchCount}
+                                winRate={dashboardData.winRate}
+                                recentPitches={dashboardData.recentPitches}
+                                objectionCategories={dashboardData.objectionCategories}
+                              />
+                            </ErrorBoundary>
                           ) : (
                             <EmptyState 
                               title="No pitch data yet"

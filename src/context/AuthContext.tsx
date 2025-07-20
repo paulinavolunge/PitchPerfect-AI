@@ -164,32 +164,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log('🔍 Loading user profile for:', userId);
+      
       const { data: profile, error } = await supabase
         .from('user_profiles')
         .select('credits_remaining, trial_used')
         .eq('id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading user profile:', error);
-        // Log security event for profile access issues
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'profile_access_failed',
-          p_event_details: { error: error.message },
-          p_user_id: userId
-        });
+      if (error) {
+        console.log('Profile error code:', error.code, 'message:', error.message);
+        
+        // Handle case where profile doesn't exist yet
+        if (error.code === 'PGRST116') {
+          console.log('⚠️ User profile not found, creating new profile...');
+          
+          // Try to create the profile (should be automatic via trigger, but fallback)
+          const { data: newProfile, error: insertError } = await supabase
+            .from('user_profiles')
+            .insert({ 
+              id: userId, 
+              credits_remaining: 1, // Free credit on signup
+              trial_used: false 
+            })
+            .select('credits_remaining, trial_used')
+            .single();
+            
+          if (insertError) {
+            console.warn('Could not create user profile:', insertError);
+            // Use defaults if creation fails
+            setCreditsRemaining(1);
+            setTrialUsed(false);
+          } else {
+            console.log('✅ Created new user profile:', newProfile);
+            setCreditsRemaining(newProfile.credits_remaining || 1);
+            setTrialUsed(newProfile.trial_used || false);
+          }
+        } else {
+          console.error('Error loading user profile:', error);
+          // Log security event for profile access issues
+          await supabase.rpc('log_security_event', {
+            p_event_type: 'profile_access_failed',
+            p_event_details: { error: error.message },
+            p_user_id: userId
+          });
+          
+          // Use safe defaults
+          setCreditsRemaining(0);
+          setTrialUsed(false);
+        }
       } else if (profile) {
+        console.log('✅ Loaded user profile:', profile);
         setCreditsRemaining(profile.credits_remaining || 0);
         setTrialUsed(profile.trial_used || false);
+      } else {
+        console.warn('No profile data returned');
+        setCreditsRemaining(0);
+        setTrialUsed(false);
       }
     } catch (error) {
       console.error('Failed to load user profile:', error);
+      
       // Log security event for profile loading errors
       await supabase.rpc('log_security_event', {
         p_event_type: 'profile_loading_error',
         p_event_details: { error: error instanceof Error ? error.message : 'Unknown error' },
         p_user_id: userId
       });
+      
+      // Use safe defaults on any error
+      setCreditsRemaining(0);
+      setTrialUsed(false);
     }
   };
 
