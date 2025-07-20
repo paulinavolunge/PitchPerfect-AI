@@ -83,8 +83,41 @@ const Signup = () => {
           title: "Welcome!",
           description: "Your account has been created successfully.",
         });
+        
         // Mark as new user for onboarding
         sessionStorage.setItem('newUser', 'true');
+        
+        // Ensure user profile exists before navigating
+        if (data.user) {
+          console.log('Checking user profile...');
+          
+          // Give the database trigger time to execute
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Check if profile was created
+          const { data: profile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (profileError && profileError.code === 'PGRST116') {
+            console.log('Profile not created by trigger, creating manually...');
+            
+            // Create profile manually if trigger failed
+            const { error: createError } = await supabase
+              .from('user_profiles')
+              .insert({
+                id: data.user.id,
+                credits_remaining: 1,
+                trial_used: false
+              });
+              
+            if (createError) {
+              console.error('Failed to create user profile:', createError);
+            }
+          }
+        }
         
         // Add a small delay to ensure auth context is properly initialized
         setTimeout(() => {

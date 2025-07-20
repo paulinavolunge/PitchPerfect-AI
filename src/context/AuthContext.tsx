@@ -196,6 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔍 Loading user profile for:', userId, 'retry:', retryCount);
       
+      // First, try to get the profile
       const { data: profile, error } = await supabase
         .from('user_profiles')
         .select('credits_remaining, trial_used')
@@ -209,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error.code === 'PGRST116') {
           console.log('⚠️ User profile not found, creating new profile...');
           
-          // Try to create the profile (should be automatic via trigger, but fallback)
+          // Try to create the profile
           const { data: newProfile, error: insertError } = await supabase
             .from('user_profiles')
             .insert({ 
@@ -230,9 +231,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return loadUserProfile(userId, retryCount + 1);
             }
             
-            // Use defaults if creation fails
-            setCreditsRemaining(1);
-            setTrialUsed(false);
+            // If still failing, try upsert as last resort
+            if (retryCount < 2) {
+              console.log('Attempting upsert as fallback...');
+              const { data: upsertProfile, error: upsertError } = await supabase
+                .from('user_profiles')
+                .upsert({ 
+                  id: userId, 
+                  credits_remaining: 1,
+                  trial_used: false 
+                }, { 
+                  onConflict: 'id',
+                  ignoreDuplicates: false 
+                })
+                .select('credits_remaining, trial_used')
+                .single();
+                
+              if (upsertError) {
+                console.error('Upsert also failed:', upsertError);
+                // Use defaults if all creation attempts fail
+                setCreditsRemaining(1);
+                setTrialUsed(false);
+              } else if (upsertProfile) {
+                console.log('✅ Profile created via upsert:', upsertProfile);
+                setCreditsRemaining(upsertProfile.credits_remaining || 1);
+                setTrialUsed(upsertProfile.trial_used || false);
+              }
+            } else {
+              // Use defaults if creation fails after retries
+              setCreditsRemaining(1);
+              setTrialUsed(false);
+            }
           } else {
             console.log('✅ Created new user profile:', newProfile);
             setCreditsRemaining(newProfile?.credits_remaining || 1);
@@ -249,11 +278,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           // Log security event for profile access issues
-          await supabase.rpc('log_security_event', {
-            p_event_type: 'profile_access_failed',
-            p_event_details: { error: error.message },
-            p_user_id: userId
-          }).catch(console.warn); // Don't let logging failures break the flow
+          try {
+            await supabase.rpc('log_security_event', {
+              p_event_type: 'profile_access_failed',
+              p_event_details: { error: error.message },
+              p_user_id: userId
+            });
+          } catch (logError) {
+            console.warn('Failed to log security event:', logError);
+          }
           
           // Use safe defaults
           setCreditsRemaining(1); // Give new users 1 free credit
@@ -287,11 +320,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Log security event for profile loading errors
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'profile_loading_error',
-        p_event_details: { error: error instanceof Error ? error.message : 'Unknown error' },
-        p_user_id: userId
-      }).catch(console.warn); // Don't let logging failures break the flow
+      try {
+        await supabase.rpc('log_security_event', {
+          p_event_type: 'profile_loading_error',
+          p_event_details: { error: error instanceof Error ? error.message : 'Unknown error' },
+          p_user_id: userId
+        });
+      } catch (logError) {
+        console.warn('Failed to log security event:', logError);
+      }
       
       // Use safe defaults on any error
       setCreditsRemaining(1); // Give new users 1 free credit
