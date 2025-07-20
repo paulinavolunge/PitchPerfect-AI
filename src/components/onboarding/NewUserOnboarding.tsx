@@ -53,10 +53,14 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
 
   // Handle closing the dialog
   const handleClose = (completed: boolean = false) => {
-    if (completed || currentStep === steps.length - 1) {
-      onComplete();
-    }
+    // Always call onComplete when closing to mark onboarding as done
+    onComplete();
     onOpenChange(false);
+    // Reset state
+    setCurrentStep(0);
+    setSelectedIndustry('');
+    setSelectedChallenge('');
+    setMicrophoneReady(false);
   };
 
   // Handle ESC key
@@ -69,6 +73,16 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [open]);
+
+  // Override the default onOpenChange to use our handleClose
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      // Modal is being closed (including by X button)
+      handleClose(true);
+    } else {
+      onOpenChange(newOpen);
+    }
+  };
 
   const industries = [
     { value: 'technology', label: 'Technology' },
@@ -262,6 +276,9 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+    } else {
+      // If on last step, complete onboarding
+      handleComplete('/dashboard');
     }
   };
 
@@ -275,37 +292,49 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      // If on last step, complete onboarding
       handleComplete('/dashboard');
     }
   };
 
   const handleComplete = async (redirectTo: string = '/dashboard') => {
-    // Save user preferences
-    if (selectedIndustry) {
-      localStorage.setItem('userIndustry', selectedIndustry);
-    }
-    if (selectedChallenge) {
-      localStorage.setItem('userChallenge', selectedChallenge);
-    }
-
-    // Mark onboarding as complete
-    localStorage.setItem('onboardingComplete', 'true');
-    localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
-
-    // Start free trial if available
-    if (user && !localStorage.getItem('trialStarted')) {
-      const trialStarted = await startFreeTrial();
-      if (trialStarted) {
-        localStorage.setItem('trialStarted', 'true');
+    try {
+      // Save user preferences
+      if (selectedIndustry) {
+        localStorage.setItem('userIndustry', selectedIndustry);
       }
+      if (selectedChallenge) {
+        localStorage.setItem('userChallenge', selectedChallenge);
+      }
+
+      // Mark onboarding as complete
+      localStorage.setItem('onboardingComplete', 'true');
+      localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
+
+      // Start free trial if available (don't let this block completion)
+      if (user && !localStorage.getItem('trialStarted')) {
+        startFreeTrial().then(trialStarted => {
+          if (trialStarted) {
+            localStorage.setItem('trialStarted', 'true');
+          }
+        }).catch(err => {
+          console.warn('Failed to start free trial:', err);
+        });
+      }
+
+      // Close onboarding
+      handleClose(true);
+
+      // Navigate after a small delay to ensure modal closes
+      setTimeout(() => {
+        navigate(redirectTo);
+      }, 100);
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+      // Even if there's an error, close the modal
+      handleClose(true);
+      navigate(redirectTo);
     }
-
-    // Close onboarding and trigger tour
-    onComplete();
-    onOpenChange(false);
-
-    // Navigate to chosen path
-    navigate(redirectTo);
   };
 
   // Auto-advance for step 1 (welcome)
@@ -321,7 +350,7 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
   if (!open) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between mb-4">

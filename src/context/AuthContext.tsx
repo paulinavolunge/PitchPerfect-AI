@@ -198,7 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 session_isolated: true
               },
               p_user_id: session.user.id
-            }).catch(console.warn);
+            }).catch(err => {
+              console.warn('Failed to log auth event:', err);
+            });
           }, 0);
         }
         
