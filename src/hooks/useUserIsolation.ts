@@ -20,9 +20,37 @@ export const useUserIsolation = () => {
     }
   }, [user?.id]);
 
+  const validateUserAccess = () => {
+    return user?.id ? validateSessionIsolation(user.id) : false;
+  };
+
+  const getUserSpecificKey = (key: string) => {
+    return user?.id ? `user_${user.id}_${key}` : null;
+  };
+
+  const clearUserData = () => {
+    if (!user?.id) return false;
+    
+    try {
+      const userPrefix = `user_${user.id}_`;
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(userPrefix)) {
+          localStorage.removeItem(key);
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to clear user data:', error);
+      return false;
+    }
+  };
+
   return {
     userId: user?.id || null,
-    isIsolated: user?.id ? validateSessionIsolation(user.id) : true
+    isIsolated: user?.id ? validateSessionIsolation(user.id) : true,
+    validateUserAccess,
+    getUserSpecificKey,
+    clearUserData
   };
 };
 
