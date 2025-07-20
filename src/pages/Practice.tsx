@@ -223,10 +223,15 @@ const Practice = () => {
       </Helmet>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-yellow-100 text-yellow-800 p-4 rounded-xl text-sm text-center my-4">
-          🚧 PitchPerfect AI is in early access! You're one of the very first users 🙌  
-          We're still polishing things — so if something doesn't work, we're likely fixing it already.  
-          Thank you for being part of the journey. You matter more than you know.
+        {/* FORCED EARLY ACCESS BANNER - ALWAYS VISIBLE */}
+        <div className="bg-yellow-100 text-yellow-800 p-6 rounded-xl text-center mb-6 border-2 border-yellow-300 shadow-lg">
+          <div className="text-lg font-semibold mb-2">
+            🚧 PitchPerfect AI is in early access! You're one of the very first users 🙌
+          </div>
+          <div className="text-sm">
+            We're still polishing things — so if something doesn't work, we're likely fixing it already.<br />
+            Thank you for being part of the journey. You matter more than you know.
+          </div>
         </div>
         
         <div className="mb-8">
