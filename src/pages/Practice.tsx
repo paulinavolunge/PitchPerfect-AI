@@ -4,7 +4,9 @@ import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mic, Play, Square, RotateCcw, Zap, Trophy, Target } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Mic, Play, Square, RotateCcw, Zap, Trophy, Target, MessageCircle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { trackEvent } from '@/utils/analytics';
@@ -17,6 +19,9 @@ const Practice = () => {
   const { user, creditsRemaining, deductUserCredits } = useAuth();
   const { toast } = useToast();
   const { validateUserAccess, getUserSpecificKey, clearUserData } = useUserIsolation();
+  const [practiceMode, setPracticeMode] = useState<'voice' | 'text'>('voice');
+  const [textInput, setTextInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -90,7 +95,7 @@ const Practice = () => {
     await handleAnalyzePitch(audioBlob);
   };
 
-  const handleAnalyzePitch = async (audioData: Blob) => {
+  const handleAnalyzePitch = async (audioData?: Blob) => {
     if (!user?.id) return;
 
     try {
@@ -108,8 +113,9 @@ const Practice = () => {
         return;
       }
 
-      // Mock analysis results (in a real app, you'd send audioData to your analysis service)
-      const mockTranscript = "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
+      // Mock analysis results (in a real app, you'd send audioData or textInput to your analysis service)
+      const mockTranscript = practiceMode === 'text' ? textInput : 
+        "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
       const mockFeedback = "Great use of specific metrics! Consider adding more emotional connection and addressing potential objections earlier in your pitch.";
       const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
 
@@ -118,7 +124,7 @@ const Practice = () => {
       setScore(mockScore);
       setAnalysisComplete(true);
 
-      console.log('✅ Analysis complete:', { score: mockScore, creditsUsed: 1 });
+      console.log('✅ Analysis complete:', { score: mockScore, creditsUsed: 1, mode: practiceMode });
 
       // Update streak if score is good (with user-specific storage)
       if (mockScore >= 80 && user?.id) {
@@ -130,7 +136,8 @@ const Practice = () => {
 
       trackEvent('practice_analysis_complete', {
         score: mockScore,
-        credits_used: 1
+        credits_used: 1,
+        mode: practiceMode
       });
 
       toast({
@@ -148,6 +155,39 @@ const Practice = () => {
     }
   };
 
+  const handleTextSubmit = async () => {
+    if (!textInput.trim()) {
+      toast({
+        title: "Please Enter Your Pitch",
+        description: "Type your pitch in the text area before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to analyze your pitch.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (creditsRemaining < 1) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 1 credit to analyze a pitch.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    await handleAnalyzePitch();
+    setIsSubmitting(false);
+  };
+
   const resetPractice = () => {
     setAnalysisComplete(false);
     setTranscript('');
@@ -155,11 +195,13 @@ const Practice = () => {
     setScore(null);
     setAudioBlob(null);
     setAudioUrl(null);
+    setTextInput('');
+    setIsSubmitting(false);
     trackEvent('practice_reset');
     
     toast({
       title: "Practice Reset",
-      description: "Ready for a new recording session!",
+      description: "Ready for a new practice session!",
     });
   };
 
@@ -211,25 +253,116 @@ const Practice = () => {
           </Card>
         </div>
 
-        {/* Recording Interface */}
+        {/* Practice Interface */}
         {!analysisComplete ? (
-          <div className="space-y-6">
-            {/* Welcome Card for First-Time Users */}
-            {!hasPermission && (
-              <Card className="text-center py-8 bg-gradient-to-br from-brand-blue/5 to-brand-green/5 border-brand-blue/20">
+          <Tabs value={practiceMode} onValueChange={(value) => setPracticeMode(value as 'voice' | 'text')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="voice" className="flex items-center gap-2">
+                <Mic className="h-4 w-4" />
+                🎙️ Voice Practice
+              </TabsTrigger>
+              <TabsTrigger value="text" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                💬 Text Practice
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Voice Practice Tab */}
+            <TabsContent value="voice" className="space-y-6 mt-0">
+              {/* Welcome Card for First-Time Users */}
+              {!hasPermission && (
+                <Card className="text-center py-8 bg-gradient-to-br from-brand-blue/5 to-brand-green/5 border-brand-blue/20">
+                  <CardContent className="space-y-4">
+                    <div className="mx-auto w-16 h-16 bg-brand-blue/10 rounded-full flex items-center justify-center mb-4">
+                      <Mic className="h-8 w-8 text-brand-blue" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-brand-dark">🎤 Ready to sharpen your pitch?</h3>
+                    <p className="text-brand-dark/70 max-w-md mx-auto">
+                      Click the button below to record your first practice session.
+                      We'll give you instant AI-powered feedback to help you grow.
+                    </p>
+                    
+                    {/* What to Expect */}
+                    <div className="bg-white/50 rounded-lg p-4 mt-6 max-w-sm mx-auto">
+                      <h4 className="font-semibold text-brand-dark mb-3">🧠 Here's what you'll get after recording:</h4>
+                      <div className="space-y-2 text-sm text-brand-dark/80">
+                        <div className="flex items-center gap-2">
+                          <span className="text-brand-green">✅</span>
+                          <span>Instant pitch score</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-brand-green">✅</span>
+                          <span>Strengths and areas to improve</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-brand-green">✅</span>
+                          <span>AI tips tailored to your tone & pacing</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Gamification Badge */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4 max-w-sm mx-auto">
+                      <div className="flex items-center gap-2 justify-center">
+                        <Trophy className="h-5 w-5 text-yellow-600" />
+                        <span className="text-yellow-800 font-medium">🏅 Record your first pitch to earn the "Starter Badge"</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <MicrophonePermissionHandler
+                onPermissionGranted={handlePermissionGranted}
+                onPermissionDenied={handlePermissionDenied}
+              >
+                {hasPermission && (
+                  <AudioRecorder
+                    maxDuration={180}
+                    onRecordingComplete={handleRecordingComplete}
+                    className="mb-8"
+                  />
+                )}
+                
+                {/* Enhanced Permission Denied State */}
+                {!hasPermission && (
+                  <Card className="border-amber-200 bg-amber-50">
+                    <CardContent className="pt-6 text-center">
+                      <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                        <Mic className="h-6 w-6 text-amber-600" />
+                      </div>
+                      <h3 className="font-semibold text-amber-800 mb-2">⚠️ Microphone Access Required</h3>
+                      <p className="text-amber-700 mb-4">
+                        We couldn't access your microphone. Please allow mic access and refresh the page.
+                      </p>
+                      <Button 
+                        onClick={() => window.location.reload()} 
+                        variant="outline" 
+                        className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                      >
+                        🔄 Try Again
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </MicrophonePermissionHandler>
+            </TabsContent>
+
+            {/* Text Practice Tab */}
+            <TabsContent value="text" className="space-y-6 mt-0">
+              <Card className="text-center py-8 bg-gradient-to-br from-brand-green/5 to-brand-blue/5 border-brand-green/20">
                 <CardContent className="space-y-4">
-                  <div className="mx-auto w-16 h-16 bg-brand-blue/10 rounded-full flex items-center justify-center mb-4">
-                    <Mic className="h-8 w-8 text-brand-blue" />
+                  <div className="mx-auto w-16 h-16 bg-brand-green/10 rounded-full flex items-center justify-center mb-4">
+                    <MessageCircle className="h-8 w-8 text-brand-green" />
                   </div>
-                  <h3 className="text-2xl font-bold text-brand-dark">🎤 Ready to sharpen your pitch?</h3>
+                  <h3 className="text-2xl font-bold text-brand-dark">💬 Type your pitch below</h3>
                   <p className="text-brand-dark/70 max-w-md mx-auto">
-                    Click the button below to record your first practice session.
-                    We'll give you instant AI-powered feedback to help you grow.
+                    Write out your sales pitch and get detailed AI feedback on your messaging and structure.
                   </p>
                   
                   {/* What to Expect */}
                   <div className="bg-white/50 rounded-lg p-4 mt-6 max-w-sm mx-auto">
-                    <h4 className="font-semibold text-brand-dark mb-3">🧠 Here's what you'll get after recording:</h4>
+                    <h4 className="font-semibold text-brand-dark mb-3">🧠 Here's what you'll get after submitting:</h4>
                     <div className="space-y-2 text-sm text-brand-dark/80">
                       <div className="flex items-center gap-2">
                         <span className="text-brand-green">✅</span>
@@ -237,11 +370,11 @@ const Practice = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-brand-green">✅</span>
-                        <span>Strengths and areas to improve</span>
+                        <span>Message structure analysis</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-brand-green">✅</span>
-                        <span>AI tips tailored to your tone & pacing</span>
+                        <span>AI tips for clearer communication</span>
                       </div>
                     </div>
                   </div>
@@ -250,50 +383,57 @@ const Practice = () => {
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4 max-w-sm mx-auto">
                     <div className="flex items-center gap-2 justify-center">
                       <Trophy className="h-5 w-5 text-yellow-600" />
-                      <span className="text-yellow-800 font-medium">🏅 Record your first pitch to earn the "Starter Badge"</span>
+                      <span className="text-yellow-800 font-medium">🏅 Submit your first pitch to earn the "Writer Badge"</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
 
-            <MicrophonePermissionHandler
-              onPermissionGranted={handlePermissionGranted}
-              onPermissionDenied={handlePermissionDenied}
-            >
-              {hasPermission && (
-                <AudioRecorder
-                  maxDuration={180}
-                  onRecordingComplete={handleRecordingComplete}
-                  className="mb-8"
-                />
-              )}
-              
-              {/* Enhanced Permission Denied State */}
-              {!hasPermission && (
-                <Card className="border-amber-200 bg-amber-50">
-                  <CardContent className="pt-6 text-center">
-                    <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-                      <Mic className="h-6 w-6 text-amber-600" />
-                    </div>
-                    <h3 className="font-semibold text-amber-800 mb-2">⚠️ Microphone Access Required</h3>
-                    <p className="text-amber-700 mb-4">
-                      We couldn't access your microphone. Please allow mic access and refresh the page.
-                    </p>
+              {/* Text Input Area */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5" />
+                    Your Pitch
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    placeholder="Type your sales pitch here... For example: 'Hi, I'm calling from XYZ Company. We help businesses like yours increase revenue by 40% through our innovative software solution...'"
+                    className="min-h-[200px] resize-none"
+                    maxLength={2000}
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-brand-dark/60">
+                      {textInput.length}/2000 characters
+                    </span>
                     <Button 
-                      onClick={() => window.location.reload()} 
-                      variant="outline" 
-                      className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                      onClick={handleTextSubmit}
+                      disabled={isSubmitting || !textInput.trim() || creditsRemaining < 1}
+                      className="bg-brand-green hover:bg-brand-green/90"
                     >
-                      🔄 Try Again
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Analyze Pitch
+                        </>
+                      )}
                     </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </MicrophonePermissionHandler>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
             
+            {/* Credits Warning */}
             {creditsRemaining < 1 && (
-              <Card className="mb-8 border-red-200 bg-red-50">
+              <Card className="border-red-200 bg-red-50">
                 <CardContent className="pt-6 text-center">
                   <Zap className="h-8 w-8 text-red-500 mx-auto mb-2" />
                   <p className="text-red-600">
@@ -302,7 +442,7 @@ const Practice = () => {
                 </CardContent>
               </Card>
             )}
-          </div>
+          </Tabs>
         ) : (
           <Card className="mb-8">
             <CardHeader>
