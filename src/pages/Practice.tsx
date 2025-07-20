@@ -120,10 +120,11 @@ const Practice = () => {
       
       // Generate structured feedback based on score
       const structuredFeedback = {
-        clarity: mockScore >= 85 ? 'Strong' : mockScore >= 70 ? 'Moderate' : 'Needs Work',
-        confidence: mockScore >= 80 ? 'Strong' : mockScore >= 65 ? 'Moderate' : 'Needs Work',
-        urgency: mockScore >= 75 ? 'Good use of compelling language' : 'Add more urgency in your CTA',
-        objectionHandling: mockScore >= 70 ? 'Good use of value framing' : 'Consider addressing more potential objections'
+        clarity: mockScore >= 85 ? 'Clear and concise' : mockScore >= 70 ? 'Mostly clear' : 'Needs clarity improvement',
+        confidence: mockScore >= 80 ? 'Strong and assertive' : mockScore >= 65 ? 'Moderate confidence' : 'Needs more assertiveness',
+        persuasiveness: mockScore >= 75 ? 'Compelling arguments' : mockScore >= 60 ? 'Somewhat persuasive' : 'Strengthen value proposition',
+        tone: mockScore >= 80 ? 'Friendly and professional' : mockScore >= 65 ? 'Professional tone' : 'Consider warming up tone',
+        objectionHandling: mockScore >= 70 ? 'Good use of value-based responses' : 'Address potential objections proactively'
       };
       
       const mockFeedback = structuredFeedback;
@@ -566,26 +567,26 @@ const Practice = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">✅</span>
                               <span className="font-medium">Clarity:</span>
-                              <span className={feedbackData.clarity === 'Strong' ? 'text-green-600' : feedbackData.clarity === 'Moderate' ? 'text-yellow-600' : 'text-red-600'}>
-                                {feedbackData.clarity}
-                              </span>
+                              <span className="text-brand-dark/80">{feedbackData.clarity}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">✅</span>
                               <span className="font-medium">Confidence:</span>
-                              <span className={feedbackData.confidence === 'Strong' ? 'text-green-600' : feedbackData.confidence === 'Moderate' ? 'text-yellow-600' : 'text-red-600'}>
-                                {feedbackData.confidence}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={feedbackData.urgency.includes('Add more') ? 'text-yellow-500' : 'text-green-500'}>
-                                {feedbackData.urgency.includes('Add more') ? '⚠️' : '✅'}
-                              </span>
-                              <span className="text-brand-dark/80">{feedbackData.urgency}</span>
+                              <span className="text-brand-dark/80">{feedbackData.confidence}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">✅</span>
-                              <span className="font-medium">Objection handling:</span>
+                              <span className="font-medium">Persuasiveness:</span>
+                              <span className="text-brand-dark/80">{feedbackData.persuasiveness}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-500">✅</span>
+                              <span className="font-medium">Tone/Emotion:</span>
+                              <span className="text-brand-dark/80">{feedbackData.tone}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-500">✅</span>
+                              <span className="font-medium">Objection Handling:</span>
                               <span className="text-brand-dark/80">{feedbackData.objectionHandling}</span>
                             </div>
                           </>
