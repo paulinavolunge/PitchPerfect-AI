@@ -20,14 +20,21 @@ const Practice = () => {
   const [score, setScore] = useState<number | null>(null);
   const [streakCount, setStreakCount] = useState(0);
 
-  // Mock streak data since user_streaks table doesn't exist
+  // User-specific streak data with proper isolation
   useEffect(() => {
     if (user?.id) {
-      // Use a simple localStorage-based streak for now
-      const storedStreak = localStorage.getItem(`streak_${user.id}`);
+      // Use user-specific localStorage key
+      const streakKey = `streak_${user.id}`;
+      const storedStreak = localStorage.getItem(streakKey);
       if (storedStreak) {
         setStreakCount(parseInt(storedStreak, 10));
+      } else {
+        // Initialize streak for new user
+        setStreakCount(0);
       }
+    } else {
+      // Clear streak when no user
+      setStreakCount(0);
     }
   }, [user?.id]);
 
@@ -98,13 +105,12 @@ const Practice = () => {
       setScore(mockScore);
       setAnalysisComplete(true);
 
-      // Update streak if score is good
-      if (mockScore >= 80) {
+      // Update streak if score is good (with user-specific storage)
+      if (mockScore >= 80 && user?.id) {
         const newStreak = streakCount + 1;
         setStreakCount(newStreak);
-        if (user?.id) {
-          localStorage.setItem(`streak_${user.id}`, newStreak.toString());
-        }
+        const streakKey = `streak_${user.id}`;
+        localStorage.setItem(streakKey, newStreak.toString());
       }
 
       trackEvent('practice_analysis_complete', {

@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { clearAllSessionData, clearUserSpecificData, initializeCleanSession, validateSessionIsolation } from '@/utils/sessionCleanup';
 
 interface AuthContextType {
   user: User | null;
@@ -73,36 +74,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         console.log('AuthContext: Auth state changed:', event, !!session);
         
+        // Handle different auth events with proper data isolation
+        if (event === 'SIGNED_OUT' || (!session && user)) {
+          console.log('🧹 User signed out, clearing all session data...');
+          
+          // Clear all user-specific data (preserve consent)
+          clearAllSessionData(true);
+          
+          // Reset component state
+          setUser(null);
+          setSession(null);
+          setCreditsRemaining(0);
+          setTrialUsed(false);
+          setIsNewUser(false);
+          
+          console.log('✅ Session data cleared for logout');
+        } else if (event === 'SIGNED_IN' && session?.user?.id) {
+          console.log('🚀 User signed in, initializing clean session...');
+          
+          // Check if this is a different user than before
+          const previousUser = user;
+          if (previousUser && previousUser.id !== session.user.id) {
+            console.log('👤 Different user detected, clearing previous user data...');
+            clearUserSpecificData(previousUser.id);
+          }
+          
+          // Initialize clean session for new user
+          initializeCleanSession(session.user.id);
+          
+          // Update state
+          setSession(session);
+          setUser(session.user);
+          
+          // Load fresh user profile data
+          setTimeout(() => {
+            loadUserProfile(session.user.id);
+          }, 0);
+          
+          // Check if this is a new user (after cleanup)
+          const hasCompletedOnboarding = localStorage.getItem('onboardingComplete');
+          if (!hasCompletedOnboarding) {
+            setIsNewUser(true);
+          }
+          
+          // Validate session isolation in development
+          if (process.env.NODE_ENV === 'development') {
+            setTimeout(() => validateSessionIsolation(session.user.id), 100);
+          }
+          
+          console.log('✅ Clean session initialized for user:', session.user.id);
+        } else if (event === 'TOKEN_REFRESHED' && session?.user?.id) {
+          // Token refresh - maintain current state but verify data integrity
+          setSession(session);
+          setUser(session.user);
+          
+          // Validate no data leakage occurred
+          if (process.env.NODE_ENV === 'development') {
+            validateSessionIsolation(session.user.id);
+          }
+        } else {
+          // Handle other events (PASSWORD_RECOVERY, etc.)
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+        
         // Log security events for auth state changes
         if (session?.user?.id) {
           setTimeout(() => {
             supabase.rpc('log_security_event', {
               p_event_type: `auth_${event}`,
-              p_event_details: { user_id: session.user.id },
+              p_event_details: { 
+                user_id: session.user.id,
+                session_isolated: true
+              },
               p_user_id: session.user.id
             });
           }, 0);
-
-          // Check if this is a new user
-          if (event === 'SIGNED_IN') {
-            const hasCompletedOnboarding = localStorage.getItem('onboardingComplete');
-            if (!hasCompletedOnboarding) {
-              setIsNewUser(true);
-            }
-          }
-        }
-
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user?.id) {
-          setTimeout(() => {
-            loadUserProfile(session.user.id);
-          }, 0);
-        } else {
-          // Reset user data when signed out
-          setCreditsRemaining(0);
-          setTrialUsed(false);
         }
         
         setLoading(false);
@@ -247,20 +294,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('AuthContext: Signing out user...');
       
+      const currentUserId = user?.id;
+      
       // Log security event for sign out
-      if (user?.id) {
+      if (currentUserId) {
         await supabase.rpc('log_security_event', {
           p_event_type: 'user_signout_initiated',
-          p_event_details: {},
-          p_user_id: user.id
+          p_event_details: { clean_logout: true },
+          p_user_id: currentUserId
         });
       }
       
-      // Clear local state first
+      // Clear ALL session data including localStorage (preserve consent)
+      console.log('🧹 Clearing all session data on logout...');
+      clearAllSessionData(true);
+      
+      // Clear local state
       setUser(null);
       setSession(null);
       setCreditsRemaining(0);
       setTrialUsed(false);
+      setIsNewUser(false);
       
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
@@ -281,7 +335,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
     } catch (error) {
       console.error('Sign out error:', error);
-      // Even if there's an error, redirect to home
+      
+      // Even if there's an error, clear local data and redirect
+      clearAllSessionData(true);
+      setUser(null);
+      setSession(null);
+      setCreditsRemaining(0);
+      setTrialUsed(false);
+      setIsNewUser(false);
+      
       const targetUrl = window.location.hostname.includes('lovable.app') 
         ? 'https://pitchperfectai.lovable.app/' 
         : 'https://pitchperfectai.ai/';
@@ -291,9 +353,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const markOnboardingComplete = () => {
+    if (!user?.id) return;
+    
     setIsNewUser(false);
+    // Use user-specific keys for onboarding completion
     localStorage.setItem('onboardingComplete', 'true');
     localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
+    localStorage.setItem(`user_${user.id}_onboarding_complete`, 'true');
   };
 
   const value = {
