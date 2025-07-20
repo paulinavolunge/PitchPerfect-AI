@@ -35,38 +35,56 @@ const TOUR_COOLDOWN_KEY = 'pitchperfect_tour_cooldown';
 const TOUR_COOLDOWN_HOURS = 24;
 
 const Dashboard = () => {
-  // Add comprehensive error handling for auth context
-  let authData;
+  const navigate = useNavigate();
+  const { isGuestMode } = useGuestMode();
+  
+  // Initialize auth data with safe defaults
+  const [authError, setAuthError] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
+  
+  let authData = {
+    user: null as any,
+    refreshSubscription: async () => {},
+    isPremium: false,
+    creditsRemaining: 0,
+    trialUsed: false,
+    loading: true,
+    isNewUser: false,
+    markOnboardingComplete: () => {}
+  };
+
+  // Try to get auth data safely
   try {
-    authData = useAuth();
+    const auth = useAuth();
+    authData = {
+      user: auth.user,
+      refreshSubscription: auth.refreshSubscription,
+      isPremium: auth.isPremium || false,
+      creditsRemaining: auth.creditsRemaining || 0,
+      trialUsed: auth.trialUsed || false,
+      loading: auth.loading ?? true,
+      isNewUser: auth.isNewUser || false,
+      markOnboardingComplete: auth.markOnboardingComplete || (() => {})
+    };
+    setAuthInitialized(true);
   } catch (error) {
     console.error('❌ Auth context error:', error);
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <h1 className="text-xl font-semibold text-red-600 mb-2">Authentication Error</h1>
-          <p className="text-gray-600 mb-4">There was an issue loading your account. Please try refreshing the page.</p>
-          <Button onClick={() => window.location.reload()}>
-            Refresh Page
-          </Button>
-        </div>
-      </div>
-    );
+    // Only set auth error if we've waited for initialization
+    setTimeout(() => {
+      setAuthError(true);
+    }, 2000);
   }
 
   const { 
     user, 
     refreshSubscription, 
-    isPremium = false, 
-    creditsRemaining = 0, 
-    trialUsed = false, 
-    loading = true, 
-    isNewUser = false, 
+    isPremium, 
+    creditsRemaining, 
+    trialUsed, 
+    loading, 
+    isNewUser, 
     markOnboardingComplete 
-  } = authData || {};
-
-  const { isGuestMode } = useGuestMode();
-  const navigate = useNavigate();
+  } = authData;
 
   // Local state - simplified with error protection
   const [showTour, setShowTour] = useState(false);
@@ -102,14 +120,49 @@ const Dashboard = () => {
         creditsRemaining,
         trialUsed,
         isPremium,
-        isGuestMode
+        isGuestMode,
+        authError
       });
     } catch (error) {
       console.error('❌ Error in debug logging:', error);
     }
-  }, [user, loading, isNewUser, creditsRemaining, trialUsed, isPremium, isGuestMode]);
+  }, [user, loading, isNewUser, creditsRemaining, trialUsed, isPremium, isGuestMode, authError]);
 
-  // Enhanced loading state with timeout protection
+  // Handle loading timeout
+  useEffect(() => {
+    if (loading && !isGuestMode) {
+      const timeout = setTimeout(() => {
+        console.error('Loading timeout reached, redirecting to login');
+        navigate('/login', { replace: true });
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [loading, navigate, isGuestMode]);
+
+  // Handle unauthenticated users
+  useEffect(() => {
+    if (!loading && !user && !isGuestMode) {
+      navigate('/login', { replace: true });
+    }
+  }, [loading, user, isGuestMode, navigate]);
+
+  // Handle auth error state
+  if (authError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <h1 className="text-xl font-semibold text-red-600 mb-2">Authentication Error</h1>
+          <p className="text-gray-600 mb-4">There was an issue loading your account. Please try refreshing the page.</p>
+          <Button onClick={() => window.location.reload()}>
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Enhanced loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -122,10 +175,16 @@ const Dashboard = () => {
     );
   }
 
-  // If not authenticated and not in guest mode, redirect to login
+  // If not authenticated and not in guest mode, show loading (redirect will happen via useEffect)
   if (!user && !isGuestMode) {
-    navigate('/login', { replace: true });
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-4"></div>
+          <p className="text-brand-dark">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   const tourSteps: Step[] = [

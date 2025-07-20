@@ -25,11 +25,11 @@ const Signup = () => {
   useEffect(() => {
     console.log('Signup page loaded');
     
-    // Redirect if already authenticated
-    if (user) {
+    // Redirect if already authenticated (but not during signup process)
+    if (user && !isLoading) {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
 
   // Auto-dismiss Google error after 8 seconds
   useEffect(() => {
@@ -85,7 +85,11 @@ const Signup = () => {
         });
         // Mark as new user for onboarding
         sessionStorage.setItem('newUser', 'true');
-        navigate('/dashboard');
+        
+        // Add a small delay to ensure auth context is properly initialized
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 500);
       }
     } catch (error) {
       console.error('Signup error:', error);

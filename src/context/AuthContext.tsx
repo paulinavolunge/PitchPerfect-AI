@@ -162,9 +162,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const loadUserProfile = async (userId: string) => {
+  const loadUserProfile = async (userId: string, retryCount = 0): Promise<void> => {
     try {
-      console.log('🔍 Loading user profile for:', userId);
+      console.log('🔍 Loading user profile for:', userId, 'retry:', retryCount);
       
       const { data: profile, error } = await supabase
         .from('user_profiles')
@@ -192,25 +192,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
           if (insertError) {
             console.warn('Could not create user profile:', insertError);
+            
+            // If creation failed due to race condition, retry after a delay
+            if (insertError.code === '23505' && retryCount < 3) { // Unique violation
+              console.log('Profile creation race condition detected, retrying...');
+              await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+              return loadUserProfile(userId, retryCount + 1);
+            }
+            
             // Use defaults if creation fails
             setCreditsRemaining(1);
             setTrialUsed(false);
           } else {
             console.log('✅ Created new user profile:', newProfile);
-            setCreditsRemaining(newProfile.credits_remaining || 1);
-            setTrialUsed(newProfile.trial_used || false);
+            setCreditsRemaining(newProfile?.credits_remaining || 1);
+            setTrialUsed(newProfile?.trial_used || false);
           }
         } else {
           console.error('Error loading user profile:', error);
+          
+          // Retry on temporary errors
+          if (retryCount < 3 && (error.code === 'PGRST301' || error.code === '500')) {
+            console.log('Temporary error, retrying profile load...');
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+            return loadUserProfile(userId, retryCount + 1);
+          }
+          
           // Log security event for profile access issues
           await supabase.rpc('log_security_event', {
             p_event_type: 'profile_access_failed',
             p_event_details: { error: error.message },
             p_user_id: userId
-          });
+          }).catch(console.warn); // Don't let logging failures break the flow
           
           // Use safe defaults
-          setCreditsRemaining(0);
+          setCreditsRemaining(1); // Give new users 1 free credit
           setTrialUsed(false);
         }
       } else if (profile) {
@@ -219,21 +235,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTrialUsed(profile.trial_used || false);
       } else {
         console.warn('No profile data returned');
-        setCreditsRemaining(0);
+        
+        // Retry if no data returned
+        if (retryCount < 3) {
+          console.log('No profile data, retrying...');
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          return loadUserProfile(userId, retryCount + 1);
+        }
+        
+        setCreditsRemaining(1); // Give new users 1 free credit
         setTrialUsed(false);
       }
     } catch (error) {
       console.error('Failed to load user profile:', error);
+      
+      // Retry on network errors
+      if (retryCount < 3) {
+        console.log('Network error, retrying profile load...');
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return loadUserProfile(userId, retryCount + 1);
+      }
       
       // Log security event for profile loading errors
       await supabase.rpc('log_security_event', {
         p_event_type: 'profile_loading_error',
         p_event_details: { error: error instanceof Error ? error.message : 'Unknown error' },
         p_user_id: userId
-      });
+      }).catch(console.warn); // Don't let logging failures break the flow
       
       // Use safe defaults on any error
-      setCreditsRemaining(0);
+      setCreditsRemaining(1); // Give new users 1 free credit
       setTrialUsed(false);
     }
   };
