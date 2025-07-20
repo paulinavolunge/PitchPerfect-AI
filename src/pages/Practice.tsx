@@ -9,38 +9,72 @@ import { useToast } from '@/hooks/use-toast';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { trackEvent } from '@/utils/analytics';
 import { Helmet } from 'react-helmet-async';
+import { MicrophonePermissionHandler } from '@/components/permissions/MicrophonePermissionHandler';
+import { AudioRecorder } from '@/components/recordings/AudioRecorder';
+import { useUserIsolation } from '@/hooks/useUserIsolation';
 
 const Practice = () => {
   const { user, creditsRemaining, deductUserCredits } = useAuth();
   const { toast } = useToast();
+  const { validateUserAccess, getUserSpecificKey, clearUserData } = useUserIsolation();
   const [isRecording, setIsRecording] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [feedback, setFeedback] = useState('');
   const [score, setScore] = useState<number | null>(null);
   const [streakCount, setStreakCount] = useState(0);
+  const [hasPermission, setHasPermission] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   // User-specific streak data with proper isolation
   useEffect(() => {
+    if (!validateUserAccess()) return;
+    
     if (user?.id) {
-      // Use user-specific localStorage key
-      const streakKey = `streak_${user.id}`;
+      const streakKey = getUserSpecificKey('streak');
       const storedStreak = localStorage.getItem(streakKey);
       if (storedStreak) {
         setStreakCount(parseInt(storedStreak, 10));
       } else {
-        // Initialize streak for new user
         setStreakCount(0);
       }
     } else {
-      // Clear streak when no user
       setStreakCount(0);
     }
-  }, [user?.id]);
+  }, [user?.id, validateUserAccess, getUserSpecificKey]);
 
-  const handleStartRecording = async () => {
-    console.log('🔵 Start Recording clicked!', { creditsRemaining, user: !!user });
+  const handlePermissionGranted = () => {
+    console.log('🟢 Microphone permission granted');
+    setHasPermission(true);
+    toast({
+      title: "Microphone Ready",
+      description: "You can now record your pitch!",
+    });
+  };
+
+  const handlePermissionDenied = () => {
+    console.log('🔴 Microphone permission denied');
+    setHasPermission(false);
+    toast({
+      title: "Microphone Access Required",
+      description: "Please allow microphone access to record your pitch.",
+      variant: "destructive",
+    });
+  };
+
+  const handleRecordingComplete = async (audioBlob: Blob, audioUrl: string) => {
+    console.log('🎵 Recording completed:', { size: audioBlob.size, url: audioUrl });
     
+    if (!user?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to analyze your pitch.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (creditsRemaining < 1) {
       console.log('🔴 Insufficient credits:', creditsRemaining);
       toast({
@@ -51,38 +85,17 @@ const Practice = () => {
       return;
     }
 
-    try {
-      console.log('🟢 Starting recording...');
-      setIsRecording(true);
-      trackEvent('practice_recording_started');
-      
-      // Mock recording logic
-      setTimeout(() => {
-        console.log('🟡 Recording timeout complete, stopping...');
-        setIsRecording(false);
-        handleAnalyzePitch();
-      }, 3000);
-      
-    } catch (error) {
-      console.error('🔴 Recording error:', error);
-      setIsRecording(false);
-      toast({
-        title: "Recording Error",
-        description: "Failed to start recording. Please try again.",
-        variant: "destructive",
-      });
-    }
+    setAudioBlob(audioBlob);
+    setAudioUrl(audioUrl);
+    await handleAnalyzePitch(audioBlob);
   };
 
-  const handleStopRecording = () => {
-    setIsRecording(false);
-    handleAnalyzePitch();
-  };
-
-  const handleAnalyzePitch = async () => {
+  const handleAnalyzePitch = async (audioData: Blob) => {
     if (!user?.id) return;
 
     try {
+      console.log('🔍 Starting pitch analysis...');
+      
       // Deduct credits for analysis
       const success = await deductUserCredits('pitch_analysis', 1);
       
@@ -95,7 +108,7 @@ const Practice = () => {
         return;
       }
 
-      // Mock analysis results
+      // Mock analysis results (in a real app, you'd send audioData to your analysis service)
       const mockTranscript = "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
       const mockFeedback = "Great use of specific metrics! Consider adding more emotional connection and addressing potential objections earlier in your pitch.";
       const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
@@ -105,11 +118,13 @@ const Practice = () => {
       setScore(mockScore);
       setAnalysisComplete(true);
 
+      console.log('✅ Analysis complete:', { score: mockScore, creditsUsed: 1 });
+
       // Update streak if score is good (with user-specific storage)
       if (mockScore >= 80 && user?.id) {
         const newStreak = streakCount + 1;
         setStreakCount(newStreak);
-        const streakKey = `streak_${user.id}`;
+        const streakKey = getUserSpecificKey('streak');
         localStorage.setItem(streakKey, newStreak.toString());
       }
 
@@ -124,7 +139,7 @@ const Practice = () => {
       });
 
     } catch (error) {
-      console.error('Analysis error:', error);
+      console.error('❌ Analysis error:', error);
       toast({
         title: "Analysis Failed",
         description: "Failed to analyze your pitch. Please try again.",
@@ -138,7 +153,14 @@ const Practice = () => {
     setTranscript('');
     setFeedback('');
     setScore(null);
+    setAudioBlob(null);
+    setAudioUrl(null);
     trackEvent('practice_reset');
+    
+    toast({
+      title: "Practice Reset",
+      description: "Ready for a new recording session!",
+    });
   };
 
   return (
@@ -190,69 +212,44 @@ const Practice = () => {
         </div>
 
         {/* Recording Interface */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Mic className="h-5 w-5 mr-2" />
-              Record Your Pitch
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-6">
-              {!analysisComplete ? (
-                <>
-                  <div className="flex justify-center">
-                    {!isRecording ? (
-                      <Button 
-                        onClick={handleStartRecording}
-                        size="lg"
-                        className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-4 text-lg"
-                        disabled={creditsRemaining < 1}
-                      >
-                        <Play className="h-5 w-5 mr-2" />
-                        Start Recording
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={handleStopRecording}
-                        size="lg"
-                        variant="destructive"
-                        className="px-8 py-4 text-lg"
-                      >
-                        <Square className="h-5 w-5 mr-2" />
-                        Stop Recording
-                      </Button>
-                    )}
-                  </div>
-
-                  {isRecording && (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                      <span className="text-brand-dark">Recording in progress...</span>
-                    </div>
-                  )}
-
-                  {creditsRemaining < 1 && (
-                    <p className="text-red-600 text-sm">
-                      You need at least 1 credit to analyze a pitch. Please purchase more credits to continue.
-                    </p>
-                  )}
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <Badge variant="secondary" className="text-lg px-4 py-2">
-                    Analysis Complete!
-                  </Badge>
-                  
-                  <Button onClick={resetPractice} className="bg-brand-blue hover:bg-brand-blue/90">
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Practice Again
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {!analysisComplete ? (
+          <MicrophonePermissionHandler
+            onPermissionGranted={handlePermissionGranted}
+            onPermissionDenied={handlePermissionDenied}
+          >
+            {hasPermission && (
+              <AudioRecorder
+                maxDuration={180}
+                onRecordingComplete={handleRecordingComplete}
+                className="mb-8"
+              />
+            )}
+            
+            {creditsRemaining < 1 && (
+              <Card className="mb-8 border-red-200 bg-red-50">
+                <CardContent className="pt-6">
+                  <p className="text-red-600 text-center">
+                    You need at least 1 credit to analyze a pitch. Please purchase more credits to continue.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </MicrophonePermissionHandler>
+        ) : (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-center">
+                <Badge variant="secondary" className="text-lg px-4 py-2 mr-4">
+                  Analysis Complete!
+                </Badge>
+                <Button onClick={resetPractice} className="bg-brand-blue hover:bg-brand-blue/90">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Practice Again
+                </Button>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        )}
 
         {/* Results */}
         {analysisComplete && (
@@ -296,6 +293,23 @@ const Practice = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-brand-dark/80 leading-relaxed">{feedback}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Playback */}
+            {audioUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Recording</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <audio
+                    controls
+                    src={audioUrl}
+                    className="w-full"
+                    aria-label="Your recorded pitch"
+                  />
                 </CardContent>
               </Card>
             )}
