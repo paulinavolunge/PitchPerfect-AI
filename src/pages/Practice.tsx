@@ -113,14 +113,23 @@ const Practice = () => {
         return;
       }
 
-      // Mock analysis results (in a real app, you'd send audioData or textInput to your analysis service)
+      // Mock analysis results with structured feedback
+      const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
       const mockTranscript = practiceMode === 'text' ? textInput : 
         "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
-      const mockFeedback = "Great use of specific metrics! Consider adding more emotional connection and addressing potential objections earlier in your pitch.";
-      const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
+      
+      // Generate structured feedback based on score
+      const structuredFeedback = {
+        clarity: mockScore >= 85 ? 'Strong' : mockScore >= 70 ? 'Moderate' : 'Needs Work',
+        confidence: mockScore >= 80 ? 'Strong' : mockScore >= 65 ? 'Moderate' : 'Needs Work',
+        urgency: mockScore >= 75 ? 'Good use of compelling language' : 'Add more urgency in your CTA',
+        objectionHandling: mockScore >= 70 ? 'Good use of value framing' : 'Consider addressing more potential objections'
+      };
+      
+      const mockFeedback = structuredFeedback;
 
       setTranscript(mockTranscript);
-      setFeedback(mockFeedback);
+      setFeedback(JSON.stringify(mockFeedback)); // Store as JSON for structured display
       setScore(mockScore);
       setAnalysisComplete(true);
 
@@ -448,34 +457,31 @@ const Practice = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Textarea
+                    <textarea
                       value={textInput}
                       onChange={(e) => setTextInput(e.target.value)}
-                      placeholder="Type your sales pitch here... For example: 'Hi, I'm calling from XYZ Company. We help businesses like yours increase revenue by 40% through our innovative software solution...'"
-                      className="min-h-[200px] resize-none"
+                      placeholder="Paste your pitch or type it out here..."
+                      className="w-full border border-gray-300 p-4 rounded-xl mt-4 mb-4 resize-none h-40"
                       maxLength={2000}
                     />
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-brand-dark/60">
                         {textInput.length}/2000 characters
                       </span>
-                      <Button 
+                      <button 
                         onClick={handleTextSubmit}
                         disabled={isSubmitting || !textInput.trim() || creditsRemaining < 1}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded-xl shadow disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSubmitting ? (
                           <>
-                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                            <div className="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                             Analyzing...
                           </>
                         ) : (
-                          <>
-                            <Send className="h-4 w-4 mr-2" />
-                            Analyze Pitch
-                          </>
+                          "🚀 Analyze My Pitch"
                         )}
-                      </Button>
+                      </button>
                     </div>
                   </CardContent>
                 </Card>
@@ -551,7 +557,44 @@ const Practice = () => {
                   <CardTitle>AI Feedback</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-brand-dark/80 leading-relaxed">{feedback}</p>
+                  <div className="space-y-3">
+                    {(() => {
+                      try {
+                        const feedbackData = JSON.parse(feedback);
+                        return (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-500">✅</span>
+                              <span className="font-medium">Clarity:</span>
+                              <span className={feedbackData.clarity === 'Strong' ? 'text-green-600' : feedbackData.clarity === 'Moderate' ? 'text-yellow-600' : 'text-red-600'}>
+                                {feedbackData.clarity}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-500">✅</span>
+                              <span className="font-medium">Confidence:</span>
+                              <span className={feedbackData.confidence === 'Strong' ? 'text-green-600' : feedbackData.confidence === 'Moderate' ? 'text-yellow-600' : 'text-red-600'}>
+                                {feedbackData.confidence}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={feedbackData.urgency.includes('Add more') ? 'text-yellow-500' : 'text-green-500'}>
+                                {feedbackData.urgency.includes('Add more') ? '⚠️' : '✅'}
+                              </span>
+                              <span className="text-brand-dark/80">{feedbackData.urgency}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-500">✅</span>
+                              <span className="font-medium">Objection handling:</span>
+                              <span className="text-brand-dark/80">{feedbackData.objectionHandling}</span>
+                            </div>
+                          </>
+                        );
+                      } catch {
+                        return <p className="text-brand-dark/80 leading-relaxed">{feedback}</p>;
+                      }
+                    })()}
+                  </div>
                 </CardContent>
               </Card>
             )}
