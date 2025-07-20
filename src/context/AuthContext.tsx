@@ -17,6 +17,7 @@ interface AuthContextType {
   deductUserCredits: (featureType: string, credits: number) => Promise<boolean>;
   refreshSubscription: () => Promise<void>;
   markOnboardingComplete: () => void;
+  initError: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [creditsRemaining, setCreditsRemaining] = useState(0);
   const [trialUsed, setTrialUsed] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('AuthContext: Initializing auth state');
@@ -36,40 +38,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Initialize auth state
     const initializeAuth = async () => {
       try {
+        console.log('AuthContext: Getting initial session...');
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.warn('Auth initialization error:', error);
+          console.error('Auth initialization error:', error);
+          setInitError(`Auth initialization failed: ${error.message}`);
           // Log security event for failed auth initialization
-          await supabase.rpc('log_security_event', {
-            p_event_type: 'auth_initialization_failed',
-            p_event_details: { error: error.message }
-          });
+          try {
+            await supabase.rpc('log_security_event', {
+              p_event_type: 'auth_initialization_failed',
+              p_event_details: { error: error.message }
+            });
+          } catch (logError) {
+            console.warn('Failed to log security event:', logError);
+          }
         } else {
-          console.log('AuthContext: Initial session', !!initialSession);
+          console.log('AuthContext: Initial session loaded', !!initialSession);
           setSession(initialSession);
           setUser(initialSession?.user ?? null);
           
           // Load user profile data if user exists
           if (initialSession?.user?.id) {
+            console.log('AuthContext: Loading user profile for:', initialSession.user.id);
             await loadUserProfile(initialSession.user.id);
           }
         }
       } catch (error) {
-        console.warn('Failed to initialize auth:', error);
+        console.error('Failed to initialize auth:', error);
+        setInitError(`Failed to initialize auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
         // Log security event for auth system errors
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'auth_system_error',
-          p_event_details: { error: error instanceof Error ? error.message : 'Unknown error' }
-        });
+        try {
+          await supabase.rpc('log_security_event', {
+            p_event_type: 'auth_system_error',
+            p_event_details: { error: error instanceof Error ? error.message : 'Unknown error' }
+          });
+        } catch (logError) {
+          console.warn('Failed to log security event:', logError);
+        }
       } finally {
+        console.log('AuthContext: Setting loading to false');
         setLoading(false);
       }
     };
 
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.error('Auth initialization timeout');
+        setInitError('Auth initialization timed out');
+        setLoading(false);
+      }
+    }, 15000); // 15 second timeout
+
     initializeAuth();
 
-    // Listen for auth changes
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Listen for auth changes in a separate effect
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('AuthContext: Auth state changed:', event, !!session);
@@ -87,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCreditsRemaining(0);
           setTrialUsed(false);
           setIsNewUser(false);
+          setInitError(null);
           
           console.log('✅ Session data cleared for logout');
         } else if (event === 'SIGNED_IN' && session?.user?.id) {
@@ -105,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Update state
           setSession(session);
           setUser(session.user);
+          setInitError(null);
           
           // Load fresh user profile data
           setTimeout(() => {
@@ -148,7 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 session_isolated: true
               },
               p_user_id: session.user.id
-            });
+            }).catch(console.warn);
           }, 0);
         }
         
@@ -160,7 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Cleaning up auth listener');
       subscription.unsubscribe();
     };
-  }, []);
+  }, [user]);
 
   const loadUserProfile = async (userId: string, retryCount = 0): Promise<void> => {
     try {
@@ -451,6 +481,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deductUserCredits,
     refreshSubscription,
     markOnboardingComplete,
+    initError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

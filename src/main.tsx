@@ -5,12 +5,40 @@ import App from './App.tsx';
 import './index.css';
 import './styles/mobile-optimizations.css';
 
+// Global error handler
+window.addEventListener('error', (event) => {
+  console.error('[Global Error Handler]', {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    error: event.error
+  });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[Unhandled Promise Rejection]', event.reason);
+});
+
 // Initialize polyfills
 import { initializePolyfills } from './utils/polyfills';
 import { preloadCriticalResources, measureWebVitals } from './utils/performance';
 
-initializePolyfills();
-preloadCriticalResources();
+console.log('[main.tsx] Starting application initialization...');
+
+try {
+  initializePolyfills();
+  console.log('[main.tsx] Polyfills initialized');
+} catch (error) {
+  console.error('[main.tsx] Failed to initialize polyfills:', error);
+}
+
+try {
+  preloadCriticalResources();
+  console.log('[main.tsx] Critical resources preloaded');
+} catch (error) {
+  console.error('[main.tsx] Failed to preload critical resources:', error);
+}
 
 // Measure Web Vitals in development
 if (process.env.NODE_ENV === 'development') {

@@ -52,6 +52,9 @@ import AIRoleplay from '@/pages/AIRoleplay';
 // Placeholder page imports
 import { VoiceTrainingPage, AnalyticsPage, RoleplayPage } from '@/components/PlaceholderPages';
 
+// Import ProtectedRoute
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+
 // Create QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -156,26 +159,26 @@ function App() {
                               <Route path="/email-confirmed" element={<EmailConfirmed />} />
                               
                               {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
-                              <Route path="/dashboard" element={<Dashboard />} />
-                              <Route path="/practice" element={<Practice />} />
-                              <Route path="/roleplay" element={<RolePlay />} />
-                              <Route path="/progress" element={<Progress />} />
-                              <Route path="/tips" element={<Tips />} />
-                              <Route path="/call-recordings" element={<CallRecordings />} />
-                              <Route path="/recordings" element={<CallRecordings />} />
-                              <Route path="/team" element={<TeamDashboard />} />
+                              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                              <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
+                              <Route path="/roleplay" element={<ProtectedRoute><RolePlay /></ProtectedRoute>} />
+                              <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+                              <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
+                              <Route path="/call-recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
+                              <Route path="/recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
+                              <Route path="/team" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
                               
                               {/* Subscription routes */}
-                              <Route path="/subscription" element={<Subscription />} />
-                              <Route path="/subscription-management" element={<SubscriptionManagement />} />
-                              <Route path="/success" element={<Success />} />
-                              <Route path="/cancel" element={<Cancel />} />
+                              <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
+                              <Route path="/subscription-management" element={<ProtectedRoute><SubscriptionManagement /></ProtectedRoute>} />
+                              <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
+                              <Route path="/cancel" element={<ProtectedRoute><Cancel /></ProtectedRoute>} />
                               
                               {/* Legal routes */}
                               <Route path="/terms" element={<Terms />} />
                               <Route path="/privacy" element={<Privacy />} />
                               <Route path="/data-safety" element={<DataSafety />} />
-                              <Route path="/account-delete" element={<AccountDelete />} />
+                              <Route path="/account-delete" element={<ProtectedRoute><AccountDelete /></ProtectedRoute>} />
                               
                               {/* Fallback route - IMPORTANT: This catches all unmatched routes */}
                               <Route path="*" element={<NotFound />} />
