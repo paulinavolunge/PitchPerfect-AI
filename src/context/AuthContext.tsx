@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { clearAllSessionData, clearUserSpecificData, initializeCleanSession, validateSessionIsolation } from '@/utils/sessionCleanup';
+import { SafeRPCService } from '@/services/SafeRPCService';
 
 interface AuthContextType {
   user: User | null;
@@ -45,14 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Auth initialization error:', error);
           setInitError(`Auth initialization failed: ${error.message}`);
           // Log security event for failed auth initialization
-          try {
-            await supabase.rpc('log_security_event', {
-              p_event_type: 'auth_initialization_failed',
-              p_event_details: { error: error.message }
-            });
-          } catch (logError) {
-            console.warn('Failed to log security event:', logError);
-          }
+          SafeRPCService.logSecurityEvent('auth_initialization_failed', { 
+            error: error.message 
+          });
         } else {
           console.log('AuthContext: Initial session loaded', !!initialSession);
           setSession(initialSession);
@@ -67,15 +63,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Failed to initialize auth:', error);
         setInitError(`Failed to initialize auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        // Log security event for auth system errors
-        try {
-          await supabase.rpc('log_security_event', {
-            p_event_type: 'auth_system_error',
-            p_event_details: { error: error instanceof Error ? error.message : 'Unknown error' }
+                  // Log security event for auth system errors
+          SafeRPCService.logSecurityEvent('auth_system_error', { 
+            error: error instanceof Error ? error.message : 'Unknown error' 
           });
-        } catch (logError) {
-          console.warn('Failed to log security event:', logError);
-        }
       } finally {
         console.log('AuthContext: Setting loading to false');
         setLoading(false);
@@ -191,16 +182,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Log security events for auth state changes
         if (session?.user?.id) {
           setTimeout(() => {
-            supabase.rpc('log_security_event', {
-              p_event_type: `auth_${event}`,
-              p_event_details: { 
-                user_id: session.user.id,
-                session_isolated: true
-              },
-              p_user_id: session.user.id
-            }).catch(err => {
-              console.warn('Failed to log auth event:', err);
-            });
+            SafeRPCService.logSecurityEvent(`auth_${event}`, { 
+              user_id: session.user.id,
+              session_isolated: true
+            }, session.user.id);
           }, 0);
         }
         
@@ -299,16 +284,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return loadUserProfile(userId, retryCount + 1);
           }
           
-          // Log security event for profile access issues
-          try {
-            await supabase.rpc('log_security_event', {
-              p_event_type: 'profile_access_failed',
-              p_event_details: { error: error.message },
-              p_user_id: userId
-            });
-          } catch (logError) {
-            console.warn('Failed to log security event:', logError);
-          }
+                      // Log security event for profile access issues
+            SafeRPCService.logSecurityEvent('profile_access_failed', { 
+              error: error.message 
+            }, userId);
           
           // Use safe defaults
           setCreditsRemaining(1); // Give new users 1 free credit
@@ -341,16 +320,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return loadUserProfile(userId, retryCount + 1);
       }
       
-      // Log security event for profile loading errors
-      try {
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'profile_loading_error',
-          p_event_details: { error: error instanceof Error ? error.message : 'Unknown error' },
-          p_user_id: userId
-        });
-      } catch (logError) {
-        console.warn('Failed to log security event:', logError);
-      }
+              // Log security event for profile loading errors
+        SafeRPCService.logSecurityEvent('profile_loading_error', { 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        }, userId);
       
       // Use safe defaults on any error
       setCreditsRemaining(1); // Give new users 1 free credit
@@ -416,39 +389,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Use the secure function for credit deduction
-      const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
-        p_user_id: user.id,
-        p_feature_used: featureType
-      });
-
-      if (error) {
-        console.error('Error deducting credits:', error);
+      const result = await SafeRPCService.deductCredits(user.id, featureType);
+      
+      if (result.success) {
+        setCreditsRemaining(result.remainingCredits);
+        return true;
+      } else {
+        console.error('Credit deduction failed');
         // Log security event for credit deduction failure
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'credit_deduction_failed',
-          p_event_details: { 
-            feature: featureType,
-            error: error.message 
-          },
-          p_user_id: user.id
-        });
+        SafeRPCService.logSecurityEvent('credit_deduction_failed', { 
+          feature: featureType
+        }, user.id);
         return false;
       }
-
-      // Handle the response properly based on the function's return type
-      if (typeof data === 'object' && data !== null) {
-        const result = data as any;
-        
-        if (result.success === true) {
-          setCreditsRemaining(result.remaining_credits || 0);
-          return true;
-        } else {
-          console.error('Credit deduction failed:', result.error);
-          return false;
-        }
-      }
-
-      return false;
     } catch (error) {
       console.error('Failed to deduct credits:', error);
       return false;
@@ -463,11 +416,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Log security event for sign out
       if (currentUserId) {
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'user_signout_initiated',
-          p_event_details: { clean_logout: true },
-          p_user_id: currentUserId
-        });
+        SafeRPCService.logSecurityEvent('user_signout_initiated', { 
+          clean_logout: true 
+        }, currentUserId);
       }
       
       // Clear ALL session data including localStorage (preserve consent)

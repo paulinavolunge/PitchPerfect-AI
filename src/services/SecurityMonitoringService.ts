@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { SafeRPCService } from './SafeRPCService';
 
 export class SecurityMonitoringService {
   // Enhanced error message sanitization
@@ -36,18 +37,8 @@ export class SecurityMonitoringService {
     details: Record<string, any> = {},
     userId?: string
   ): Promise<void> {
-    try {
-      const sanitizedDetails = this.sanitizeEventDetails(details);
-      
-      await supabase.rpc('log_security_event', {
-        p_event_type: eventType,
-        p_event_details: sanitizedDetails,
-        p_user_id: userId
-      });
-    } catch (error) {
-      // Fail silently to avoid loops
-      console.warn('Failed to log security event:', this.sanitizeErrorMessage(error));
-    }
+    const sanitizedDetails = this.sanitizeEventDetails(details);
+    await SafeRPCService.logSecurityEvent(eventType, sanitizedDetails, userId);
   }
 
   private static sanitizeEventDetails(details: Record<string, any>): Record<string, any> {
@@ -70,20 +61,15 @@ export class SecurityMonitoringService {
 
   // Check security health
   static async performSecurityHealthCheck(): Promise<any> {
-    try {
-      const { data, error } = await supabase.rpc('security_health_check');
-      
-      if (error) {
-        throw error;
-      }
-      
-      return data;
-    } catch (error) {
+    const result = await SafeRPCService.securityHealthCheck();
+    
+    if (!result.healthy) {
       await this.logSecurityEvent('security_health_check_failed', {
-        error: this.sanitizeErrorMessage(error)
+        error: 'Health check failed'
       });
-      throw error;
     }
+    
+    return result.details;
   }
 
   // Enhanced input validation
