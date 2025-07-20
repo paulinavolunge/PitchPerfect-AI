@@ -213,28 +213,96 @@ const Practice = () => {
 
         {/* Recording Interface */}
         {!analysisComplete ? (
-          <MicrophonePermissionHandler
-            onPermissionGranted={handlePermissionGranted}
-            onPermissionDenied={handlePermissionDenied}
-          >
-            {hasPermission && (
-              <AudioRecorder
-                maxDuration={180}
-                onRecordingComplete={handleRecordingComplete}
-                className="mb-8"
-              />
+          <div className="space-y-6">
+            {/* Welcome Card for First-Time Users */}
+            {!hasPermission && (
+              <Card className="text-center py-8 bg-gradient-to-br from-brand-blue/5 to-brand-green/5 border-brand-blue/20">
+                <CardContent className="space-y-4">
+                  <div className="mx-auto w-16 h-16 bg-brand-blue/10 rounded-full flex items-center justify-center mb-4">
+                    <Mic className="h-8 w-8 text-brand-blue" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-brand-dark">🎤 Ready to sharpen your pitch?</h3>
+                  <p className="text-brand-dark/70 max-w-md mx-auto">
+                    Click the button below to record your first practice session.
+                    We'll give you instant AI-powered feedback to help you grow.
+                  </p>
+                  
+                  {/* What to Expect */}
+                  <div className="bg-white/50 rounded-lg p-4 mt-6 max-w-sm mx-auto">
+                    <h4 className="font-semibold text-brand-dark mb-3">🧠 Here's what you'll get after recording:</h4>
+                    <div className="space-y-2 text-sm text-brand-dark/80">
+                      <div className="flex items-center gap-2">
+                        <span className="text-brand-green">✅</span>
+                        <span>Instant pitch score</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-brand-green">✅</span>
+                        <span>Strengths and areas to improve</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-brand-green">✅</span>
+                        <span>AI tips tailored to your tone & pacing</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gamification Badge */}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4 max-w-sm mx-auto">
+                    <div className="flex items-center gap-2 justify-center">
+                      <Trophy className="h-5 w-5 text-yellow-600" />
+                      <span className="text-yellow-800 font-medium">🏅 Record your first pitch to earn the "Starter Badge"</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
+
+            <MicrophonePermissionHandler
+              onPermissionGranted={handlePermissionGranted}
+              onPermissionDenied={handlePermissionDenied}
+            >
+              {hasPermission && (
+                <AudioRecorder
+                  maxDuration={180}
+                  onRecordingComplete={handleRecordingComplete}
+                  className="mb-8"
+                />
+              )}
+              
+              {/* Enhanced Permission Denied State */}
+              {!hasPermission && (
+                <Card className="border-amber-200 bg-amber-50">
+                  <CardContent className="pt-6 text-center">
+                    <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                      <Mic className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <h3 className="font-semibold text-amber-800 mb-2">⚠️ Microphone Access Required</h3>
+                    <p className="text-amber-700 mb-4">
+                      We couldn't access your microphone. Please allow mic access and refresh the page.
+                    </p>
+                    <Button 
+                      onClick={() => window.location.reload()} 
+                      variant="outline" 
+                      className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                    >
+                      🔄 Try Again
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </MicrophonePermissionHandler>
             
             {creditsRemaining < 1 && (
               <Card className="mb-8 border-red-200 bg-red-50">
-                <CardContent className="pt-6">
-                  <p className="text-red-600 text-center">
+                <CardContent className="pt-6 text-center">
+                  <Zap className="h-8 w-8 text-red-500 mx-auto mb-2" />
+                  <p className="text-red-600">
                     You need at least 1 credit to analyze a pitch. Please purchase more credits to continue.
                   </p>
                 </CardContent>
               </Card>
             )}
-          </MicrophonePermissionHandler>
+          </div>
         ) : (
           <Card className="mb-8">
             <CardHeader>
