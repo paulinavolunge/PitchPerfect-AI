@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { SafeRPCService } from '@/services/SafeRPCService';
 
 interface CreditDeductionResult {
   success: boolean;
@@ -25,7 +26,7 @@ export const useSecureData = () => {
 
     try {
       // Match current function signature
-      const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
+      const { data, error } = await SafeRPCService.call('secure_deduct_credits_and_log_usage', {
         p_user_id: user.id,
         p_feature_used: featureType
       });

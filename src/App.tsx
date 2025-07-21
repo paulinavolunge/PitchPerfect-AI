@@ -111,8 +111,6 @@ const AuthLoadingBoundary = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  // TODO: Remove debug logging for production
-  // TODO: Remove in production
   
   return (
     <ErrorBoundary>

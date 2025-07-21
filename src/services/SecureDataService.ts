@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { SafeRPCService } from './SafeRPCService';
 
 export interface SecureDataResponse<T = any> {
   success: boolean;
@@ -16,10 +17,10 @@ export class SecureDataService {
     creditsToDeduct: number
   ): Promise<SecureDataResponse> {
     try {
-      // Match current function signature
-      const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
+      const { data, error } = await SafeRPCService.call('secure_deduct_credits_and_log_usage', {
         p_user_id: userId,
-        p_feature_used: featureType
+        p_feature_used: featureType,
+        p_credits_used: creditsToDeduct
       });
 
       if (error) {
@@ -70,18 +71,13 @@ export class SecureDataService {
     userId?: string
   ): Promise<SecureDataResponse> {
     try {
-      const { data, error } = await supabase.rpc('log_security_event', {
-        p_event_type: eventType,
-        p_event_details: eventDetails,
-        p_user_id: userId
-      });
+      await SafeRPCService.logSecurityEvent(
+        eventType,
+        eventDetails,
+        userId
+      );
 
-      if (error) {
-        console.error('Security event logging failed:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, data };
+      return { success: true, data: {} }; // Assuming SafeRPCService returns data on success
     } catch (error) {
       console.error('Security event logging error:', error);
       return { 

@@ -55,14 +55,9 @@ export const generateAIResponse = async (
 ): Promise<string> => {
   const persona = getAIPersona();
   
-  console.log("🤖 Generating AI response for input:", userInput);
-  console.log("📝 Scenario:", scenario);
-  console.log("🎭 Persona:", persona);
-  
   // Content safety check for user input
   const safetyAnalysis = ContentSafetyAnalyzer.analyzeContent(userInput, 'USER_MESSAGE');
   if (safetyAnalysis.blocked) {
-    console.warn('User input blocked by content safety:', safetyAnalysis.issues);
     return `${persona}: I'm sorry, but I can't respond to that type of content. Let's keep our conversation professional and focused on sales practice.`;
   }
 
@@ -70,8 +65,6 @@ export const generateAIResponse = async (
   const safeUserInput = safetyAnalysis.sanitizedContent || userInput;
   
   try {
-    console.log("🚀 Calling roleplay-ai-response edge function...");
-    
     // Call the secure Supabase Edge Function
     const { data, error } = await supabase.functions.invoke('roleplay-ai-response', {
       body: {
@@ -84,19 +77,14 @@ export const generateAIResponse = async (
       }
     });
 
-    console.log("📡 Edge function response:", { data, error });
-
     if (error) {
-      console.error('❌ Error calling roleplay AI function:', error);
       throw new Error(error.message);
     }
 
     if (!data || !data.response) {
-      console.error('❌ No response received from AI service');
       throw new Error('No response received from AI service');
     }
 
-    console.log("✅ AI response received:", data.response);
     const aiResponse = `${persona}: ${data.response}`;
     
     // Safety check for AI output
@@ -108,8 +96,6 @@ export const generateAIResponse = async (
     return outputSafety.sanitizedContent || aiResponse;
 
   } catch (error) {
-    console.error('💥 Failed to generate AI response:', error);
-    
     // Enhanced fallback response with more context
     return generateFallbackResponse(userInput, scenario, persona, conversationHistory);
   }
@@ -135,8 +121,6 @@ function getVoiceStyleFromPersona(persona: string): string {
 
 // Enhanced fallback response generation for reversed roles
 function generateFallbackResponse(userInput: string, scenario: Scenario, persona: string, conversationHistory: Message[] = []): string {
-  console.log("🔄 Using fallback response generation for reversed roles");
-  
   const lowerInput = userInput.toLowerCase();
   const isFirstExchange = conversationHistory.length <= 1;
   

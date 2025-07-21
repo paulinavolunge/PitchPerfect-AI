@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { SafeRPCService } from './SafeRPCService';
 
 export interface CreditDeductionResult {
   success: boolean;
@@ -39,7 +40,7 @@ export class EnhancedSecurityService {
     creditsToDeduct: number = 1
   ): Promise<CreditDeductionResult> {
     try {
-      const { data, error } = await supabase.rpc('secure_deduct_credits_and_log_usage', {
+      const { data, error } = await SafeRPCService.call('secure_deduct_credits_and_log_usage', {
         p_user_id: userId,
         p_feature_used: featureType
       });
@@ -90,8 +91,9 @@ export class EnhancedSecurityService {
     userId?: string
   ): Promise<ValidationResult> {
     try {
-      const { data, error } = await supabase.rpc('validate_voice_input', {
-        p_input: input,
+      const { data, error } = await SafeRPCService.call('validate_voice_input', {
+        p_input_text: input,
+        p_duration_seconds: 0, // Placeholder, as duration is not in the original code
         p_user_id: userId || null
       });
 
@@ -172,16 +174,11 @@ export class EnhancedSecurityService {
     userId?: string
   ): Promise<boolean> {
     try {
-      const { error } = await supabase.rpc('log_security_event', {
-        p_event_type: eventType,
-        p_event_details: eventDetails,
-        p_user_id: userId || null
-      });
-
-      if (error) {
-        console.error('Security event logging failed:', error);
-        return false;
-      }
+      await SafeRPCService.logSecurityEvent(
+        eventType,
+        eventDetails,
+        userId
+      );
 
       return true;
     } catch (error) {
@@ -259,9 +256,9 @@ export class EnhancedSecurityService {
     requiredRole: string = 'user'
   ): Promise<boolean> {
     try {
-      const { data, error } = await supabase.rpc('check_user_permission', {
+      const { data, error } = await SafeRPCService.call('check_user_permission', {
         p_user_id: userId,
-        p_required_role: requiredRole
+        p_permission: requiredRole
       });
 
       if (error) {

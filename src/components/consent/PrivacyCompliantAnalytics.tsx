@@ -4,7 +4,6 @@ import { autoInitAnalytics, trackPageView, hasValidConsent, checkAnalyticsConnec
 
 export const PrivacyCompliantAnalytics = () => {
   useEffect(() => {
-    console.log('🔧 PrivacyCompliantAnalytics: Component mounted');
     
     // Auto-initialize analytics if consent exists
     autoInitAnalytics();
@@ -12,7 +11,6 @@ export const PrivacyCompliantAnalytics = () => {
     // Track initial page view if analytics is ready and consent is valid
     if (hasValidConsent()) {
       const currentPath = window.location.pathname + window.location.search;
-      console.log('📄 PrivacyCompliantAnalytics: Tracking initial page view:', currentPath);
       
       // Delay page view tracking to ensure analytics is loaded
       setTimeout(() => {
@@ -22,8 +20,6 @@ export const PrivacyCompliantAnalytics = () => {
     
     // Set up debug check
     setTimeout(() => {
-      // TODO: Consider environment-based logging for production
-      console.log('🔍 PrivacyCompliantAnalytics: Running connection check...');
       checkAnalyticsConnection();
     }, 3000);
     

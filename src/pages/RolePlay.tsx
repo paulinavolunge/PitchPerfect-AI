@@ -29,7 +29,6 @@ const RolePlay = () => {
   // Handle auto-start from AI Roleplay page
   useEffect(() => {
     if (location.state?.autoStart && location.state?.scenario) {
-      console.log('Auto-starting roleplay with scenario:', location.state.scenario);
       setScenario(location.state.scenario);
       setSessionStarted(true);
     }

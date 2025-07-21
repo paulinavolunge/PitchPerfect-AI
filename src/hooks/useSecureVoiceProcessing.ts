@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeVoiceInput, checkVoiceRateLimit } from '@/utils/securityUtils';
 import { toast } from 'sonner';
+import { SafeRPCService } from '@/services/SafeRPCService';
 
 interface VoiceProcessingResult {
   success: boolean;
@@ -39,14 +40,15 @@ export const useSecureVoiceProcessing = () => {
       const sanitizedInput = sanitizeVoiceInput(rawInput);
 
       // Log security event
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'voice_processing_started',
-        p_event_details: {
+      await SafeRPCService.logSecurityEvent(
+        'voice_processing_started',
+        { 
           processing_type: processingType,
           input_length: sanitizedInput.length,
-          user_id: user.id
+          user_id: user.id,
+          timestamp: new Date().toISOString() 
         }
-      });
+      );
 
       // Process the sanitized input (implement actual processing logic here)
       const result = {
@@ -56,14 +58,15 @@ export const useSecureVoiceProcessing = () => {
       };
 
       // Log successful processing
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'voice_processing_completed',
-        p_event_details: {
+      await SafeRPCService.logSecurityEvent(
+        'voice_processing_completed',
+        { 
           processing_type: processingType,
           success: true,
-          user_id: user.id
+          user_id: user.id,
+          timestamp: new Date().toISOString() 
         }
-      });
+      );
 
       return { success: true, data: result };
 
@@ -71,14 +74,15 @@ export const useSecureVoiceProcessing = () => {
       const errorMessage = error instanceof Error ? error.message : 'Processing failed';
       
       // Log failed processing
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'voice_processing_failed',
-        p_event_details: {
+      await SafeRPCService.logSecurityEvent(
+        'voice_processing_failed',
+        { 
           processing_type: processingType,
           error: errorMessage,
-          user_id: user.id
+          user_id: user.id,
+          timestamp: new Date().toISOString() 
         }
-      });
+      );
 
       return { success: false, error: errorMessage };
     } finally {

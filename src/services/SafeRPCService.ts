@@ -63,8 +63,9 @@ export class SafeRPCService {
       p_user_id: userId
     }, {
       logError: false // Don't spam console with security log failures
-    }).catch(() => {
+    }).catch((error) => {
       // Silently ignore security logging failures
+      // In production, could send to external monitoring
     });
   }
 

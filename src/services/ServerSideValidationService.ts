@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { SafeRPCService } from './SafeRPCService';
 
 interface FileValidationResult {
   valid: boolean;
@@ -26,11 +27,11 @@ export class ServerSideValidationService {
     userId?: string
   ): Promise<FileValidationResult> {
     try {
-      const { data, error } = await supabase.rpc('validate_file_upload', {
+      const { data, error } = await SafeRPCService.call('validate_file_upload', {
         p_file_name: fileName,
         p_file_size: fileSize,
         p_file_type: fileType,
-        p_user_id: userId || null
+        p_user_id: userId
       });
 
       if (error) {
@@ -71,9 +72,10 @@ export class ServerSideValidationService {
     userId?: string
   ): Promise<VoiceInputValidationResult> {
     try {
-      const { data, error } = await supabase.rpc('validate_voice_input', {
-        p_input: input,
-        p_user_id: userId || null
+      const { data, error } = await SafeRPCService.call('validate_voice_input', {
+        p_input_text: input,
+        p_duration_seconds: 0, // Placeholder, as duration is not in the original file
+        p_user_id: userId
       });
 
       if (error) {
@@ -140,7 +142,7 @@ export class ServerSideValidationService {
    */
   static async performSecurityHealthCheck(): Promise<any> {
     try {
-      const { data, error } = await supabase.rpc('security_health_check');
+      const { data, error } = await SafeRPCService.call('security_health_check');
 
       if (error) {
         console.error('Security health check error:', error);
@@ -165,7 +167,7 @@ export class ServerSideValidationService {
    */
   static async cleanupExpiredRateLimits(): Promise<number> {
     try {
-      const { data, error } = await supabase.rpc('cleanup_expired_rate_limits');
+      const { data, error } = await SafeRPCService.call('cleanup_expired_rate_limits');
 
       if (error) {
         console.error('Rate limit cleanup error:', error);

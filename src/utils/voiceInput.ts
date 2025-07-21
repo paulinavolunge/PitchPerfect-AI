@@ -7,8 +7,6 @@ import { supabase } from '@/integrations/supabase/client';
 const startAudioRecording = (): Promise<{ recorder: MediaRecorder; stream: MediaStream }> => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log('🎤 Requesting microphone access...');
-      
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -18,8 +16,6 @@ const startAudioRecording = (): Promise<{ recorder: MediaRecorder; stream: Media
           channelCount: 1
         }
       });
-
-      console.log('🎤 Microphone access granted');
 
       // Test different MIME types for MediaRecorder
       let mimeType = 'audio/webm;codecs=opus';
@@ -35,8 +31,6 @@ const startAudioRecording = (): Promise<{ recorder: MediaRecorder; stream: Media
           }
         }
       }
-
-      console.log('🎤 Using MIME type:', mimeType);
 
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       
@@ -83,7 +77,6 @@ const nativeSpeechRecognition = (): Promise<string> => {
         if (event.results && event.results.length > 0) {
           const transcript = event.results[0][0].transcript;
           const sanitizedTranscript = VoiceInputSecurity.sanitizeTranscription(transcript);
-          console.log('🗣️ Native speech recognition result:', sanitizedTranscript);
           resolve(sanitizedTranscript);
         } else {
           reject(new Error('No speech detected'));
@@ -105,7 +98,6 @@ const nativeSpeechRecognition = (): Promise<string> => {
       };
 
       recognition.start();
-      console.log('🗣️ Native speech recognition started');
     } catch (error) {
       reject(error);
     }
@@ -114,7 +106,6 @@ const nativeSpeechRecognition = (): Promise<string> => {
 
 export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
   try {
-    console.log('🎙️ Processing voice input, blob size:', audioBlob.size, 'type:', audioBlob.type);
     
     // Get current user for rate limiting
     const { data: { user } } = await supabase.auth.getUser();
@@ -137,11 +128,8 @@ export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
     }
 
     // Always use Whisper for reliable transcription
-    console.log('🤖 Using Whisper API for transcription');
     const rawTranscript = await whisperTranscribe(audioBlob);
     const transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
-
-    console.log('✅ Voice processing complete, transcript:', transcript);
 
     // Secure cleanup
     VoiceInputSecurity.secureCleanup(audioBlob);
@@ -206,13 +194,11 @@ export const startRealTimeSpeechRecognition = (
     };
 
     recognition.start();
-    console.log('🗣️ Real-time speech recognition started');
 
     // Return stop function
     return () => {
       try {
         recognition.stop();
-        console.log('🗣️ Real-time speech recognition stopped');
       } catch (error) {
         console.warn('⚠️ Error stopping speech recognition:', error);
       }
@@ -248,7 +234,6 @@ export class VoiceRecordingManager {
       this.recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           this.audioChunks.push(event.data);
-          console.log('🎵 Audio chunk received, size:', event.data.size);
         }
       };
 
@@ -264,7 +249,6 @@ export class VoiceRecordingManager {
 
       // Start recording with data collection every second
       this.recorder.start(1000);
-      console.log('🎤 Recording started successfully');
 
     } catch (error) {
       this.isRecording = false;
@@ -291,8 +275,6 @@ export class VoiceRecordingManager {
             type: this.recorder?.mimeType || 'audio/webm' 
           });
           
-          console.log('🎵 Audio blob created, size:', audioBlob.size, 'type:', audioBlob.type);
-          
           // Clean up
           this.cleanup();
           
@@ -315,7 +297,6 @@ export class VoiceRecordingManager {
     this.recorder = null;
     this.audioChunks = [];
     this.isRecording = false;
-    console.log('🧹 Recording cleanup complete');
   }
 
   isCurrentlyRecording(): boolean {

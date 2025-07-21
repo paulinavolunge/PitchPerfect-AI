@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { SafeRPCService } from '@/services/SafeRPCService';
 
 /**
  * Enhanced security utilities for voice processing and data validation
@@ -124,11 +125,11 @@ export const logSecurityEvent = async (
   userId?: string
 ): Promise<void> => {
   try {
-    await supabase.rpc('log_security_event', {
-      p_event_type: eventType,
-      p_event_details: eventDetails,
-      p_user_id: userId || null
-    });
+    await SafeRPCService.logSecurityEvent(
+      eventType,
+      eventDetails,
+      userId
+    );
   } catch (error) {
     // Silently fail - security logging should not break functionality
     // In production, this could be sent to external monitoring

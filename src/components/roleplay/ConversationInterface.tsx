@@ -81,7 +81,6 @@ const ConversationInterface = ({
       voiceManagerRef.current = new VoiceRecordingManager();
       
       setIsInitialized(true);
-      console.log('🎤 Voice services initialized');
     } catch (error) {
       console.error('❌ Error initializing voice services:', error);
       toast({
@@ -110,7 +109,6 @@ const ConversationInterface = ({
     }
 
     try {
-      console.log('🎤 Starting voice recording...');
       setVoiceStatus('listening');
       setRealtimeTranscript('');
       setIsListening(true);
@@ -118,7 +116,6 @@ const ConversationInterface = ({
       if (mode === 'voice' || mode === 'hybrid') {
         const stopRealtime = startRealTimeSpeechRecognition(
           (transcript, isFinal) => {
-            console.log('🗣️ Real-time transcript:', transcript, 'Final:', isFinal);
             setRealtimeTranscript(transcript);
             if (isFinal && transcript.trim()) {
               setInputText(transcript);
@@ -159,8 +156,6 @@ const ConversationInterface = ({
       return;
     }
 
-    console.log('🛑 Stopping recording...');
-    
     if (realtimeRecognitionRef.current) {
       realtimeRecognitionRef.current();
       realtimeRecognitionRef.current = null;
@@ -171,10 +166,8 @@ const ConversationInterface = ({
 
     try {
       const audioBlob = await voiceManagerRef.current.stopRecording();
-      console.log('🎵 Audio blob received, size:', audioBlob.size);
 
       if (realtimeTranscript.trim()) {
-        console.log('✅ Using real-time transcript:', realtimeTranscript);
         setInputText(realtimeTranscript);
         setVoiceStatus('complete');
         toast({
@@ -182,7 +175,6 @@ const ConversationInterface = ({
           description: `"${realtimeTranscript.substring(0, 50)}${realtimeTranscript.length > 50 ? '...' : ''}"`,
         });
       } else {
-        console.log('🤖 Processing audio with Whisper...');
         const transcript = await processVoiceInput(audioBlob);
         
         if (transcript && transcript.trim()) {
@@ -208,10 +200,7 @@ const ConversationInterface = ({
   }, [realtimeTranscript, toast]);
 
   const speakText = useCallback(async (text: string) => {
-    console.log('🔊 speakText called with:', { text, speechEnabled });
-    
     if (!speechEnabled) {
-      console.log('🔇 Speech disabled, returning early');
       return;
     }
     
@@ -219,24 +208,14 @@ const ConversationInterface = ({
       // Stop any current speech
       if (synthRef.current) {
         synthRef.current.cancel();
-        console.log('🛑 Cancelled existing browser speech');
       }
       
       // Remove persona name prefix (like "Alex:") from speech
       const cleanText = text.replace(/^(Alex|Jordan|Morgan|Taylor):\s*/, '');
-      console.log('🧹 Cleaned text:', { original: text, cleaned: cleanText });
       
       if (!cleanText.trim()) {
-        console.log('❌ No text to speak after cleaning');
         return;
       }
-      
-      console.log('🚀 ATTEMPTING ELEVENLABS TTS - Starting API call...');
-      console.log('📝 Request details:', {
-        text: cleanText,
-        voiceId: 'CwhRBWXzGAHq8TQ4Fs17',
-        timestamp: new Date().toISOString()
-      });
       
       // Call ElevenLabs TTS edge function
       const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
@@ -246,69 +225,48 @@ const ConversationInterface = ({
         }
       });
       
-      console.log('📡 ElevenLabs API response:', { data, error });
-      
       if (error) {
-        console.error('❌ ELEVENLABS FAILED - Error:', error);
-        console.log('🔄 FALLING BACK TO BROWSER TTS');
         fallbackToWebSpeech(cleanText);
         return;
       }
       
       if (data?.audioContent) {
-        console.log('✅ ELEVENLABS SUCCESS - Converting base64 audio to blob');
-        
         // Convert base64 to audio and play
         const audioBlob = new Blob(
           [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
           { type: 'audio/mpeg' }
         );
         
-        console.log('🎵 Created audio blob:', {
-          size: audioBlob.size,
-          type: audioBlob.type
-        });
-        
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         
         audio.onended = () => {
-          console.log('🎵 ElevenLabs audio finished playing');
           URL.revokeObjectURL(audioUrl);
         };
         
         audio.onerror = (audioError) => {
           console.error('❌ Audio playback failed:', audioError);
-          console.log('🔄 FALLING BACK TO BROWSER TTS due to audio error');
           URL.revokeObjectURL(audioUrl);
           fallbackToWebSpeech(cleanText);
         };
         
         await audio.play();
-        console.log('🎤 ELEVENLABS AUDIO NOW PLAYING - Should be Roger\'s voice!');
       } else {
-        console.error('❌ No audioContent in response');
-        console.log('🔄 FALLING BACK TO BROWSER TTS - no audio content');
         fallbackToWebSpeech(cleanText);
       }
     } catch (error) {
       console.error('❌ ELEVENLABS EXCEPTION:', error);
-      console.log('🔄 FALLING BACK TO BROWSER TTS due to exception');
       fallbackToWebSpeech(text.replace(/^(Alex|Jordan|Morgan|Taylor):\s*/, ''));
     }
   }, [speechEnabled]);
   
   // Fallback to web speech synthesis if ElevenLabs fails
   const fallbackToWebSpeech = useCallback((cleanText: string) => {
-    console.log('🔄 USING BROWSER TTS FALLBACK');
-    console.log('⚠️ This will sound robotic - ElevenLabs failed');
-    
     if (synthRef.current && speechEnabled) {
       synthRef.current.cancel();
       const utterance = new SpeechSynthesisUtterance(cleanText);
       
       const voices = synthRef.current.getVoices();
-      console.log('🎙️ Available browser voices:', voices.map(v => ({ name: v.name, lang: v.lang })));
       
       const maleVoice = voices.find(voice => 
         voice.name.toLowerCase().includes('male') || 
@@ -320,21 +278,15 @@ const ConversationInterface = ({
       
       if (maleVoice) {
         utterance.voice = maleVoice;
-        console.log('🎙️ Using male voice:', maleVoice.name);
-      } else {
-        console.log('⚠️ No male voice found, using default');
       }
       
       utterance.rate = 0.9;
       utterance.pitch = 0.9;
       utterance.volume = volume / 100;
       
-      utterance.onstart = () => console.log('🎙️ Browser TTS started');
-      utterance.onend = () => console.log('🎙️ Browser TTS finished');
       utterance.onerror = (error) => console.error('❌ Browser TTS error:', error);
       
       synthRef.current.speak(utterance);
-      console.log('🎙️ BROWSER TTS SPEAKING - This is the robotic voice');
     }
   }, [speechEnabled, volume]);
 
@@ -384,8 +336,6 @@ const ConversationInterface = ({
         feedback_data: feedback,
         completed_at: new Date().toISOString()
       };
-
-      console.log('Saving session data:', sessionData);
 
       const { data, error } = await supabase
         .from('practice_sessions')
@@ -459,8 +409,6 @@ const ConversationInterface = ({
     }
 
     try {
-      console.log('Sending message to AI:', textToSend);
-      
       const chatMessages = messages.map(msg => ({
         id: msg.id,
         text: msg.text,
@@ -491,8 +439,6 @@ const ConversationInterface = ({
 
       // Generate enhanced feedback for every user response after the first exchange
       if (scenario && userResponseCount >= 1) {
-        console.log('🎯 Generating enhanced feedback for user response:', textToSend);
-        
         const enhancedFeedbackData = generateEnhancedFeedback(
           textToSend,
           currentObjectionText || scenario.objection,
@@ -500,7 +446,6 @@ const ConversationInterface = ({
           userResponseCount
         );
         
-        console.log('📊 Generated enhanced feedback:', enhancedFeedbackData);
         setEnhancedFeedback(enhancedFeedbackData);
         
         // Save session with enhanced feedback
@@ -508,7 +453,6 @@ const ConversationInterface = ({
         
         // Show enhanced feedback after a brief delay
         setTimeout(() => {
-          console.log('🚀 Showing enhanced feedback display');
           setShowEnhancedFeedback(true);
         }, 1500);
       }

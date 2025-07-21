@@ -9,8 +9,6 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const isDevelopment = mode === 'development';
   
-  console.log('Vite config mode:', mode, { isProduction, isDevelopment });
-  
   return {
     server: {
       host: "::",

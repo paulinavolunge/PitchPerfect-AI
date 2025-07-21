@@ -10,8 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase configuration is missing');
 }
 
-console.log('[Supabase] Initializing client with URL:', supabaseUrl);
-
+// Initialize Supabase client with custom storage for better cross-browser support
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -49,5 +48,3 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     }
   }
 })
-
-console.log('[Supabase] Client initialized successfully');

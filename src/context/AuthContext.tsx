@@ -358,20 +358,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error starting free trial:', error);
         // Log security event for trial activation failure
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'trial_activation_failed',
-          p_event_details: { error: error.message },
-          p_user_id: user.id
-        });
+        await SafeRPCService.logSecurityEvent(
+          'trial_activation_failed',
+          { error: error.message },
+          user.id
+        );
         return false;
       }
 
       // Log successful trial activation
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'trial_activated',
-        p_event_details: { credits_added: 10 },
-        p_user_id: user.id
-      });
+      await SafeRPCService.logSecurityEvent(
+        'trial_activated',
+        { credits_added: 10 },
+        user.id
+      );
 
       setTrialUsed(true);
       setCreditsRemaining(prev => prev + 10);

@@ -318,7 +318,7 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
             localStorage.setItem('trialStarted', 'true');
           }
         }).catch(err => {
-          console.warn('Failed to start free trial:', err);
+          // Silently handle trial start failure - don't block onboarding
         });
       }
 

@@ -151,9 +151,14 @@ const Tips = () => {
       }
       
       // Copy script to clipboard for immediate use
-      navigator.clipboard.writeText(description).catch(err => 
-        console.error("Failed to copy script to clipboard:", err)
-      );
+      navigator.clipboard.writeText(description).catch(err => {
+        console.error('Failed to copy to clipboard:', err);
+        toast({
+          title: "Copy failed",
+          description: "Failed to copy to clipboard",
+          variant: "destructive"
+        });
+      });
       
       toast({
         title: "Script Ready to Use",
