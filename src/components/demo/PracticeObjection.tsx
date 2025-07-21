@@ -24,15 +24,10 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    console.log("PracticeObjection component mounted");
-    console.log("Scenario loaded:", scenario);
-    
     // Check for speech recognition support
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      console.log("Speech recognition supported");
       initializeSpeechRecognition();
     } else {
-      console.log("Speech recognition not supported, falling back to text input");
       setInputMode('text');
       setError("Voice input not supported in this browser. Using text input instead.");
     }
@@ -51,10 +46,8 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
   }, []);
 
   const requestMicrophonePermission = async () => {
-    console.log("Requesting microphone permission");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("Microphone permission granted");
       setHasPermission(true);
       setError(null);
       mediaStreamRef.current = stream;
@@ -78,7 +71,6 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
       recognitionRef.current.lang = 'en-US';
 
       recognitionRef.current.onresult = (event: any) => {
-        console.log("Speech recognition result:", event);
         let interimTranscript = '';
         let finalTranscript = '';
         
@@ -94,7 +86,6 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
         // Update transcript with both final and interim results
         setTranscript(prev => {
           const newTranscript = prev + finalTranscript;
-          console.log("Updated transcript:", newTranscript);
           return newTranscript;
         });
       };
@@ -111,15 +102,12 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
       };
 
       recognitionRef.current.onend = () => {
-        console.log("Speech recognition ended");
         setIsListening(false);
       };
     }
   };
 
   const startListening = async () => {
-    console.log("Starting voice recording");
-    
     if (!hasPermission) {
       await requestMicrophonePermission();
       return;
@@ -144,8 +132,6 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
   };
 
   const stopListening = () => {
-    console.log("Stopping voice recording");
-    
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsListening(false);
@@ -160,10 +146,10 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
   };
 
   const handleSubmit = async () => {
-    console.log("Submitting objection response");
-    console.log("Input mode:", inputMode);
-    console.log("Transcript:", transcript);
-    console.log("Text input:", textInput);
+    // Stop listening if still active
+    if (isListening) {
+      stopListening();
+    }
     
     const response = inputMode === 'voice' ? transcript.trim() : textInput.trim();
     
@@ -181,15 +167,11 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
     setError(null);
 
     try {
-      console.log(`Submitting ${inputMode} response:`, response);
-      
       // Call the onSubmit prop with the response data
       await onSubmit({
         type: inputMode,
         data: response
       });
-      
-      console.log("Response submitted successfully");
       
       // Reset form after successful submission
       setTranscript('');
@@ -210,7 +192,6 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
   };
 
   const switchToTextMode = () => {
-    console.log("Switching to text input mode");
     setInputMode('text');
     setError(null);
     if (isListening) {
@@ -219,7 +200,6 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
   };
 
   const retryVoiceMode = () => {
-    console.log("Retrying voice mode");
     setInputMode('voice');
     setError(null);
     requestMicrophonePermission();
@@ -365,7 +345,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
           className="w-full strong-cta text-lg py-4"
           size="lg"
         >
-          Get Feedback
+          {isListening ? 'Stop & Get Feedback' : 'Get Feedback'}
         </Button>
       ) : (
         <div className="w-full py-4 text-lg text-center text-vibrant-blue-600 font-semibold">

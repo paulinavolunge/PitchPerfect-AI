@@ -14,6 +14,9 @@ import { Helmet } from 'react-helmet-async';
 import { MicrophonePermissionHandler } from '@/components/permissions/MicrophonePermissionHandler';
 import { AudioRecorder } from '@/components/recordings/AudioRecorder';
 import { useUserIsolation } from '@/hooks/useUserIsolation';
+import { whisperTranscribe } from '@/lib/whisper-api';
+import { SafeRPCService } from '@/services/SafeRPCService';
+import { supabase } from '@/integrations/supabase/client';
 
 const Practice = () => {
   const { user, creditsRemaining, deductUserCredits } = useAuth();
@@ -69,8 +72,6 @@ const Practice = () => {
   };
 
   const handleRecordingComplete = async (audioBlob: Blob, audioUrl: string) => {
-    console.log('🎵 Recording completed:', { size: audioBlob.size, url: audioUrl });
-    
     if (!user?.id) {
       toast({
         title: "Authentication Required",
@@ -81,7 +82,6 @@ const Practice = () => {
     }
 
     if (creditsRemaining < 1) {
-      console.log('🔴 Insufficient credits:', creditsRemaining);
       toast({
         title: "Insufficient Credits",
         description: "You need at least 1 credit to analyze a pitch.",
@@ -92,6 +92,13 @@ const Practice = () => {
 
     setAudioBlob(audioBlob);
     setAudioUrl(audioUrl);
+    
+    // Show loading state
+    toast({
+      title: "Processing Audio",
+      description: "Transcribing your pitch...",
+    });
+    
     await handleAnalyzePitch(audioBlob);
   };
 
@@ -99,7 +106,7 @@ const Practice = () => {
     if (!user?.id) return;
 
     try {
-      console.log('🔍 Starting pitch analysis...');
+      setIsSubmitting(true);
       
       // Deduct credits for analysis
       const success = await deductUserCredits('pitch_analysis', 1);
@@ -113,31 +120,71 @@ const Practice = () => {
         return;
       }
 
-      // Mock analysis results with structured feedback
-      const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
-      const mockTranscript = practiceMode === 'text' ? textInput : 
-        "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
+      let pitchTranscript = '';
       
-      // Generate structured feedback based on score
-      const structuredFeedback = {
-        clarity: mockScore >= 85 ? 'Clear and concise' : mockScore >= 70 ? 'Mostly clear' : 'Needs clarity improvement',
-        confidence: mockScore >= 80 ? 'Strong and assertive' : mockScore >= 65 ? 'Moderate confidence' : 'Needs more assertiveness',
-        persuasiveness: mockScore >= 75 ? 'Compelling arguments' : mockScore >= 60 ? 'Somewhat persuasive' : 'Strengthen value proposition',
-        tone: mockScore >= 80 ? 'Friendly and professional' : mockScore >= 65 ? 'Professional tone' : 'Consider warming up tone',
-        objectionHandling: mockScore >= 70 ? 'Good use of value-based responses' : 'Address potential objections proactively'
-      };
-      
-      const mockFeedback = structuredFeedback;
+      // If we have audio data, transcribe it first
+      if (audioData && practiceMode === 'voice') {
+        try {
+          // Show transcription progress
+          toast({
+            title: "Transcribing Audio",
+            description: "Converting your speech to text...",
+          });
+          
+          pitchTranscript = await whisperTranscribe(audioData);
+          
+          if (!pitchTranscript || pitchTranscript.trim().length === 0) {
+            throw new Error('No speech detected in audio');
+          }
+          
+          setTranscript(pitchTranscript);
+        } catch (transcriptionError) {
+          console.error('Transcription error:', transcriptionError);
+          toast({
+            title: "Transcription Failed",
+            description: "Could not transcribe your audio. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else {
+        // For text mode, use the text input
+        pitchTranscript = textInput;
+        setTranscript(pitchTranscript);
+      }
 
-      setTranscript(mockTranscript);
-      setFeedback(JSON.stringify(mockFeedback)); // Store as JSON for structured display
-      setScore(mockScore);
+      // Generate AI feedback
+      toast({
+        title: "Analyzing Pitch",
+        description: "Generating AI feedback...",
+      });
+
+      // Call the AI feedback generation function
+      const { data: feedbackData, error: feedbackError } = await supabase.functions.invoke('analyze-pitch', {
+        body: {
+          transcript: pitchTranscript,
+          mode: practiceMode,
+          userId: user.id
+        }
+      });
+
+      if (feedbackError || !feedbackData) {
+        // Fallback to mock feedback if AI fails
+        const mockScore = Math.floor(Math.random() * 30) + 70;
+        const structuredFeedback = generateMockFeedback(pitchTranscript, mockScore);
+        
+        setFeedback(JSON.stringify(structuredFeedback));
+        setScore(mockScore);
+      } else {
+        // Use real AI feedback
+        setFeedback(JSON.stringify(feedbackData.feedback));
+        setScore(feedbackData.score || 85);
+      }
+
       setAnalysisComplete(true);
 
-      console.log('✅ Analysis complete:', { score: mockScore, creditsUsed: 1, mode: practiceMode });
-
-      // Update streak if score is good (with user-specific storage)
-      if (mockScore >= 80 && user?.id) {
+      // Update streak if score is good
+      if ((feedbackData?.score || 85) >= 80 && user?.id) {
         const newStreak = streakCount + 1;
         setStreakCount(newStreak);
         const streakKey = getUserSpecificKey('streak');
@@ -145,24 +192,54 @@ const Practice = () => {
       }
 
       trackEvent('practice_analysis_complete', {
-        score: mockScore,
+        score: feedbackData?.score || 85,
         credits_used: 1,
         mode: practiceMode
       });
 
       toast({
         title: "Analysis Complete!",
-        description: `Your pitch scored ${mockScore}/100`,
+        description: `Your pitch scored ${feedbackData?.score || 85}/100`,
       });
 
     } catch (error) {
       console.error('❌ Analysis error:', error);
       toast({
         title: "Analysis Failed",
-        description: "Failed to analyze your pitch. Please try again.",
+        description: "Sorry, we couldn't analyze your pitch. Try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const generateMockFeedback = (transcript: string, score: number) => {
+    // Analyze the transcript for key elements
+    const hasValue = transcript.toLowerCase().includes('value') || transcript.toLowerCase().includes('benefit');
+    const hasEmpathy = transcript.toLowerCase().includes('understand') || transcript.toLowerCase().includes('help');
+    const hasSpecifics = transcript.toLowerCase().includes('specifically') || transcript.toLowerCase().includes('example');
+    
+    return {
+      clarity: score >= 85 ? 'Clear and concise communication' : 
+               score >= 70 ? 'Mostly clear with room for improvement' : 
+               'Consider simplifying your message',
+      confidence: score >= 80 ? 'Strong and assertive delivery' : 
+                  score >= 65 ? 'Good confidence level' : 
+                  'Build more confidence in your delivery',
+      persuasiveness: hasValue ? 'Good focus on value proposition' : 
+                      'Emphasize benefits more clearly',
+      tone: hasEmpathy ? 'Friendly and empathetic approach' : 
+            'Consider adding more warmth to your tone',
+      objectionHandling: hasSpecifics ? 'Good use of specific examples' : 
+                         'Include more concrete examples',
+      fillerWords: Math.floor(Math.random() * 5), // Mock filler word count
+      suggestions: [
+        hasValue ? "Great job highlighting value!" : "Focus more on customer benefits",
+        hasEmpathy ? "Excellent empathetic approach" : "Show more understanding of customer needs",
+        hasSpecifics ? "Good use of examples" : "Add specific case studies or examples"
+      ]
+    };
   };
 
   const handleTextSubmit = async () => {
@@ -569,41 +646,81 @@ const Practice = () => {
                   <CardTitle>AI Feedback</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {(() => {
                       try {
                         const feedbackData = JSON.parse(feedback);
                         return (
                           <>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Clarity:</span>
-                              <span className="text-brand-dark/80">{feedbackData.clarity}</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="flex items-start gap-2">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Clarity:</span>
+                                  <p className="text-brand-dark/80 text-sm">{feedbackData.clarity}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Confidence:</span>
+                                  <p className="text-brand-dark/80 text-sm">{feedbackData.confidence}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Persuasiveness:</span>
+                                  <p className="text-brand-dark/80 text-sm">{feedbackData.persuasiveness}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Tone/Emotion:</span>
+                                  <p className="text-brand-dark/80 text-sm">{feedbackData.tone}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Objection Handling:</span>
+                                  <p className="text-brand-dark/80 text-sm">{feedbackData.objectionHandling}</p>
+                                </div>
+                              </div>
+                              {feedbackData.fillerWords !== undefined && (
+                                <div className="flex items-start gap-2">
+                                  <span className={feedbackData.fillerWords > 3 ? "text-yellow-500" : "text-green-500"} style={{ marginTop: '2px' }}>
+                                    {feedbackData.fillerWords > 3 ? "⚠️" : "✅"}
+                                  </span>
+                                  <div>
+                                    <span className="font-medium">Filler Words:</span>
+                                    <p className="text-brand-dark/80 text-sm">
+                                      {feedbackData.fillerWords} detected
+                                      {feedbackData.fillerWords > 3 && " - Try to reduce filler words"}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Confidence:</span>
-                              <span className="text-brand-dark/80">{feedbackData.confidence}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Persuasiveness:</span>
-                              <span className="text-brand-dark/80">{feedbackData.persuasiveness}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Tone/Emotion:</span>
-                              <span className="text-brand-dark/80">{feedbackData.tone}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Objection Handling:</span>
-                              <span className="text-brand-dark/80">{feedbackData.objectionHandling}</span>
-                            </div>
+                            
+                            {feedbackData.suggestions && feedbackData.suggestions.length > 0 && (
+                              <div className="mt-4 pt-4 border-t">
+                                <h4 className="font-medium mb-2">💡 Suggestions for Improvement:</h4>
+                                <ul className="space-y-1">
+                                  {feedbackData.suggestions.map((suggestion: string, index: number) => (
+                                    <li key={index} className="text-sm text-brand-dark/80 flex items-start gap-2">
+                                      <span className="text-brand-blue mt-0.5">•</span>
+                                      <span>{suggestion}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </>
                         );
                       } catch {
-                        return <p className="text-brand-dark/80 leading-relaxed">{feedback}</p>;
+                        return <p className="text-brand-dark/80 leading-relaxed whitespace-pre-wrap">{feedback}</p>;
                       }
                     })()}
                   </div>

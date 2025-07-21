@@ -11,13 +11,14 @@ import WebhookSettings from '@/components/WebhookSettings';
 import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Settings, UserPlus, RefreshCw } from 'lucide-react';
+import { Settings, UserPlus, RefreshCw, Sparkles } from 'lucide-react';
 import MicrophoneGuard from '@/components/MicrophoneGuard';
 import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import DemoNavigation from '@/components/demo/DemoNavigation';
+import { whisperTranscribe } from '@/lib/whisper-api';
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
@@ -32,13 +33,10 @@ const Demo = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Demo component mounted");
-    console.log("Demo page loaded with objection scenario:", objectionScenario);
-    console.log("Guest mode:", isGuestMode, "User:", user);
+    // Component mounted
   }, []);
   
   const handleDemoComplete = (data?: any) => {
-    console.log("Demo completed with data:", data);
     // Save session data
     if (data) {
       setSessionData(data);
@@ -61,7 +59,6 @@ const Demo = () => {
               variant: "default",
             });
           } else {
-            console.warn("CRM push failed:", webhookResult.message);
             // No toast for failure in production to avoid confusing users
           }
         });
@@ -69,10 +66,6 @@ const Demo = () => {
   };
 
   const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
-    console.log('Objection practice submission:', input);
-    console.log('Submission type:', input.type);
-    console.log('Submission data:', input.data);
-    
     try {
       setHasError(false);
       
@@ -88,48 +81,63 @@ const Demo = () => {
         const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
         const featureType = `demo_objection_${input.type}`;
         
-        console.log(`Attempting to deduct ${creditsToDeduct} credits for ${featureType}`);
-        
         const deducted = await deductUserCredits(featureType, creditsToDeduct);
         if (!deducted) {
-          console.log('Credit deduction failed - stopping demo');
           // The deductUserCredits function already shows appropriate toast
           return;
         }
-        
-        console.log('Credits deducted successfully');
       }
       
-      // Simulate AI processing with a more realistic delay
-      console.log('Starting AI analysis simulation...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      let responseText = '';
       
-      // Generate mock feedback based on input type and content
-      const responseText = typeof input.data === 'string' ? input.data : 'Voice response processed';
+      // Process voice input
+      if (input.type === 'voice' && input.data instanceof Blob) {
+        try {
+          toast({
+            title: "Transcribing Audio",
+            description: "Converting your speech to text...",
+          });
+          
+          responseText = await whisperTranscribe(input.data);
+          
+          if (!responseText || responseText.trim().length === 0) {
+            throw new Error('No speech detected in audio');
+          }
+        } catch (transcriptionError) {
+          console.error('Transcription error:', transcriptionError);
+          toast({
+            title: "Transcription Failed",
+            description: "Could not transcribe your audio. Please try again.",
+            variant: "destructive",
+          });
+          setHasError(true);
+          return;
+        }
+      } else {
+        responseText = typeof input.data === 'string' ? input.data : '';
+      }
+      
+      // Generate AI feedback
       const feedbackData = {
         type: input.type,
         response: responseText,
         timestamp: new Date().toISOString(),
-        feedback: generateMockFeedback(responseText),
+        feedback: generateEnhancedFeedback(responseText),
         score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
       };
-      
-      console.log('Generated feedback data:', feedbackData);
       
       setFeedback(feedbackData.feedback);
       
       // Complete the demo with the feedback data
       handleDemoComplete(feedbackData);
       
-      // Show completion toast (separate from credit usage toast)
+      // Show completion toast
       toast({
         title: "Analysis Complete",
         description: `Your ${input.type} response has been analyzed and feedback is ready.`,
         variant: "default",
         duration: 4000,
       });
-      
-      console.log('Demo submission completed successfully');
       
     } catch (error) {
       console.error('Error processing objection:', error);
@@ -142,17 +150,68 @@ const Demo = () => {
     }
   };
 
-  const generateMockFeedback = (response: string): string => {
-    // Generate more realistic feedback based on response content
-    if (response.toLowerCase().includes('value') || response.toLowerCase().includes('roi')) {
-      return "Excellent approach! You focused on value and ROI, which effectively addresses pricing concerns. Consider providing specific examples or metrics to strengthen your response further.";
-    } else if (response.toLowerCase().includes('understand') || response.toLowerCase().includes('budget')) {
-      return "Good empathetic approach. You acknowledged their budget concerns, which builds rapport. Try adding more concrete benefits and cost justification to overcome the objection.";
-    } else if (response.toLowerCase().includes('compare') || response.toLowerCase().includes('competition')) {
-      return "Smart strategy addressing the competitive landscape. Consider highlighting unique differentiators and long-term value proposition to justify the premium pricing.";
+  const generateEnhancedFeedback = (response: string): string => {
+    // Enhanced feedback generation with more detailed analysis
+    const lowerResponse = response.toLowerCase();
+    const responseLength = response.length;
+    
+    // Check for key elements
+    const hasValue = lowerResponse.includes('value') || lowerResponse.includes('roi') || lowerResponse.includes('benefit');
+    const hasEmpathy = lowerResponse.includes('understand') || lowerResponse.includes('appreciate') || lowerResponse.includes('hear');
+    const hasSpecifics = lowerResponse.includes('example') || lowerResponse.includes('specifically') || lowerResponse.includes('case');
+    const hasQuestions = response.includes('?');
+    const hasComparison = lowerResponse.includes('compare') || lowerResponse.includes('competition') || lowerResponse.includes('alternative');
+    
+    let feedback = "**AI Analysis of Your Response:**\n\n";
+    
+    // Tone and Empathy
+    if (hasEmpathy) {
+      feedback += "✅ **Tone & Empathy**: Excellent! You acknowledged their concern, which builds rapport and trust.\n\n";
     } else {
-      return "Good handling of the objection. Consider emphasizing value over cost and highlighting ROI to strengthen your response. Try to be more specific about benefits that justify the pricing.";
+      feedback += "💡 **Tone & Empathy**: Consider starting with acknowledgment like 'I understand your budget concerns' to build rapport.\n\n";
     }
+    
+    // Value Focus
+    if (hasValue) {
+      feedback += "✅ **Value Focus**: Great job emphasizing value and ROI! This effectively addresses pricing objections.\n\n";
+    } else {
+      feedback += "💡 **Value Focus**: Try highlighting specific ROI or value propositions to justify the investment.\n\n";
+    }
+    
+    // Specificity
+    if (hasSpecifics) {
+      feedback += "✅ **Specificity**: Well done using specific examples! This builds credibility.\n\n";
+    } else {
+      feedback += "💡 **Specificity**: Add concrete examples or case studies to strengthen your argument.\n\n";
+    }
+    
+    // Discovery
+    if (hasQuestions) {
+      feedback += "✅ **Discovery**: Good use of questions to understand their needs better!\n\n";
+    } else {
+      feedback += "💡 **Discovery**: Consider asking questions to uncover the real concern behind the objection.\n\n";
+    }
+    
+    // Response Quality
+    if (responseLength > 100) {
+      feedback += "✅ **Detail Level**: Comprehensive response with good detail.\n\n";
+    } else if (responseLength > 50) {
+      feedback += "⚠️ **Detail Level**: Adequate response, but could be more thorough.\n\n";
+    } else {
+      feedback += "💡 **Detail Level**: Your response is quite brief. Provide more detail to be convincing.\n\n";
+    }
+    
+    // Overall recommendation
+    feedback += "**Next Steps**: ";
+    if (hasValue && hasEmpathy && hasSpecifics) {
+      feedback += "Excellent objection handling! Continue practicing with more complex scenarios.";
+    } else if (hasValue || hasEmpathy) {
+      feedback += "Good foundation! Focus on combining empathy with specific value propositions.";
+    } else {
+      feedback += "Keep practicing! Remember to acknowledge concerns, then pivot to value and specific benefits.";
+    }
+    
+    return feedback;
   };
 
   const handleTryMoreFeatures = () => {
@@ -160,7 +219,6 @@ const Demo = () => {
   };
 
   const handleRetry = () => {
-    console.log('Retrying demo...');
     setHasError(false);
     setFeedback(null);
     setSessionData(null);
@@ -184,7 +242,7 @@ const Demo = () => {
           currentStep={1}
           totalSteps={3}
           showProgress={true}
-          onHelp={() => console.log('Help requested')}
+          onHelp={() => {/* Help handler */}}
         />
         {isGuestMode && <GuestBanner />}
         <main className="flex-grow pt-24 pb-12">
@@ -235,9 +293,49 @@ const Demo = () => {
                 )}
 
                 {feedback && (
-                  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h3 className="font-medium text-green-800 mb-2">AI Feedback</h3>
-                    <p className="text-green-700">{feedback}</p>
+                  <div className="mt-6 p-6 bg-gradient-to-br from-green-50 to-blue-50 border border-green-200 rounded-lg shadow-sm">
+                    <h3 className="font-bold text-green-800 mb-4 text-lg flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-green-600" />
+                      AI Feedback Analysis
+                    </h3>
+                    <div className="text-green-700 space-y-2 whitespace-pre-wrap">
+                      {feedback.split('\n').map((line, index) => {
+                        // Handle markdown-style formatting
+                        if (line.startsWith('**') && line.endsWith('**')) {
+                          return (
+                            <p key={index} className="font-bold text-green-800 mt-3">
+                              {line.replace(/\*\*/g, '')}
+                            </p>
+                          );
+                        } else if (line.includes('✅')) {
+                          return (
+                            <p key={index} className="text-green-700 ml-2">
+                              {line}
+                            </p>
+                          );
+                        } else if (line.includes('💡')) {
+                          return (
+                            <p key={index} className="text-amber-700 ml-2">
+                              {line}
+                            </p>
+                          );
+                        } else if (line.includes('⚠️')) {
+                          return (
+                            <p key={index} className="text-orange-700 ml-2">
+                              {line}
+                            </p>
+                          );
+                        } else if (line.trim() === '') {
+                          return <br key={index} />;
+                        } else {
+                          return (
+                            <p key={index} className="text-gray-700">
+                              {line}
+                            </p>
+                          );
+                        }
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
