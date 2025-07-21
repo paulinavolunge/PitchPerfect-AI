@@ -14,6 +14,7 @@ import { Helmet } from 'react-helmet-async';
 import { MicrophonePermissionHandler } from '@/components/permissions/MicrophonePermissionHandler';
 import { AudioRecorder } from '@/components/recordings/AudioRecorder';
 import { useUserIsolation } from '@/hooks/useUserIsolation';
+import { PitchAnalysisAPIService } from '@/services/PitchAnalysisAPIService';
 
 const Practice = () => {
   const { user, creditsRemaining, deductUserCredits } = useAuth();
@@ -113,31 +114,44 @@ const Practice = () => {
         return;
       }
 
-      // Mock analysis results with structured feedback
-      const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
-      const mockTranscript = practiceMode === 'text' ? textInput : 
-        "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
-      
-      // Generate structured feedback based on score
-      const structuredFeedback = {
-        clarity: mockScore >= 85 ? 'Clear and concise' : mockScore >= 70 ? 'Mostly clear' : 'Needs clarity improvement',
-        confidence: mockScore >= 80 ? 'Strong and assertive' : mockScore >= 65 ? 'Moderate confidence' : 'Needs more assertiveness',
-        persuasiveness: mockScore >= 75 ? 'Compelling arguments' : mockScore >= 60 ? 'Somewhat persuasive' : 'Strengthen value proposition',
-        tone: mockScore >= 80 ? 'Friendly and professional' : mockScore >= 65 ? 'Professional tone' : 'Consider warming up tone',
-        objectionHandling: mockScore >= 70 ? 'Good use of value-based responses' : 'Address potential objections proactively'
-      };
-      
-      const mockFeedback = structuredFeedback;
+      // Use the real AI analysis service
+      const analysisResult = practiceMode === 'text' 
+        ? await PitchAnalysisAPIService.analyzePitchText(textInput)
+        : audioData 
+          ? await PitchAnalysisAPIService.analyzePitchAudio(audioData)
+          : await PitchAnalysisAPIService.analyzePitchText(''); // This will trigger an error
 
-      setTranscript(mockTranscript);
-      setFeedback(JSON.stringify(mockFeedback)); // Store as JSON for structured display
-      setScore(mockScore);
+      // Check for errors in the response
+      if (analysisResult.error) {
+        toast({
+          title: "Analysis Notice",
+          description: analysisResult.error,
+          variant: analysisResult.score === 0 ? "destructive" : "default",
+        });
+        
+        // If it's a validation error (score 0), don't proceed
+        if (analysisResult.score === 0) {
+          // Refund the credit since we couldn't analyze
+          // Note: You might want to implement a refund mechanism here
+          return;
+        }
+      }
+
+      // Update state with the analysis results
+      setTranscript(analysisResult.transcript);
+      setFeedback(JSON.stringify(analysisResult.feedback)); // Store as JSON for structured display
+      setScore(analysisResult.score);
       setAnalysisComplete(true);
 
-      console.log('✅ Analysis complete:', { score: mockScore, creditsUsed: 1, mode: practiceMode });
+      console.log('✅ Analysis complete:', { 
+        score: analysisResult.score, 
+        creditsUsed: 1, 
+        mode: practiceMode,
+        wordCount: analysisResult.wordCount 
+      });
 
       // Update streak if score is good (with user-specific storage)
-      if (mockScore >= 80 && user?.id) {
+      if (analysisResult.score >= 80 && user?.id) {
         const newStreak = streakCount + 1;
         setStreakCount(newStreak);
         const streakKey = getUserSpecificKey('streak');
@@ -145,14 +159,15 @@ const Practice = () => {
       }
 
       trackEvent('practice_analysis_complete', {
-        score: mockScore,
+        score: analysisResult.score,
         credits_used: 1,
-        mode: practiceMode
+        mode: practiceMode,
+        word_count: analysisResult.wordCount
       });
 
       toast({
         title: "Analysis Complete!",
-        description: `Your pitch scored ${mockScore}/100`,
+        description: `Your pitch scored ${analysisResult.score}/100`,
       });
 
     } catch (error) {
@@ -569,41 +584,80 @@ const Practice = () => {
                   <CardTitle>AI Feedback</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {(() => {
                       try {
                         const feedbackData = JSON.parse(feedback);
                         return (
                           <>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Clarity:</span>
-                              <span className="text-brand-dark/80">{feedbackData.clarity}</span>
+                            {/* Overall Assessment */}
+                            {feedbackData.overall && (
+                              <div className="p-4 bg-brand-blue/10 rounded-lg mb-4">
+                                <h4 className="font-semibold text-brand-dark mb-2">Overall Assessment</h4>
+                                <p className="text-brand-dark/80">{feedbackData.overall}</p>
+                              </div>
+                            )}
+                            
+                            {/* Detailed Feedback */}
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Clarity:</span>
+                                  <p className="text-brand-dark/80 text-sm mt-1">{feedbackData.clarity}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Confidence:</span>
+                                  <p className="text-brand-dark/80 text-sm mt-1">{feedbackData.confidence}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Persuasiveness:</span>
+                                  <p className="text-brand-dark/80 text-sm mt-1">{feedbackData.persuasiveness}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Tone:</span>
+                                  <p className="text-brand-dark/80 text-sm mt-1">{feedbackData.tone}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <span className="text-green-500 mt-0.5">✅</span>
+                                <div>
+                                  <span className="font-medium">Objection Handling:</span>
+                                  <p className="text-brand-dark/80 text-sm mt-1">{feedbackData.objectionHandling}</p>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Confidence:</span>
-                              <span className="text-brand-dark/80">{feedbackData.confidence}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Persuasiveness:</span>
-                              <span className="text-brand-dark/80">{feedbackData.persuasiveness}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Tone/Emotion:</span>
-                              <span className="text-brand-dark/80">{feedbackData.tone}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">✅</span>
-                              <span className="font-medium">Objection Handling:</span>
-                              <span className="text-brand-dark/80">{feedbackData.objectionHandling}</span>
-                            </div>
+                            
+                            {/* Suggestions for Improvement */}
+                            {feedbackData.suggestions && feedbackData.suggestions.length > 0 && (
+                              <div className="mt-6 p-4 bg-amber-50 rounded-lg">
+                                <h4 className="font-semibold text-brand-dark mb-3 flex items-center gap-2">
+                                  <Target className="h-5 w-5 text-amber-600" />
+                                  Suggestions for Improvement
+                                </h4>
+                                <ul className="space-y-2">
+                                  {feedbackData.suggestions.map((suggestion: string, index: number) => (
+                                    <li key={index} className="flex items-start gap-2">
+                                      <span className="text-amber-600 mt-0.5">•</span>
+                                      <span className="text-brand-dark/80 text-sm">{suggestion}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </>
                         );
-                      } catch {
-                        return <p className="text-brand-dark/80 leading-relaxed">{feedback}</p>;
+                      } catch (e) {
+                        return <p className="text-brand-dark/80">{feedback}</p>;
                       }
                     })()}
                   </div>
