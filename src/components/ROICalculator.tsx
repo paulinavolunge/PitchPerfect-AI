@@ -202,7 +202,7 @@ const ROICalculator = () => {
         <div className="mt-6 sticky-roi-cta">
           <Link to="/signup">
             <Button 
-              className="w-full bg-brand-green hover:bg-brand-green/90 text-white py-6 h-auto text-lg font-medium shadow-lg hover:shadow-xl transition-all"
+              className="w-full bg-brand-green hover:bg-brand-green/90 text-white py-6 h-auto text-lg font-medium shadow-lg"
             >
               Start Free Trial Now
             </Button>

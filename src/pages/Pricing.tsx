@@ -196,7 +196,7 @@ const Pricing = () => {
               <div className="mb-8">
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-primary-600 via-primary-500 to-vibrant-blue-500 hover:from-primary-700 hover:via-primary-600 hover:to-vibrant-blue-600 text-white text-xl font-bold px-12 py-6 h-16 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 transform hover:scale-105 animate-pulse border-0 ring-4 ring-primary-200 hover:ring-primary-300"
+                  className="bg-gradient-to-r from-primary-600 via-primary-500 to-vibrant-blue-500 hover:from-primary-700 hover:via-primary-600 hover:to-vibrant-blue-600 text-white text-xl font-bold px-12 py-6 h-16 shadow-2xl animate-pulse border-0 ring-4 ring-primary-200"
                   onClick={handleSignUpRedirect}
                 >
                   <UserPlus className="h-6 w-6 mr-3" aria-hidden="true" />
