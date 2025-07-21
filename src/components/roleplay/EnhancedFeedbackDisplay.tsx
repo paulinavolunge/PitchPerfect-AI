@@ -24,6 +24,7 @@ interface EnhancedFeedbackDisplayProps {
   userResponse: string;
   isVisible: boolean;
   onClose: () => void;
+  onContinue?: () => void;
 }
 
 const EnhancedFeedbackDisplay: React.FC<EnhancedFeedbackDisplayProps> = ({ 
@@ -31,7 +32,8 @@ const EnhancedFeedbackDisplay: React.FC<EnhancedFeedbackDisplayProps> = ({
   objectionText, 
   userResponse, 
   isVisible, 
-  onClose 
+  onClose,
+  onContinue 
 }) => {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     exchange: true,
@@ -431,7 +433,17 @@ const EnhancedFeedbackDisplay: React.FC<EnhancedFeedbackDisplayProps> = ({
                   </p>
                 </div>
                 <div className="text-right">
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                  <Button 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => {
+                      if (onContinue) {
+                        onContinue();
+                      } else {
+                        onClose();
+                      }
+                    }}
+                  >
                     Continue Practicing
                   </Button>
                 </div>

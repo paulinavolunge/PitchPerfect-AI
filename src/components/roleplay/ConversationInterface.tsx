@@ -495,6 +495,71 @@ const ConversationInterface = ({
     setShowEnhancedFeedback(false);
   };
 
+  const generateNewObjection = () => {
+    // Generate a new objection using the existing scenario
+    const aiPersona = voiceStyle === 'friendly' ? 'Friendly Client' :
+                     voiceStyle === 'assertive' ? 'Assertive Executive' :
+                     voiceStyle === 'skeptical' ? 'Skeptical Buyer' :
+                     'Rushed Decision Maker';
+    
+    const getAIPersona = () => aiPersona;
+    
+    // Vary the objection type for practice variety
+    const objectionTypes = ['Price', 'Timing', 'Trust', 'Authority', 'Competition', 'Need'];
+    const currentIndex = objectionTypes.indexOf(scenario.objection);
+    const nextIndex = (currentIndex + 1) % objectionTypes.length;
+    const newScenario = { ...scenario, objection: objectionTypes[nextIndex] };
+    
+    return getScenarioIntro(newScenario, getAIPersona);
+  };
+
+  const handleContinuePracticing = async () => {
+    // Close the feedback display
+    setShowEnhancedFeedback(false);
+    
+    // Reset conversation state
+    setMessages([]);
+    setInputText('');
+    setEnhancedFeedback(null);
+    setCurrentObjectionText('');
+    
+    // Generate a new objection to continue practicing
+    setIsLoading(true);
+    
+    try {
+      const newObjection = generateNewObjection();
+      
+      const objectionMessage: Message = {
+        id: Date.now().toString(),
+        text: newObjection,
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+      
+      setMessages([objectionMessage]);
+      setCurrentObjectionText(newObjection);
+      
+      // Play the new objection if voice is enabled
+      if ((mode === 'voice' || mode === 'hybrid') && voiceManagerRef.current) {
+        speakText(newObjection);
+      }
+      
+      toast({
+        title: "New Objection Ready",
+        description: "Continue practicing with a fresh scenario!",
+      });
+    } catch (error) {
+      console.error('Error generating new objection:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate new objection. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (realtimeRecognitionRef.current) {
@@ -553,6 +618,7 @@ const ConversationInterface = ({
           userResponse={messages.filter(m => m.sender === 'user').slice(-1)[0]?.text || ''}
           isVisible={showEnhancedFeedback}
           onClose={closeEnhancedFeedback}
+          onContinue={handleContinuePracticing}
         />
       )}
 
