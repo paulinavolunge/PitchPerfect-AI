@@ -20,11 +20,11 @@ export class SafeRPCService {
     const { throwOnError = false, defaultValue = null, logError = true } = options;
 
     try {
-      const { data, error } = await supabase.rpc(functionName, params);
+      const { data, error } = await supabase.rpc(functionName as any, params);
 
       if (error) {
         if (logError) {
-          console.warn(`RPC call failed: ${functionName}`, { error, params });
+          console.warn(`RPC call failed: ${String(functionName)}`, { error, params });
         }
         
         if (throwOnError) {
@@ -34,10 +34,10 @@ export class SafeRPCService {
         return { data: defaultValue, error };
       }
 
-      return { data, error: null };
+      return { data: data as T, error: null };
     } catch (error) {
       if (logError) {
-        console.error(`RPC call exception: ${functionName}`, { error, params });
+        console.error(`RPC call exception: ${String(functionName)}`, { error, params });
       }
       
       if (throwOnError) {

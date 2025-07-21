@@ -48,22 +48,20 @@ const GuidedTour = ({
     // For debugging
     devLog('Tour callback:', { status, action, index, type, stepsLength: steps.length });
     
-    // Handle tour step navigation
-    if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
-      if (action === ACTIONS.NEXT) {
-        // Only advance if we're not already on the last step
-        if (index < steps.length - 1) {
-          devLog(`Moving from step ${index} to step ${index + 1}`);
-          setTourState(prevState => ({
-            ...prevState,
-            stepIndex: index + 1
-          }));
-        } else {
-          // This is the last step, handle completion
-          devLog('Last step reached, completing tour');
-          setTourState(prevState => ({ ...prevState, run: false }));
-          onComplete();
-        }
+    // Handle Next button click
+    if (action === ACTIONS.NEXT) {
+      // Only advance if we're not already on the last step
+      if (index < steps.length - 1) {
+        devLog(`Moving from step ${index} to step ${index + 1}`);
+        setTourState(prevState => ({
+          ...prevState,
+          stepIndex: index + 1
+        }));
+      } else {
+        // This is the last step, handle completion
+        devLog('Last step reached, completing tour');
+        setTourState(prevState => ({ ...prevState, run: false }));
+        onComplete();
       }
     }
     
