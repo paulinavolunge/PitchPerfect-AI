@@ -48,6 +48,7 @@ import NotFound from '@/pages/NotFound';
 import VoiceTraining from '@/pages/VoiceTraining';
 import Analytics from '@/pages/Analytics';
 import AIRoleplay from '@/pages/AIRoleplay';
+import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 
 // Placeholder page imports
 import { VoiceTrainingPage, AnalyticsPage, RoleplayPage } from '@/components/PlaceholderPages';
@@ -167,6 +168,7 @@ function App() {
                               <Route path="/call-recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
                               <Route path="/recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
                               <Route path="/team" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
+                              <Route path="/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
                               
                               {/* Subscription routes */}
                               <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />

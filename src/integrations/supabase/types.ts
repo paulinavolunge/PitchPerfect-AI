@@ -299,6 +299,30 @@ export type Database = {
         }
         Relationships: []
       }
+      security_logs: {
+        Row: {
+          created_at: string | null
+          event_details: Json | null
+          event_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_details?: Json | null
+          event_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_details?: Json | null
+          event_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -489,6 +513,14 @@ export type Database = {
         }
         Returns: Json
       }
+      check_privilege_escalation: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      check_rate_limit: {
+        Args: { p_user_id: string; p_ip_address: unknown; p_action?: string }
+        Returns: Json
+      }
       check_user_permission: {
         Args: { p_user_id: string; p_required_role?: string }
         Returns: boolean
@@ -514,6 +546,10 @@ export type Database = {
         Returns: boolean
       }
       is_authenticated_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_emergency_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
@@ -548,6 +584,10 @@ export type Database = {
       }
       security_health_check: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      validate_content_safety: {
+        Args: { p_content: string; p_user_id?: string }
         Returns: Json
       }
       validate_file_upload: {

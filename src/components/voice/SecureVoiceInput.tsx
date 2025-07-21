@@ -4,6 +4,8 @@ import { sanitizeVoiceInput, validateAudioFile, checkVoiceRateLimit } from '@/ut
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { SecurityValidationService } from '@/services/SecurityValidationService';
+import { EnhancedRateLimitService } from '@/services/EnhancedRateLimitService';
 
 interface SecureVoiceInputProps {
   onVoiceInput: (sanitizedInput: string) => void;
@@ -28,24 +30,46 @@ const SecureVoiceInput: React.FC<SecureVoiceInputProps> = ({
     setIsProcessing(true);
 
     try {
-      // Check rate limiting
-      const rateLimitOk = await checkVoiceRateLimit(user.id, supabase);
-      if (!rateLimitOk) {
-        toast.error('Rate limit exceeded. Please wait before trying again.');
-        onError?.('Rate limit exceeded');
+      // Enhanced security validation
+      const validationResult = await SecurityValidationService.validateUserInput(
+        rawInput, 
+        user.id, 
+        'voice'
+      );
+
+      if (!validationResult.valid) {
+        const errorMessage = validationResult.errors[0] || 'Voice input validation failed';
+        toast.error(errorMessage);
+        onError?.(errorMessage);
         return;
       }
 
-      // Sanitize and validate input
-      const sanitizedInput = sanitizeVoiceInput(rawInput);
+      // Show warnings if any
+      if (validationResult.warnings.length > 0) {
+        validationResult.warnings.forEach(warning => toast.error(warning));
+      }
+
+      // Enhanced rate limiting check
+      const rateLimitResult = await EnhancedRateLimitService.checkRateLimit(user.id, 'voice_processing');
+      if (!rateLimitResult.allowed) {
+        const errorMessage = 'Voice processing rate limit exceeded. Please try again later.';
+        toast.error(errorMessage);
+        onError?.(errorMessage);
+        return;
+      }
+
+      // Use sanitized content from validation
+      const sanitizedInput = validationResult.sanitizedData || rawInput;
       
-      // Log security event for monitoring
+      // Log enhanced security event
       await supabase.rpc('log_security_event', {
-        p_event_type: 'voice_input_processed',
+        p_event_type: 'voice_input_processed_secure',
         p_event_details: {
           input_length: sanitizedInput.length,
           original_length: rawInput.length,
-          sanitized: sanitizedInput !== rawInput
+          sanitized: validationResult.was_sanitized,
+          safety_warnings: validationResult.warnings.length,
+          rate_limit_remaining: rateLimitResult.current_requests
         }
       });
 
@@ -58,7 +82,7 @@ const SecureVoiceInput: React.FC<SecureVoiceInputProps> = ({
 
       // Log security event for failed processing
       await supabase.rpc('log_security_event', {
-        p_event_type: 'voice_input_failed',
+        p_event_type: 'voice_input_failed_secure',
         p_event_details: {
           error: errorMessage,
           input_length: rawInput?.length || 0
@@ -76,20 +100,38 @@ const SecureVoiceInput: React.FC<SecureVoiceInputProps> = ({
     }
 
     try {
-      // Validate file before processing
-      validateAudioFile(file);
-      
-      // Log file upload security event
+      // Enhanced file validation
+      const validationResult = await SecurityValidationService.validateFileUpload(
+        file.name,
+        file.size,
+        file.type,
+        user.id
+      );
+
+      if (!validationResult.valid) {
+        const errorMessage = validationResult.errors[0] || 'File validation failed';
+        toast.error(errorMessage);
+        onError?.(errorMessage);
+        return;
+      }
+
+      // Show warnings if any
+      if (validationResult.warnings.length > 0) {
+        validationResult.warnings.forEach(warning => toast.error(warning));
+      }
+
+      // Log enhanced file upload security event
       await supabase.rpc('log_security_event', {
-        p_event_type: 'audio_file_uploaded',
+        p_event_type: 'audio_file_uploaded_secure',
         p_event_details: {
           file_size: file.size,
           file_type: file.type,
-          file_name: file.name
+          original_name: file.name,
+          sanitized_name: validationResult.sanitizedData?.sanitized_name,
+          security_warnings: validationResult.warnings.length
         }
       });
 
-      // Process file (implement actual audio processing here)
       toast.success('Audio file validated and ready for processing');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'File validation failed';
@@ -99,7 +141,7 @@ const SecureVoiceInput: React.FC<SecureVoiceInputProps> = ({
 
       // Log security event for failed validation
       await supabase.rpc('log_security_event', {
-        p_event_type: 'file_validation_failed',
+        p_event_type: 'file_validation_failed_secure',
         p_event_details: {
           error: errorMessage,
           file_name: file?.name || 'unknown'
