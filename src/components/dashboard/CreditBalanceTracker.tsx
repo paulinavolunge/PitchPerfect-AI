@@ -60,7 +60,7 @@ const CreditBalanceTracker: React.FC<CreditBalanceTrackerProps> = ({ className =
     : "text-blue-600";
 
   return (
-    <Card className={`${cardStyle} shadow-sm hover:shadow-md transition-shadow ${className}`}>
+    <Card className={`${cardStyle} shadow-sm ${className}`}>
       <CardContent className="pt-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Diamond className={`h-6 w-6 ${iconColor}`} />
