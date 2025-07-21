@@ -14,6 +14,7 @@ import { Helmet } from 'react-helmet-async';
 import { MicrophonePermissionHandler } from '@/components/permissions/MicrophonePermissionHandler';
 import { AudioRecorder } from '@/components/recordings/AudioRecorder';
 import { useUserIsolation } from '@/hooks/useUserIsolation';
+import { PitchQualityValidator } from '@/utils/contentSafety';
 
 const Practice = () => {
   const { user, creditsRemaining, deductUserCredits } = useAuth();
@@ -113,31 +114,44 @@ const Practice = () => {
         return;
       }
 
-      // Mock analysis results with structured feedback
-      const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
+      // Get quality-based analysis results
+      const qualityValidation = practiceMode === 'text' ? 
+        PitchQualityValidator.validatePitchQuality(textInput) : 
+        { quality: 'excellent', score: Math.floor(Math.random() * 30) + 70, feedback: '' };
+      
+      const analysisScore = practiceMode === 'text' ? 
+        PitchQualityValidator.getAnalysisScore(textInput) : 
+        Math.floor(Math.random() * 30) + 70;
+      
       const mockTranscript = practiceMode === 'text' ? textInput : 
         "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
       
-      // Generate structured feedback based on score
-      const structuredFeedback = {
-        clarity: mockScore >= 85 ? 'Clear and concise' : mockScore >= 70 ? 'Mostly clear' : 'Needs clarity improvement',
-        confidence: mockScore >= 80 ? 'Strong and assertive' : mockScore >= 65 ? 'Moderate confidence' : 'Needs more assertiveness',
-        persuasiveness: mockScore >= 75 ? 'Compelling arguments' : mockScore >= 60 ? 'Somewhat persuasive' : 'Strengthen value proposition',
-        tone: mockScore >= 80 ? 'Friendly and professional' : mockScore >= 65 ? 'Professional tone' : 'Consider warming up tone',
-        objectionHandling: mockScore >= 70 ? 'Good use of value-based responses' : 'Address potential objections proactively'
+      // Generate structured feedback based on quality and score
+      const structuredFeedback = practiceMode === 'text' ? {
+        clarity: qualityValidation.quality === 'excellent' ? 'Clear and concise' : qualityValidation.quality === 'good' ? 'Mostly clear' : 'Needs clarity improvement',
+        confidence: qualityValidation.quality === 'excellent' ? 'Strong and assertive' : qualityValidation.quality === 'good' ? 'Moderate confidence' : 'Needs more assertiveness',
+        persuasiveness: qualityValidation.quality === 'excellent' ? 'Compelling arguments' : qualityValidation.quality === 'good' ? 'Somewhat persuasive' : 'Strengthen value proposition',
+        tone: qualityValidation.quality === 'excellent' ? 'Friendly and professional' : qualityValidation.quality === 'good' ? 'Professional tone' : 'Consider warming up tone',
+        objectionHandling: qualityValidation.quality === 'excellent' ? 'Good use of value-based responses' : qualityValidation.quality === 'good' ? 'Basic objection handling' : 'Address potential objections proactively'
+      } : {
+        clarity: analysisScore >= 85 ? 'Clear and concise' : analysisScore >= 70 ? 'Mostly clear' : 'Needs clarity improvement',
+        confidence: analysisScore >= 80 ? 'Strong and assertive' : analysisScore >= 65 ? 'Moderate confidence' : 'Needs more assertiveness',
+        persuasiveness: analysisScore >= 75 ? 'Compelling arguments' : analysisScore >= 60 ? 'Somewhat persuasive' : 'Strengthen value proposition',
+        tone: analysisScore >= 80 ? 'Friendly and professional' : analysisScore >= 65 ? 'Professional tone' : 'Consider warming up tone',
+        objectionHandling: analysisScore >= 70 ? 'Good use of value-based responses' : 'Address potential objections proactively'
       };
       
       const mockFeedback = structuredFeedback;
 
       setTranscript(mockTranscript);
       setFeedback(JSON.stringify(mockFeedback)); // Store as JSON for structured display
-      setScore(mockScore);
+      setScore(analysisScore);
       setAnalysisComplete(true);
 
-      console.log('✅ Analysis complete:', { score: mockScore, creditsUsed: 1, mode: practiceMode });
+      console.log('✅ Analysis complete:', { score: analysisScore, creditsUsed: 1, mode: practiceMode, quality: qualityValidation.quality });
 
       // Update streak if score is good (with user-specific storage)
-      if (mockScore >= 80 && user?.id) {
+      if (analysisScore >= 80 && user?.id) {
         const newStreak = streakCount + 1;
         setStreakCount(newStreak);
         const streakKey = getUserSpecificKey('streak');
@@ -145,14 +159,14 @@ const Practice = () => {
       }
 
       trackEvent('practice_analysis_complete', {
-        score: mockScore,
+        score: analysisScore,
         credits_used: 1,
         mode: practiceMode
       });
 
       toast({
         title: "Analysis Complete!",
-        description: `Your pitch scored ${mockScore}/100`,
+        description: `Your pitch scored ${analysisScore}/100`,
       });
 
     } catch (error) {
@@ -170,6 +184,18 @@ const Practice = () => {
       toast({
         title: "Please Enter Your Pitch",
         description: "Type your pitch in the text area before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate pitch quality before proceeding
+    const qualityValidation = PitchQualityValidator.validatePitchQuality(textInput);
+    
+    if (!qualityValidation.isValid) {
+      toast({
+        title: "Insufficient Content",
+        description: qualityValidation.feedback,
         variant: "destructive",
       });
       return;
@@ -477,9 +503,14 @@ const Practice = () => {
                       maxLength={2000}
                     />
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-brand-dark/60">
-                        {textInput.length}/2000 characters
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-brand-dark/60">
+                          {textInput.length}/2000 characters
+                        </span>
+                        <span className="text-xs text-brand-dark/50">
+                          💡 Minimum: 50 characters, 10 words, 2 sentences for accurate analysis
+                        </span>
+                      </div>
                       <button 
                         onClick={handleTextSubmit}
                         disabled={isSubmitting || !textInput.trim() || creditsRemaining < 1}

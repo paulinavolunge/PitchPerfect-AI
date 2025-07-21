@@ -328,3 +328,157 @@ export class SafetyRateLimiter {
     return true;
   }
 }
+
+/**
+ * Pitch quality validation for analysis
+ */
+export class PitchQualityValidator {
+  // Minimum requirements for a meaningful pitch analysis
+  private static readonly MIN_WORD_COUNT = 10;
+  private static readonly MIN_CHAR_COUNT = 50;
+  private static readonly MIN_SENTENCES = 2;
+  
+  // Common low-effort or nonsensical inputs
+  private static readonly LOW_EFFORT_PATTERNS = [
+    /^[a-zA-Z\s]{1,20}$/, // Very short single words or phrases
+    /^(hello|hi|hey|test|demo|sample|pitch|sales|product|service)$/i, // Common test words
+    /^[a-zA-Z]{1,5}$/, // Very short words
+    /^(a|an|the|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|could|should|may|might|can)$/i, // Common filler words
+    /^[^\w\s]*$/, // Only punctuation/symbols
+    /^[a-zA-Z\s]{1,30}$/, // Very short text with only letters and spaces
+  ];
+
+  /**
+   * Validate pitch content quality for analysis
+   */
+  static validatePitchQuality(content: string): {
+    isValid: boolean;
+    quality: 'excellent' | 'good' | 'poor' | 'invalid';
+    score: number;
+    feedback: string;
+    issues: string[];
+  } {
+    const issues: string[] = [];
+    let quality: 'excellent' | 'good' | 'poor' | 'invalid' = 'excellent';
+    let score = 100;
+    let feedback = '';
+
+    // Basic validation
+    if (!content || typeof content !== 'string') {
+      return {
+        isValid: false,
+        quality: 'invalid',
+        score: 0,
+        feedback: 'Please provide a valid pitch for analysis.',
+        issues: ['No content provided']
+      };
+    }
+
+    const trimmedContent = content.trim();
+    
+    // Check for empty or whitespace-only content
+    if (!trimmedContent) {
+      return {
+        isValid: false,
+        quality: 'invalid',
+        score: 0,
+        feedback: 'Please provide a pitch for analysis.',
+        issues: ['Empty content']
+      };
+    }
+
+    // Check character count
+    if (trimmedContent.length < this.MIN_CHAR_COUNT) {
+      issues.push(`Content too short (${trimmedContent.length} characters, minimum ${this.MIN_CHAR_COUNT})`);
+      score -= 40;
+    }
+
+    // Check word count
+    const words = trimmedContent.split(/\s+/).filter(word => word.length > 0);
+    if (words.length < this.MIN_WORD_COUNT) {
+      issues.push(`Too few words (${words.length} words, minimum ${this.MIN_WORD_COUNT})`);
+      score -= 30;
+    }
+
+    // Check sentence count
+    const sentences = trimmedContent.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0);
+    if (sentences.length < this.MIN_SENTENCES) {
+      issues.push(`Too few sentences (${sentences.length} sentences, minimum ${this.MIN_SENTENCES})`);
+      score -= 20;
+    }
+
+    // Check for low-effort patterns
+    const isLowEffort = this.LOW_EFFORT_PATTERNS.some(pattern => pattern.test(trimmedContent));
+    if (isLowEffort) {
+      issues.push('Content appears to be low-effort or nonsensical');
+      score -= 50;
+    }
+
+    // Check for repetitive content
+    const uniqueWords = new Set(words.map(word => word.toLowerCase()));
+    const repetitionRatio = uniqueWords.size / words.length;
+    if (words.length > 5 && repetitionRatio < 0.3) {
+      issues.push('Content appears repetitive');
+      score -= 15;
+    }
+
+    // Check for meaningful content indicators
+    const hasBusinessTerms = /\b(business|product|service|customer|client|value|benefit|solution|problem|need|want|help|improve|increase|reduce|save|cost|price|quality|feature|advantage|benefit)\b/i.test(trimmedContent);
+    const hasActionWords = /\b(can|will|help|provide|offer|give|show|demonstrate|explain|solve|address|meet|exceed|deliver|create|build|develop|improve|enhance|optimize)\b/i.test(trimmedContent);
+    
+    if (!hasBusinessTerms && !hasActionWords && words.length > 3) {
+      issues.push('Content lacks business or action-oriented language');
+      score -= 25;
+    }
+
+    // Determine quality level and generate feedback
+    if (score <= 20) {
+      quality = 'invalid';
+      feedback = 'Please provide a more substantial pitch for an accurate analysis. Your input appears to be too short or nonsensical.';
+    } else if (score <= 50) {
+      quality = 'poor';
+      feedback = 'Your pitch needs significant improvement. Consider adding more details about your product/service, target audience, and value proposition.';
+    } else if (score <= 80) {
+      quality = 'good';
+      feedback = 'Your pitch has potential but could be enhanced with more specific details and stronger value propositions.';
+    } else {
+      quality = 'excellent';
+      feedback = 'Your pitch appears well-structured and ready for detailed analysis.';
+    }
+
+    // Ensure score is within bounds
+    score = Math.max(0, Math.min(100, score));
+
+    return {
+      isValid: quality !== 'invalid',
+      quality,
+      score,
+      feedback,
+      issues
+    };
+  }
+
+  /**
+   * Get appropriate analysis score based on content quality
+   */
+  static getAnalysisScore(content: string): number {
+    const validation = this.validatePitchQuality(content);
+    
+    if (!validation.isValid) {
+      return 0; // Invalid content gets 0 score
+    }
+    
+    // For poor quality content, return a very low score
+    if (validation.quality === 'poor') {
+      return Math.floor(Math.random() * 10) + 5; // 5-15 range
+    }
+    
+    // For good quality content, return a moderate score
+    if (validation.quality === 'good') {
+      return Math.floor(Math.random() * 20) + 40; // 40-60 range
+    }
+    
+    // For excellent content, return a high score (original mock logic)
+    return Math.floor(Math.random() * 30) + 70; // 70-100 range
+  }
+}
