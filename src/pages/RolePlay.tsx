@@ -6,14 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Mic, MessageSquare, Volume2, Play, ArrowLeft } from 'lucide-react';
+import { Mic, MessageSquare, Volume2, Play, ArrowLeft, Lightbulb } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
 import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
+import { useToast } from '@/hooks/use-toast';
 
 const RolePlay = () => {
   const location = useLocation();
+  const { toast } = useToast();
   const [mode, setMode] = useState<'voice' | 'text' | 'hybrid'>('text');
   const [scenario, setScenario] = useState({
     difficulty: 'Beginner',
@@ -25,6 +27,16 @@ const RolePlay = () => {
   const [volume, setVolume] = useState([75]);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [userScript, setUserScript] = useState<string | null>(null);
+  const [appliedTips, setAppliedTips] = useState<any[]>([]);
+  const [activeScripts, setActiveScripts] = useState<any[]>([]);
+
+  // Load applied tips and scripts
+  useEffect(() => {
+    const savedTipDetails = JSON.parse(localStorage.getItem('appliedTipDetails') || '[]');
+    const savedScripts = JSON.parse(localStorage.getItem('activeSalesScripts') || '[]');
+    setAppliedTips(savedTipDetails);
+    setActiveScripts(savedScripts);
+  }, []);
 
   // Handle auto-start from AI Roleplay page
   useEffect(() => {
@@ -175,6 +187,58 @@ const RolePlay = () => {
 
             {/* Script Upload */}
             <ScriptUpload onScriptUpload={handleScriptUpload} />
+
+            {/* Applied Tips & Scripts */}
+            {(appliedTips.length > 0 || activeScripts.length > 0) && (
+              <Card className="border-green-300/30 bg-green-50/50">
+                <CardHeader className="pb-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                    Your Active Tips & Scripts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {appliedTips.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-sm mb-2 text-green-700">Applied Tips:</h4>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {appliedTips.map((tip, index) => (
+                          <div key={index} className="p-2 bg-white rounded border border-green-200">
+                            <h5 className="font-medium text-xs text-brand-dark">{tip.title}</h5>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {activeScripts.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-sm mb-2 text-purple-700">Active Scripts:</h4>
+                      <div className="space-y-2">
+                        {activeScripts.map((script, index) => (
+                          <div key={index} className="p-2 bg-white rounded border border-purple-200">
+                            <h5 className="font-medium text-xs text-brand-dark">{script.title}</h5>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="mt-1 text-xs text-purple-600 hover:bg-purple-100"
+                              onClick={() => {
+                                setUserScript(script.description);
+                                toast({
+                                  title: "Script Loaded",
+                                  description: "Script is ready to use in your roleplay",
+                                });
+                              }}
+                            >
+                              Use This Script
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Scenario Selection */}

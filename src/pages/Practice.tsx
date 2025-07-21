@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Mic, Play, Square, RotateCcw, Zap, Trophy, Target, MessageCircle, Send } from 'lucide-react';
+import { Mic, Play, Square, RotateCcw, Zap, Trophy, Target, MessageCircle, Send, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { trackEvent } from '@/utils/analytics';
@@ -34,6 +34,16 @@ const Practice = () => {
   const [hasPermission, setHasPermission] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [appliedTips, setAppliedTips] = useState<any[]>([]);
+  const [activeScripts, setActiveScripts] = useState<any[]>([]);
+
+  // Load applied tips and scripts
+  useEffect(() => {
+    const savedTipDetails = JSON.parse(localStorage.getItem('appliedTipDetails') || '[]');
+    const savedScripts = JSON.parse(localStorage.getItem('activeSalesScripts') || '[]');
+    setAppliedTips(savedTipDetails);
+    setActiveScripts(savedScripts);
+  }, []);
 
   // User-specific streak data with proper isolation
   useEffect(() => {
@@ -350,6 +360,61 @@ const Practice = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Applied Tips Section */}
+        {(appliedTips.length > 0 || activeScripts.length > 0) && !practiceMode && (
+          <Card className="mb-8 border-green-300/30 bg-green-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-green-600" />
+                Your Active Tips & Scripts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {appliedTips.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-medium text-sm mb-2 text-green-700">Applied Tips:</h4>
+                  <div className="space-y-2">
+                    {appliedTips.map((tip, index) => (
+                      <div key={index} className="p-3 bg-white rounded-lg border border-green-200">
+                        <h5 className="font-medium text-sm text-brand-dark">{tip.title}</h5>
+                        <p className="text-xs text-brand-dark/70 mt-1">{tip.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {activeScripts.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-sm mb-2 text-purple-700">Active Scripts:</h4>
+                  <div className="space-y-2">
+                    {activeScripts.map((script, index) => (
+                      <div key={index} className="p-3 bg-white rounded-lg border border-purple-200">
+                        <h5 className="font-medium text-sm text-brand-dark">{script.title}</h5>
+                        <p className="text-xs text-brand-dark/70 mt-1">{script.description}</p>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-2 text-xs text-purple-600 hover:bg-purple-100"
+                          onClick={() => {
+                            setTextInput(script.description);
+                            setPracticeMode('text');
+                            toast({
+                              title: "Script Loaded",
+                              description: "Script has been loaded into the text input",
+                            });
+                          }}
+                        >
+                          Use This Script
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Practice Interface */}
         {!analysisComplete ? (

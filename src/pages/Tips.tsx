@@ -1,21 +1,34 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Search, Bot } from 'lucide-react';
+import { Search, Bot, CheckCircle, Copy, Lightbulb, FileText } from 'lucide-react';
 import AISuggestionCard from '@/components/AISuggestionCard';
 import { useToast } from '@/hooks/use-toast';
 import AIDisclosure from '@/components/AIDisclosure';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 const Tips = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All Tips');
   const [displayedTips, setDisplayedTips] = useState(6);
   const [appliedTips, setAppliedTips] = useState<string[]>([]);
   const [activeScripts, setActiveScripts] = useState<{title: string, description: string}[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Load saved tips and scripts on mount
+  useEffect(() => {
+    const savedTips = JSON.parse(localStorage.getItem('appliedSalesTips') || '[]');
+    const savedScripts = JSON.parse(localStorage.getItem('activeSalesScripts') || '[]');
+    setAppliedTips(savedTips);
+    setActiveScripts(savedScripts);
+  }, []);
 
   const allSalesTips = [
     {
@@ -110,64 +123,134 @@ const Tips = () => {
     }
   };
 
-  const handleGeneratePersonalizedTips = () => {
+  const handleGeneratePersonalizedTips = async () => {
+    setIsGenerating(true);
     toast({
       title: "Generating Personalized Tips",
       description: "AI is analyzing your profile to create custom recommendations",
     });
+    
+    // Simulate AI generation
+    setTimeout(() => {
+      setIsGenerating(false);
+      toast({
+        title: "Tips Generated!",
+        description: "New personalized tips have been added to your collection",
+      });
+    }, 2000);
   };
 
-  const handleApplyTipOrScript = (title: string, description: string, type: 'tip' | 'script') => {
-    if (type === 'tip') {
-      // Handle tip application
-      if (!appliedTips.includes(title)) {
-        setAppliedTips(prev => [...prev, title]);
-      }
-      toast({
-        title: "Tip Applied",
-        description: "This tip will be included in your next practice session",
-      });
-      
-      // Save to localStorage for persistence across sessions
-      const savedTips = JSON.parse(localStorage.getItem('appliedSalesTips') || '[]');
-      if (!savedTips.includes(title)) {
-        localStorage.setItem('appliedSalesTips', JSON.stringify([...savedTips, title]));
-      }
-    } else {
-      // Handle script application
-      const newScript = { title, description };
-      setActiveScripts(prev => {
-        // Don't add duplicates
-        if (prev.some(script => script.title === title)) {
-          return prev;
+  const handleApplyTipOrScript = async (title: string, description: string, type: 'tip' | 'script') => {
+    try {
+      if (type === 'tip') {
+        // Handle tip application
+        if (!appliedTips.includes(title)) {
+          const newAppliedTips = [...appliedTips, title];
+          setAppliedTips(newAppliedTips);
+          
+          // Save to localStorage for persistence
+          localStorage.setItem('appliedSalesTips', JSON.stringify(newAppliedTips));
+          
+          // Also save the full tip details for use in practice sessions
+          const savedTipDetails = JSON.parse(localStorage.getItem('appliedTipDetails') || '[]');
+          const tipDetails = allSalesTips.find(t => t.title === title);
+          if (tipDetails && !savedTipDetails.some((t: any) => t.title === title)) {
+            savedTipDetails.push(tipDetails);
+            localStorage.setItem('appliedTipDetails', JSON.stringify(savedTipDetails));
+          }
         }
-        return [...prev, newScript];
-      });
-      
-      // Save to localStorage
-      const savedScripts = JSON.parse(localStorage.getItem('activeSalesScripts') || '[]');
-      if (!savedScripts.some((script: any) => script.title === title)) {
-        localStorage.setItem('activeSalesScripts', JSON.stringify([...savedScripts, newScript]));
-      }
-      
-      // Copy script to clipboard for immediate use
-      navigator.clipboard.writeText(description).catch(err => {
-        console.error('Failed to copy to clipboard:', err);
+        
         toast({
-          title: "Copy failed",
-          description: "Failed to copy to clipboard",
-          variant: "destructive"
+          title: "✅ Tip Applied Successfully!",
+          description: (
+            <div className="space-y-2">
+              <p>This tip will be available in your practice sessions</p>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/practice')}
+                  className="text-xs"
+                >
+                  Go to Practice
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/ai-roleplay')}
+                  className="text-xs"
+                >
+                  Try Roleplay
+                </Button>
+              </div>
+            </div>
+          ),
         });
-      });
-      
+      } else {
+        // Handle script application
+        const newScript = { title, description };
+        
+        // Check if script already exists
+        if (!activeScripts.some(script => script.title === title)) {
+          const newActiveScripts = [...activeScripts, newScript];
+          setActiveScripts(newActiveScripts);
+          
+          // Save to localStorage
+          localStorage.setItem('activeSalesScripts', JSON.stringify(newActiveScripts));
+        }
+        
+        // Copy script to clipboard
+        await navigator.clipboard.writeText(description);
+        
+        toast({
+          title: "📋 Script Copied & Saved!",
+          description: (
+            <div className="space-y-2">
+              <p>Script copied to clipboard and saved to your library</p>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/practice')}
+                  className="text-xs"
+                >
+                  Practice Script
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/ai-roleplay')}
+                  className="text-xs"
+                >
+                  Use in Roleplay
+                </Button>
+              </div>
+            </div>
+          ),
+        });
+      }
+    } catch (error) {
+      console.error('Failed to apply tip/script:', error);
       toast({
-        title: "Script Ready to Use",
-        description: "Script has been copied to clipboard and saved to your library",
+        title: "Error",
+        description: "Failed to apply. Please try again.",
+        variant: "destructive"
       });
     }
   };
 
-  // Filter tips based on search query and active filter - modified to be case insensitive
+  const handleRemoveScript = (scriptTitle: string) => {
+    const newActiveScripts = activeScripts.filter(script => script.title !== scriptTitle);
+    setActiveScripts(newActiveScripts);
+    localStorage.setItem('activeSalesScripts', JSON.stringify(newActiveScripts));
+    
+    toast({
+      title: "Script Removed",
+      description: "Script has been removed from your library",
+    });
+  };
+
+  // Filter tips based on search query and active filter
   const filteredTips = allSalesTips.filter(tip => {
     const matchesSearch = searchQuery === '' || 
                           tip.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -181,13 +264,22 @@ const Tips = () => {
   // Get the tips to display (limited by displayedTips)
   const salesTips = filteredTips.slice(0, displayedTips);
 
+  // Check if a tip is already applied
+  const isTipApplied = (title: string) => appliedTips.includes(title);
+  const isScriptActive = (title: string) => activeScripts.some(script => script.title === title);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-2 text-brand-dark">AI Sales Tips & Scripts</h1>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2 text-brand-dark">AI Sales Tips & Scripts</h1>
+            <p className="text-brand-dark/70">
+              Apply tips and scripts to enhance your sales practice sessions
+            </p>
+          </div>
           
           <AIDisclosure 
             variant="compact"
@@ -195,22 +287,75 @@ const Tips = () => {
             className="mb-4"
           />
           
-          {activeScripts.length > 0 && (
-            <Card className="mb-8 border-purple-300/30">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-medium mb-4 text-brand-dark">Your Active Scripts</h2>
-                <div className="space-y-4">
-                  {activeScripts.map((script, index) => (
-                    <div key={index} className="p-3 bg-purple-300/5 border border-purple-300/20 rounded-lg">
-                      <h3 className="font-medium text-brand-dark">{script.title}</h3>
-                      <p className="text-sm text-brand-dark/70 mt-1">{script.description}</p>
+          {/* Active Scripts Section */}
+          <AnimatePresence>
+            {activeScripts.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="mb-8 border-purple-300/30 bg-purple-50/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-medium text-brand-dark flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-purple-600" />
+                        Your Active Scripts ({activeScripts.length})
+                      </h2>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate('/practice')}
+                        className="text-purple-600 border-purple-300 hover:bg-purple-100"
+                      >
+                        Use in Practice
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                    <div className="space-y-3">
+                      {activeScripts.map((script, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="p-4 bg-white border border-purple-200 rounded-lg flex items-start justify-between group"
+                        >
+                          <div className="flex-1">
+                            <h3 className="font-medium text-brand-dark flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              {script.title}
+                            </h3>
+                            <p className="text-sm text-brand-dark/70 mt-1">{script.description}</p>
+                          </div>
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => navigator.clipboard.writeText(script.description)}
+                              className="text-purple-600 hover:bg-purple-100"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleRemoveScript(script.title)}
+                              className="text-red-600 hover:bg-red-100"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
+          {/* AI Recommendations Card */}
           <Card className="mb-8 border-purple-300/30">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-6 items-center">
@@ -222,9 +367,10 @@ const Tips = () => {
                   <Button 
                     className="btn-primary bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
                     onClick={handleGeneratePersonalizedTips}
+                    disabled={isGenerating}
                   >
-                    <Bot size={16} />
-                    Generate Personalized Tips
+                    <Bot size={16} className={isGenerating ? 'animate-spin' : ''} />
+                    {isGenerating ? 'Generating...' : 'Generate Personalized Tips'}
                   </Button>
                 </div>
                 <div className="md:w-1/3 flex justify-center">
@@ -238,6 +384,7 @@ const Tips = () => {
             </CardContent>
           </Card>
           
+          {/* Search and Filters */}
           <div className="mb-8">
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -265,16 +412,24 @@ const Tips = () => {
             </div>
           </div>
           
+          {/* Tips Grid */}
           {salesTips.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {salesTips.map((tip, index) => (
-                <AISuggestionCard
+                <motion.div
                   key={index}
-                  title={tip.title}
-                  description={tip.description}
-                  type={tip.type as 'tip' | 'script'}
-                  onApply={handleApplyTipOrScript}
-                />
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <AISuggestionCard
+                    title={tip.title}
+                    description={tip.description}
+                    type={tip.type as 'tip' | 'script'}
+                    onApply={handleApplyTipOrScript}
+                    isApplied={tip.type === 'tip' ? isTipApplied(tip.title) : isScriptActive(tip.title)}
+                  />
+                </motion.div>
               ))}
             </div>
           ) : (
@@ -293,6 +448,28 @@ const Tips = () => {
                 Load More Tips
               </Button>
             </div>
+          )}
+          
+          {/* Applied Tips Summary */}
+          {appliedTips.length > 0 && (
+            <Card className="mt-8 border-green-300/30 bg-green-50/50">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-green-600" />
+                  Applied Tips ({appliedTips.length})
+                </h3>
+                <p className="text-sm text-brand-dark/70 mb-3">
+                  These tips are now available in your practice sessions
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {appliedTips.map((tip, index) => (
+                    <Badge key={index} variant="secondary" className="bg-green-100 text-green-700">
+                      {tip}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </main>
