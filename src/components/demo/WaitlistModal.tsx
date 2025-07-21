@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { addToWaitlist } from '@/utils/demoUtils';
 import { sendSessionToCRM, sendImmediateConfirmation, CRMProvider, getWebhookUrl } from '@/utils/webhookUtils';
-import { CheckCircle, Mail, AlertCircle } from 'lucide-react';
+import { CheckCircle, Mail, AlertCircle, Loader2 } from 'lucide-react';
 
 interface WaitlistModalProps {
   open: boolean;
@@ -159,31 +159,30 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
                 )}
               </div>
               
-              <DialogFooter className="pt-4 gap-2 sm:gap-0">
-                <Button 
+              <div className="flex gap-3 pt-2">
+                <Button
                   type="button"
                   variant="outline"
                   onClick={handleClose}
                   disabled={isSubmitting}
-                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
-                  className="w-full sm:w-auto font-medium"
-                  disabled={isSubmitting || !email.trim()}
+                  disabled={isSubmitting || !email}
+                  className="bg-primary hover:bg-primary/90 text-white"
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full inline-block mr-2" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Sending...
                     </>
                   ) : (
-                    "Send Me the Recap"
+                    'Send Recap'
                   )}
                 </Button>
-              </DialogFooter>
+              </div>
               
               <div className="text-center text-sm text-muted-foreground pt-2">
                 <p>Want to save your progress? <a href="/signup" className="text-primary hover:underline font-medium">Sign up free</a></p>
@@ -191,36 +190,25 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
             </form>
           </>
         ) : (
-          <>
+          <div className="text-center py-6">
+            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
             <DialogHeader>
-              <div className="mx-auto mb-4">
-                <CheckCircle className="h-16 w-16 text-green-500" />
-              </div>
-              <DialogTitle className="text-xl text-center">
-                Check Your Email!
-              </DialogTitle>
-              <DialogDescription className="text-center space-y-2">
-                <p className="font-medium">✅ Your pitch recap has been sent to:</p>
-                <p className="text-primary font-semibold">{email}</p>
-                <p className="text-sm text-muted-foreground pt-2">
-                  You should receive it within a few minutes. Check your spam folder if you don't see it.
-                </p>
+              <DialogTitle className="text-xl">Success!</DialogTitle>
+              <DialogDescription className="pt-2">
+                We've sent your pitch analysis to <strong>{email}</strong>
               </DialogDescription>
             </DialogHeader>
-            
-            <DialogFooter className="pt-6">
+            <div className="mt-6">
               <Button 
                 onClick={handleClose}
-                className="w-full font-medium"
+                className="w-full bg-primary hover:bg-primary/90 text-white"
               >
                 Done
               </Button>
-            </DialogFooter>
-            
-            <div className="text-center text-sm text-muted-foreground pt-2">
-              <p>Ready to improve your pitch? <a href="/signup" className="text-primary hover:underline font-medium">Sign up for free</a></p>
             </div>
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>

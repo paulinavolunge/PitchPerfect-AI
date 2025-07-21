@@ -145,10 +145,14 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
     }
   };
 
-  const handleSubmit = async () => {
-    // Stop listening if still active
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    
+    // Stop listening if voice is active
     if (isListening) {
       stopListening();
+      // Wait a moment for the final transcript to be set
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     const response = inputMode === 'voice' ? transcript.trim() : textInput.trim();

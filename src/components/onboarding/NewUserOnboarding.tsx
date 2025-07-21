@@ -411,7 +411,10 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
               <Button
                 onClick={handleNext}
                 className="bg-gradient-to-r from-primary-600 to-vibrant-blue-500 hover:from-primary-700 hover:to-vibrant-blue-600 text-white"
-                disabled={currentStep === 1 && !selectedIndustry}
+                disabled={
+                  (currentStep === 1 && !selectedIndustry) ||
+                  (currentStep === 2 && !selectedChallenge)
+                }
               >
                 {currentStep === steps.length - 1 ? 'Get Started' : 'Continue'}
                 <ArrowRight className="h-4 w-4 ml-1" />
