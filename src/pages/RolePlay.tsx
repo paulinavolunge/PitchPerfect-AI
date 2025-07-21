@@ -188,15 +188,18 @@ const RolePlay = () => {
                 <CardTitle className="text-base sm:text-lg">Ready to Practice?</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <Button 
-                  onClick={handleStartSession} 
-                  size="lg" 
-                  className="w-full text-sm sm:text-base h-11 sm:h-12"
+                <Button
+                  onClick={handleStartSession}
+                  size="lg"
+                  variant="default"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                  aria-label="Start Roleplay Session"
                 >
-                  <Play className="h-4 w-4 mr-2" />
+                  <Play className="h-5 w-5 mr-2" />
                   Start Roleplay Session
                 </Button>
-                <p className="text-xs sm:text-sm text-brand-dark/60 mt-2 text-center">
+                
+                <p className="text-xs sm:text-sm text-gray-600 mt-3 text-center">
                   Your AI conversation partner is ready when you are!
                 </p>
               </CardContent>
