@@ -275,7 +275,7 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(prev => prev + 1);
     } else {
       // If on last step, complete onboarding
       handleComplete('/dashboard');
@@ -284,13 +284,13 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
 
   const handleBack = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep(prev => prev - 1);
     }
   };
 
   const handleSkip = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(prev => prev + 1);
     } else {
       // If on last step, complete onboarding
       handleComplete('/dashboard');
@@ -337,15 +337,15 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
     }
   };
 
-  // Auto-advance for step 1 (welcome)
+  // Auto-advance for step 0 (welcome) only
   useEffect(() => {
-    if (currentStep === 0) {
+    if (currentStep === 0 && open) {
       const timer = setTimeout(() => {
-        handleNext();
+        setCurrentStep(1);
       }, 3000); // Auto-advance after 3 seconds
       return () => clearTimeout(timer);
     }
-  }, [currentStep]);
+  }, [currentStep, open]);
 
   if (!open) return null;
 
@@ -385,43 +385,38 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t">
-          <div className="flex gap-2">
+          <div className="flex justify-between items-center">
             {currentStep > 0 && (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={handleBack}
-                className="flex items-center gap-2"
+                className="text-muted-foreground"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4 mr-1" />
                 Back
               </Button>
             )}
             
-            {currentStepData.skipText && currentStep < steps.length - 1 && (
-              <Button 
-                variant="ghost" 
-                onClick={handleSkip}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {currentStepData.skipText}
-              </Button>
-            )}
-          </div>
-
-          <div className="flex gap-2">
-            {currentStep < steps.length - 1 && (
-              <Button 
+            <div className="flex gap-2 ml-auto">
+              {currentStepData.skipText && currentStep < steps.length - 1 && (
+                <Button
+                  variant="ghost"
+                  onClick={handleSkip}
+                  className="text-muted-foreground"
+                >
+                  {currentStepData.skipText}
+                </Button>
+              )}
+              
+              <Button
                 onClick={handleNext}
-                className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700"
-                disabled={
-                  (currentStep === 1 && !selectedIndustry) ||
-                  (currentStep === 2 && !selectedChallenge)
-                }
+                className="bg-gradient-to-r from-primary-600 to-vibrant-blue-500 hover:from-primary-700 hover:to-vibrant-blue-600 text-white"
+                disabled={currentStep === 1 && !selectedIndustry}
               >
-                Continue
-                <ArrowRight className="h-4 w-4" />
+                {currentStep === steps.length - 1 ? 'Get Started' : 'Continue'}
+                <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
-            )}
+            </div>
           </div>
         </div>
       </DialogContent>

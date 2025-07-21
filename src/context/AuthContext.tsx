@@ -109,63 +109,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Listen for auth changes in a separate effect
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    let mounted = true;
+    let lastEventLogged: string | null = null;
+    
+    const subscription = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('AuthContext: Auth state changed:', event, !!session);
+        if (!mounted) return;
         
-        // Handle different auth events with proper data isolation
-        if (event === 'SIGNED_OUT' || (!session && user)) {
-          console.log('🧹 User signed out, clearing all session data...');
+        // Prevent duplicate event logging
+        const eventKey = `${event}_${session?.user?.id || 'anonymous'}`;
+        if (lastEventLogged === eventKey) {
+          return;
+        }
+        lastEventLogged = eventKey;
+        
+        if (event === 'INITIAL_SESSION') {
+          // Initial load - set session and user
+          setSession(session);
+          setUser(session?.user ?? null);
           
-          // Clear all user-specific data (preserve consent)
-          clearAllSessionData(true);
+          // Clean any stale data first
+          if (!session?.user) {
+            clearUserSpecificData();
+          }
+        } else if (event === 'SIGNED_IN') {
+          // User signed in - clean old data and set new session
+          if (session?.user?.id) {
+            await initializeCleanSession(session.user.id);
+          }
+          setSession(session);
+          setUser(session.user);
           
-          // Reset component state
-          setUser(null);
+          // Validate no data leakage occurred
+          if (process.env.NODE_ENV === 'development') {
+            validateSessionIsolation(session.user.id);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          // User signed out - clear everything
+          clearAllSessionData();
           setSession(null);
+          setUser(null);
+          setIsPremium(false);
           setCreditsRemaining(0);
           setTrialUsed(false);
           setIsNewUser(false);
-          setInitError(null);
-          
-          console.log('✅ Session data cleared for logout');
-        } else if (event === 'SIGNED_IN' && session?.user?.id) {
-          console.log('🚀 User signed in, initializing clean session...');
-          
-          // Check if this is a different user than before
-          const previousUser = user;
-          if (previousUser && previousUser.id !== session.user.id) {
-            console.log('👤 Different user detected, clearing previous user data...');
-            clearUserSpecificData(previousUser.id);
-          }
-          
-          // Initialize clean session for new user
-          initializeCleanSession(session.user.id);
-          
-          // Update state
-          setSession(session);
-          setUser(session.user);
-          setInitError(null);
-          
-          // Load fresh user profile data
-          setTimeout(() => {
-            loadUserProfile(session.user.id);
-          }, 0);
-          
-          // Check if this is a new user (after cleanup)
-          const hasCompletedOnboarding = localStorage.getItem('onboardingComplete');
-          if (!hasCompletedOnboarding) {
-            setIsNewUser(true);
-          }
-          
-          // Validate session isolation in development
-          if (process.env.NODE_ENV === 'development') {
-            setTimeout(() => validateSessionIsolation(session.user.id), 100);
-          }
-          
-          console.log('✅ Clean session initialized for user:', session.user.id);
-        } else if (event === 'TOKEN_REFRESHED' && session?.user?.id) {
-          // Token refresh - maintain current state but verify data integrity
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Token refreshed - update session
           setSession(session);
           setUser(session.user);
           
@@ -179,14 +168,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(session?.user ?? null);
         }
         
-        // Log security events for auth state changes
-        if (session?.user?.id) {
-          setTimeout(() => {
-            SafeRPCService.logSecurityEvent(`auth_${event}`, { 
-              user_id: session.user.id,
-              session_isolated: true
-            }, session.user.id);
-          }, 0);
+        // Log security events for auth state changes (throttled by SafeRPCService)
+        if (session?.user?.id && (event === 'SIGNED_IN' || event === 'SIGNED_OUT')) {
+          SafeRPCService.logSecurityEvent(`auth_${event}`, { 
+            user_id: session.user.id,
+            session_isolated: true
+          }, session.user.id);
         }
         
         setLoading(false);
@@ -194,139 +181,117 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => {
-      console.log('AuthContext: Cleaning up auth listener');
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
-  const loadUserProfile = async (userId: string, retryCount = 0): Promise<void> => {
+  const loadUserProfile = async (userId: string, retryCount: number = 0): Promise<void> => {
+    if (!userId) return;
+    
     try {
-      console.log('🔍 Loading user profile for:', userId, 'retry:', retryCount);
-      
-      // First, try to get the profile
+      // Use SafeRPCService for better error handling
       const { data: profile, error } = await supabase
         .from('user_profiles')
         .select('credits_remaining, trial_used')
         .eq('id', userId)
-        .single();
-
+        .maybeSingle();
+      
       if (error) {
-        console.log('Profile error code:', error.code, 'message:', error.message);
-        
-        // Handle case where profile doesn't exist yet
-        if (error.code === 'PGRST116') {
-          console.log('⚠️ User profile not found, creating new profile...');
-          
-          // Try to create the profile
-          const { data: newProfile, error: insertError } = await supabase
+        // Don't retry on certain errors
+        if (error.code === 'PGRST116' || error.message?.includes('multiple')) {
+          // No profile exists yet, create one
+          const { data: newProfile, error: createError } = await supabase
             .from('user_profiles')
             .insert({ 
               id: userId, 
-              credits_remaining: 1, // Free credit on signup
-              trial_used: false 
+              credits_remaining: 1,
+              trial_used: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             })
             .select('credits_remaining, trial_used')
             .single();
             
-          if (insertError) {
-            console.warn('Could not create user profile:', insertError);
-            
-            // If creation failed due to race condition, retry after a delay
-            if (insertError.code === '23505' && retryCount < 3) { // Unique violation
-              console.log('Profile creation race condition detected, retrying...');
-              await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-              return loadUserProfile(userId, retryCount + 1);
-            }
-            
-            // If still failing, try upsert as last resort
-            if (retryCount < 2) {
-              console.log('Attempting upsert as fallback...');
-              const { data: upsertProfile, error: upsertError } = await supabase
-                .from('user_profiles')
-                .upsert({ 
-                  id: userId, 
-                  credits_remaining: 1,
-                  trial_used: false 
-                }, { 
-                  onConflict: 'id',
-                  ignoreDuplicates: false 
-                })
-                .select('credits_remaining, trial_used')
-                .single();
-                
-              if (upsertError) {
-                console.error('Upsert also failed:', upsertError);
-                // Use defaults if all creation attempts fail
-                setCreditsRemaining(1);
-                setTrialUsed(false);
-              } else if (upsertProfile) {
-                console.log('✅ Profile created via upsert:', upsertProfile);
-                setCreditsRemaining(upsertProfile.credits_remaining || 1);
-                setTrialUsed(upsertProfile.trial_used || false);
-              }
-            } else {
-              // Use defaults if creation fails after retries
+          if (createError) {
+            // Try upsert as fallback
+            const { data: upsertProfile, error: upsertError } = await supabase
+              .from('user_profiles')
+              .upsert({ 
+                id: userId, 
+                credits_remaining: 1,
+                trial_used: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }, { 
+                onConflict: 'id',
+                ignoreDuplicates: false 
+              })
+              .select('credits_remaining, trial_used')
+              .single();
+              
+            if (upsertError) {
+              console.error('Profile creation failed:', upsertError);
+              // Use defaults
               setCreditsRemaining(1);
               setTrialUsed(false);
+            } else if (upsertProfile) {
+              setCreditsRemaining(upsertProfile.credits_remaining || 1);
+              setTrialUsed(upsertProfile.trial_used || false);
             }
-          } else {
-            console.log('✅ Created new user profile:', newProfile);
-            setCreditsRemaining(newProfile?.credits_remaining || 1);
-            setTrialUsed(newProfile?.trial_used || false);
+          } else if (newProfile) {
+            setCreditsRemaining(newProfile.credits_remaining || 1);
+            setTrialUsed(newProfile.trial_used || false);
           }
+        } else if (error.code === '429' || error.message?.includes('rate limit')) {
+          // Rate limited - use cached values or defaults
+          console.warn('Rate limited when fetching profile');
+          setCreditsRemaining(prev => prev || 1);
+          setTrialUsed(prev => prev || false);
+          return;
         } else {
           console.error('Error loading user profile:', error);
           
-          // Retry on temporary errors
-          if (retryCount < 3 && (error.code === 'PGRST301' || error.code === '500')) {
-            console.log('Temporary error, retrying profile load...');
-            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          // Only retry on temporary errors, not on rate limits
+          if (retryCount < 2 && error.code === 'PGRST301') {
+            await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
             return loadUserProfile(userId, retryCount + 1);
           }
           
-                      // Log security event for profile access issues
-            SafeRPCService.logSecurityEvent('profile_access_failed', { 
-              error: error.message 
-            }, userId);
-          
           // Use safe defaults
-          setCreditsRemaining(1); // Give new users 1 free credit
+          setCreditsRemaining(1);
           setTrialUsed(false);
         }
       } else if (profile) {
-        console.log('✅ Loaded user profile:', profile);
         setCreditsRemaining(profile.credits_remaining || 0);
         setTrialUsed(profile.trial_used || false);
       } else {
-        console.warn('No profile data returned');
-        
-        // Retry if no data returned
-        if (retryCount < 3) {
-          console.log('No profile data, retrying...');
-          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-          return loadUserProfile(userId, retryCount + 1);
+        // No profile exists, create one
+        const { data: newProfile } = await supabase
+          .from('user_profiles')
+          .insert({ 
+            id: userId, 
+            credits_remaining: 1,
+            trial_used: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select('credits_remaining, trial_used')
+          .single();
+          
+        if (newProfile) {
+          setCreditsRemaining(newProfile.credits_remaining || 1);
+          setTrialUsed(newProfile.trial_used || false);
+        } else {
+          setCreditsRemaining(1);
+          setTrialUsed(false);
         }
-        
-        setCreditsRemaining(1); // Give new users 1 free credit
-        setTrialUsed(false);
       }
     } catch (error) {
       console.error('Failed to load user profile:', error);
       
-      // Retry on network errors
-      if (retryCount < 3) {
-        console.log('Network error, retrying profile load...');
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-        return loadUserProfile(userId, retryCount + 1);
-      }
-      
-              // Log security event for profile loading errors
-        SafeRPCService.logSecurityEvent('profile_loading_error', { 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        }, userId);
-      
-      // Use safe defaults on any error
-      setCreditsRemaining(1); // Give new users 1 free credit
+      // Don't retry on network errors to prevent spam
+      setCreditsRemaining(1);
       setTrialUsed(false);
     }
   };
