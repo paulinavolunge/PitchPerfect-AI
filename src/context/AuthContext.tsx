@@ -433,14 +433,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const markOnboardingComplete = () => {
-    if (!user?.id) return;
-    
+  const markOnboardingComplete = async () => {
     setIsNewUser(false);
-    // Use user-specific keys for onboarding completion
+    
+    // Save to localStorage
     localStorage.setItem('onboardingComplete', 'true');
     localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
-    localStorage.setItem(`user_${user.id}_onboarding_complete`, 'true');
+    
+    // Save to user profile if user exists
+    if (user?.id) {
+      try {
+        const { error } = await supabase
+          .from('user_profiles')
+          .update({ 
+            onboarding_completed: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+          
+        if (error) {
+          console.error('Failed to update onboarding status:', error);
+        }
+      } catch (err) {
+        console.error('Error saving onboarding status:', err);
+      }
+    }
   };
 
   const value = {

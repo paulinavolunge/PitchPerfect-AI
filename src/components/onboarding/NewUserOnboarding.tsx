@@ -53,36 +53,34 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
 
   // Handle closing the dialog
   const handleClose = (completed: boolean = false) => {
-    // Always call onComplete when closing to mark onboarding as done
-    onComplete();
+    if (completed) {
+      // Mark onboarding as complete
+      onComplete();
+    }
+    // Close the modal
     onOpenChange(false);
-    // Reset state
-    setCurrentStep(0);
-    setSelectedIndustry('');
-    setSelectedChallenge('');
-    setMicrophoneReady(false);
+    // Reset state after a delay to prevent flashing
+    setTimeout(() => {
+      setCurrentStep(0);
+      setSelectedIndustry('');
+      setSelectedChallenge('');
+      setMicrophoneReady(false);
+    }, 300);
   };
 
-  // Handle ESC key
+  // Handle ESC key - only allow closing if on last step or explicitly skipping
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) {
-        handleClose(true); // Allow ESC to complete onboarding
+      if (e.key === 'Escape' && open && currentStep === steps.length - 1) {
+        handleClose(true);
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [open]);
+  }, [open, currentStep]);
 
-  // Override the default onOpenChange to use our handleClose
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      // Modal is being closed (including by X button)
-      handleClose(true);
-    } else {
-      onOpenChange(newOpen);
-    }
-  };
+  // Don't override onOpenChange - let the parent control the modal state
+  // This prevents accidental closing when navigating between steps
 
   const industries = [
     { value: 'technology', label: 'Technology' },
@@ -270,12 +268,32 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
     }
   ];
 
+  // Ensure we have valid step data
+  if (!steps || steps.length === 0) {
+    console.error('Onboarding steps not defined');
+    return null;
+  }
+
   const currentStepData = steps[currentStep];
   const progress = ((currentStep + 1) / steps.length) * 100;
 
+  // Debug logging
+  console.log('Onboarding state:', {
+    currentStep,
+    totalSteps: steps.length,
+    selectedIndustry,
+    selectedChallenge,
+    open
+  });
+
   const handleNext = () => {
+    console.log('handleNext called, currentStep:', currentStep);
     if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep(prev => {
+        const newStep = prev + 1;
+        console.log('Setting new step:', newStep);
+        return newStep;
+      });
     } else {
       // If on last step, complete onboarding
       handleComplete('/dashboard');
@@ -289,12 +307,8 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
   };
 
   const handleSkip = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      // If on last step, complete onboarding
-      handleComplete('/dashboard');
-    }
+    // Mark as completed and close
+    handleClose(true);
   };
 
   const handleComplete = async (redirectTo: string = '/dashboard') => {
@@ -311,18 +325,20 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
       localStorage.setItem('onboardingComplete', 'true');
       localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
 
-      // Start free trial if available (don't let this block completion)
+      // Start free trial if available
       if (user && !localStorage.getItem('trialStarted')) {
-        startFreeTrial().then(trialStarted => {
+        try {
+          const trialStarted = await startFreeTrial();
           if (trialStarted) {
             localStorage.setItem('trialStarted', 'true');
           }
-        }).catch(err => {
+        } catch (err) {
           // Silently handle trial start failure - don't block onboarding
-        });
+          console.error('Failed to start trial:', err);
+        }
       }
 
-      // Close onboarding
+      // Close onboarding with completion flag
       handleClose(true);
 
       // Navigate after a small delay to ensure modal closes
@@ -337,21 +353,23 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
     }
   };
 
-  // Auto-advance for step 0 (welcome) only
-  useEffect(() => {
-    if (currentStep === 0 && open) {
-      const timer = setTimeout(() => {
-        setCurrentStep(1);
-      }, 3000); // Auto-advance after 3 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [currentStep, open]);
+  // Remove auto-advance - let user control the pace
+  // This prevents the modal from advancing/closing unexpectedly
 
   if (!open) return null;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      // Only allow closing via explicit actions (skip, complete, etc.)
+      // Prevent closing when clicking outside or pressing X
+      if (!newOpen && currentStep < steps.length - 1) {
+        // If trying to close before completion, treat as skip
+        handleSkip();
+      } else if (!newOpen) {
+        handleClose(true);
+      }
+    }}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <div className="flex items-center justify-between mb-4">
             <Badge variant="outline" className="bg-primary-50 text-primary-700 border-primary-200">
