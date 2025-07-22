@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 import { PrimaryButton } from './ui/primary-button';
 import { useAuth } from '../context/AuthContext';
+import { isPricingEnabled } from '@/config/features';
 
 export const Navigation: React.FC = () => {
   const location = useLocation();
@@ -43,16 +44,18 @@ export const Navigation: React.FC = () => {
               >
                 Compare
               </Link>
-              <Link
-                to="/pricing"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/pricing')
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                Pricing
-              </Link>
+              {isPricingEnabled() && (
+                <Link
+                  to="/pricing"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive('/pricing')
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
+                >
+                  Pricing
+                </Link>
+              )}
               <Link
                 to="/demo"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${

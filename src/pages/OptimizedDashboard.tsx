@@ -3,10 +3,10 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useAuth } from '@/context/AuthContext';
 import { debounce } from 'lodash';
 
-// Lazy load heavy components
-const DashboardOverview = React.lazy(() => import('@/components/dashboard/DashboardOverview'));
-const StreakDisplay = React.lazy(() => import('@/components/gamification/StreakDisplay'));
-const MilestoneTracker = React.lazy(() => import('@/components/gamification/MilestoneTracker'));
+// Import available components directly
+import DashboardStats from '@/components/DashboardStats';
+import MilestoneTracker from '@/components/gamification/MilestoneTracker';
+import StreakBadge from '@/components/dashboard/StreakBadge';
 
 // Constants outside component to prevent recreation
 const TOUR_STORAGE_KEY = 'pitchPerfectTourCompleted';
@@ -161,15 +161,17 @@ export default function OptimizedDashboard() {
     return (
       <React.Suspense fallback={<div>Loading components...</div>}>
         {state.activeTab === 'overview' && (
-          <DashboardOverview
-            data={state.dashboardData}
-            onRefresh={handleRefresh}
-            isRefreshing={state.isRefreshing}
-          />
+          <DashboardStats />
         )}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <StreakDisplay count={state.streakCount} />
-          <MilestoneTracker />
+          <StreakBadge streakCount={state.streakCount || 0} />
+          <MilestoneTracker milestone={{ 
+            id: 'first_practice', 
+            title: 'Complete First Practice', 
+            description: 'Complete your first practice session', 
+            targetValue: 1,
+            currentValue: 0
+          }} />
         </div>
       </React.Suspense>
     );

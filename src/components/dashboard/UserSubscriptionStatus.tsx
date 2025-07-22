@@ -6,10 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Diamond, Calendar, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { isPremiumFeaturesEnabled, isPricingEnabled } from '@/config/features';
 
 const UserSubscriptionStatus: React.FC = () => {
   const { user, isPremium, creditsRemaining, trialUsed } = useAuth();
   const navigate = useNavigate();
+
+  // Don't show subscription status if premium features are disabled
+  if (!isPremiumFeaturesEnabled()) {
+    return null;
+  }
 
   if (!user) return null;
 
@@ -108,7 +114,7 @@ const UserSubscriptionStatus: React.FC = () => {
           <div className="space-y-3">
             <p className="text-sm text-gray-600">
               You have <strong>{creditsRemaining} credits</strong> remaining. 
-              Each practice session uses 1 credit. Upgrade to Premium for unlimited access.
+              Each practice session uses 1 credit. {isPricingEnabled() ? 'Upgrade to Premium for unlimited access.' : 'Continue practicing with your available credits.'}
             </p>
             <div className="flex space-x-2">
               <Button 

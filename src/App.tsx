@@ -43,6 +43,7 @@ import Success from '@/pages/Success';
 import Cancel from '@/pages/Cancel';
 import TeamDashboard from '@/pages/TeamDashboard';
 import NotFound from '@/pages/NotFound';
+import { isPricingEnabled, isSubscriptionEnabled } from '@/config/features';
 
 // Add new page imports
 import VoiceTraining from '@/pages/VoiceTraining';
@@ -139,7 +140,7 @@ function App() {
                               <Route path="/" element={<Index />} />
                               <Route path="/about" element={<About />} />
                               <Route path="/compare" element={<Compare />} />
-                              <Route path="/pricing" element={<Pricing />} />
+                              {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
                               <Route path="/demo" element={<Demo />} />
                               
                               {/* New functional routes */}
@@ -170,9 +171,9 @@ function App() {
                               <Route path="/team" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
                               <Route path="/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
                               
-                              {/* Subscription routes */}
-                              <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
-                              <Route path="/subscription-management" element={<ProtectedRoute><SubscriptionManagement /></ProtectedRoute>} />
+                               {/* Subscription routes */}
+                               {isSubscriptionEnabled() && <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />}
+                               {isSubscriptionEnabled() && <Route path="/subscription-management" element={<ProtectedRoute><SubscriptionManagement /></ProtectedRoute>} />}
                               <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
                               <Route path="/cancel" element={<ProtectedRoute><Cancel /></ProtectedRoute>} />
                               

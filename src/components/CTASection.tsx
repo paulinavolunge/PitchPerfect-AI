@@ -10,7 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAuth } from '@/context/AuthContext'; // Import useAuth
+import { useAuth } from '@/context/AuthContext';
+import { isPricingEnabled } from '@/config/features';
 
 const features = [
   "1 Free Pitch Analysis (for new users)", // Updated feature
@@ -169,7 +170,7 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
   const getPrimaryCtaText = () => {
     if (!user) {
       return 'Get 1 Free Pitch Analysis'; // For new users
-    } else if (trialUsed) {
+    } else if (isPricingEnabled() && trialUsed) {
       return 'Top Up Credits'; // If trial already used, go to pricing
     } else {
       return 'Start Your Free Analysis'; // Logged in, but trial not used
@@ -181,8 +182,10 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
       navigate('/signup'); // Direct to signup for new users
     } else if (!trialUsed) {
       navigate('/demo'); // Direct to demo for users to use their free analysis
-    } else {
+    } else if (isPricingEnabled()) {
       navigate('/pricing'); // Direct to pricing to top up credits
+    } else {
+      navigate('/demo'); // If pricing disabled, just go to demo
     }
   };
 

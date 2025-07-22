@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Logo from './Logo';
 import { PrimaryButton } from './ui/primary-button';
 import { useAuth } from '../context/AuthContext';
+import { isPricingEnabled } from '@/config/features';
 
 export const MobileNavigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,13 +52,15 @@ export const MobileNavigation: React.FC = () => {
           >
             Compare
           </Link>
-          <Link
-            to="/pricing"
-            className="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors min-h-[44px] flex items-center"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Pricing
-          </Link>
+          {isPricingEnabled() && (
+            <Link
+              to="/pricing"
+              className="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors min-h-[44px] flex items-center"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Pricing
+            </Link>
+          )}
           <Link
             to="/demo"
             className="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors min-h-[44px] flex items-center"
