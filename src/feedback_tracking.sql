@@ -54,7 +54,10 @@ CREATE POLICY "users_view_own_feedback"
 
 -- Create a function to check if a user is an admin
 CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN 
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1
@@ -63,7 +66,7 @@ BEGIN
     AND role = 'admin'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 -- Admins can view all feedback
 CREATE POLICY "admins_view_all_feedback"
