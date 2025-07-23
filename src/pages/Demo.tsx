@@ -17,6 +17,7 @@ import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import DemoNavigation from '@/components/demo/DemoNavigation';
 
 const Demo = () => {
@@ -65,6 +66,62 @@ const Demo = () => {
             // No toast for failure in production to avoid confusing users
           }
         });
+    }
+  };
+
+  const savePracticeSession = async (practiceData: any) => {
+    if (!user?.id || isGuestMode) {
+      console.log('Skipping database save - guest mode or no user');
+      return;
+    }
+
+    try {
+      const sessionData = {
+        user_id: user.id,
+        scenario_type: 'objection_handling',
+        difficulty: 'beginner',
+        industry: 'general',
+        duration_seconds: 60, // Estimated practice duration
+        score: practiceData.score,
+        transcript: {
+          input_type: practiceData.type,
+          response_text: practiceData.response,
+          feedback: practiceData.feedback
+        },
+        feedback_data: {
+          score: practiceData.score,
+          feedback: practiceData.feedback,
+          type: practiceData.type,
+          timestamp: practiceData.timestamp
+        },
+        completed_at: new Date().toISOString()
+      };
+
+      console.log('Saving practice session to database:', sessionData);
+
+      const { data, error } = await supabase
+        .from('practice_sessions')
+        .insert(sessionData)
+        .select();
+
+      if (error) {
+        console.error('Error saving practice session:', error);
+        toast({
+          title: "Save Error",
+          description: "Practice completed but couldn't save to your progress. Your credits were still used.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Practice session saved successfully:', data);
+      toast({
+        title: "Progress Saved",
+        description: "Your practice session has been saved to your dashboard!",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Failed to save practice session:', error);
     }
   };
 
@@ -117,6 +174,9 @@ const Demo = () => {
       console.log('Generated feedback data:', feedbackData);
       
       setFeedback(feedbackData.feedback);
+      
+      // Save practice session to database for authenticated users
+      await savePracticeSession(feedbackData);
       
       // Complete the demo with the feedback data
       handleDemoComplete(feedbackData);

@@ -113,25 +113,66 @@ export function useDashboardData() {
       
       // Try to load actual data if possible
       try {
+        // Load pitch recordings
         const { data: pitchData, error: pitchError } = await supabase
           .from('pitch_recordings')
           .select('*')
           .eq('user_id', user.id)
           .limit(10);
+
+        // Load practice sessions (objection handling, etc.)
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('practice_sessions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('completed_at', { ascending: false })
+          .limit(10);
           
+        let totalPractices = 0;
+        let totalScore = 0;
+        let scoredCount = 0;
+        let hasAnyData = false;
+
+        // Process pitch recordings
         if (!pitchError && pitchData?.length > 0) {
-          newDashboardData.pitchCount = pitchData.length;
-          newDashboardData.hasData = true;
+          totalPractices += pitchData.length;
+          hasAnyData = true;
           
-          // Calculate win rate if scores available
           const scoredPitches = pitchData.filter(p => p.score !== null);
-          if (scoredPitches.length > 0) {
-            const highScorePitches = scoredPitches.filter(p => p.score && p.score >= 70);
-            newDashboardData.winRate = Math.round((highScorePitches.length / scoredPitches.length) * 100);
-          }
+          scoredPitches.forEach(p => {
+            if (p.score) {
+              totalScore += p.score;
+              scoredCount++;
+            }
+          });
         }
+
+        // Process practice sessions
+        if (!sessionError && sessionData?.length > 0) {
+          totalPractices += sessionData.length;
+          hasAnyData = true;
+          
+          const scoredSessions = sessionData.filter(s => s.score !== null);
+          scoredSessions.forEach(s => {
+            if (s.score) {
+              totalScore += s.score;
+              scoredCount++;
+            }
+          });
+        }
+
+        // Update dashboard data
+        newDashboardData.pitchCount = totalPractices;
+        newDashboardData.hasData = hasAnyData;
+        
+        // Calculate overall win rate from both sources
+        if (scoredCount > 0) {
+          const averageScore = totalScore / scoredCount;
+          newDashboardData.winRate = Math.round(averageScore);
+        }
+
       } catch (dataError) {
-        console.log('Could not load pitch data, using defaults:', dataError);
+        console.log('Could not load practice data, using defaults:', dataError);
       }
       
       setDashboardData(newDashboardData);
