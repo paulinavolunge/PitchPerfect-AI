@@ -113,12 +113,16 @@ export function useDashboardData() {
       
       // Try to load actual data if possible
       try {
+        console.log('🔍 Loading dashboard data for user:', user.id);
+        
         // Load pitch recordings
         const { data: pitchData, error: pitchError } = await supabase
           .from('pitch_recordings')
           .select('*')
           .eq('user_id', user.id)
           .limit(10);
+
+        console.log('📊 Pitch recordings:', pitchData?.length || 0, 'error:', pitchError);
 
         // Load practice sessions (objection handling, etc.)
         const { data: sessionData, error: sessionError } = await supabase
@@ -127,7 +131,10 @@ export function useDashboardData() {
           .eq('user_id', user.id)
           .order('completed_at', { ascending: false })
           .limit(10);
-          
+
+        console.log('🎯 Practice sessions:', sessionData?.length || 0, 'error:', sessionError);
+        console.log('🎯 Practice sessions data:', sessionData);
+           
         let totalPractices = 0;
         let totalScore = 0;
         let scoredCount = 0;
@@ -135,6 +142,7 @@ export function useDashboardData() {
 
         // Process pitch recordings
         if (!pitchError && pitchData?.length > 0) {
+          console.log('✅ Processing pitch recordings:', pitchData.length);
           totalPractices += pitchData.length;
           hasAnyData = true;
           
@@ -149,10 +157,12 @@ export function useDashboardData() {
 
         // Process practice sessions
         if (!sessionError && sessionData?.length > 0) {
+          console.log('✅ Processing practice sessions:', sessionData.length);
           totalPractices += sessionData.length;
           hasAnyData = true;
           
           const scoredSessions = sessionData.filter(s => s.score !== null);
+          console.log('📈 Scored sessions:', scoredSessions.length);
           scoredSessions.forEach(s => {
             if (s.score) {
               totalScore += s.score;
@@ -160,6 +170,12 @@ export function useDashboardData() {
             }
           });
         }
+
+        console.log('📊 Final dashboard stats:', {
+          totalPractices,
+          averageScore: scoredCount > 0 ? totalScore / scoredCount : null,
+          hasAnyData
+        });
 
         // Update dashboard data
         newDashboardData.pitchCount = totalPractices;

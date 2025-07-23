@@ -70,8 +70,11 @@ const Demo = () => {
   };
 
   const savePracticeSession = async (practiceData: any) => {
+    console.log('💾 savePracticeSession called with:', practiceData);
+    console.log('👤 User:', user?.id, 'Guest mode:', isGuestMode);
+    
     if (!user?.id || isGuestMode) {
-      console.log('Skipping database save - guest mode or no user');
+      console.log('❌ Skipping database save - guest mode or no user');
       return;
     }
 
