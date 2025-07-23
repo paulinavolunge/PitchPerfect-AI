@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/AuthContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
@@ -120,95 +119,93 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-            <TooltipProvider>
-              <AccessibilityProvider>
-                <Router>
-                  <AuthProvider>
-                    <AuthLoadingBoundary>
-                      <GuestModeProvider>
-                        <PageTrackingProvider>
-                          {/* Initialize analytics */}
-                          <PrivacyCompliantAnalytics />
+          <TooltipProvider>
+            <AccessibilityProvider>
+              <Router>
+                <AuthProvider>
+                  <AuthLoadingBoundary>
+                    <GuestModeProvider>
+                      <PageTrackingProvider>
+                        {/* Initialize analytics */}
+                        <PrivacyCompliantAnalytics />
+                        
+                        {/* Consent banner for analytics */}
+                        <ConsentBanner />
+                        
+                        <div className="min-h-screen bg-background font-sans antialiased">
+                          <Routes>
+                            {/* Public routes */}
+                            <Route path="/" element={<Index />} />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/compare" element={<Compare />} />
+                            {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
+                            <Route path="/demo" element={<Demo />} />
+                            
+                            {/* New functional routes */}
+                            <Route path="/voice-training" element={<VoiceTraining />} />
+                            <Route path="/analytics" element={<Analytics />} />
+                            <Route path="/ai-roleplay" element={<AIRoleplay />} />
+                            
+                            {/* Placeholder routes for testing (keeping as backup) */}
+                            <Route path="/voice-training-old" element={<VoiceTrainingPage />} />
+                            <Route path="/analytics-old" element={<AnalyticsPage />} />
+                            <Route path="/ai-roleplay-old" element={<RoleplayPage />} />
+                            
+                            {/* Authentication routes */}
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<Signup />} />
+                            <Route path="/password-reset" element={<PasswordReset />} />
+                            <Route path="/update-password" element={<UpdatePassword />} />
+                            <Route path="/email-confirmed" element={<EmailConfirmed />} />
+                            
+                            {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
+                            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                            <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
+                            <Route path="/roleplay" element={<ProtectedRoute><RolePlay /></ProtectedRoute>} />
+                            <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+                            <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
+                            <Route path="/call-recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
+                            <Route path="/recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
+                            <Route path="/team" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
+                            <Route path="/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
+                            
+                             {/* Subscription routes */}
+                             {isSubscriptionEnabled() && <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />}
+                             {isSubscriptionEnabled() && <Route path="/subscription-management" element={<ProtectedRoute><SubscriptionManagement /></ProtectedRoute>} />}
+                            <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
+                            <Route path="/cancel" element={<ProtectedRoute><Cancel /></ProtectedRoute>} />
+                            
+                            {/* Legal routes */}
+                            <Route path="/terms" element={<Terms />} />
+                            <Route path="/privacy" element={<Privacy />} />
+                            <Route path="/data-safety" element={<DataSafety />} />
+                            <Route path="/account-delete" element={<ProtectedRoute><AccountDelete /></ProtectedRoute>} />
+                            
+                            {/* Fallback route - IMPORTANT: This catches all unmatched routes */}
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
                           
-                          {/* Consent banner for analytics */}
-                          <ConsentBanner />
+                          {/* Mobile navigation bar */}
+                          <MobileNavBar />
                           
-                          <div className="min-h-screen bg-background font-sans antialiased">
-                            <Routes>
-                              {/* Public routes */}
-                              <Route path="/" element={<Index />} />
-                              <Route path="/about" element={<About />} />
-                              <Route path="/compare" element={<Compare />} />
-                              {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
-                              <Route path="/demo" element={<Demo />} />
-                              
-                              {/* New functional routes */}
-                              <Route path="/voice-training" element={<VoiceTraining />} />
-                              <Route path="/analytics" element={<Analytics />} />
-                              <Route path="/ai-roleplay" element={<AIRoleplay />} />
-                              
-                              {/* Placeholder routes for testing (keeping as backup) */}
-                              <Route path="/voice-training-old" element={<VoiceTrainingPage />} />
-                              <Route path="/analytics-old" element={<AnalyticsPage />} />
-                              <Route path="/ai-roleplay-old" element={<RoleplayPage />} />
-                              
-                              {/* Authentication routes */}
-                              <Route path="/login" element={<Login />} />
-                              <Route path="/signup" element={<Signup />} />
-                              <Route path="/password-reset" element={<PasswordReset />} />
-                              <Route path="/update-password" element={<UpdatePassword />} />
-                              <Route path="/email-confirmed" element={<EmailConfirmed />} />
-                              
-                              {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
-                              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                              <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
-                              <Route path="/roleplay" element={<ProtectedRoute><RolePlay /></ProtectedRoute>} />
-                              <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
-                              <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
-                              <Route path="/call-recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
-                              <Route path="/recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
-                              <Route path="/team" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
-                              <Route path="/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
-                              
-                               {/* Subscription routes */}
-                               {isSubscriptionEnabled() && <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />}
-                               {isSubscriptionEnabled() && <Route path="/subscription-management" element={<ProtectedRoute><SubscriptionManagement /></ProtectedRoute>} />}
-                              <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
-                              <Route path="/cancel" element={<ProtectedRoute><Cancel /></ProtectedRoute>} />
-                              
-                              {/* Legal routes */}
-                              <Route path="/terms" element={<Terms />} />
-                              <Route path="/privacy" element={<Privacy />} />
-                              <Route path="/data-safety" element={<DataSafety />} />
-                              <Route path="/account-delete" element={<ProtectedRoute><AccountDelete /></ProtectedRoute>} />
-                              
-                              {/* Fallback route - IMPORTANT: This catches all unmatched routes */}
-                              <Route path="*" element={<NotFound />} />
-                            </Routes>
-                            
-                            {/* Mobile navigation bar */}
-                            <MobileNavBar />
-                            
-                            {/* Accessibility floating button */}
-                            <AccessibilityButton />
-                            
-                            {/* Global toast notifications */}
-                            <Toaster 
-                              position="top-right"
-                              expand={false}
-                              richColors
-                              closeButton
-                            />
-                          </div>
-                        </PageTrackingProvider>
-                      </GuestModeProvider>
-                    </AuthLoadingBoundary>
-                  </AuthProvider>
-                </Router>
-              </AccessibilityProvider>
-            </TooltipProvider>
-          </ThemeProvider>
+                          {/* Accessibility floating button */}
+                          <AccessibilityButton />
+                          
+                          {/* Global toast notifications */}
+                          <Toaster 
+                            position="top-right"
+                            expand={false}
+                            richColors
+                            closeButton
+                          />
+                        </div>
+                      </PageTrackingProvider>
+                    </GuestModeProvider>
+                  </AuthLoadingBoundary>
+                </AuthProvider>
+              </Router>
+            </AccessibilityProvider>
+          </TooltipProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>

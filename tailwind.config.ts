@@ -2,7 +2,6 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -99,6 +98,13 @@ export default {
           DEFAULT: '#F4F6F8',
           light: '#FFFFFF',
           medium: '#E9EEF4',
+        },
+        // Brand colors for consistent theming (light mode only)
+        "brand": {
+          DEFAULT: '#1A2B50', // Deep navy for primary brand
+          dark: '#0F172A', // Darker variant for headings and emphasis
+          blue: '#63A4FF', // Primary blue
+          'blue-dark': '#2563EB', // Darker blue for hover states
         },
       },
       borderRadius: {
