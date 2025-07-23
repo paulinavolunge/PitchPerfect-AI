@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PitchPerfect AI - Debug Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>PitchPerfect AI - Debug Information</h1>
+    
+    <div id="browserInfo" class="status info">
+        <h3>Browser Information</h3>
+        <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+        <p><strong>Platform:</strong> <span id="platform"></span></p>
+        <p><strong>Language:</strong> <span id="language"></span></p>
+        <p><strong>Screen:</strong> <span id="screen"></span></p>
+        <p><strong>Viewport:</strong> <span id="viewport"></span></p>
+    </div>
+
+    <div id="supportInfo" class="status">
+        <h3>Feature Support</h3>
+        <p><strong>ES6 Modules:</strong> <span id="esModules"></span></p>
+        <p><strong>Custom Elements:</strong> <span id="customElements"></span></p>
+        <p><strong>Shadow DOM:</strong> <span id="shadowDOM"></span></p>
+        <p><strong>Web Components:</strong> <span id="webComponents"></span></p>
+        <p><strong>Fetch API:</strong> <span id="fetchAPI"></span></p>
+        <p><strong>Local Storage:</strong> <span id="localStorage"></span></p>
+        <p><strong>Session Storage:</strong> <span id="sessionStorage"></span></p>
+    </div>
+
+    <div id="errorLog" class="status warning">
+        <h3>Error Log</h3>
+        <pre id="errors">No errors detected yet...</pre>
+    </div>
+
+    <div class="status info">
+        <h3>Actions</h3>
+        <button onclick="testMainApp()">Test Main App</button>
+        <button onclick="clearErrors()">Clear Errors</button>
+        <button onclick="testReactImport()">Test React Import</button>
+        <button onclick="location.reload()">Reload Page</button>
+    </div>
+
+    <div id="testResults" class="status" style="display: none;">
+        <h3>Test Results</h3>
+        <div id="testOutput"></div>
+    </div>
+
+    <script>
+        // Error tracking
+        const errors = [];
+        
+        window.addEventListener('error', function(e) {
+            const error = {
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno,
+                error: e.error ? e.error.toString() : 'Unknown error',
+                timestamp: new Date().toISOString()
+            };
+            errors.push(error);
+            updateErrorLog();
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            const error = {
+                message: 'Unhandled Promise Rejection',
+                reason: e.reason ? e.reason.toString() : 'Unknown reason',
+                timestamp: new Date().toISOString()
+            };
+            errors.push(error);
+            updateErrorLog();
+        });
+
+        function updateErrorLog() {
+            const errorElement = document.getElementById('errors');
+            if (errors.length === 0) {
+                errorElement.textContent = 'No errors detected...';
+            } else {
+                errorElement.textContent = errors.map(error => 
+                    `[${error.timestamp}] ${error.message}\n${error.filename ? `File: ${error.filename}:${error.lineno}:${error.colno}` : ''}\n${error.error || error.reason || ''}\n`
+                ).join('\n---\n');
+            }
+        }
+
+        function clearErrors() {
+            errors.length = 0;
+            updateErrorLog();
+        }
+
+        function testMainApp() {
+            const testResults = document.getElementById('testResults');
+            const testOutput = document.getElementById('testOutput');
+            testResults.style.display = 'block';
+            testOutput.innerHTML = '<p>Testing main app...</p>';
+            
+            try {
+                // Try to load the main app
+                window.open('/', '_blank');
+                testOutput.innerHTML += '<p class="success">✓ Main app opened in new tab</p>';
+            } catch (error) {
+                testOutput.innerHTML += `<p class="error">✗ Failed to open main app: ${error.message}</p>`;
+            }
+        }
+
+        function testReactImport() {
+            const testResults = document.getElementById('testResults');
+            const testOutput = document.getElementById('testOutput');
+            testResults.style.display = 'block';
+            testOutput.innerHTML = '<p>Testing React import...</p>';
+            
+            try {
+                // Test if we can import React
+                import('https://unpkg.com/react@18/umd/react.development.js').then(React => {
+                    testOutput.innerHTML += '<p class="success">✓ React can be imported</p>';
+                    testOutput.innerHTML += `<p>React version: ${React.version}</p>`;
+                }).catch(error => {
+                    testOutput.innerHTML += `<p class="error">✗ Failed to import React: ${error.message}</p>`;
+                });
+            } catch (error) {
+                testOutput.innerHTML += `<p class="error">✗ React import test failed: ${error.message}</p>`;
+            }
+        }
+
+        // Populate browser information
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            document.getElementById('platform').textContent = navigator.platform;
+            document.getElementById('language').textContent = navigator.language;
+            document.getElementById('screen').textContent = `${screen.width}x${screen.height}`;
+            document.getElementById('viewport').textContent = `${window.innerWidth}x${window.innerHeight}`;
+
+            // Feature detection
+            document.getElementById('esModules').textContent = 'noModule' in HTMLScriptElement.prototype ? '✓ Supported' : '✗ Not supported';
+            document.getElementById('customElements').textContent = 'customElements' in window ? '✓ Supported' : '✗ Not supported';
+            document.getElementById('shadowDOM').textContent = 'attachShadow' in Element.prototype ? '✓ Supported' : '✗ Not supported';
+            document.getElementById('webComponents').textContent = ('customElements' in window && 'attachShadow' in Element.prototype) ? '✓ Supported' : '✗ Not supported';
+            document.getElementById('fetchAPI').textContent = 'fetch' in window ? '✓ Supported' : '✗ Not supported';
+            document.getElementById('localStorage').textContent = 'localStorage' in window ? '✓ Supported' : '✗ Not supported';
+            document.getElementById('sessionStorage').textContent = 'sessionStorage' in window ? '✓ Supported' : '✗ Not supported';
+
+            // Set overall support status
+            const supportDiv = document.getElementById('supportInfo');
+            const hasEssentialSupport = 'fetch' in window && 'localStorage' in window;
+            supportDiv.className = hasEssentialSupport ? 'status success' : 'status error';
+        });
+
+        console.log('Debug page loaded successfully');
+    </script>
+</body>
+</html>

@@ -3,8 +3,11 @@
 <html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="icon" href="/favicon.ico" />
     <title>PitchPerfect AI</title>
     
@@ -12,6 +15,27 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Ensure proper script loading order and error handling -->
+    <script>
+      // Global error handler for initialization issues
+      window.addEventListener('error', function(e) {
+        console.error('Global error during initialization:', e.error || e.message);
+        if (e.error && e.error.message && e.error.message.includes("Cannot access 'A' before initialization")) {
+          console.error('React initialization error detected - this is a known issue on some browsers');
+          // Try to reload after a short delay
+          setTimeout(function() {
+            if (confirm('The app failed to load properly. Would you like to reload the page?')) {
+              window.location.reload();
+            }
+          }, 1000);
+        }
+      });
+      
+      // Ensure global objects are available
+      window.global = window.global || window;
+      window.process = window.process || { env: { NODE_ENV: 'production' } };
+    </script>
     
     <!-- Improved Google Analytics with proper consent logic -->
     <script>
@@ -85,7 +109,17 @@
     <script>
       console.log('index.html: Script tag executed');
       console.log('index.html: About to load main.tsx');
+      console.log('Browser:', navigator.userAgent);
+      
+      // Additional Safari/iOS specific handling
+      if (/Safari/.test(navigator.userAgent) && /iPhone|iPad/.test(navigator.userAgent)) {
+        console.log('iOS Safari detected - applying compatibility fixes');
+        // Ensure proper module loading
+        if (!window.customElements) {
+          console.warn('Custom elements not supported, may need polyfills');
+        }
+      }
     </script>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" onerror="console.error('Failed to load main.tsx:', event)"></script>
   </body>
 </html>

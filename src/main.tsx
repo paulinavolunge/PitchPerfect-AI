@@ -5,6 +5,11 @@ import App from './App.tsx';
 import './index.css';
 import './styles/mobile-optimizations.css';
 
+// Ensure React is available globally for better compatibility
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+}
+
 // Global error handler
 window.addEventListener('error', (event) => {
   console.error('[Global Error Handler]', {
@@ -79,14 +84,53 @@ class RootErrorBoundary extends React.Component<{
   }
 }
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+// Ensure DOM is ready before rendering
+const initializeApp = () => {
+  const rootElement = document.getElementById('root');
+  if (!rootElement) {
+    console.error('[main.tsx] Root element not found');
+    return;
+  }
 
-root.render(
-  <RootErrorBoundary>
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  </RootErrorBoundary>
-);
+  try {
+    const root = ReactDOM.createRoot(rootElement);
+    
+    root.render(
+      <RootErrorBoundary>
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      </RootErrorBoundary>
+    );
+    
+    console.log('[main.tsx] App rendered successfully');
+  } catch (error) {
+    console.error('[main.tsx] Failed to render app:', error);
+    // Fallback rendering without StrictMode
+    try {
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        <RootErrorBoundary>
+          <App />
+        </RootErrorBoundary>
+      );
+    } catch (fallbackError) {
+      console.error('[main.tsx] Fallback rendering also failed:', fallbackError);
+      rootElement.innerHTML = `
+        <div style="min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #fef2f2;">
+          <h2 style="font-size: 1.5rem; font-weight: bold; color: #b91c1c; margin-bottom: 0.5rem;">App failed to load</h2>
+          <div style="color: #ef4444; background-color: #fee2e2; border: 1px solid #fecaca; border-radius: 0.375rem; padding: 1rem; max-width: 32rem;">
+            Please refresh the page or try again later.
+          </div>
+        </div>
+      `;
+    }
+  }
+};
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}

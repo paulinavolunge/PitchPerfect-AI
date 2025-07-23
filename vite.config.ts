@@ -17,7 +17,10 @@ export default defineConfig(({ mode }) => {
       port: 8080,
     },
     plugins: [
-      react(),
+      react({
+        // Ensure React import is handled properly
+        jsxRuntime: 'automatic',
+      }),
       // Only include the Lovable tagger in development mode, never in production
       !isProduction && isDevelopment && componentTagger(),
     ].filter(Boolean),
@@ -29,12 +32,14 @@ export default defineConfig(({ mode }) => {
     // Ensure proper environment variables
     define: {
       'import.meta.env.VITE_LOVABLE': JSON.stringify(isDevelopment ? 'true' : 'false'),
+      // Ensure global is defined for better browser compatibility
+      global: 'globalThis',
     },
     build: {
       // Use esbuild for minification instead of terser (no additional dependency required)
       minify: isProduction ? 'esbuild' : false,
       sourcemap: isDevelopment,
-      target: 'es2020',
+      target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari13'],
       cssCodeSplit: true,
       rollupOptions: {
         output: {
@@ -78,6 +83,10 @@ export default defineConfig(({ mode }) => {
       esbuild: {
         drop: ['console', 'debugger'],
         legalComments: 'none',
+        // Ensure proper handling of JSX
+        jsx: 'automatic',
+        jsxFactory: 'React.createElement',
+        jsxFragment: 'React.Fragment',
       },
     }),
     // Optimize dependencies pre-bundling
@@ -88,8 +97,11 @@ export default defineConfig(({ mode }) => {
         'react-router-dom',
         '@tanstack/react-query',
         'lucide-react',
+        'react/jsx-runtime',
       ],
       exclude: ['@supabase/supabase-js'],
+      // Force pre-bundling of React to avoid initialization issues
+      force: true,
     },
   };
 });
