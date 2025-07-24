@@ -102,17 +102,7 @@ const Practice = () => {
     try {
       console.log('🔍 Starting pitch analysis...');
       
-      // Deduct credits for analysis
-      const success = await deductUserCredits('pitch_analysis', 1);
-      
-      if (!success) {
-        toast({
-          title: "Credit Deduction Failed",
-          description: "Unable to process payment for analysis.",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Credits will be deducted after successful analysis
 
       // Call AI analysis instead of using mock data
       console.log('🔍 Starting AI pitch analysis...');
@@ -146,6 +136,13 @@ const Practice = () => {
         setTranscript(analysisText);
         setScore(analysis.overallScore);
         setAnalysisComplete(true);
+
+        // Deduct credits AFTER successful analysis
+        const success = await deductUserCredits('pitch_analysis', 1);
+        if (!success) {
+          console.warn('Credit deduction failed after successful analysis');
+          // Don't show error - user already got the value
+        }
 
         // Format the feedback for display
         const formattedFeedback = {

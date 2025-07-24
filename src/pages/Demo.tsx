@@ -143,22 +143,7 @@ const Demo = () => {
         duration: 3000,
       });
       
-      // For demo purposes, we'll deduct credits if user is authenticated
-      if (!isGuestMode && user) {
-        const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
-        const featureType = `demo_objection_${input.type}`;
-        
-        console.log(`Attempting to deduct ${creditsToDeduct} credits for ${featureType}`);
-        
-        const deducted = await deductUserCredits(featureType, creditsToDeduct);
-        if (!deducted) {
-          console.log('Credit deduction failed - stopping demo');
-          // The deductUserCredits function already shows appropriate toast
-          return;
-        }
-        
-        console.log('Credits deducted successfully');
-      }
+      // Credits will be deducted AFTER successful AI response
       
       // Simulate AI processing with a more realistic delay
       console.log('Starting AI analysis simulation...');
@@ -186,19 +171,35 @@ const Demo = () => {
           response: responseText,
           timestamp: new Date().toISOString(),
           feedback: data.feedback || generateFallbackFeedback(responseText),
-          score: Math.floor(Math.random() * 3) + 7 // Still use random score for demo
+          score: Math.floor(Math.random() * 3) + 7, // Still use random score for demo
+          aiSuccess: !data.fallback // Track if this was from real AI
         };
+        
+        // Deduct credits AFTER successful AI response
+        if (!isGuestMode && user && !data.fallback) {
+          const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
+          const featureType = `demo_objection_${input.type}`;
+          
+          console.log(`Deducting ${creditsToDeduct} credits for successful ${featureType}`);
+          
+          const deducted = await deductUserCredits(featureType, creditsToDeduct);
+          if (!deducted) {
+            console.warn('Credit deduction failed after successful AI response');
+            // Don't stop the flow - user already got the value
+          }
+        }
         
       } catch (error) {
         console.error('AI feedback failed, using fallback:', error);
         
-        // Fallback to local feedback generation
+        // Fallback to local feedback generation (no credit deduction for fallback)
         feedbackData = {
           type: input.type,
           response: responseText,
           timestamp: new Date().toISOString(),
           feedback: generateFallbackFeedback(responseText),
-          score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
+          score: Math.floor(Math.random() * 3) + 7, // Mock score 7-10
+          aiSuccess: false // Mark as fallback
         };
       }
       
