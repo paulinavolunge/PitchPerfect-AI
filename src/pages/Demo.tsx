@@ -13,11 +13,11 @@ import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Settings, UserPlus, RefreshCw } from 'lucide-react';
 import MicrophoneGuard from '@/components/MicrophoneGuard';
+import { supabase } from '@/integrations/supabase/client';
 import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import DemoNavigation from '@/components/demo/DemoNavigation';
 
 const Demo = () => {
@@ -164,15 +164,43 @@ const Demo = () => {
       console.log('Starting AI analysis simulation...');
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Generate mock feedback based on input type and content
+      // Call real AI feedback service instead of mock
       const responseText = typeof input.data === 'string' ? input.data : 'Voice response processed';
-      const feedbackData = {
-        type: input.type,
-        response: responseText,
-        timestamp: new Date().toISOString(),
-        feedback: generateMockFeedback(responseText),
-        score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
-      };
+      
+      let feedbackData;
+      try {
+        const { data, error } = await supabase.functions.invoke('demo-feedback', {
+          body: {
+            response: responseText,
+            inputType: input.type
+          }
+        });
+
+        if (error) {
+          console.error('Demo feedback error:', error);
+          throw new Error(error.message);
+        }
+
+        feedbackData = {
+          type: input.type,
+          response: responseText,
+          timestamp: new Date().toISOString(),
+          feedback: data.feedback || generateFallbackFeedback(responseText),
+          score: Math.floor(Math.random() * 3) + 7 // Still use random score for demo
+        };
+        
+      } catch (error) {
+        console.error('AI feedback failed, using fallback:', error);
+        
+        // Fallback to local feedback generation
+        feedbackData = {
+          type: input.type,
+          response: responseText,
+          timestamp: new Date().toISOString(),
+          feedback: generateFallbackFeedback(responseText),
+          score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
+        };
+      }
       
       console.log('Generated feedback data:', feedbackData);
       
@@ -205,7 +233,7 @@ const Demo = () => {
     }
   };
 
-  const generateMockFeedback = (response: string): string => {
+  const generateFallbackFeedback = (response: string): string => {
     // Generate more realistic feedback based on response content
     if (response.toLowerCase().includes('value') || response.toLowerCase().includes('roi')) {
       return "Excellent approach! You focused on value and ROI, which effectively addresses pricing concerns. Consider providing specific examples or metrics to strengthen your response further.";
