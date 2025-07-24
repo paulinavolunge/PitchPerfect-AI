@@ -6,20 +6,20 @@ const LoadingWithTimeout = () => {
   const [secondsElapsed, setSecondsElapsed] = useState(0);
 
   useEffect(() => {
-    console.log('LoadingWithTimeout: useEffect started');
+    // Debug logging removed for production
     
     // Update seconds counter
     const secondsInterval = setInterval(() => {
       setSecondsElapsed(prev => {
         const newSeconds = prev + 1;
-        console.log(`LoadingWithTimeout: ${newSeconds} seconds elapsed`);
+        // Debug: ${newSeconds} seconds elapsed
         return newSeconds;
       });
     }, 1000);
 
     // Set timeout to show error after 5 seconds
     const timeout = setTimeout(() => {
-      console.log('LoadingWithTimeout: Timeout reached - showing error message');
+      // Timeout reached - showing error message
       setTimeoutReached(true);
     }, 5000);
 
@@ -53,7 +53,7 @@ const LoadingWithTimeout = () => {
         <div style={{ marginBottom: '2rem' }}>
           <button
             onClick={() => {
-              console.log('User clicked Try Again');
+              // User clicked Try Again
               window.location.reload();
             }}
             style={{
@@ -70,11 +70,11 @@ const LoadingWithTimeout = () => {
           </button>
           <button
             onClick={() => {
-              console.log('User clicked Open Console');
+              // User clicked Open Console
               // Check if Chrome DevTools API is available
               const isChrome = 'chrome' in window && window.chrome?.runtime;
               if (isChrome) {
-                console.log('Chrome detected - please open DevTools manually (F12)');
+                // Chrome detected - please open DevTools manually (F12)
               }
               alert('Please open your browser\'s developer console (F12) to see error details');
             }}

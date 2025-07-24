@@ -7,9 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
 import DemoScorecard from '../demo/DemoScorecard';
+import { CallData } from '../../types/feedback';
 
 interface CallComparisonViewProps {
-  realCall: any;
+  realCall: CallData;
   onBack: () => void;
 }
 

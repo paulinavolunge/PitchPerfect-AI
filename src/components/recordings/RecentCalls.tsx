@@ -59,8 +59,8 @@ const sampleCalls = [
 ];
 
 interface RecentCallsProps {
-  onSelectCall: (call: any) => void;
-  selectedCall: any;
+  onSelectCall: (call: Record<string, unknown>) => void;
+  selectedCall: Record<string, unknown> | null;
 }
 
 const RecentCalls: React.FC<RecentCallsProps> = ({ onSelectCall, selectedCall }) => {

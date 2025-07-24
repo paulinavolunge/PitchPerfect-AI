@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const VoiceTrainingPage = () => {
-  console.log('VoiceTrainingPage component rendered');
+  // VoiceTrainingPage component rendered
   
   return (
     <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
@@ -10,7 +10,7 @@ export const VoiceTrainingPage = () => {
       <p>Route: /voice-training</p>
       <button 
         onClick={() => {
-          console.log('Back to Home clicked from Voice Training');
+          // Back to Home clicked from Voice Training
           window.location.href = '/';
         }} 
         style={{ padding: '0.5rem 1rem', marginTop: '1rem' }}
@@ -22,7 +22,7 @@ export const VoiceTrainingPage = () => {
 };
 
 export const AnalyticsPage = () => {
-  console.log('AnalyticsPage component rendered');
+  // AnalyticsPage component rendered
   
   return (
     <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
@@ -31,7 +31,7 @@ export const AnalyticsPage = () => {
       <p>Route: /analytics</p>
       <button 
         onClick={() => {
-          console.log('Back to Home clicked from Analytics');
+          // Back to Home clicked from Analytics
           window.location.href = '/';
         }} 
         style={{ padding: '0.5rem 1rem', marginTop: '1rem' }}
@@ -43,7 +43,7 @@ export const AnalyticsPage = () => {
 };
 
 export const RoleplayPage = () => {
-  console.log('RoleplayPage component rendered');
+  // RoleplayPage component rendered
   
   return (
     <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
@@ -52,7 +52,7 @@ export const RoleplayPage = () => {
       <p>Route: /ai-roleplay</p>
       <button 
         onClick={() => {
-          console.log('Back to Home clicked from AI Roleplay');
+          // Back to Home clicked from AI Roleplay
           window.location.href = '/';
         }} 
         style={{ padding: '0.5rem 1rem', marginTop: '1rem' }}

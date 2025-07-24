@@ -11,7 +11,9 @@ interface GuidedTourProps {
   continuous?: boolean;
   stepIndex?: number;
   spotlightClicks?: boolean;
-  styles?: any;
+  styles?: {
+    [key: string]: React.CSSProperties;
+  };
   scrollToSteps?: boolean;
 }
 
