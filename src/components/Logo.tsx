@@ -27,7 +27,7 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
       className
     )}>
       <img 
-        src="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png" 
+        src="/assets/logo-pitchperfectai-optimized.webp"
         alt="PitchPerfect AI Logo" 
         className={cn(
           "object-contain bg-transparent transition-all duration-300 flex-shrink-0", 

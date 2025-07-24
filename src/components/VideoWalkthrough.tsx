@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@/utils/analytics';
-import videoPlaceholder from '@/assets/video-placeholder.jpg';
+import videoPlaceholder from '@/assets/video-placeholder-optimized.webp';
 
 const VideoWalkthrough: React.FC = () => {
   const navigate = useNavigate();

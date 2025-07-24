@@ -7,7 +7,7 @@ import React from "react";
  */
 const Logo = ({ width = 180, height = 80, style }) => (
   <img
-    src="/assets/logo-pitchperfectai.png"
+    src="/assets/logo-pitchperfectai-optimized.webp"
     alt="Pitch Perfect AI Logo"
     width={width}
     height={height}
