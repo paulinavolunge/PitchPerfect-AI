@@ -118,7 +118,8 @@ const Index = () => {
                 variant="outline" 
                 size="lg"
                 className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 font-medium px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg"
-                onClick={handleWatchDemoClick}
+                    onClick={handleWatchDemoClick}
+                    data-onboarding="demo-button"
               >
                 <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
                 Watch 2-Min Demo
@@ -211,7 +212,7 @@ const Index = () => {
           <CompanyLogos />
         </LazyComponent>
 
-        <section id="testimonials">
+        <section id="testimonials" data-onboarding="testimonials">
           <LazyComponent>
             <Testimonials />
           </LazyComponent>
@@ -227,7 +228,7 @@ const Index = () => {
           <VideoWalkthrough />
         </LazyComponent>
 
-        <LazyComponent className="py-12 sm:py-16">
+        <LazyComponent className="py-12 sm:py-16" data-onboarding="pricing">
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="mb-6 sm:mb-8">
               <TrustBadges variant="compact" className="justify-center mb-4 sm:mb-6" />
