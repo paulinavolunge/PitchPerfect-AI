@@ -54,6 +54,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
+    "esbuild": "^0.25.8",
     "framer-motion": "^12.9.2",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
@@ -93,6 +94,6 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^7.0.6"
   }
 }
