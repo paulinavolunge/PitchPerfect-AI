@@ -27,7 +27,7 @@ const VideoPlayer = ({
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.play().catch(error => {
-        console.log('Auto-play was prevented:', error);
+        // Auto-play was prevented
       });
     }
   }, []);

@@ -31,7 +31,7 @@ declare global {
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
-  error: any;
+  error: Error | null;
 }
 
 interface SpeechRecognitionError extends Event {
@@ -336,7 +336,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
 
     // Deduct credits for demo analysis if user is authenticated
     if (user && transcript.trim()) {
-      console.log('Deducting 1 credit for demo pitch analysis');
+      // Deducting 1 credit for demo pitch analysis
       const deducted = await deductUserCredits('demo_pitch_analysis', 1);
       if (!deducted) {
         console.warn('Credit deduction failed for demo analysis');

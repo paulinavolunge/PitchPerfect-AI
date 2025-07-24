@@ -17,9 +17,10 @@ import {
   Zap,
   Eye
 } from 'lucide-react';
+import { DetailedFeedback } from '../../types/feedback';
 
 interface EnhancedFeedbackDisplayProps {
-  feedback: any;
+  feedback: DetailedFeedback;
   objectionText: string;
   userResponse: string;
   isVisible: boolean;

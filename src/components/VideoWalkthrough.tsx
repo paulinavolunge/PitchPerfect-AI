@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@/utils/analytics';
-import videoPlaceholder from '@/assets/video-placeholder.jpg';
+import { LazyImage } from '@/components/LazyImage';
+import videoPlaceholder from '@/assets/video-placeholder-optimized.webp';
 
 const VideoWalkthrough: React.FC = () => {
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ const VideoWalkthrough: React.FC = () => {
                   ) : (
                     /* Fallback content when video fails to load */
                     <div className="absolute inset-0 w-full h-full">
-                      <img 
+                      <LazyImage 
                         src={videoPlaceholder}
                         alt="PitchPerfect AI Demo Preview"
                         className="w-full h-full object-cover"

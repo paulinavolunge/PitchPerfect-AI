@@ -15,7 +15,7 @@ interface MobilePricingCardProps {
   buttonText: string;
   loading?: boolean;
   onPurchase: () => void;
-  user?: any;
+  user?: unknown;
   gradient?: string;
 }
 

@@ -1,19 +1,21 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import PricingCTA from '@/components/PricingCTA';
-import VideoWalkthrough from '@/components/VideoWalkthrough';
-import Testimonials from '@/components/Testimonials';
-import TrustBadges from '@/components/TrustBadges';
-import CompanyLogos from '@/components/CompanyLogos';
-
+import { LazyComponent } from '@/components/LazyComponent';
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
 import { trackEvent } from '@/utils/analytics';
+
+// Lazy load heavy components below the fold
+const Footer = lazy(() => import('@/components/Footer'));
+const PricingCTA = lazy(() => import('@/components/PricingCTA'));
+const VideoWalkthrough = lazy(() => import('@/components/VideoWalkthrough'));
+const Testimonials = lazy(() => import('@/components/Testimonials'));
+const TrustBadges = lazy(() => import('@/components/TrustBadges'));
+const CompanyLogos = lazy(() => import('@/components/CompanyLogos'));
 
 const Index = () => {
   const navigate = useNavigate();
@@ -116,7 +118,8 @@ const Index = () => {
                 variant="outline" 
                 size="lg"
                 className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 font-medium px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg"
-                onClick={handleWatchDemoClick}
+                    onClick={handleWatchDemoClick}
+                    data-onboarding="demo-button"
               >
                 <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
                 Watch 2-Min Demo
@@ -205,30 +208,38 @@ const Index = () => {
           </div>
         </section>
 
-        <CompanyLogos />
+        <LazyComponent>
+          <CompanyLogos />
+        </LazyComponent>
 
-        <section id="testimonials">
-          <Testimonials />
+        <section id="testimonials" data-onboarding="testimonials">
+          <LazyComponent>
+            <Testimonials />
+          </LazyComponent>
         </section>
 
-        <section className="py-8 sm:py-12 bg-secondary-100">
+        <LazyComponent className="py-8 sm:py-12 bg-secondary-100">
           <div className="container mx-auto px-4">
             <TrustBadges variant="horizontal" />
           </div>
-        </section>
+        </LazyComponent>
 
-        <VideoWalkthrough />
+        <LazyComponent>
+          <VideoWalkthrough />
+        </LazyComponent>
 
-        <section className="py-12 sm:py-16">
+        <LazyComponent className="py-12 sm:py-16" data-onboarding="pricing">
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="mb-6 sm:mb-8">
               <TrustBadges variant="compact" className="justify-center mb-4 sm:mb-6" />
             </div>
             <PricingCTA />
           </div>
-        </section>
+        </LazyComponent>
 
-        <Footer />
+        <LazyComponent>
+          <Footer />
+        </LazyComponent>
         </main>
       </div>
     </>

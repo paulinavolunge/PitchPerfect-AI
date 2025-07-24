@@ -29,7 +29,7 @@ export const ConsentBanner: React.FC = () => {
     // Check if analytics consent already exists and trigger analytics
     const analyticsConsent = localStorage.getItem('analytics-consent');
     if (analyticsConsent === 'true') {
-      console.log('🔧 ConsentBanner: Analytics consent found, triggering loadAnalytics');
+      
       if (typeof window.loadAnalytics === 'function') {
         // Delay slightly to ensure DOM is ready
         setTimeout(() => {
@@ -42,7 +42,7 @@ export const ConsentBanner: React.FC = () => {
   }, []);
 
   const saveConsent = (consentData: ConsentPreferences) => {
-    console.log('🔧 ConsentBanner: Saving consent:', consentData);
+    
     
     localStorage.setItem('privacy-consent', JSON.stringify(consentData));
     localStorage.setItem('marketing-consent', consentData.marketing.toString());
