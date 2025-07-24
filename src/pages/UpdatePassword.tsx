@@ -19,16 +19,42 @@ const UpdatePassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have a recovery token in the URL
-    const hash = window.location.hash;
-    if (!hash || !hash.includes('type=recovery')) {
-      setIsValidToken(false);
-      toast({
-        title: "Invalid or expired link",
-        description: "Please request a new password reset",
-        variant: "destructive",
-      });
-    }
+    const handleTokenValidation = async () => {
+      // Extract token from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      
+      if (!token) {
+        setIsValidToken(false);
+        toast({
+          title: "Invalid or expired link",
+          description: "Please request a new password reset",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        // Exchange the token for a session
+        const { error } = await supabase.auth.exchangeCodeForSession(token);
+        
+        if (error) {
+          throw error;
+        }
+        
+        setIsValidToken(true);
+      } catch (error) {
+        console.error("Error validating token:", error);
+        setIsValidToken(false);
+        toast({
+          title: "Invalid or expired link",
+          description: "Please request a new password reset",
+          variant: "destructive",
+        });
+      }
+    };
+
+    handleTokenValidation();
   }, [toast]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
