@@ -1,0 +1,43 @@
+# Build outputs
+dist/
+build/
+out/
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# Generated files
+*.min.js
+*.bundle.js
+
+# Legacy files
+public/test.html
+public/videos/
+
+# Temporary files
+tmp/
+temp/
+
+# Lock files
+*.lock
+yarn.lock
+package-lock.json
+bun.lockb
+
+# Configuration files that may have different syntax
+*.config.js
+tailwind.config.ts
+postcss.config.js
+vite.config.ts
+playwright.config.ts
+capacitor.config.ts
+
+# Third-party scripts
+public/assets/
+supabase/functions/**/index.ts

@@ -72,7 +72,7 @@ const LoadingWithTimeout = () => {
             onClick={() => {
               console.log('User clicked Open Console');
               // Check if Chrome DevTools API is available
-              const isChrome = 'chrome' in window && (window as any).chrome?.runtime;
+              const isChrome = 'chrome' in window && window.chrome?.runtime;
               if (isChrome) {
                 console.log('Chrome detected - please open DevTools manually (F12)');
               }
