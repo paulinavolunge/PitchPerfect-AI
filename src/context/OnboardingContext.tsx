@@ -93,14 +93,11 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     if (!user) return;
 
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('id', user.id)
-        .single();
-
+      // Use localStorage to track onboarding for now since profiles table doesn't have onboarding_completed
+      const hasCompletedOnboarding = localStorage.getItem(`onboarding_completed_${user.id}`);
+      
       // Show onboarding if user hasn't completed it
-      if (!profile?.onboarding_completed) {
+      if (!hasCompletedOnboarding) {
         // Wait a bit for the page to load
         setTimeout(() => {
           setIsActive(true);
@@ -144,13 +141,8 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     if (!user) return;
 
     try {
-      await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          onboarding_completed: true,
-          updated_at: new Date().toISOString()
-        });
+      // Store completion in localStorage for now
+      localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
     } catch (error) {
       console.error('Error marking onboarding as complete:', error);
     }

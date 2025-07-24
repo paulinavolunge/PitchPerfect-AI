@@ -80,6 +80,30 @@ export type Database = {
         }
         Relationships: []
       }
+      login_events: {
+        Row: {
+          id: string
+          ip_address: string | null
+          login_timestamp: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          login_timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          login_timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pitch_recordings: {
         Row: {
           audio_content: string | null
@@ -380,6 +404,24 @@ export type Database = {
           id?: string
           timestamp?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_login_events: {
+        Row: {
+          id: number
+          login_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: never
+          login_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: never
+          login_at?: string
+          user_id?: string
         }
         Relationships: []
       }
