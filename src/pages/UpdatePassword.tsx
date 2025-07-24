@@ -20,38 +20,54 @@ const UpdatePassword = () => {
 
   useEffect(() => {
     const handleTokenValidation = async () => {
-      // Extract token from URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
+      // Supabase recovery links use URL fragments (hash) or come pre-authenticated
+      // First check if we already have a session (user came from recovery email)
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!token) {
-        setIsValidToken(false);
-        toast({
-          title: "Invalid or expired link",
-          description: "Please request a new password reset",
-          variant: "destructive",
-        });
+      if (session) {
+        setIsValidToken(true);
         return;
       }
 
-      try {
-        // Exchange the token for a session
-        const { error } = await supabase.auth.exchangeCodeForSession(token);
-        
-        if (error) {
-          throw error;
-        }
-        
+      // Check for token in URL fragments (hash)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
+      
+      // Also check URL search params as fallback
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token') || urlParams.get('code');
+      
+      if (type === 'recovery' && accessToken && refreshToken) {
+        // Supabase handles this automatically, just set as valid
         setIsValidToken(true);
-      } catch (error) {
-        console.error("Error validating token:", error);
-        setIsValidToken(false);
-        toast({
-          title: "Invalid or expired link",
-          description: "Please request a new password reset",
-          variant: "destructive",
-        });
+        return;
       }
+      
+      if (token) {
+        try {
+          // Try to exchange the token for a session
+          const { error } = await supabase.auth.exchangeCodeForSession(token);
+          
+          if (error) {
+            throw error;
+          }
+          
+          setIsValidToken(true);
+          return;
+        } catch (error) {
+          console.error("Error validating token:", error);
+        }
+      }
+      
+      // If no valid session or token found
+      setIsValidToken(false);
+      toast({
+        title: "Invalid or expired link",
+        description: "Please request a new password reset",
+        variant: "destructive",
+      });
     };
 
     handleTokenValidation();
