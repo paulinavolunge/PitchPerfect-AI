@@ -73,7 +73,10 @@ test.describe('Roleplay Functionality', () => {
     const startButton = page.locator('[data-testid="start-roleplay"], [data-testid="begin-session"]');
     if (await startButton.isVisible({ timeout: 5000 })) {
       await startButton.click();
-      await page.waitForTimeout(2000);
+      
+      // Wait for session to be active instead of fixed timeout
+      const sessionIndicator = page.locator('[data-testid="session-active"], [data-testid="recording-indicator"]');
+      await expect(sessionIndicator).toBeVisible({ timeout: 10000 });
     }
     
     // Check for record button
