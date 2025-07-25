@@ -33,10 +33,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const { imageSrc, isImageLoaded, elementRef, shouldLoad } = useLazyImage(
-    webpSrc || src, 
-    { threshold, rootMargin }
-  );
 
   // Support for WebP detection
   const [supportsWebP, setSupportsWebP] = useState(false);
@@ -52,6 +48,18 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     setSupportsWebP(checkWebPSupport());
   }, []);
 
+  const getOptimizedSrc = () => {
+    if (hasError) return src; // Fallback to original on error
+    if (supportsWebP && webpSrc) return webpSrc;
+    return src;
+  };
+
+  // Use the optimized source for lazy loading to avoid unnecessary WebP requests
+  const { imageSrc, isImageLoaded, elementRef, shouldLoad } = useLazyImage(
+    getOptimizedSrc(), 
+    { threshold, rootMargin }
+  );
+
   const handleLoad = () => {
     setIsLoaded(true);
     onLoad?.();
@@ -60,12 +68,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const handleError = () => {
     setHasError(true);
     onError?.();
-  };
-
-  const getOptimizedSrc = () => {
-    if (hasError) return src; // Fallback to original on error
-    if (supportsWebP && webpSrc) return webpSrc;
-    return src;
   };
 
   const defaultFallback = (
@@ -105,7 +107,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   return (
     <div ref={elementRef} className="relative">
       {shouldLoad && isImageLoaded ? (
-        <picture className="block">
+        <picture className="block relative">
           {webpSrc && (
             <source srcSet={webpSrc} type="image/webp" sizes={sizes} />
           )}
