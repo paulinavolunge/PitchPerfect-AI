@@ -44,6 +44,7 @@ SELECT DISTINCT
   'WARNING: RLS enabled but no policies found' AS security_status
 FROM pg_tables t
 LEFT JOIN pg_class c ON c.relname = t.tablename
+  AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = t.schemaname)
 LEFT JOIN pg_policies p ON p.tablename = t.tablename AND p.schemaname = t.schemaname
 WHERE t.schemaname = 'public' 
   AND c.rowsecurity = true
