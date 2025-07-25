@@ -22,6 +22,7 @@ const DemoVideoSection = () => {
               loop
               playsInline
               controls
+              preload="metadata"
               aria-label="PitchPerfect AI Demo Video - Shows how the platform works"
               title="PitchPerfect AI Demo Video"
             >
