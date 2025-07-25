@@ -79,7 +79,14 @@ test.describe('Feedback System', () => {
     }
   });
 
-  test('should display appropriate feedback for different performance levels', async ({ page }) => {
+  test('should display meaningful feedback content when available', async ({ page }) => {
+    // Mock different performance responses
+    await page.route('**/api/performance*', route => {
+      route.fulfill({
+        json: { score: 85, feedback: "Excellent performance!" }
+      });
+    });
+
     // This test would ideally mock different performance scenarios
     await page.goto('/demo');
     await page.waitForLoadState('networkidle');
