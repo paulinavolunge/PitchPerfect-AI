@@ -120,10 +120,11 @@ test.describe('Sales Professional User Scenarios', () => {
       
       // Use Stripe test card
       const stripeFrame = page.frameLocator('iframe[title="Secure payment input frame"]');
+      // Wait for Stripe iframe to be fully loaded
+      await expect(stripeFrame.locator('[placeholder="Card number"]')).toBeVisible({ timeout: 10000 });
       await stripeFrame.locator('[placeholder="Card number"]').fill('4242424242424242');
       await stripeFrame.locator('[placeholder="MM / YY"]').fill('12/25');
       await stripeFrame.locator('[placeholder="CVC"]').fill('123');
-      
       // Complete purchase
       await page.getByRole('button', { name: /Start Subscription/i }).click();
       
