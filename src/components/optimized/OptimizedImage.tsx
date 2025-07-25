@@ -76,7 +76,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   // For priority images, skip intersection observer
   if (priority) {
     return (
-      <picture className="block">
+      <picture className="block relative">
         {webpSrc && (
           <source srcSet={webpSrc} type="image/webp" sizes={sizes} />
         )}
