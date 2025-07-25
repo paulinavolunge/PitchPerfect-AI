@@ -8,7 +8,12 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:smoke": "playwright test tests/smoke",
+    "test:accessibility": "playwright test tests/e2e/accessibility.spec.ts",
+    "audit:rls": "supabase db shell < src/database_rls_audit.sql || echo 'Please ensure Supabase CLI is installed and configured'"
   },
   "dependencies": {
     "@capacitor/android": "^7.2.0",

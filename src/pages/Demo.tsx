@@ -1,13 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import DemoSandbox from '@/components/demo/DemoSandbox';
-import PracticeObjection from '@/components/demo/PracticeObjection';
-import WaitlistModal from '@/components/demo/WaitlistModal';
-import GuestBanner from '@/components/GuestBanner';
-import WebhookSettings from '@/components/WebhookSettings';
+import LazyLoadManager from '@/components/optimized/LazyLoadManager';
+import { Skeleton } from '@/components/ui/skeleton';
 import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -18,7 +14,15 @@ import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import DemoNavigation from '@/components/demo/DemoNavigation';
+
+// Lazy load heavy demo components
+const Footer = lazy(() => import('@/components/Footer'));
+const DemoSandbox = lazy(() => import('@/components/demo/DemoSandbox'));
+const PracticeObjection = lazy(() => import('@/components/demo/PracticeObjection'));
+const WaitlistModal = lazy(() => import('@/components/demo/WaitlistModal'));
+const GuestBanner = lazy(() => import('@/components/GuestBanner'));
+const WebhookSettings = lazy(() => import('@/components/WebhookSettings'));
+const DemoNavigation = lazy(() => import('@/components/demo/DemoNavigation'));
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
@@ -272,13 +276,19 @@ const Demo = () => {
       
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <DemoNavigation 
-          currentStep={1}
-          totalSteps={3}
-          showProgress={true}
-          onHelp={() => console.log('Help requested')}
-        />
-        {isGuestMode && <GuestBanner />}
+        <Suspense fallback={<Skeleton className="h-16 w-full" />}>
+          <DemoNavigation 
+            currentStep={1}
+            totalSteps={3}
+            showProgress={true}
+            onHelp={() => console.log('Help requested')}
+          />
+        </Suspense>
+        {isGuestMode && (
+          <Suspense fallback={<Skeleton className="h-12 w-full" />}>
+            <GuestBanner />
+          </Suspense>
+        )}
         <main className="flex-grow pt-24 pb-12">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
@@ -319,10 +329,12 @@ const Demo = () => {
                   </div>
                 ) : (
                   <MicrophoneGuard>
-                    <PracticeObjection
-                      scenario={objectionScenario}
-                      onSubmit={handleObjectionSubmit}
-                    />
+                    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                      <PracticeObjection
+                        scenario={objectionScenario}
+                        onSubmit={handleObjectionSubmit}
+                      />
+                    </Suspense>
                   </MicrophoneGuard>
                 )}
 
@@ -361,18 +373,24 @@ const Demo = () => {
             </div>
           </div>
         </main>
-        <Footer />
+        <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+          <Footer />
+        </Suspense>
 
-        <WaitlistModal 
-          open={showWaitlistModal} 
-          onOpenChange={setShowWaitlistModal}
-          sessionData={sessionData}
-        />
+        <Suspense fallback={null}>
+          <WaitlistModal 
+            open={showWaitlistModal} 
+            onOpenChange={setShowWaitlistModal}
+            sessionData={sessionData}
+          />
+        </Suspense>
         
-        <WebhookSettings
-          open={showWebhookSettings}
-          onOpenChange={setShowWebhookSettings}
-        />
+        <Suspense fallback={null}>
+          <WebhookSettings
+            open={showWebhookSettings}
+            onOpenChange={setShowWebhookSettings}
+          />
+        </Suspense>
       </div>
     </>
   );

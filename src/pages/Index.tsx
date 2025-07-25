@@ -4,19 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { LazyComponent } from '@/components/LazyComponent';
+import LazyComponent from '@/components/LazyComponent';
+import LazyLoadManager from '@/components/optimized/LazyLoadManager';
+import OptimizedImage from '@/components/optimized/OptimizedImage';
 import { LazySection } from '@/components/LazySection';
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
 import { trackEvent } from '@/utils/analytics';
 
-// Lazy load heavy components below the fold
+
+// Lazy load heavy components below the fold with prioritization
 const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
 const VideoWalkthrough = lazy(() => import('@/components/VideoWalkthrough'));
 const Testimonials = lazy(() => import('@/components/Testimonials'));
 const TrustBadges = lazy(() => import('@/components/TrustBadges'));
 const CompanyLogos = lazy(() => import('@/components/CompanyLogos'));
+const Features = lazy(() => import('@/components/Features'));
+const HowItWorks = lazy(() => import('@/components/HowItWorks'));
 
 const Index = () => {
   const navigate = useNavigate();
@@ -209,38 +214,40 @@ const Index = () => {
           </div>
         </section>
 
-        <LazySection>
-          <CompanyLogos />
-        </LazySection>
+<LazyLoadManager priority="high" rootMargin="300px">
+  <CompanyLogos />
+</LazyLoadManager>
 
-        <section id="testimonials" data-onboarding="testimonials">
-          <LazySection>
-            <Testimonials />
-          </LazySection>
-        </section>
+<section id="testimonials" data-onboarding="testimonials">
+  <LazyLoadManager priority="normal" rootMargin="200px">
+    <Testimonials />
+  </LazyLoadManager>
+</section>
 
-        <LazySection className="py-8 sm:py-12 bg-secondary-100">
-          <div className="container mx-auto px-4">
-            <TrustBadges variant="horizontal" />
-          </div>
-        </LazySection>
+<LazyLoadManager className="py-8 sm:py-12 bg-secondary-100" priority="normal">
+  <div className="container mx-auto px-4">
+    <TrustBadges variant="horizontal" />
+  </div>
+</LazyLoadManager>
 
-        <LazySection>
-          <VideoWalkthrough />
-        </LazySection>
+<LazyLoadManager priority="low" rootMargin="100px">
+  <VideoWalkthrough />
+</LazyLoadManager>
 
-        <LazySection className="py-12 sm:py-16" data-onboarding="pricing">
+<LazyLoadManager className="py-12 sm:py-16" data-onboarding="pricing" priority="high" rootMargin="250px">
+
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="mb-6 sm:mb-8">
               <TrustBadges variant="compact" className="justify-center mb-4 sm:mb-6" />
             </div>
             <PricingCTA />
           </div>
-        </LazySection>
+</LazyLoadManager>
 
-        <LazySection>
-          <Footer />
-        </LazySection>
+<LazyLoadManager priority="low">
+  <Footer />
+</LazyLoadManager>
+
         </main>
       </div>
     </>
