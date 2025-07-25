@@ -144,7 +144,13 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should handle logout successfully', async ({ page }) => {
-    // First, simulate logged in state
+    // First, establish authenticated session
+    // Option 1: Use API to create session
+    // await page.request.post('/api/auth/login', { ... });
+
+    // Option 2: Set auth cookies/tokens
+    // await page.context().addCookies([{ ... }]);
+
     await page.goto('/dashboard');
     
     // Look for logout option (could be in user menu)
