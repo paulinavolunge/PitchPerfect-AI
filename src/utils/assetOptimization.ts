@@ -130,17 +130,27 @@ export function preloadCriticalAssets(assets: Array<{
 // Font optimization
 export function optimizeFontLoading(fontFamilies: string[]) {
   if (typeof document === 'undefined') return;
-  
-  fontFamilies.forEach(family => {
-    // Create font-display: swap for better loading performance
-    const style = document.createElement('style');
-    style.textContent = `
-      @font-face {
-        font-family: '${family}';
-        font-display: swap;
-      }
-    `;
-    document.head.appendChild(style);
+
+  // Get all stylesheets
+  const styleSheets = Array.from(document.styleSheets);
+
+  styleSheets.forEach(sheet => {
+    try {
+      const rules = Array.from(sheet.cssRules || []);
+      rules.forEach(rule => {
+        if (rule instanceof CSSFontFaceRule) {
+          const fontFamily = rule.style.getPropertyValue('font-family')
+            .replace(/['"]/g, '');
+
+          if (fontFamilies.includes(fontFamily)) {
+            rule.style.setProperty('font-display', 'swap');
+          }
+        }
+      });
+    } catch (e) {
+      // Handle cross-origin stylesheets
+      console.warn('Cannot access stylesheet:', e);
+    }
   });
 }
 
