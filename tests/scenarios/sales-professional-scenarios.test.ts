@@ -50,8 +50,11 @@ test.describe('Sales Professional User Scenarios', () => {
       await page.getByRole('button', { name: /Start Recording/i }).click();
       
       // Simulate speaking (wait for realistic duration)
-      await page.waitForTimeout(5000);
-      
+      // Simulate speaking (wait for realistic duration)
+      // Wait for recording indicator or use a more reliable signal
+      await expect(page.locator('[data-testid="recording-active"]')).toBeVisible();
+      await page.waitForTimeout(2000); // Minimum recording time
+      await expect(page.locator('[data-testid="recording-active"]')).toBeVisible();
       await page.getByRole('button', { name: /Stop Recording/i }).click();
       
       // Wait for AI processing
