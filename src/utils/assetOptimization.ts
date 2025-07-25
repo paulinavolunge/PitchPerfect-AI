@@ -25,22 +25,43 @@ export function optimizeImageUrl(
   } = {},
   config: AssetOptimizationConfig = defaultConfig
 ): string {
+export function optimizeImageUrl(
+  originalUrl: string, 
+  options: {
+    width?: number;
+    height?: number;
+    quality?: number;
+    format?: 'webp' | 'jpg' | 'png';
+  } = {},
+  config: AssetOptimizationConfig = defaultConfig
+): string {
   if (!originalUrl) return '';
+  
+  // Validate URL format
+  try {
+    new URL(originalUrl, window.location.origin);
+  } catch {
+    console.warn('Invalid URL provided to optimizeImageUrl:', originalUrl);
+    return originalUrl;
+  }
   
   // If CDN is enabled, use CDN URL with optimization parameters
   if (config.enableCDN && config.cdnBaseUrl) {
     const params = new URLSearchParams();
     
-    if (options.width) params.set('w', options.width.toString());
+    if (options.width)  params.set('w', options.width.toString());
     if (options.height) params.set('h', options.height.toString());
     if (options.quality) params.set('q', options.quality.toString());
     if (options.format && config.enableWebP) params.set('f', options.format);
     
-    return `${config.cdnBaseUrl}/${originalUrl}?${params.toString()}`;
+    // Properly encode the path
+    const encodedPath = encodeURIComponent(originalUrl);
+    return `${config.cdnBaseUrl}/${encodedPath}?${params.toString()}`;
   }
   
   // For local development, return original URL
   return originalUrl;
+}
 }
 
 // Generate responsive image URLs
