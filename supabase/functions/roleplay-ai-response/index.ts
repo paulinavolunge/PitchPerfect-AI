@@ -1,19 +1,20 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
+config();
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+export async function handler(req: Request): Promise<Response> {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
     }
@@ -29,12 +30,10 @@ serve(async (req) => {
 
     console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole });
 
-    // Create the system prompt based on the role and scenario
     const systemPrompt = isReversedRole 
       ? createProspectSystemPrompt(scenario, voiceStyle)
       : createSalespersonSystemPrompt(scenario, voiceStyle);
 
-    // Build conversation context
     const messages = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-6).map(msg => ({
@@ -69,28 +68,26 @@ serve(async (req) => {
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    console.log('AI response generated:', aiResponse);
-
     return new Response(JSON.stringify({ response: aiResponse }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in roleplay-ai-response function:', error);
-    return new Response(JSON.stringify({ 
+    console.error('Error in roleplay-ai-response:', error);
+    return new Response(JSON.stringify({
       error: error.message,
-      fallback: true
+      fallback: true,
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}
 
 function createProspectSystemPrompt(scenario: any, voiceStyle: string): string {
   const objectionTypes = {
     Price: 'price and cost concerns',
-    Timing: 'timing and urgency issues', 
+    Timing: 'timing and urgency issues',
     Trust: 'trust and credibility concerns',
     Authority: 'decision-making authority limitations',
     Competition: 'competitive alternatives',
