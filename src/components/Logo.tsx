@@ -32,7 +32,9 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
         className={cn(
           "object-contain bg-transparent transition-all duration-300 flex-shrink-0", 
           imageSizeClasses[size]
-        )} 
+        )}
+        loading="eager"
+        decoding="async"
       />
       <span className="font-bold whitespace-nowrap">
         Pitch<span className="text-blue-600 dark:text-green-500">Perfect</span> AI
