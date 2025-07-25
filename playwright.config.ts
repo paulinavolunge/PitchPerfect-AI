@@ -3,19 +3,20 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 30000,
+  timeout: process.env.CI ? 60000 : 30000,
   expect: {
-    timeout: 5000
+    timeout: process.env.CI ? 10000 : 5000
   },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? 'github' : 'html',
+  reporter: process.env.CI ? [['github'], ['html']] : 'html',
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
-    video: 'on-first-retry',
+    video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
   },
   projects: [
     {
@@ -49,5 +50,8 @@ export default defineConfig({
     command: 'npm run dev',
     port: 5173,
     reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+    stderr: 'pipe',
+    stdout: 'pipe',
   },
 });

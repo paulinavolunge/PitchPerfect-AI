@@ -103,7 +103,10 @@ USING (auth.role() = 'service_role');
 
 -- Enhanced audit logging with better error handling
 CREATE OR REPLACE FUNCTION public.log_data_access()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
 DECLARE
   client_ip TEXT;
   client_info TEXT;
@@ -145,7 +148,7 @@ BEGIN
   
   RETURN COALESCE(NEW, OLD);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 -- Create triggers for sensitive tables
 DROP TRIGGER IF EXISTS log_pitch_recordings_access ON public.pitch_recordings;

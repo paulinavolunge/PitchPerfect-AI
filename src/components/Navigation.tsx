@@ -2,8 +2,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
-import { PrimaryButton } from './ui/primary-button';
+import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
+import { isPricingEnabled } from '@/config/features';
 
 export const Navigation: React.FC = () => {
   const location = useLocation();
@@ -43,16 +44,18 @@ export const Navigation: React.FC = () => {
               >
                 Compare
               </Link>
-              <Link
-                to="/pricing"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/pricing')
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                Pricing
-              </Link>
+              {isPricingEnabled() && (
+                <Link
+                  to="/pricing"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive('/pricing')
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
+                >
+                  Pricing
+                </Link>
+              )}
               <Link
                 to="/demo"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
@@ -70,9 +73,9 @@ export const Navigation: React.FC = () => {
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link to="/dashboard">
-                  <PrimaryButton variant="secondary" size="sm">
+                  <Button variant="outline" size="sm">
                     Dashboard
-                  </PrimaryButton>
+                  </Button>
                 </Link>
                 <div className="relative">
                   {/* User menu would go here */}
@@ -84,18 +87,17 @@ export const Navigation: React.FC = () => {
             ) : (
               <div className="flex items-center space-x-4">
                 <Link to="/login">
-                  <PrimaryButton variant="secondary" size="sm">
+                  <Button variant="outline" size="sm">
                     Log In
-                  </PrimaryButton>
+                  </Button>
                 </Link>
                 <Link to="/signup">
-                  <PrimaryButton 
-                    variant="primary" 
+                  <Button 
                     size="sm"
                     className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 ring-2 ring-green-400/20"
                   >
                     Sign Up Free
-                  </PrimaryButton>
+                  </Button>
                 </Link>
               </div>
             )}

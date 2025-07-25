@@ -27,12 +27,14 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
       className
     )}>
       <img 
-        src="/lovable-uploads/5b9309ea-3b10-4401-9c33-7d84a6e1fa68.png" 
+        src="/assets/logo-pitchperfectai-optimized.webp"
         alt="PitchPerfect AI Logo" 
         className={cn(
           "object-contain bg-transparent transition-all duration-300 flex-shrink-0", 
           imageSizeClasses[size]
-        )} 
+        )}
+        loading="eager"
+        decoding="async"
       />
       <span className="font-bold whitespace-nowrap">
         Pitch<span className="text-blue-600 dark:text-green-500">Perfect</span> AI

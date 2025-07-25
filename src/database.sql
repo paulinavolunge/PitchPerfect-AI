@@ -74,13 +74,16 @@ EXECUTE FUNCTION update_timestamp();
 
 -- Function to create a public.user_profiles entry for new auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
 BEGIN
   INSERT INTO public.user_profiles (id, credits_remaining, trial_used)
   VALUES (NEW.id, 1, FALSE); -- Grant 1 free pitch analysis on signup
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 -- Trigger to run handle_new_user function on new auth.users creation
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -116,7 +119,10 @@ CREATE OR REPLACE FUNCTION public.deduct_credits_and_log_usage(
   p_feature_used TEXT,
   p_credits_to_deduct INTEGER
 )
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN 
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
 DECLARE
   current_credits INTEGER;
 BEGIN
@@ -141,4 +147,4 @@ BEGIN
 
   RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;

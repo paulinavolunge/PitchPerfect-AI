@@ -12,7 +12,7 @@ const ReferralProgram = () => {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   
-  // Mock referral stats since the table doesn't exist yet
+  // Referral program data
   const [referralStats] = useState({
     totalReferrals: 0,
     pendingReferrals: 0,

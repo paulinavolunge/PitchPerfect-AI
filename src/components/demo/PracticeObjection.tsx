@@ -72,7 +72,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current = new SpeechRecognition() as any;
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'en-US';
@@ -113,6 +113,19 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
       recognitionRef.current.onend = () => {
         console.log("Speech recognition ended");
         setIsListening(false);
+        
+        // Show feedback to user that recording stopped
+        if (transcript.trim()) {
+          toast({
+            title: "Recording Stopped",
+            description: "Click the microphone again to continue recording or submit your response.",
+          });
+        } else {
+          toast({
+            title: "Recording Stopped", 
+            description: "No speech detected. Click the microphone to try again.",
+          });
+        }
       };
     }
   };

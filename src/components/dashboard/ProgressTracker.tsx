@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '../ui/card';
 import { Progress } from '../ui/progress';
-import { PrimaryButton } from '../ui/primary-button';
+import { Button } from '../ui/button';
 
 interface ProgressStats {
   practiceSessionsCompleted: number;
@@ -28,7 +28,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ stats, onStart
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Your Progress</h2>
-        <PrimaryButton onClick={onStartPractice}>Practice Now</PrimaryButton>
+        <Button onClick={onStartPractice}>Practice Now</Button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

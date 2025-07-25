@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Check, X } from 'lucide-react';
+import { passwordSchema } from '@/utils/formValidation';
 
 const UpdatePassword = () => {
   const [password, setPassword] = useState('');
@@ -19,16 +20,58 @@ const UpdatePassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have a recovery token in the URL
-    const hash = window.location.hash;
-    if (!hash || !hash.includes('type=recovery')) {
+    const handleTokenValidation = async () => {
+      // Supabase recovery links use URL fragments (hash) or come pre-authenticated
+      // First check if we already have a session (user came from recovery email)
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        setIsValidToken(true);
+        return;
+      }
+
+      // Check for token in URL fragments (hash)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
+      
+      // Also check URL search params as fallback
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token') || urlParams.get('code');
+      
+      if (type === 'recovery' && accessToken && refreshToken) {
+        // Supabase handles this automatically, just set as valid
+        setIsValidToken(true);
+        return;
+      }
+      
+      if (token) {
+        try {
+          // Try to exchange the token for a session
+          const { error } = await supabase.auth.exchangeCodeForSession(token);
+          
+          if (error) {
+            throw error;
+          }
+          
+          setIsValidToken(true);
+          return;
+        } catch (error) {
+          console.error("Error validating token:", error);
+        }
+      }
+      
+      // If no valid session or token found
       setIsValidToken(false);
       toast({
         title: "Invalid or expired link",
         description: "Please request a new password reset",
         variant: "destructive",
       });
-    }
+    };
+
+    handleTokenValidation();
   }, [toast]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -43,10 +86,12 @@ const UpdatePassword = () => {
       return;
     }
     
-    if (password.length < 6) {
+    // Validate password using the schema
+    const validation = passwordSchema.safeParse(password);
+    if (!validation.success) {
       toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long",
+        title: "Password requirements not met",
+        description: validation.error.errors[0].message,
         variant: "destructive",
       });
       return;
@@ -64,18 +109,26 @@ const UpdatePassword = () => {
       }
       
       toast({
-        title: "Password updated",
-        description: "Your password has been successfully updated",
+        title: "Password updated successfully!",
+        description: "Redirecting to login page...",
       });
       
-      // Redirect to login after a short delay
-      setTimeout(() => navigate('/login'), 2000);
+      // Redirect to login after showing success message
+      setTimeout(() => navigate('/login'), 1500);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating password:", error);
+      let errorMessage = "Please try again or request a new reset link";
+      
+      if (error?.message?.includes('Password should be at least')) {
+        errorMessage = error.message;
+      } else if (error?.status === 422) {
+        errorMessage = "Password doesn't meet security requirements. Please use a stronger password.";
+      }
+      
       toast({
         title: "Failed to update password",
-        description: "Please try again or request a new reset link",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -84,10 +137,19 @@ const UpdatePassword = () => {
   };
 
   const validatePassword = (password: string) => {
-    return password.length >= 6;
+    return passwordSchema.safeParse(password).success;
   };
 
   const passwordsMatch = password === confirmPassword && confirmPassword !== '';
+
+  const getPasswordRequirements = (password: string) => {
+    return [
+      { text: "At least 6 characters", met: password.length >= 6 },
+      { text: "One uppercase letter", met: /[A-Z]/.test(password) },
+      { text: "One lowercase letter", met: /[a-z]/.test(password) },
+      { text: "One number", met: /[0-9]/.test(password) },
+    ];
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -112,19 +174,26 @@ const UpdatePassword = () => {
                     <Input
                       id="password"
                       type="password"
+                      autoComplete="new-password"
                       placeholder="Enter new password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                     {password && (
-                      <div className="mt-1 text-xs flex items-center">
-                        {validatePassword(password) ? (
-                          <Check className="h-3 w-3 text-green-500 mr-1" />
-                        ) : (
-                          <X className="h-3 w-3 text-red-500 mr-1" />
-                        )}
-                        Must be at least 6 characters
+                      <div className="mt-2 space-y-1">
+                        {getPasswordRequirements(password).map((req, index) => (
+                          <div key={index} className="text-xs flex items-center">
+                            {req.met ? (
+                              <Check className="h-3 w-3 text-green-500 mr-1" />
+                            ) : (
+                              <X className="h-3 w-3 text-red-500 mr-1" />
+                            )}
+                            <span className={req.met ? "text-green-600" : "text-red-600"}>
+                              {req.text}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -135,6 +204,7 @@ const UpdatePassword = () => {
                     <Input
                       id="confirmPassword"
                       type="password"
+                      autoComplete="new-password"
                       placeholder="Confirm new password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}

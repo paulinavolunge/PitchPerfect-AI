@@ -4,9 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { isPricingEnabled } from '@/config/features';
 
 const PricingCTA = () => {
   const navigate = useNavigate();
+
+  if (!isPricingEnabled()) {
+    return null;
+  }
 
   return (
     <Card className="vibrant-card relative overflow-hidden">

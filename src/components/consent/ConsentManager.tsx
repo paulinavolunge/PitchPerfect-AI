@@ -125,18 +125,18 @@ const ConsentManager: React.FC = () => {
   const applyConsentPreferences = (prefs: ConsentPreferences) => {
     // Implementation to actually apply these consent preferences
     // For example, enabling/disabling analytics trackers, etc.
-    console.log("Applying consent preferences:", prefs);
+    
     
     // Example: If analytics consent is given, initialize analytics
     if (prefs.analytics) {
       // Initialize analytics
-      console.log("Analytics enabled");
+      
     }
     
     // Example: If marketing consent is given
     if (prefs.marketing) {
       // Setup marketing cookies/trackers
-      console.log("Marketing enabled");
+      
     }
     
     // And so on for other consent types

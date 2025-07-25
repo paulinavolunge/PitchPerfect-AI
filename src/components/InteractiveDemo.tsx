@@ -43,7 +43,7 @@ const InteractiveDemo: React.FC = () => {
     }
   ];
 
-  const mockFeedback = {
+  const sampleFeedback = {
     score: 8.5,
     strengths: [
       "Strong confidence in delivery",
@@ -244,7 +244,7 @@ const InteractiveDemo: React.FC = () => {
                     {/* Score */}
                     <div className="text-center bg-primary-50 rounded-lg p-4">
                       <div className="text-3xl font-bold text-primary-600 mb-1">
-                        {mockFeedback.score}/10
+                        {sampleFeedback.score}/10
                       </div>
                       <p className="text-primary-700 font-medium">Overall Score</p>
                     </div>
@@ -256,7 +256,7 @@ const InteractiveDemo: React.FC = () => {
                         Strengths
                       </h3>
                       <ul className="space-y-2" role="list">
-                        {mockFeedback.strengths.map((strength, index) => (
+                        {sampleFeedback.strengths.map((strength, index) => (
                           <li key={index} className="flex items-start text-sm">
                             <CheckCircle2 className="h-4 w-4 text-primary-500 mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
                             <span>{strength}</span>
@@ -271,7 +271,7 @@ const InteractiveDemo: React.FC = () => {
                         Areas for Improvement
                       </h3>
                       <ul className="space-y-2" role="list">
-                        {mockFeedback.improvements.map((improvement, index) => (
+                        {sampleFeedback.improvements.map((improvement, index) => (
                           <li key={index} className="flex items-start text-sm">
                             <div className="h-4 w-4 border-2 border-amber-400 rounded-full mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
                             <span>{improvement}</span>
@@ -286,7 +286,7 @@ const InteractiveDemo: React.FC = () => {
                         AI Recommendation
                       </h3>
                       <p className="text-vibrant-blue-700 text-sm">
-                        {mockFeedback.recommendation}
+                        {sampleFeedback.recommendation}
                       </p>
                     </div>
                   </div>

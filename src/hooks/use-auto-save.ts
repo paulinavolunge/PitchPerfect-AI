@@ -3,9 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface AutoSaveOptions {
   key: string;
-  data: any;
+  data: Record<string, unknown>;
   interval?: number; // in milliseconds
-  onSave?: (data: any) => void;
+  onSave?: (data: Record<string, unknown>) => void;
   onRestore?: (data: any) => void;
 }
 

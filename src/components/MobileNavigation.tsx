@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
-import { PrimaryButton } from './ui/primary-button';
+import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
+import { isPricingEnabled } from '@/config/features';
 
 export const MobileNavigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,13 +52,15 @@ export const MobileNavigation: React.FC = () => {
           >
             Compare
           </Link>
-          <Link
-            to="/pricing"
-            className="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors min-h-[44px] flex items-center"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Pricing
-          </Link>
+          {isPricingEnabled() && (
+            <Link
+              to="/pricing"
+              className="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors min-h-[44px] flex items-center"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Pricing
+            </Link>
+          )}
           <Link
             to="/demo"
             className="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors min-h-[44px] flex items-center"
@@ -69,26 +72,21 @@ export const MobileNavigation: React.FC = () => {
           <div className="pt-4 pb-3 border-t border-gray-200 space-y-3">
             {user ? (
               <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                <PrimaryButton variant="primary" fullWidth size="lg">
+                <Button className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90">
                   Dashboard
-                </PrimaryButton>
+                </Button>
               </Link>
             ) : (
               <div className="space-y-3">
                 <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                  <PrimaryButton variant="secondary" fullWidth size="lg">
+                  <Button variant="outline" className="w-full h-11">
                     Log In
-                  </PrimaryButton>
+                  </Button>
                 </Link>
                 <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
-                  <PrimaryButton 
-                    variant="primary" 
-                    fullWidth 
-                    size="lg"
-                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 border-0 ring-2 ring-green-400/20"
-                  >
+                  <Button className="w-full h-11 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 border-0 ring-2 ring-green-400/20">
                     Sign Up Free
-                  </PrimaryButton>
+                  </Button>
                 </Link>
               </div>
             )}

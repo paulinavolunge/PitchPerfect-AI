@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/AuthContext';
+import { OnboardingProvider } from '@/context/OnboardingContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import AccessibilityButton from '@/components/accessibility/AccessibilityButton';
@@ -14,6 +15,7 @@ import MobileNavBar from '@/components/MobileNavBar';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
 import { initializeSecurity } from '@/utils/securityHeaders';
 
 // Page imports
@@ -43,6 +45,7 @@ import Success from '@/pages/Success';
 import Cancel from '@/pages/Cancel';
 import TeamDashboard from '@/pages/TeamDashboard';
 import NotFound from '@/pages/NotFound';
+import { isPricingEnabled, isSubscriptionEnabled } from '@/config/features';
 
 // Add new page imports
 import VoiceTraining from '@/pages/VoiceTraining';
@@ -112,8 +115,6 @@ const AuthLoadingBoundary = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  // TODO: Remove debug logging for production
-  // TODO: Remove in production
   
   return (
     <ErrorBoundary>
@@ -124,8 +125,9 @@ function App() {
               <AccessibilityProvider>
                 <Router>
                   <AuthProvider>
-                    <AuthLoadingBoundary>
-                      <GuestModeProvider>
+                    <OnboardingProvider>
+                      <AuthLoadingBoundary>
+                        <GuestModeProvider>
                         <PageTrackingProvider>
                           {/* Initialize analytics */}
                           <PrivacyCompliantAnalytics />
@@ -139,7 +141,7 @@ function App() {
                               <Route path="/" element={<Index />} />
                               <Route path="/about" element={<About />} />
                               <Route path="/compare" element={<Compare />} />
-                              <Route path="/pricing" element={<Pricing />} />
+                              {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
                               <Route path="/demo" element={<Demo />} />
                               
                               {/* New functional routes */}
@@ -170,9 +172,9 @@ function App() {
                               <Route path="/team" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
                               <Route path="/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
                               
-                              {/* Subscription routes */}
-                              <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
-                              <Route path="/subscription-management" element={<ProtectedRoute><SubscriptionManagement /></ProtectedRoute>} />
+                               {/* Subscription routes */}
+                               {isSubscriptionEnabled() && <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />}
+                               {isSubscriptionEnabled() && <Route path="/subscription-management" element={<ProtectedRoute><SubscriptionManagement /></ProtectedRoute>} />}
                               <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
                               <Route path="/cancel" element={<ProtectedRoute><Cancel /></ProtectedRoute>} />
                               
@@ -199,11 +201,15 @@ function App() {
                               richColors
                               closeButton
                             />
+                            
+                            {/* Onboarding overlay */}
+                            <OnboardingOverlay />
                           </div>
                         </PageTrackingProvider>
                       </GuestModeProvider>
                     </AuthLoadingBoundary>
-                  </AuthProvider>
+                  </OnboardingProvider>
+                </AuthProvider>
                 </Router>
               </AccessibilityProvider>
             </TooltipProvider>

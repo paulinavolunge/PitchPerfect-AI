@@ -153,16 +153,18 @@ const Testimonials = () => {
                     <Card key={index} className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300" role="article" aria-labelledby={`testimonial-${index}-author`}>
                       <CardContent className="p-8">
                         <div className="flex items-center mb-6">
-                          <Avatar className="h-14 w-14 border-3 border-primary-200 shadow-md">
-                            <AvatarImage 
-                              src={testimonial.avatar} 
-                              alt={`Profile photo of ${testimonial.author}`}
-                              className="object-cover"
-                            />
-                            <AvatarFallback className="bg-primary-100 text-primary-700 font-semibold text-lg">
-                              {testimonial.author.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
+                           <Avatar className="h-14 w-14 border-3 border-primary-200 shadow-md">
+                             <AvatarImage 
+                               src={testimonial.avatar} 
+                               alt={`Profile photo of ${testimonial.author}`}
+                               className="object-cover"
+                               loading="lazy"
+                               decoding="async"
+                             />
+                             <AvatarFallback className="bg-primary-100 text-primary-700 font-semibold text-lg">
+                               {testimonial.author.charAt(0)}
+                             </AvatarFallback>
+                           </Avatar>
                           <div className="ml-4">
                             <div className="flex items-center gap-2">
                               <div className="flex text-yellow-400">

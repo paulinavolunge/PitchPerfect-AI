@@ -14,6 +14,7 @@ import LoadingSpinner from '@/components/ui/loading-spinner';
 import { VoiceRecordingManager, startRealTimeSpeechRecognition, processVoiceInput } from '@/utils/voiceInput';
 import { markPracticeComplete } from '@/utils/practiceCompletionHandler';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface Message {
   id: string;
@@ -58,6 +59,7 @@ const ConversationInterface = ({
   const [realtimeTranscript, setRealtimeTranscript] = useState('');
   const [userResponseCount, setUserResponseCount] = useState(0);
   
+  const { user, deductUserCredits } = useAuth();
   const voiceManagerRef = useRef<VoiceRecordingManager | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const realtimeRecognitionRef = useRef<(() => void) | null>(null);
@@ -489,6 +491,20 @@ const ConversationInterface = ({
       const updatedMessages = [...messages, userMessage, aiMessage];
       setMessages(updatedMessages);
 
+      // Deduct credits for successful AI roleplay interaction
+      if (user && !aiResponse.includes('fallback')) {
+        const creditsToDeduct = mode === 'voice' || mode === 'hybrid' ? 2 : 1;
+        const featureType = `roleplay_${mode}_${scenario?.objection || 'general'}`;
+        
+        console.log(`Deducting ${creditsToDeduct} credits for successful ${featureType}`);
+        
+        const deducted = await deductUserCredits(featureType, creditsToDeduct);
+        if (!deducted) {
+          console.warn('Credit deduction failed after successful roleplay response');
+          // Don't stop the flow - user already got the value
+        }
+      }
+
       // Generate enhanced feedback for every user response after the first exchange
       if (scenario && userResponseCount >= 1) {
         console.log('🎯 Generating enhanced feedback for user response:', textToSend);
@@ -601,15 +617,19 @@ const ConversationInterface = ({
         </CardContent>
       </Card>
 
-      {/* Enhanced Feedback Display */}
+      {/* Enhanced Feedback Display - Fixed positioning */}
       {enhancedFeedback && showEnhancedFeedback && (
-        <EnhancedFeedbackDisplay
-          feedback={enhancedFeedback}
-          objectionText={currentObjectionText}
-          userResponse={messages.filter(m => m.sender === 'user').slice(-1)[0]?.text || ''}
-          isVisible={showEnhancedFeedback}
-          onClose={closeEnhancedFeedback}
-        />
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-background rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <EnhancedFeedbackDisplay
+              feedback={enhancedFeedback}
+              objectionText={currentObjectionText}
+              userResponse={messages.filter(m => m.sender === 'user').slice(-1)[0]?.text || ''}
+              isVisible={showEnhancedFeedback}
+              onClose={closeEnhancedFeedback}
+            />
+          </div>
+        </div>
       )}
 
       <div className="space-y-4">

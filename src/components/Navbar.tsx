@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
 import { useGuestMode } from "@/context/GuestModeContext";
 import { Menu, UserPlus, LogIn, Home, UserRound, Crown, Diamond } from 'lucide-react';
+import { isPricingEnabled, isPremiumFeaturesEnabled } from '@/config/features';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -83,7 +84,7 @@ const Navbar: React.FC = () => {
   const guestNavigationItems = [
     { name: 'About', href: '/about' },
     { name: 'Compare', href: '/compare' },
-    { name: 'Pricing', href: '/pricing' },
+    ...(isPricingEnabled() ? [{ name: 'Pricing', href: '/pricing' }] : []),
     { name: 'Demo', href: '/demo' }
   ];
 
@@ -183,7 +184,7 @@ const Navbar: React.FC = () => {
             {showAuthenticatedUI ? (
               <>
                 {/* Premium Badge */}
-                {isPremium && (
+                {isPremiumFeaturesEnabled() && isPremium && (
                   <div className="hidden sm:flex items-center space-x-1 px-2 py-1 bg-amber-100 rounded-full">
                     <Crown className="h-4 w-4 text-amber-600" />
                     <span className="text-xs font-medium text-amber-800">Premium</span>
@@ -191,7 +192,7 @@ const Navbar: React.FC = () => {
                 )}
 
                 {/* Credits display */}
-                {!isPremium && (
+                {isPremiumFeaturesEnabled() && !isPremium && (
                   <div className="hidden sm:flex items-center space-x-1 text-sm text-deep-navy/70">
                     <Diamond className="h-4 w-4" aria-hidden="true" />
                     <span>{creditsRemaining} credits</span>
@@ -241,7 +242,7 @@ const Navbar: React.FC = () => {
                         Profile
                       </Link>
                     </DropdownMenuItem>
-                    {!isPremium && (
+                    {isPremiumFeaturesEnabled() && !isPremium && (
                       <DropdownMenuItem asChild>
                         <Link to="/pricing" className="cursor-pointer w-full">
                           <Crown className="mr-2 h-4 w-4" aria-hidden="true" />

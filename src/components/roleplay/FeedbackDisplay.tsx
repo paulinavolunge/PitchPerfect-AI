@@ -3,9 +3,10 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Progress } from '../ui/progress';
+import { SimpleFeedback } from '../../types/feedback';
 
 interface FeedbackDisplayProps {
-  feedback: any;
+  feedback: SimpleFeedback;
   onSaveSummary: () => void;
   onPracticeSimilar: () => void;
 }
