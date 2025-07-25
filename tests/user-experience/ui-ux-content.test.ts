@@ -225,8 +225,10 @@ test.describe('User Interface & Experience', () => {
       // Check contrast
       const color = await bodyText.evaluate(el => window.getComputedStyle(el).color);
       const bgColor = await bodyText.evaluate(el => window.getComputedStyle(el.parentElement).backgroundColor);
-      // Basic contrast check (would use color contrast library in production)
-      expect(color).not.toBe(bgColor);
+      // TODO: Implement proper WCAG color contrast validation
+      // Consider using libraries like 'color-contrast-checker' or 'wcag-contrast'
+      // WCAG AA requires 4.5:1 for normal text, 3:1 for large text
+      expect(color).not.toBe(bgColor); // Basic check for now
       
       await context.close();
     });
