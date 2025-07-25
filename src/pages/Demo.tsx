@@ -276,13 +276,19 @@ const Demo = () => {
       
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <DemoNavigation 
-          currentStep={1}
-          totalSteps={3}
-          showProgress={true}
-          onHelp={() => console.log('Help requested')}
-        />
-        {isGuestMode && <GuestBanner />}
+        <Suspense fallback={<Skeleton className="h-16 w-full" />}>
+          <DemoNavigation 
+            currentStep={1}
+            totalSteps={3}
+            showProgress={true}
+            onHelp={() => console.log('Help requested')}
+          />
+        </Suspense>
+        {isGuestMode && (
+          <Suspense fallback={<Skeleton className="h-12 w-full" />}>
+            <GuestBanner />
+          </Suspense>
+        )}
         <main className="flex-grow pt-24 pb-12">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
@@ -323,10 +329,12 @@ const Demo = () => {
                   </div>
                 ) : (
                   <MicrophoneGuard>
-                    <PracticeObjection
-                      scenario={objectionScenario}
-                      onSubmit={handleObjectionSubmit}
-                    />
+                    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                      <PracticeObjection
+                        scenario={objectionScenario}
+                        onSubmit={handleObjectionSubmit}
+                      />
+                    </Suspense>
                   </MicrophoneGuard>
                 )}
 
@@ -365,18 +373,24 @@ const Demo = () => {
             </div>
           </div>
         </main>
-        <Footer />
+        <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+          <Footer />
+        </Suspense>
 
-        <WaitlistModal 
-          open={showWaitlistModal} 
-          onOpenChange={setShowWaitlistModal}
-          sessionData={sessionData}
-        />
+        <Suspense fallback={null}>
+          <WaitlistModal 
+            open={showWaitlistModal} 
+            onOpenChange={setShowWaitlistModal}
+            sessionData={sessionData}
+          />
+        </Suspense>
         
-        <WebhookSettings
-          open={showWebhookSettings}
-          onOpenChange={setShowWebhookSettings}
-        />
+        <Suspense fallback={null}>
+          <WebhookSettings
+            open={showWebhookSettings}
+            onOpenChange={setShowWebhookSettings}
+          />
+        </Suspense>
       </div>
     </>
   );
