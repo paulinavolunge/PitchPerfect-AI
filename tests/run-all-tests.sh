@@ -218,7 +218,12 @@ echo -e "\n${PURPLE}Final Test Metrics:${NC}"
 echo -e "├─ Total Test Suites Run: ${YELLOW}$TOTAL_TESTS${NC}"
 echo -e "├─ Successful Suites: ${GREEN}$PASSED_TESTS${NC}"
 echo -e "├─ Failed Suites: ${RED}$FAILED_TESTS${NC}"
-echo -e "└─ Overall Success Rate: ${YELLOW}$(( PASSED_TESTS * 100 / TOTAL_TESTS ))%${NC}"
+if [ "$TOTAL_TESTS" -gt 0 ]; then
+    SUCCESS_RATE=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
+else
+    SUCCESS_RATE=0
+fi
+echo -e "└─ Overall Success Rate: ${YELLOW}${SUCCESS_RATE}%${NC}"
 
 # Open reports if available
 if command -v xdg-open &> /dev/null; then

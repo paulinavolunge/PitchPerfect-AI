@@ -124,7 +124,11 @@ echo -e "${PURPLE}GENERATING FINAL REVIEW SUMMARY${NC}"
 echo -e "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
 # Calculate launch readiness score
-READINESS_SCORE=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
+if [ "$TOTAL_TESTS" -gt 0 ]; then
+    READINESS_SCORE=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
+else
+    READINESS_SCORE=0
+fi
 
 cat > $REVIEW_DIR/final-review-summary.md << SUMMARY
 # PitchPerfectAI Final Review Summary
