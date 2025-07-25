@@ -161,7 +161,11 @@ test.describe('Credit System & Billing', () => {
       const newCredits = await page.locator('[data-testid="credit-balance"]').textContent();
       
       // Verify credit deduction
-      expect(parseInt(newCredits || '0')).toBe(parseInt(initialCredits || '0') - 1);
+      const parseCredits = (text: string | null) => {
+        const match = text?.match(/\d+/);
+        return match ? parseInt(match[0]) : 0;
+      };
+      expect(parseCredits(newCredits)).toBe(parseCredits(initialCredits) - 1);
     });
 
     test('credit consumption tracking - AI voice (2-3 credits)', async ({ page }) => {
