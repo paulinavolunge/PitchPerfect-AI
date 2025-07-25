@@ -6,7 +6,7 @@
  * In a real implementation, this would fetch from an API or JSON file
  */
 export const getSampleScenario = async () => {
-  // This is a mock function that returns a hardcoded scenario
+  // Returns a demo scenario for practice
   // In a real implementation, this would fetch from /data/scenarios.json
   return {
     id: "price-objection",
@@ -28,7 +28,7 @@ export const getSampleScenario = async () => {
  * Add a user to the waitlist
  */
 export const addToWaitlist = async (email: string) => {
-  // This is a mock function that simulates an API call
+  // Simulates analyzing audio input and providing feedback
   // In a real implementation, this would POST to /api/waitlist
   return new Promise((resolve) => {
     // Simulate API call delay

@@ -104,7 +104,7 @@ const Practice = () => {
       
       // Credits will be deducted after successful analysis
 
-      // Call AI analysis instead of using mock data
+      // Call AI analysis service
       console.log('🔍 Starting AI pitch analysis...');
       
       const analysisText = practiceMode === 'text' ? textInput : 

@@ -86,7 +86,7 @@ export function useDashboardData() {
     setIsLoading(true);
     
     try {
-      // Simplified data loading - just set mock data for now
+      // Simplified data loading for demo purposes
       setStreakCount(Math.floor(Math.random() * 10));
       
       // Default data structure

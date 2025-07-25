@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import ScenarioSelector from "./ScenarioSelector";
-import FeedbackModal from "./FeedbackModal";
+
 import VoiceInput from "./voice/VoiceInput";
 import useObjectionPractice from "../hooks/useObjectionPractice";
 import { Button } from "./ui/button";
@@ -138,13 +138,29 @@ const ObjectionPractice = () => {
         </Card>
       )}
 
-      <FeedbackModal
-        open={showFeedback}
-        onClose={() => setShowFeedback(false)}
-        feedback={feedback}
-        scenario={selectedScenario}
-        userObjection={inputValue}
-      />
+      {showFeedback && feedback && (
+        <Card className="mt-6 p-6 bg-green-50 border border-green-200">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-green-800">AI Feedback</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowFeedback(false)}
+              className="text-green-700 border-green-300 hover:bg-green-100"
+            >
+              Close
+            </Button>
+          </div>
+          {feedback.suggestion && (
+            <p className="text-green-700 mb-2">{feedback.suggestion}</p>
+          )}
+          {feedback.score && (
+            <div className="text-sm text-green-600">
+              Score: {feedback.score}/10
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 };

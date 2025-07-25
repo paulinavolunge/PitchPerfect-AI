@@ -617,15 +617,19 @@ const ConversationInterface = ({
         </CardContent>
       </Card>
 
-      {/* Enhanced Feedback Display */}
+      {/* Enhanced Feedback Display - Fixed positioning */}
       {enhancedFeedback && showEnhancedFeedback && (
-        <EnhancedFeedbackDisplay
-          feedback={enhancedFeedback}
-          objectionText={currentObjectionText}
-          userResponse={messages.filter(m => m.sender === 'user').slice(-1)[0]?.text || ''}
-          isVisible={showEnhancedFeedback}
-          onClose={closeEnhancedFeedback}
-        />
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-background rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <EnhancedFeedbackDisplay
+              feedback={enhancedFeedback}
+              objectionText={currentObjectionText}
+              userResponse={messages.filter(m => m.sender === 'user').slice(-1)[0]?.text || ''}
+              isVisible={showEnhancedFeedback}
+              onClose={closeEnhancedFeedback}
+            />
+          </div>
+        </div>
       )}
 
       <div className="space-y-4">

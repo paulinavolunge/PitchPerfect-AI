@@ -149,7 +149,7 @@ const Demo = () => {
       console.log('Starting AI analysis simulation...');
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Call real AI feedback service instead of mock
+      // Call AI feedback service
       const responseText = typeof input.data === 'string' ? input.data : 'Voice response processed';
       
       let feedbackData;
@@ -198,7 +198,7 @@ const Demo = () => {
           response: responseText,
           timestamp: new Date().toISOString(),
           feedback: generateFallbackFeedback(responseText),
-          score: Math.floor(Math.random() * 3) + 7, // Mock score 7-10
+          score: Math.floor(Math.random() * 3) + 7, // Demo score 7-10
           aiSuccess: false // Mark as fallback
         };
       }

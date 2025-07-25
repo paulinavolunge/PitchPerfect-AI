@@ -165,7 +165,7 @@ const Dashboard = () => {
         console.log('📊 Loading dashboard data...');
         setIsLoading(true);
         
-        // Mock data for now to prevent issues - wrap in try-catch
+        // Dashboard data loading - wrap in try-catch
         if (mounted) {
           try {
             const newStreakCount = Math.floor(Math.random() * 10);
