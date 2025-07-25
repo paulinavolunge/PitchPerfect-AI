@@ -54,18 +54,6 @@ npm run a11y-check
    - Ensure pricing matches implementation
 
 4. **Performance Testing**
-   ```javascript
-   // In browser console
-   // Measure page load time
-   performance.timing.loadEventEnd - performance.timing.navigationStart
-   
-   // Check memory usage
-   performance.memory
-   
-   // Monitor network requests
-   // Open Network tab in DevTools
-   // Look for slow requests, failed requests, large payloads
-   ```
 
 5. **Accessibility Testing**
    - Use keyboard navigation only (no mouse)
