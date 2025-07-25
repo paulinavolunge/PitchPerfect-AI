@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLazyImage } from '@/hooks/useLazyLoading';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -37,7 +37,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     webpSrc || src, 
     { threshold, rootMargin }
   );
-  const imgRef = useRef<HTMLImageElement>(null);
 
   // Support for WebP detection
   const [supportsWebP, setSupportsWebP] = useState(false);
@@ -81,7 +80,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           <source srcSet={webpSrc} type="image/webp" sizes={sizes} />
         )}
         <img
-          ref={imgRef}
           src={src}
           alt={alt}
           className={`transition-opacity duration-300 ${
@@ -112,7 +110,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
             <source srcSet={webpSrc} type="image/webp" sizes={sizes} />
           )}
           <img
-            ref={imgRef}
             src={getOptimizedSrc()}
             alt={alt}
             className={`transition-opacity duration-300 ${
