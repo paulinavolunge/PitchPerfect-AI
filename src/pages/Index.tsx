@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import LazyComponent from '@/components/LazyComponent';
+import { LazyComponent } from '@/components/LazyComponent';
 import LazyLoadManager from '@/components/optimized/LazyLoadManager';
 import OptimizedImage from '@/components/optimized/OptimizedImage';
 import { LazySection } from '@/components/LazySection';
