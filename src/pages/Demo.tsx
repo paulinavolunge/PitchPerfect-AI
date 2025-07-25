@@ -1,13 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import DemoSandbox from '@/components/demo/DemoSandbox';
-import PracticeObjection from '@/components/demo/PracticeObjection';
-import WaitlistModal from '@/components/demo/WaitlistModal';
-import GuestBanner from '@/components/GuestBanner';
-import WebhookSettings from '@/components/WebhookSettings';
+import LazyLoadManager from '@/components/optimized/LazyLoadManager';
+import { Skeleton } from '@/components/ui/skeleton';
 import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -18,7 +14,15 @@ import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import DemoNavigation from '@/components/demo/DemoNavigation';
+
+// Lazy load heavy demo components
+const Footer = lazy(() => import('@/components/Footer'));
+const DemoSandbox = lazy(() => import('@/components/demo/DemoSandbox'));
+const PracticeObjection = lazy(() => import('@/components/demo/PracticeObjection'));
+const WaitlistModal = lazy(() => import('@/components/demo/WaitlistModal'));
+const GuestBanner = lazy(() => import('@/components/GuestBanner'));
+const WebhookSettings = lazy(() => import('@/components/WebhookSettings'));
+const DemoNavigation = lazy(() => import('@/components/demo/DemoNavigation'));
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
