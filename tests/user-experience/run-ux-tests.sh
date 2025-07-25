@@ -70,7 +70,7 @@ run_test_category "ui-content" \
 # Generate summary report
 echo -e "\n${YELLOW}Generating Summary Report...${NC}"
 
-cat > $RESULTS_DIR/summary-report.md << 'REPORT'
+cat > $RESULTS_DIR/summary-report.md << REPORT
 # PitchPerfectAI User Experience Review Summary
 
 ## Test Execution Date: $(date)

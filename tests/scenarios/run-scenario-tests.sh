@@ -98,7 +98,7 @@ done
 # Generate comprehensive report
 echo -e "\n${YELLOW}Generating Comprehensive Report...${NC}"
 
-cat > $RESULTS_DIR/scenario-test-summary.md << 'REPORT'
+cat > $RESULTS_DIR/scenario-test-summary.md << REPORT
 # PitchPerfectAI Scenario Testing Report
 
 ## Test Execution Date: $(date)
