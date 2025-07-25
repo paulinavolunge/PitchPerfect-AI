@@ -113,7 +113,7 @@ test.describe('Roleplay Functionality', () => {
       const startButton = page.locator('[data-testid="start-roleplay"]');
       if (await startButton.isVisible({ timeout: 3000 })) {
         await startButton.click();
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState('networkidle');
         
         // Look for end session button
         const endButton = page.locator('[data-testid="end-session"], [data-testid="complete-session"]');
