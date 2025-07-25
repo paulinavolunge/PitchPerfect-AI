@@ -6,7 +6,7 @@
  * In a real implementation, this would fetch from an API or JSON file
  */
 export const getSampleScenario = async () => {
-  // This is a mock function that returns a hardcoded scenario
+  // Returns a demo scenario for practice
   // In a real implementation, this would fetch from /data/scenarios.json
   return {
     id: "price-objection",
@@ -28,7 +28,7 @@ export const getSampleScenario = async () => {
  * Add a user to the waitlist
  */
 export const addToWaitlist = async (email: string) => {
-  // This is a mock function that simulates an API call
+  // Simulates analyzing audio input and providing feedback
   // In a real implementation, this would POST to /api/waitlist
   return new Promise((resolve) => {
     // Simulate API call delay
@@ -39,34 +39,4 @@ export const addToWaitlist = async (email: string) => {
   });
 };
 
-// Add type definitions for SpeechRecognition
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecognition;
-    webkitSpeechRecognition?: new () => SpeechRecognition;
-  }
-}
-
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-  error: any;
-}
-
-interface SpeechRecognitionError extends Event {
-  error: string;
-  message: string;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start: () => void;
-  stop: () => void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionError) => void) | null;
-  onend: (() => void) | null;
-}
-
-export {};
+// Type definitions are centralized in src/types/browser-apis.d.ts

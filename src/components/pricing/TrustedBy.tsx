@@ -5,23 +5,23 @@ const TrustedBy: React.FC = () => {
   const companies = [
     {
       name: "TechCorp",
-      logo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+      logo: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=200&h=80&fit=crop&crop=center"
     },
     {
-      name: "Sales Innovators",
-      logo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+      name: "Sales Innovators", 
+      logo: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=200&h=80&fit=crop&crop=center"
     },
     {
       name: "Growth Solutions",
-      logo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+      logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=200&h=80&fit=crop&crop=center"
     },
     {
-      name: "Enterprise Plus",
-      logo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+      name: "Enterprise Plus", 
+      logo: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=200&h=80&fit=crop&crop=center"
     },
     {
       name: "Future Tech",
-      logo: "/lovable-uploads/866777b3-4b6d-4f52-913b-122d40f401d3.png"
+      logo: "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=200&h=80&fit=crop&crop=center"
     }
   ];
 

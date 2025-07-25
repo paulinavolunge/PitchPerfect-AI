@@ -14,6 +14,7 @@ import { Helmet } from 'react-helmet-async';
 import { MicrophonePermissionHandler } from '@/components/permissions/MicrophonePermissionHandler';
 import { AudioRecorder } from '@/components/recordings/AudioRecorder';
 import { useUserIsolation } from '@/hooks/useUserIsolation';
+import { supabase } from '@/integrations/supabase/client';
 
 const Practice = () => {
   const { user, creditsRemaining, deductUserCredits } = useAuth();
@@ -101,43 +102,93 @@ const Practice = () => {
     try {
       console.log('🔍 Starting pitch analysis...');
       
-      // Deduct credits for analysis
-      const success = await deductUserCredits('pitch_analysis', 1);
-      
-      if (!success) {
-        toast({
-          title: "Credit Deduction Failed",
-          description: "Unable to process payment for analysis.",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Credits will be deducted after successful analysis
 
-      // Mock analysis results with structured feedback
-      const mockScore = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
-      const mockTranscript = practiceMode === 'text' ? textInput : 
+      // Call AI analysis service
+      console.log('🔍 Starting AI pitch analysis...');
+      
+      const analysisText = practiceMode === 'text' ? textInput : 
         "Thank you for considering our product. Our solution helps businesses increase efficiency by 40% while reducing operational costs. We've worked with companies similar to yours and consistently delivered measurable results.";
       
-      // Generate structured feedback based on score
-      const structuredFeedback = {
-        clarity: mockScore >= 85 ? 'Clear and concise' : mockScore >= 70 ? 'Mostly clear' : 'Needs clarity improvement',
-        confidence: mockScore >= 80 ? 'Strong and assertive' : mockScore >= 65 ? 'Moderate confidence' : 'Needs more assertiveness',
-        persuasiveness: mockScore >= 75 ? 'Compelling arguments' : mockScore >= 60 ? 'Somewhat persuasive' : 'Strengthen value proposition',
-        tone: mockScore >= 80 ? 'Friendly and professional' : mockScore >= 65 ? 'Professional tone' : 'Consider warming up tone',
-        objectionHandling: mockScore >= 70 ? 'Good use of value-based responses' : 'Address potential objections proactively'
-      };
-      
-      const mockFeedback = structuredFeedback;
+      try {
+        const { data, error } = await supabase.functions.invoke('pitch-analysis', {
+          body: {
+            transcript: analysisText,
+            practiceMode,
+            scenario: null, // Can be enhanced with actual scenario data
+            userContext: { userId: user?.id }
+          }
+        });
 
-      setTranscript(mockTranscript);
-      setFeedback(JSON.stringify(mockFeedback)); // Store as JSON for structured display
-      setScore(mockScore);
-      setAnalysisComplete(true);
+        if (error) {
+          console.error('AI analysis error:', error);
+          throw new Error(error.message);
+        }
 
-      console.log('✅ Analysis complete:', { score: mockScore, creditsUsed: 1, mode: practiceMode });
+        if (!data || !data.analysis) {
+          throw new Error('No analysis received from AI service');
+        }
+
+        const analysis = data.analysis;
+        console.log('✅ AI Analysis received:', analysis);
+
+        // Use AI analysis results
+        setTranscript(analysisText);
+        setScore(analysis.overallScore);
+        setAnalysisComplete(true);
+
+        // Deduct credits AFTER successful analysis
+        const success = await deductUserCredits('pitch_analysis', 1);
+        if (!success) {
+          console.warn('Credit deduction failed after successful analysis');
+          // Don't show error - user already got the value
+        }
+
+        // Format the feedback for display
+        const formattedFeedback = {
+          clarity: analysis.categories.clarity.feedback,
+          confidence: analysis.categories.confidence.feedback,
+          persuasiveness: analysis.categories.persuasiveness.feedback,
+          tone: analysis.categories.tone.feedback,
+          objectionHandling: analysis.categories.objectionHandling.feedback,
+          overall: analysis.recommendation,
+          strengths: analysis.strengths,
+          improvements: analysis.improvements
+        };
+        
+        setFeedback(JSON.stringify(formattedFeedback));
+
+      } catch (analysisError) {
+        console.error('Failed to get AI analysis, using fallback:', analysisError);
+        
+        // Fallback to structured feedback if AI fails
+        const fallbackScore = Math.floor(Math.random() * 30) + 70;
+        const fallbackFeedback = {
+          clarity: fallbackScore >= 85 ? 'Clear and concise' : fallbackScore >= 70 ? 'Mostly clear' : 'Needs clarity improvement',
+          confidence: fallbackScore >= 80 ? 'Strong and assertive' : fallbackScore >= 65 ? 'Moderate confidence' : 'Needs more assertiveness',
+          persuasiveness: fallbackScore >= 75 ? 'Compelling arguments' : fallbackScore >= 60 ? 'Somewhat persuasive' : 'Strengthen value proposition',
+          tone: fallbackScore >= 80 ? 'Friendly and professional' : fallbackScore >= 65 ? 'Professional tone' : 'Consider warming up tone',
+          objectionHandling: fallbackScore >= 70 ? 'Good use of value-based responses' : 'Address potential objections proactively',
+          overall: 'Continue practicing to improve your pitch delivery and effectiveness.'
+        };
+        
+        setTranscript(analysisText);
+        setFeedback(JSON.stringify(fallbackFeedback));
+        setScore(fallbackScore);
+        setAnalysisComplete(true);
+        
+        toast({
+          title: "Analysis Complete (Backup Mode)",
+          description: "AI analysis unavailable, using backup scoring system.",
+          variant: "default",
+        });
+      }
+
+      console.log('✅ Analysis complete with score:', score, 'mode:', practiceMode);
 
       // Update streak if score is good (with user-specific storage)
-      if (mockScore >= 80 && user?.id) {
+      const finalScore = score || 75; // Use current score or fallback
+      if (finalScore >= 80 && user?.id) {
         const newStreak = streakCount + 1;
         setStreakCount(newStreak);
         const streakKey = getUserSpecificKey('streak');
@@ -145,14 +196,14 @@ const Practice = () => {
       }
 
       trackEvent('practice_analysis_complete', {
-        score: mockScore,
+        score: finalScore,
         credits_used: 1,
         mode: practiceMode
       });
 
       toast({
         title: "Analysis Complete!",
-        description: `Your pitch scored ${mockScore}/100`,
+        description: `Your pitch scored ${finalScore}/100`,
       });
 
     } catch (error) {

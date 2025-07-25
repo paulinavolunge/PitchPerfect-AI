@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/AuthContext';
+import { OnboardingProvider } from '@/context/OnboardingContext';
 import { GuestModeProvider } from '@/context/GuestModeContext';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import AccessibilityButton from '@/components/accessibility/AccessibilityButton';
@@ -14,6 +15,7 @@ import MobileNavBar from '@/components/MobileNavBar';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
 import { initializeSecurity } from '@/utils/securityHeaders';
 
 // Page imports
@@ -113,8 +115,6 @@ const AuthLoadingBoundary = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  // TODO: Remove debug logging for production
-  // TODO: Remove in production
   
   return (
     <ErrorBoundary>
@@ -125,8 +125,9 @@ function App() {
               <AccessibilityProvider>
                 <Router>
                   <AuthProvider>
-                    <AuthLoadingBoundary>
-                      <GuestModeProvider>
+                    <OnboardingProvider>
+                      <AuthLoadingBoundary>
+                        <GuestModeProvider>
                         <PageTrackingProvider>
                           {/* Initialize analytics */}
                           <PrivacyCompliantAnalytics />
@@ -200,11 +201,15 @@ function App() {
                               richColors
                               closeButton
                             />
+                            
+                            {/* Onboarding overlay */}
+                            <OnboardingOverlay />
                           </div>
                         </PageTrackingProvider>
                       </GuestModeProvider>
                     </AuthLoadingBoundary>
-                  </AuthProvider>
+                  </OnboardingProvider>
+                </AuthProvider>
                 </Router>
               </AccessibilityProvider>
             </TooltipProvider>

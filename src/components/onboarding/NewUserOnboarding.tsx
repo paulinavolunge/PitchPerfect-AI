@@ -337,15 +337,15 @@ const NewUserOnboarding: React.FC<NewUserOnboardingProps> = ({
     }
   };
 
-  // Auto-advance for step 1 (welcome)
+  // Auto-advance for step 1 (welcome) - with proper dependencies
   useEffect(() => {
-    if (currentStep === 0) {
+    if (currentStep === 0 && open) {
       const timer = setTimeout(() => {
-        handleNext();
+        setCurrentStep(1);
       }, 3000); // Auto-advance after 3 seconds
       return () => clearTimeout(timer);
     }
-  }, [currentStep]);
+  }, [currentStep, open]);
 
   if (!open) return null;
 

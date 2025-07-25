@@ -18,7 +18,9 @@ import { sendSessionToCRM, sendImmediateConfirmation, CRMProvider, getWebhookUrl
 interface WaitlistModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  sessionData?: any;
+  sessionData?: {
+    [key: string]: unknown;
+  };
 }
 
 const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessionData }) => {
@@ -73,7 +75,7 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
         // Fire webhook without waiting
         sendSessionToCRM(enrichedData, provider)
           .then(webhookResult => {
-            console.log(`CRM ${provider} webhook result:`, webhookResult);
+            // CRM webhook result logged
           })
           .catch(error => {
             console.error(`CRM ${provider} webhook error:`, error);

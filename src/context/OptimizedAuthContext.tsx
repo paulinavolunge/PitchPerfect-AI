@@ -24,7 +24,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Cache for user profile data
-const profileCache = new Map<string, { data: any; timestamp: number }>();
+const profileCache = new Map<string, { data: Record<string, unknown>; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,8 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check cache first
     const cached = profileCache.get(userId);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      setCreditsRemaining(cached.data.creditsRemaining || 0);
-      setTrialUsed(cached.data.trialUsed || false);
+      setCreditsRemaining(Number(cached.data.creditsRemaining) || 0);
+      setTrialUsed(Boolean(cached.data.trialUsed) || false);
       return;
     }
 

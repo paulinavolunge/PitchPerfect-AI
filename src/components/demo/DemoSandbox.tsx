@@ -31,7 +31,7 @@ declare global {
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
-  error: any;
+  error: Error | null;
 }
 
 interface SpeechRecognitionError extends Event {
@@ -287,10 +287,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
       }
 
       try {
-        const deducted = await deductUserCredits('demo_pitch_analysis', 1);
-        if (!deducted) {
-          return;
-        }
+        // Credits will be deducted after successful analysis
       } catch (error) {
         toast({
           title: "Error processing request",
@@ -326,7 +323,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     }
   };
 
-  const endDemo = () => {
+  const endDemo = async () => {
     // Stop recording
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
@@ -336,6 +333,16 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     // Generate score
     const score = generateScore(transcript);
     setScoreData(score);
+
+    // Deduct credits for demo analysis if user is authenticated
+    if (user && transcript.trim()) {
+      // Deducting 1 credit for demo pitch analysis
+      const deducted = await deductUserCredits('demo_pitch_analysis', 1);
+      if (!deducted) {
+        console.warn('Credit deduction failed for demo analysis');
+        // Don't stop the flow - user already got the value
+      }
+    }
 
     // Update state
     setDemoState(DemoState.SCORING);

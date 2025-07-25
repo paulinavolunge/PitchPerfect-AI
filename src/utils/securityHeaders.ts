@@ -10,14 +10,19 @@ export const SECURITY_HEADERS = {
   'Permissions-Policy': 'microphone=(self), camera=(), geolocation=(), payment=()',
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://cdn.gpteng.co https://www.youtube.com https://youtube.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net https://cdn.gpteng.co https://www.youtube.com https://youtube.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
-    "connect-src 'self' https: wss:",
+    "connect-src 'self' https: wss: https://*.supabase.co",
     "media-src 'self' blob: https:",
     "font-src 'self' https://fonts.gstatic.com",
     "frame-src 'self' https://www.youtube.com https://youtube.com",
     "frame-ancestors 'self'",
+    "object-src 'none'",
+    "base-uri 'self'", 
+    "form-action 'self'",
+    "upgrade-insecure-requests",
+    "block-all-mixed-content",
     "report-uri /api/csp-violation-report"
   ].join('; ')
 } as const;

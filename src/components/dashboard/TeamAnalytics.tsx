@@ -26,8 +26,8 @@ import {
 import { Users, ChevronDown, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
-// Mock data for team member performance
-const mockTeamData = [
+// Sample team performance data
+const sampleTeamData = [
   {
     id: 1,
     name: "Alex Johnson",
@@ -80,7 +80,7 @@ const mockTeamData = [
   }
 ];
 
-// Mock time series data for performance over time
+// Sample time series data for performance over time
 const timeSeriesData = [
   {
     month: "Jan",
@@ -148,8 +148,8 @@ const TeamAnalytics: React.FC<TeamAnalyticsProps> = ({ className }) => {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('month');
   
   const filteredData = selectedMember 
-    ? mockTeamData.filter(member => member.name === selectedMember) 
-    : mockTeamData;
+    ? sampleTeamData.filter(member => member.name === selectedMember) 
+    : sampleTeamData;
     
   const handleSelectMember = (name: string) => {
     setSelectedMember(name === selectedMember ? null : name);

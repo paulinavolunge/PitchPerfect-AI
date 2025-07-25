@@ -7,7 +7,7 @@ import Footer from '@/components/Footer';
 import { BarChart, Calendar } from 'lucide-react';
 
 const Progress = () => {
-  const mockData = {
+  const progressData = {
     totalSessions: 12,
     lastWeekSessions: 5,
     averageScore: 82,
@@ -40,10 +40,10 @@ const Progress = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold text-brand-dark mb-1">
-                      {mockData.totalSessions}
+                      {progressData.totalSessions}
                     </div>
                     <p className="text-sm text-brand-dark/70">
-                      {mockData.lastWeekSessions} sessions this week
+                      {progressData.lastWeekSessions} sessions this week
                     </p>
                   </CardContent>
                 </Card>
@@ -57,7 +57,7 @@ const Progress = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold text-brand-dark mb-1">
-                      {mockData.averageScore}%
+                      {progressData.averageScore}%
                     </div>
                     <p className="text-sm text-brand-dark/70">
                       Based on clarity, engagement, and pacing
@@ -72,14 +72,14 @@ const Progress = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockData.recentScores.map((score, index) => (
+                    {progressData.recentScores.map((score, index) => (
                       <div key={index} className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center">
                             {index + 1}
                           </div>
                           <div>
-                            <p className="font-medium">Practice Session {mockData.totalSessions - index}</p>
+                            <p className="font-medium">Practice Session {progressData.totalSessions - index}</p>
                             <p className="text-sm text-brand-dark/70">Product Demo Pitch</p>
                           </div>
                         </div>

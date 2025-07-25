@@ -1,23 +1,28 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import DemoSandbox from '@/components/demo/DemoSandbox';
-import PracticeObjection from '@/components/demo/PracticeObjection';
-import WaitlistModal from '@/components/demo/WaitlistModal';
-import GuestBanner from '@/components/GuestBanner';
-import WebhookSettings from '@/components/WebhookSettings';
+import LazyLoadManager from '@/components/optimized/LazyLoadManager';
+import { Skeleton } from '@/components/ui/skeleton';
 import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Settings, UserPlus, RefreshCw } from 'lucide-react';
 import MicrophoneGuard from '@/components/MicrophoneGuard';
+import { supabase } from '@/integrations/supabase/client';
 import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import DemoNavigation from '@/components/demo/DemoNavigation';
+
+// Lazy load heavy demo components
+const Footer = lazy(() => import('@/components/Footer'));
+const DemoSandbox = lazy(() => import('@/components/demo/DemoSandbox'));
+const PracticeObjection = lazy(() => import('@/components/demo/PracticeObjection'));
+const WaitlistModal = lazy(() => import('@/components/demo/WaitlistModal'));
+const GuestBanner = lazy(() => import('@/components/GuestBanner'));
+const WebhookSettings = lazy(() => import('@/components/WebhookSettings'));
+const DemoNavigation = lazy(() => import('@/components/demo/DemoNavigation'));
 
 const Demo = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
@@ -68,6 +73,65 @@ const Demo = () => {
     }
   };
 
+  const savePracticeSession = async (practiceData: any) => {
+    console.log('💾 savePracticeSession called with:', practiceData);
+    console.log('👤 User:', user?.id, 'Guest mode:', isGuestMode);
+    
+    if (!user?.id || isGuestMode) {
+      console.log('❌ Skipping database save - guest mode or no user');
+      return;
+    }
+
+    try {
+      const sessionData = {
+        user_id: user.id,
+        scenario_type: 'objection_handling',
+        difficulty: 'beginner',
+        industry: 'general',
+        duration_seconds: 60, // Estimated practice duration
+        score: practiceData.score,
+        transcript: {
+          input_type: practiceData.type,
+          response_text: practiceData.response,
+          feedback: practiceData.feedback
+        },
+        feedback_data: {
+          score: practiceData.score,
+          feedback: practiceData.feedback,
+          type: practiceData.type,
+          timestamp: practiceData.timestamp
+        },
+        completed_at: new Date().toISOString()
+      };
+
+      console.log('Saving practice session to database:', sessionData);
+
+      const { data, error } = await supabase
+        .from('practice_sessions')
+        .insert(sessionData)
+        .select();
+
+      if (error) {
+        console.error('Error saving practice session:', error);
+        toast({
+          title: "Save Error",
+          description: "Practice completed but couldn't save to your progress. Your credits were still used.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Practice session saved successfully:', data);
+      toast({
+        title: "Progress Saved",
+        description: "Your practice session has been saved to your dashboard!",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Failed to save practice session:', error);
+    }
+  };
+
   const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
     console.log('Objection practice submission:', input);
     console.log('Submission type:', input.type);
@@ -83,40 +147,72 @@ const Demo = () => {
         duration: 3000,
       });
       
-      // For demo purposes, we'll deduct credits if user is authenticated
-      if (!isGuestMode && user) {
-        const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
-        const featureType = `demo_objection_${input.type}`;
-        
-        console.log(`Attempting to deduct ${creditsToDeduct} credits for ${featureType}`);
-        
-        const deducted = await deductUserCredits(featureType, creditsToDeduct);
-        if (!deducted) {
-          console.log('Credit deduction failed - stopping demo');
-          // The deductUserCredits function already shows appropriate toast
-          return;
-        }
-        
-        console.log('Credits deducted successfully');
-      }
+      // Credits will be deducted AFTER successful AI response
       
       // Simulate AI processing with a more realistic delay
       console.log('Starting AI analysis simulation...');
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Generate mock feedback based on input type and content
+      // Call AI feedback service
       const responseText = typeof input.data === 'string' ? input.data : 'Voice response processed';
-      const feedbackData = {
-        type: input.type,
-        response: responseText,
-        timestamp: new Date().toISOString(),
-        feedback: generateMockFeedback(responseText),
-        score: Math.floor(Math.random() * 3) + 7 // Mock score 7-10
-      };
+      
+      let feedbackData;
+      try {
+        const { data, error } = await supabase.functions.invoke('demo-feedback', {
+          body: {
+            response: responseText,
+            inputType: input.type
+          }
+        });
+
+        if (error) {
+          console.error('Demo feedback error:', error);
+          throw new Error(error.message);
+        }
+
+        feedbackData = {
+          type: input.type,
+          response: responseText,
+          timestamp: new Date().toISOString(),
+          feedback: data.feedback || generateFallbackFeedback(responseText),
+          score: Math.floor(Math.random() * 3) + 7, // Still use random score for demo
+          aiSuccess: !data.fallback // Track if this was from real AI
+        };
+        
+        // Deduct credits AFTER successful AI response
+        if (!isGuestMode && user && !data.fallback) {
+          const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
+          const featureType = `demo_objection_${input.type}`;
+          
+          console.log(`Deducting ${creditsToDeduct} credits for successful ${featureType}`);
+          
+          const deducted = await deductUserCredits(featureType, creditsToDeduct);
+          if (!deducted) {
+            console.warn('Credit deduction failed after successful AI response');
+            // Don't stop the flow - user already got the value
+          }
+        }
+        
+      } catch (error) {
+        console.error('AI feedback failed, using fallback:', error);
+        
+        // Fallback to local feedback generation (no credit deduction for fallback)
+        feedbackData = {
+          type: input.type,
+          response: responseText,
+          timestamp: new Date().toISOString(),
+          feedback: generateFallbackFeedback(responseText),
+          score: Math.floor(Math.random() * 3) + 7, // Demo score 7-10
+          aiSuccess: false // Mark as fallback
+        };
+      }
       
       console.log('Generated feedback data:', feedbackData);
       
       setFeedback(feedbackData.feedback);
+      
+      // Save practice session to database for authenticated users
+      await savePracticeSession(feedbackData);
       
       // Complete the demo with the feedback data
       handleDemoComplete(feedbackData);
@@ -142,7 +238,7 @@ const Demo = () => {
     }
   };
 
-  const generateMockFeedback = (response: string): string => {
+  const generateFallbackFeedback = (response: string): string => {
     // Generate more realistic feedback based on response content
     if (response.toLowerCase().includes('value') || response.toLowerCase().includes('roi')) {
       return "Excellent approach! You focused on value and ROI, which effectively addresses pricing concerns. Consider providing specific examples or metrics to strengthen your response further.";
@@ -180,13 +276,19 @@ const Demo = () => {
       
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <DemoNavigation 
-          currentStep={1}
-          totalSteps={3}
-          showProgress={true}
-          onHelp={() => console.log('Help requested')}
-        />
-        {isGuestMode && <GuestBanner />}
+        <Suspense fallback={<Skeleton className="h-16 w-full" />}>
+          <DemoNavigation 
+            currentStep={1}
+            totalSteps={3}
+            showProgress={true}
+            onHelp={() => console.log('Help requested')}
+          />
+        </Suspense>
+        {isGuestMode && (
+          <Suspense fallback={<Skeleton className="h-12 w-full" />}>
+            <GuestBanner />
+          </Suspense>
+        )}
         <main className="flex-grow pt-24 pb-12">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
@@ -227,10 +329,12 @@ const Demo = () => {
                   </div>
                 ) : (
                   <MicrophoneGuard>
-                    <PracticeObjection
-                      scenario={objectionScenario}
-                      onSubmit={handleObjectionSubmit}
-                    />
+                    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                      <PracticeObjection
+                        scenario={objectionScenario}
+                        onSubmit={handleObjectionSubmit}
+                      />
+                    </Suspense>
                   </MicrophoneGuard>
                 )}
 
@@ -269,18 +373,24 @@ const Demo = () => {
             </div>
           </div>
         </main>
-        <Footer />
+        <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+          <Footer />
+        </Suspense>
 
-        <WaitlistModal 
-          open={showWaitlistModal} 
-          onOpenChange={setShowWaitlistModal}
-          sessionData={sessionData}
-        />
+        <Suspense fallback={null}>
+          <WaitlistModal 
+            open={showWaitlistModal} 
+            onOpenChange={setShowWaitlistModal}
+            sessionData={sessionData}
+          />
+        </Suspense>
         
-        <WebhookSettings
-          open={showWebhookSettings}
-          onOpenChange={setShowWebhookSettings}
-        />
+        <Suspense fallback={null}>
+          <WebhookSettings
+            open={showWebhookSettings}
+            onOpenChange={setShowWebhookSettings}
+          />
+        </Suspense>
       </div>
     </>
   );

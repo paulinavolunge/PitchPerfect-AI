@@ -279,12 +279,4 @@ export const autoInitAnalytics = () => {
   }
 };
 
-// Enhanced type definition for window object
-declare global {
-  interface Window {
-    dataLayer: any[];
-    gtag: (command: string, ...args: any[]) => void;
-    fbq: any;
-    loadAnalytics?: () => void;
-  }
-}
+// Type definitions are centralized in src/types/browser-apis.d.ts
