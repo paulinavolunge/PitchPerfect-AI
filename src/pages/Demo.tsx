@@ -300,12 +300,13 @@ const Demo = () => {
               
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
                 <div className="flex justify-between items-center mb-4">
-                  <h1 className="text-2xl font-bold text-brand-dark">Try PitchPerfect AI - Objection Handling Practice</h1>
+                  <h1 className="text-2xl font-bold text-brand-dark" data-testid="demo-heading">Try PitchPerfect AI - Objection Handling Practice</h1>
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => setShowWebhookSettings(true)}
                     className="flex items-center gap-1"
+                    data-testid="demo-crm-settings-button"
                   >
                     <Settings className="h-4 w-4" />
                     <span>CRM Settings</span>
@@ -321,7 +322,7 @@ const Demo = () => {
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
                       <h3 className="text-lg font-medium text-red-800 mb-2">Something went wrong</h3>
                       <p className="text-red-600 mb-4">We encountered an issue processing your response. This could be a temporary problem.</p>
-                      <Button onClick={handleRetry} className="flex items-center gap-2">
+                      <Button onClick={handleRetry} className="flex items-center gap-2" data-testid="demo-retry-button">
                         <RefreshCw className="h-4 w-4" />
                         Try Again
                       </Button>

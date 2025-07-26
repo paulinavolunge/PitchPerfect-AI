@@ -288,6 +288,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
           onClick={() => setInputMode('voice')}
           disabled={!hasPermission}
           className={inputMode === 'voice' ? 'vibrant-button' : 'outline-button'}
+          data-testid="voice-mode-button"
         >
           <Mic className="h-4 w-4 mr-2" />
           Voice Input
@@ -296,6 +297,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
           variant={inputMode === 'text' ? 'default' : 'outline'}
           onClick={switchToTextMode}
           className={inputMode === 'text' ? 'vibrant-button' : 'outline-button'}
+          data-testid="text-mode-button"
         >
           <Send className="h-4 w-4 mr-2" />
           Text Input
@@ -316,6 +318,8 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
                 onClick={isListening ? stopListening : startListening}
                 disabled={!hasPermission || isSubmitting}
                 className={`h-20 w-20 rounded-full font-bold ${isListening ? 'bg-red-500 hover:bg-red-600 animate-strong-pulse' : 'vibrant-button animate-vibrant-glow'}`}
+                data-testid="voice-record-button"
+                aria-label={isListening ? "Stop recording" : "Start recording"}
               >
                 {isListening ? (
                   <MicOff className="h-8 w-8" />
@@ -362,6 +366,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
               className="min-h-[120px] border-vibrant-blue-300 focus:border-vibrant-blue-500 resize-none font-medium"
               maxLength={500}
               disabled={isSubmitting}
+              data-testid="objection-text-input"
             />
             <div className="text-xs text-deep-navy/60 mt-2 font-medium">
               {textInput.length}/500 characters
@@ -377,6 +382,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
           disabled={!canSubmit}
           className="w-full strong-cta text-lg py-4"
           size="lg"
+          data-testid="objection-submit-button"
         >
           Get Feedback
         </Button>

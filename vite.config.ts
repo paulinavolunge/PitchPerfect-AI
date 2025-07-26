@@ -88,8 +88,12 @@ export default defineConfig(({ mode }) => {
         'react-router-dom',
         '@tanstack/react-query',
         'lucide-react',
+        '@supabase/supabase-js',
+        '@supabase/postgrest-js',
+        '@supabase/storage-js',
+        '@supabase/functions-js',
+        '@supabase/realtime-js',
       ],
-      exclude: ['@supabase/supabase-js'],
     },
   };
 });

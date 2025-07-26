@@ -413,7 +413,7 @@ const Dashboard = () => {
             transition={{ duration: 0.5 }}
           >
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-brand-dark mb-1">Dashboard</h1>
+              <h1 className="text-3xl font-bold text-brand-dark mb-1" data-testid="dashboard-heading">Dashboard</h1>
               <RefreshAnimation isRefreshing={isRefreshing} />
               <div className="text-sm text-muted-foreground">
                 {!isLoading && (
@@ -421,6 +421,7 @@ const Dashboard = () => {
                     onClick={() => refreshDashboardData(true)}
                     className="text-brand-blue hover:underline focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2 rounded"
                     aria-label="Refresh dashboard data"
+                    data-testid="dashboard-refresh-button"
                   >
                     Refresh
                   </button>
@@ -433,6 +434,7 @@ const Dashboard = () => {
                 variant="outline" 
                 className="flex items-center gap-2 hover:scale-105 transition-transform"
                 onClick={() => navigate('/call-recordings')}
+                data-testid="dashboard-recordings-button"
               >
                 <FileAudio size={16} />
                 Call Recordings
@@ -442,6 +444,7 @@ const Dashboard = () => {
                 variant="outline" 
                 className="flex items-center gap-2 hover:scale-105 transition-transform"
                 onClick={() => navigate('/practice')}
+                data-testid="dashboard-practice-button"
               >
                 <Mic size={16} />
                 Practice Session
@@ -450,6 +453,7 @@ const Dashboard = () => {
               <Button 
                 className="flex items-center gap-2 bg-gradient-to-r from-brand-blue to-[#6d8fca] hover:from-[#4580dc] hover:to-[#5c7eb9] text-white hover:scale-105 transition-transform shadow-sm"
                 onClick={() => navigate('/roleplay')}
+                data-testid="dashboard-roleplay-button"
               >
                 <Users size={16} />
                 Role Play

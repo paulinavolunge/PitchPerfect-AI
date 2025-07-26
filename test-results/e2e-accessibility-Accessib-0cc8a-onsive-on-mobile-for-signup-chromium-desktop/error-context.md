@@ -1,0 +1,46 @@
+# Page snapshot
+
+```yaml
+- img
+- heading "Your Privacy Matters" [level=3]
+- paragraph: We use cookies and similar technologies to improve your experience, analyze usage, and provide personalized content. You can manage your preferences at any time.
+- button:
+  - img
+- button "Customize":
+  - img
+  - text: Customize
+- button "Reject All"
+- button "Accept All"
+- paragraph:
+  - text: By continuing, you agree to our
+  - link "Privacy Policy":
+    - /url: /privacy
+  - text: and
+  - link "Terms of Service":
+    - /url: /terms
+- link "Back to Home":
+  - /url: /
+  - img
+  - text: Back to Home
+- heading "Sign Up for Free" [level=3]
+- paragraph: Start practicing your sales pitch today
+- button "Sign up with Google Google icon":
+  - text: Sign up with Google
+  - img "Google icon"
+- text: Or continue with email Full Name
+- img
+- textbox "Enter your full name"
+- text: Email
+- img
+- textbox "Enter your email"
+- text: Password
+- img
+- textbox "Create a password"
+- button "Create Free Account"
+- text: Already have an account?
+- link "Sign in":
+  - /url: /login
+- button "Open accessibility settings":
+  - img
+- region "Notifications alt+T"
+```

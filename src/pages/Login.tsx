@@ -302,7 +302,7 @@ const Login = () => {
               </div>
 
               {/* Email/Password Form */}
-              <form onSubmit={handleSubmit(handleEmailLogin)} className="space-y-4">
+              <form onSubmit={handleSubmit(handleEmailLogin)} className="space-y-4" data-testid="login-form">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email address</Label>
                   <Input
@@ -311,6 +311,7 @@ const Login = () => {
                     placeholder="Enter your email"
                     {...register('email')}
                     className={errors.email ? 'border-red-500' : ''}
+                    data-testid="login-email"
                   />
                   {errors.email && (
                     <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -325,6 +326,7 @@ const Login = () => {
                     placeholder="Enter your password"
                     {...register('password')}
                     className={errors.password ? 'border-red-500' : ''}
+                    data-testid="login-password"
                   />
                   {errors.password && (
                     <p className="text-sm text-red-600">{errors.password.message}</p>
@@ -335,6 +337,7 @@ const Login = () => {
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-3 px-4 rounded-md shadow-md transition-all duration-150 flex items-center justify-center gap-2"
+                  data-testid="login-submit"
                 >
                   <Mail className="h-4 w-4" />
                   {isSubmitting ? 'Signing In...' : 'Sign In with Email'}

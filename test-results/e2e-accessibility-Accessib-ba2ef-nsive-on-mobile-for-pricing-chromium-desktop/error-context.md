@@ -1,0 +1,85 @@
+# Page snapshot
+
+```yaml
+- img
+- heading "Your Privacy Matters" [level=3]
+- paragraph: We use cookies and similar technologies to improve your experience, analyze usage, and provide personalized content. You can manage your preferences at any time.
+- button:
+  - img
+- button "Customize":
+  - img
+  - text: Customize
+- button "Reject All"
+- button "Accept All"
+- paragraph:
+  - text: By continuing, you agree to our
+  - link "Privacy Policy":
+    - /url: /privacy
+  - text: and
+  - link "Terms of Service":
+    - /url: /terms
+- navigation:
+  - link "PitchPerfect AI - Home":
+    - /url: /
+    - text: PitchPerfect AI
+  - button "Sign Up Free"
+  - button "Open navigation menu": Open main menu
+- main:
+  - heading "404" [level=1]
+  - paragraph: Page not found
+  - paragraph: The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+  - paragraph: "Looking for: /pricing"
+  - link "Return to Home":
+    - /url: /
+    - button "Return to Home":
+      - img
+      - text: Return to Home
+- contentinfo:
+  - heading "About PitchPerfect AI" [level=3]
+  - paragraph: Elevate your sales game with AI-powered pitch practice and personalized feedback. Perfect your presentations, close more deals, and grow your career.
+  - heading "Platform" [level=3]
+  - list:
+    - listitem:
+      - link "Dashboard":
+        - /url: /dashboard
+    - listitem:
+      - link "Practice":
+        - /url: /practice
+    - listitem:
+      - link "Roleplay":
+        - /url: /roleplay
+    - listitem:
+      - link "AI Tips":
+        - /url: /tips
+  - heading "Company" [level=3]
+  - list:
+    - listitem:
+      - link "About Us":
+        - /url: /about
+    - listitem:
+      - link "Contact":
+        - /url: mailto:info@pitchperfectai.ai?subject=Contact%20from%20PitchPerfect%20AI%20Website&body=Hi%20PitchPerfect%20AI%20team,%0A%0AI%20would%20like%20to%20get%20in%20touch%20regarding...
+        - img
+        - text: Contact
+  - heading "Legal" [level=3]
+  - list:
+    - listitem:
+      - link "Terms of Service":
+        - /url: /terms
+    - listitem:
+      - link "Privacy Policy":
+        - /url: /privacy
+    - listitem:
+      - link "Data Safety":
+        - /url: /data-safety
+  - paragraph: © 2025 PitchPerfect AI. All rights reserved.
+  - link "Privacy Policy":
+    - /url: /privacy
+  - link "Terms of Use":
+    - /url: /terms
+  - link "Data Safety":
+    - /url: /data-safety
+- button "Open accessibility settings":
+  - img
+- region "Notifications alt+T"
+```

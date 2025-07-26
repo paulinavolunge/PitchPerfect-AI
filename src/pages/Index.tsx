@@ -99,7 +99,11 @@ const Index = () => {
               AI-Powered Sales Training
             </Badge>
 
-            <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight">
+            <h1 
+              id="hero-heading" 
+              data-testid="hero-heading"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight"
+            >
               Master Your Sales Pitch<br />
               <span className="text-primary-600">with AI Practice</span>
             </h1>
@@ -114,6 +118,7 @@ const Index = () => {
                 size="lg" 
                 className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 onClick={handleGetStartedClick}
+                data-testid="hero-get-started-button"
               >
                 <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
                 Start Practicing Now - Free!
@@ -124,8 +129,9 @@ const Index = () => {
                 variant="outline" 
                 size="lg"
                 className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 font-medium px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg"
-                    onClick={handleWatchDemoClick}
-                    data-onboarding="demo-button"
+                onClick={handleWatchDemoClick}
+                data-onboarding="demo-button"
+                data-testid="hero-watch-demo-button"
               >
                 <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
                 Watch 2-Min Demo
