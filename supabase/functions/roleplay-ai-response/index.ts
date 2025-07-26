@@ -1,6 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import { config } from 'dotenv';
-config();
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://yourdomain.com',
@@ -9,14 +7,14 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
-export async function handler(req: Request): Promise<Response> {
+serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
     }
@@ -84,7 +82,7 @@ export async function handler(req: Request): Promise<Response> {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-}
+});
 
 function createProspectSystemPrompt(scenario: any, voiceStyle: string): string {
   const objectionTypes = {
