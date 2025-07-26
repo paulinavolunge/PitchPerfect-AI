@@ -334,3 +334,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 [functions.hello-world]
 enabled = true
 verify_jwt = true
+
+[functions.voice-to-text]
+enabled = true
+verify_jwt = true
