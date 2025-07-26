@@ -6,16 +6,16 @@ test.describe('Home Page', () => {
     // Visit the home page
     await page.goto('/');
     
-    // Wait for main content to load
-    await page.waitForSelector('[data-onboarding="hero"]', { state: 'visible', timeout: 10000 });
+    // Wait for main content to load - using the actual hero heading
+    await page.waitForSelector('h1#hero-heading', { state: 'visible', timeout: 10000 });
     
     // Check that the main heading is visible
-    const mainHeading = page.getByRole('heading', { level: 1 });
+    const mainHeading = page.locator('h1#hero-heading');
     await expect(mainHeading).toBeVisible();
     await expect(mainHeading).toContainText('Master Your Sales Pitch');
     
-    // Find and click the "Watch Demo" button  
-    const watchDemoButton = page.getByRole('button', { name: /watch demo/i });
+    // Find and click the "Watch Demo" button using data attribute
+    const watchDemoButton = page.locator('[data-onboarding="demo-button"]');
     await expect(watchDemoButton).toBeVisible();
     await watchDemoButton.click();
     
