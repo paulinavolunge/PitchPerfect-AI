@@ -17,11 +17,18 @@ const fetch = require('node-fetch');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 
 if (!JWT_SECRET) {
   console.error('❌ JWT_SECRET environment variable is required');
   console.log('💡 Add JWT_SECRET to your .env file');
+  console.log('💡 You can find this in your Supabase dashboard under Settings > API');
+  process.exit(1);
+}
+
+if (!SUPABASE_URL) {
+  console.error('❌ VITE_SUPABASE_URL environment variable is required');
+  console.log('💡 Add VITE_SUPABASE_URL to your .env file');
   console.log('💡 You can find this in your Supabase dashboard under Settings > API');
   process.exit(1);
 }

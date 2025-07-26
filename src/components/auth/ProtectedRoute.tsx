@@ -4,6 +4,18 @@ import { useAuth } from '@/context/AuthContext';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { Button } from '@/components/ui/button';
 
+// Generate Supabase auth token key dynamically from environment
+const getSupabaseAuthKey = () => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl) return null;
+  
+  // Extract project ref from URL (e.g., 'https://projectref.supabase.co' -> 'projectref')
+  const match = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/);
+  const projectRef = match?.[1];
+  
+  return projectRef ? `sb-${projectRef}-auth-token` : null;
+};
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
@@ -50,7 +62,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth =
             </Button>
             <Button variant="outline" onClick={() => {
               // Clear auth data and try again
-              localStorage.removeItem('sb-ggpodadyycvmmxifqwlp-auth-token');
+              const authKey = getSupabaseAuthKey();
+              if (authKey) {
+                localStorage.removeItem(authKey);
+              }
               window.location.reload();
             }}>
               Clear Cache & Retry
