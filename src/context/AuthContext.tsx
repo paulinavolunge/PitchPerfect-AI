@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { clearAllSessionData, clearUserSpecificData, initializeCleanSession, validateSessionIsolation } from '@/utils/sessionCleanup';
 import { SafeRPCService } from '@/services/SafeRPCService';
 import { setSentryUser } from '@/utils/sentry';
+import { identifyUser, resetUser, trackAuth, setUserProperties } from '@/utils/posthog';
 
 interface AuthContextType {
   user: User | null;
@@ -118,6 +119,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_OUT' || (!session && user)) {
           console.log('🧹 User signed out, clearing all session data...');
           
+          // Track logout event
+          if (user) {
+            const sessionDuration = session?.expires_at 
+              ? Math.floor((Date.now() - new Date(session.created_at).getTime()) / 1000)
+              : 0;
+            trackAuth('logout', undefined, sessionDuration);
+            resetUser();
+          }
+          
           // Clear all user-specific data (preserve consent)
           clearAllSessionData(true);
           
@@ -147,6 +157,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setSession(session);
           setUser(session.user);
           setInitError(null);
+          
+          // Identify user in PostHog
+          identifyUser(session.user.id, {
+            email: session.user.email,
+            created_at: session.user.created_at,
+          });
           
           // Load fresh user profile data
           setTimeout(() => {

@@ -15,6 +15,7 @@ import MobileNavBar from '@/components/MobileNavBar';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { usePostHogPageTracking } from '@/hooks/usePostHogPageTracking';
 import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
 import { initializeSecurity } from '@/utils/securityHeaders';
 
@@ -78,6 +79,7 @@ const queryClient = new QueryClient({
 // Component to handle page tracking and security initialization
 const PageTrackingProvider = ({ children }: { children: React.ReactNode }) => {
   usePageTracking();
+  usePostHogPageTracking();
   
   // Initialize security measures on app start
   React.useEffect(() => {

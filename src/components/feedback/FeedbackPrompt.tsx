@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { trackFeedbackSubmitted } from '@/utils/posthog';
 
 interface FeedbackPromptProps {
   sessionId?: string;
@@ -52,6 +53,9 @@ const FeedbackPrompt: React.FC<FeedbackPromptProps> = ({
           'user_id': feedbackData.userId
         });
       }
+      
+      // Track feedback in PostHog
+      trackFeedbackSubmitted(feedbackType, wasHelpful ? 5 : 1, false);
       
       // Call the callback if provided
       if (onFeedbackSubmitted) {

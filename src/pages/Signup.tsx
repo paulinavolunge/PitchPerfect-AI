@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { trackAuth } from '@/utils/posthog';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -79,6 +80,9 @@ const Signup = () => {
           description: "Please check your email for a confirmation link to complete your signup.",
         });
       } else if (data.session) {
+        // Track successful signup
+        trackAuth('signup', 'email');
+        
         toast({
           title: "Welcome!",
           description: "Your account has been created successfully.",

@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mic, MicOff, Send, AlertTriangle, RefreshCw, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { trackModeToggle } from '@/utils/posthog';
 
 interface PracticeObjectionProps {
   scenario: string;
@@ -225,6 +226,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
   const switchToTextMode = () => {
     console.log("Switching to text input mode");
     setInputMode('text');
+    trackModeToggle('text', 'demo');
     setError(null);
     if (isListening) {
       stopListening();
@@ -285,7 +287,10 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
       <div className="flex gap-3 mb-6">
         <Button
           variant={inputMode === 'voice' ? 'default' : 'outline'}
-          onClick={() => setInputMode('voice')}
+          onClick={() => {
+            setInputMode('voice');
+            trackModeToggle('voice', 'demo');
+          }}
           disabled={!hasPermission}
           className={inputMode === 'voice' ? 'vibrant-button' : 'outline-button'}
           data-testid="voice-mode-button"

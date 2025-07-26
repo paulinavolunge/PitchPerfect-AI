@@ -14,6 +14,7 @@ import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { trackDemoStart, trackDemoComplete } from '@/utils/posthog';
 
 // Lazy load heavy demo components
 const Footer = lazy(() => import('@/components/Footer'));
@@ -137,6 +138,9 @@ const Demo = () => {
     console.log('Submission type:', input.type);
     console.log('Submission data:', input.data);
     
+    // Track demo start
+    trackDemoStart(input.type, objectionScenario);
+    
     try {
       setHasError(false);
       
@@ -213,6 +217,10 @@ const Demo = () => {
       
       // Save practice session to database for authenticated users
       await savePracticeSession(feedbackData);
+      
+      // Track demo completion
+      const durationSeconds = 60; // Estimated duration
+      trackDemoComplete(input.type, durationSeconds, feedbackData.score, true);
       
       // Complete the demo with the feedback data
       handleDemoComplete(feedbackData);

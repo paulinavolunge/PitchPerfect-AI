@@ -24,6 +24,7 @@ window.addEventListener('unhandledrejection', (event) => {
 import { initializePolyfills } from './utils/polyfills';
 import { preloadCriticalResources, measureWebVitals } from './utils/performance';
 import { initSentry } from './utils/sentry';
+import { initPostHog } from './utils/posthog';
 
 console.log('[main.tsx] Starting application initialization...');
 
@@ -33,6 +34,14 @@ try {
   console.log('[main.tsx] Sentry initialized');
 } catch (error) {
   console.error('[main.tsx] Failed to initialize Sentry:', error);
+}
+
+// Initialize PostHog analytics
+try {
+  initPostHog();
+  console.log('[main.tsx] PostHog initialized');
+} catch (error) {
+  console.error('[main.tsx] Failed to initialize PostHog:', error);
 }
 
 try {

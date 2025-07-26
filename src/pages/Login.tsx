@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, X, Mail } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
+import { trackAuth } from '@/utils/posthog';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -162,6 +163,8 @@ const Login = () => {
         throw error;
       }
 
+      // Track successful login
+      trackAuth('login', 'email');
       toast.success("Successfully logged in!");
       
     } catch (error: any) {
