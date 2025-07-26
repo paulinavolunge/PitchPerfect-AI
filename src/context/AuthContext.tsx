@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { clearAllSessionData, clearUserSpecificData, initializeCleanSession, validateSessionIsolation } from '@/utils/sessionCleanup';
 import { SafeRPCService } from '@/services/SafeRPCService';
+import { setSentryUser } from '@/lib/sentry';
 
 interface AuthContextType {
   user: User | null;
@@ -53,6 +54,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('AuthContext: Initial session loaded', !!initialSession);
           setSession(initialSession);
           setUser(initialSession?.user ?? null);
+          
+          // Track user in Sentry
+          if (initialSession?.user) {
+            setSentryUser({
+              id: initialSession.user.id,
+              email: initialSession.user.email
+            });
+          }
           
           // Load user profile data if user exists
           if (initialSession?.user?.id) {
@@ -128,6 +137,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsNewUser(false);
           setInitError(null);
           
+          // Clear Sentry user context
+          setSentryUser(null);
+          
           console.log('✅ Session data cleared for logout');
         } else if (event === 'SIGNED_IN' && session?.user?.id) {
           console.log('🚀 User signed in, initializing clean session...');
@@ -146,6 +158,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setSession(session);
           setUser(session.user);
           setInitError(null);
+          
+          // Track user in Sentry
+          setSentryUser({
+            id: session.user.id,
+            email: session.user.email
+          });
           
           // Load fresh user profile data
           setTimeout(() => {

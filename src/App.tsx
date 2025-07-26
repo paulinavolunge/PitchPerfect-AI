@@ -1,5 +1,13 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { 
+  BrowserRouter as Router, 
+  Routes, 
+  Route,
+  useLocation,
+  useNavigationType,
+  createRoutesFromChildren,
+  matchRoutes
+} from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
@@ -11,12 +19,14 @@ import { GuestModeProvider } from '@/context/GuestModeContext';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import AccessibilityButton from '@/components/accessibility/AccessibilityButton';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
+import { SentryErrorBoundary } from '@/components/error/SentryErrorBoundary';
 import MobileNavBar from '@/components/MobileNavBar';
 import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliantAnalytics';
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
 import { initializeSecurity } from '@/utils/securityHeaders';
+import * as Sentry from '@sentry/react';
 
 // Page imports
 import Index from '@/pages/Index';
@@ -45,6 +55,7 @@ import Success from '@/pages/Success';
 import Cancel from '@/pages/Cancel';
 import TeamDashboard from '@/pages/TeamDashboard';
 import NotFound from '@/pages/NotFound';
+import TestError from '@/pages/TestError';
 import { isPricingEnabled, isSubscriptionEnabled } from '@/config/features';
 
 // Add new page imports
@@ -58,6 +69,8 @@ import { VoiceTrainingPage, AnalyticsPage, RoleplayPage } from '@/components/Pla
 
 // Import ProtectedRoute
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+
+
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -117,26 +130,27 @@ const AuthLoadingBoundary = ({ children }: { children: React.ReactNode }) => {
 function App() {
   
   return (
-    <ErrorBoundary>
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-            <TooltipProvider>
-              <AccessibilityProvider>
-                <Router>
-                  <AuthProvider>
-                    <OnboardingProvider>
-                      <AuthLoadingBoundary>
-                        <GuestModeProvider>
-                        <PageTrackingProvider>
-                          {/* Initialize analytics */}
-                          <PrivacyCompliantAnalytics />
-                          
-                          {/* Consent banner for analytics */}
-                          <ConsentBanner />
-                          
-                          <div className="min-h-screen bg-background font-sans antialiased">
-                            <Routes>
+    <SentryErrorBoundary>
+      <ErrorBoundary>
+        <HelmetProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+              <TooltipProvider>
+                <AccessibilityProvider>
+                  <Router>
+                    <AuthProvider>
+                      <OnboardingProvider>
+                        <AuthLoadingBoundary>
+                          <GuestModeProvider>
+                          <PageTrackingProvider>
+                            {/* Initialize analytics */}
+                            <PrivacyCompliantAnalytics />
+                            
+                            {/* Consent banner for analytics */}
+                            <ConsentBanner />
+                            
+                            <div className="min-h-screen bg-background font-sans antialiased">
+                              <Routes>
                               {/* Public routes */}
                               <Route path="/" element={<Index />} />
                               <Route path="/about" element={<About />} />
@@ -184,6 +198,9 @@ function App() {
                               <Route path="/data-safety" element={<DataSafety />} />
                               <Route path="/account-delete" element={<ProtectedRoute><AccountDelete /></ProtectedRoute>} />
                               
+                              {/* Test route for Sentry (remove in production) */}
+                              <Route path="/test-error" element={<TestError />} />
+                              
                               {/* Fallback route - IMPORTANT: This catches all unmatched routes */}
                               <Route path="*" element={<NotFound />} />
                             </Routes>
@@ -217,6 +234,7 @@ function App() {
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>
+  </SentryErrorBoundary>
   );
 }
 
