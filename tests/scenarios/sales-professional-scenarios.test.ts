@@ -131,20 +131,24 @@ test.describe('Sales Professional Scenarios', () => {
     // Wait for initial page load
     await page.waitForTimeout(1000);
     
-    // Attempt rapid switches only if buttons are available and mode change is needed
-    for (let i = 0; i < 3; i++) {
-      const voiceModeActive = await page.locator('[data-testid="voice-mode-active"]').isVisible({ timeout: 500 }).catch(() => false);
+    // Attempt rapid alternating switches between voice and text modes
+    for (let i = 0; i < 6; i++) {
+      const shouldSwitchToVoice = i % 2 === 0;
       
-      if (!voiceModeActive && await voiceModeButton.isVisible({ timeout: 1000 })) {
-        await voiceModeButton.click();
-        await page.waitForTimeout(200);
-      }
-      
-      const textModeActive = await page.locator('[data-testid="text-mode-active"]').isVisible({ timeout: 500 }).catch(() => false);
-      
-      if (!textModeActive && await textModeButton.isVisible({ timeout: 1000 })) {
-        await textModeButton.click();
-        await page.waitForTimeout(200);
+      if (shouldSwitchToVoice) {
+        // Switch to voice mode if not already active
+        const voiceModeActive = await page.locator('[data-testid="voice-mode-active"]').isVisible({ timeout: 500 }).catch(() => false);
+        if (!voiceModeActive && await voiceModeButton.isVisible({ timeout: 1000 })) {
+          await voiceModeButton.click();
+          await page.waitForTimeout(200);
+        }
+      } else {
+        // Switch to text mode if not already active
+        const textModeActive = await page.locator('[data-testid="text-mode-active"]').isVisible({ timeout: 500 }).catch(() => false);
+        if (!textModeActive && await textModeButton.isVisible({ timeout: 1000 })) {
+          await textModeButton.click();
+          await page.waitForTimeout(200);
+        }
       }
     }
     
