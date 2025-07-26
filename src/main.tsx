@@ -3,11 +3,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { secureLog } from './utils/secureLog';
 
 
 // Global error handler
 window.addEventListener('error', (event) => {
-  console.error('[Global Error Handler]', {
+  secureLog.error('[Global Error Handler]', {
     message: event.message,
     filename: event.filename,
     lineno: event.lineno,
@@ -17,27 +18,27 @@ window.addEventListener('error', (event) => {
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('[Unhandled Promise Rejection]', event.reason);
+  secureLog.error('[Unhandled Promise Rejection]', event.reason);
 });
 
 // Initialize polyfills
 import { initializePolyfills } from './utils/polyfills';
 import { preloadCriticalResources, measureWebVitals } from './utils/performance';
 
-console.log('[main.tsx] Starting application initialization...');
+secureLog.info('[main.tsx] Starting application initialization...');
 
 try {
   initializePolyfills();
-  console.log('[main.tsx] Polyfills initialized');
+  secureLog.info('[main.tsx] Polyfills initialized');
 } catch (error) {
-  console.error('[main.tsx] Failed to initialize polyfills:', error);
+  secureLog.error('[main.tsx] Failed to initialize polyfills:', error);
 }
 
 try {
   preloadCriticalResources();
-  console.log('[main.tsx] Critical resources preloaded');
+  secureLog.info('[main.tsx] Critical resources preloaded');
 } catch (error) {
-  console.error('[main.tsx] Failed to preload critical resources:', error);
+  secureLog.error('[main.tsx] Failed to preload critical resources:', error);
 }
 
 // Measure Web Vitals in development
@@ -69,7 +70,7 @@ class RootErrorBoundary extends React.Component<{
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, info: any) {
-    console.error('[RootErrorBoundary] App failed to load:', error, info);
+    secureLog.error('[RootErrorBoundary] App failed to load:', error, info);
   }
   render() {
     if (this.state.hasError && this.state.error) {

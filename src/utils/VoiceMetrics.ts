@@ -1,5 +1,6 @@
 
 import { trackVoiceResponseTime } from './analyticsUtils';
+import { secureLog } from './secureLog';
 
 /**
  * Utility class to track voice response metrics
@@ -33,7 +34,7 @@ class VoiceMetrics {
   public endTiming(id: string): number {
     const startTime = this.responseStartTimes.get(id);
     if (startTime === undefined) {
-      console.warn(`No start time found for voice response with id: ${id}`);
+      secureLog.warn(`No start time found for voice response with id: ${id}`);
       return 0;
     }
     

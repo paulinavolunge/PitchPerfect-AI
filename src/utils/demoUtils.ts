@@ -1,5 +1,6 @@
 
 // Demo utils for handling demo-specific functionality
+import { secureLog } from './secureLog';
 
 /**
  * Get a sample scenario for the demo
@@ -33,7 +34,7 @@ export const addToWaitlist = async (email: string) => {
   return new Promise((resolve) => {
     // Simulate API call delay
     setTimeout(() => {
-      console.log(`Added ${email} to waitlist`);
+      secureLog.info(`Added ${email} to waitlist`);
       resolve({ success: true });
     }, 1000);
   });

@@ -1,4 +1,5 @@
 // Asset Optimization Utilities
+import { secureLog } from './secureLog';
 export interface AssetOptimizationConfig {
   enableWebP: boolean;
   enableLazyLoading: boolean;
@@ -31,7 +32,7 @@ export function optimizeImageUrl(
   try {
     new URL(originalUrl, window.location.origin);
   } catch {
-    console.warn('Invalid URL provided to optimizeImageUrl:', originalUrl);
+    secureLog.warn('Invalid URL provided to optimizeImageUrl:', originalUrl);
     return originalUrl;
   }
   

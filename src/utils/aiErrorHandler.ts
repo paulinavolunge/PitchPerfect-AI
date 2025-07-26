@@ -1,5 +1,6 @@
 
 import { toast } from '@/hooks/use-toast';
+import { secureLog } from './secureLog';
 
 export interface AIError extends Error {
   code?: string;
@@ -31,7 +32,7 @@ export class AIErrorHandler {
    * Handle AI service errors with user-friendly messages
    */
   static handleError(error: AIError, context: string): void {
-    console.error(`AI Error in ${context}:`, error);
+    secureLog.error(`AI Error in ${context}:`, error);
 
     let userMessage = '';
     let showRetry = false;
@@ -110,7 +111,7 @@ export class AIErrorHandler {
 
       this.retryAttempts.set(operationId, currentAttempts + 1);
 
-      console.log(`Retrying operation ${operationId} in ${jitteredDelay}ms (attempt ${currentAttempts + 1}/${retryConfig.maxRetries})`);
+      secureLog.info(`Retrying operation ${operationId} in ${jitteredDelay}ms (attempt ${currentAttempts + 1}/${retryConfig.maxRetries})`);
 
       await new Promise(resolve => setTimeout(resolve, jitteredDelay));
       return this.withRetry(operation, operationId, config);

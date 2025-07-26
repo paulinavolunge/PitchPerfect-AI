@@ -1,5 +1,6 @@
 
 import { sanitizeStrictly } from '@/lib/sanitizeInput';
+import { secureLog } from './secureLog';
 
 // Rate limiting for voice processing
 const VOICE_RATE_LIMIT = {
@@ -41,14 +42,14 @@ export class VoiceInputSecurity {
     // Check file size (max 10MB)
     const maxSize = 10 * 1024 * 1024;
     if (audioBlob.size > maxSize) {
-      console.warn('Audio file too large:', audioBlob.size);
+      secureLog.warn('Audio file too large:', audioBlob.size);
       return false;
     }
     
     // Check MIME type
     const allowedTypes = ['audio/wav', 'audio/mp3', 'audio/webm', 'audio/ogg'];
     if (!allowedTypes.includes(audioBlob.type)) {
-      console.warn('Invalid audio type:', audioBlob.type);
+              secureLog.warn('Invalid audio type:', audioBlob.type);
       return false;
     }
     

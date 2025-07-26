@@ -1,4 +1,6 @@
 
+import { secureLog } from './secureLog';
+
 interface VoiceDebugResult {
   feature: string;
   supported: boolean;
@@ -10,7 +12,7 @@ export class VoiceDebugger {
   private static results: VoiceDebugResult[] = [];
 
   static async runFullDiagnostics(): Promise<VoiceDebugResult[]> {
-    console.log('🔍 Starting Voice Feature Diagnostics...');
+    secureLog.info('🔍 Starting Voice Feature Diagnostics...');
     this.results = [];
 
     // Test 1: Basic API Support
@@ -28,14 +30,14 @@ export class VoiceDebugger {
     // Test 5: Web Audio API
     await this.testWebAudioAPI();
 
-    console.log('🔍 Voice Diagnostics Complete:', this.results);
+    secureLog.info('🔍 Voice Diagnostics Complete:', this.results);
     return this.results;
   }
 
   private static addResult(feature: string, supported: boolean, error?: string, details?: any) {
     const result = { feature, supported, error, details };
     this.results.push(result);
-    console.log(`🔍 ${feature}: ${supported ? '✅ PASS' : '❌ FAIL'}`, error || details || '');
+    secureLog.info(`🔍 ${feature}: ${supported ? '✅ PASS' : '❌ FAIL'}`, error || details || '');
   }
 
   private static async testBasicAPISupport() {
@@ -56,7 +58,7 @@ export class VoiceDebugger {
 
   private static async testMicrophoneAccess() {
     try {
-      console.log('🎤 Testing microphone access...');
+      secureLog.info('🎤 Testing microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
       if (stream) {
@@ -79,7 +81,7 @@ export class VoiceDebugger {
 
   private static async testSpeechRecognition() {
     try {
-      console.log('🗣️ Testing speech recognition...');
+      secureLog.info('🗣️ Testing speech recognition...');
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       
       if (!SpeechRecognition) {
@@ -102,14 +104,14 @@ export class VoiceDebugger {
       // Test short recognition session
       return new Promise<void>((resolve) => {
         recognition.onstart = () => {
-          console.log('🗣️ Speech recognition started');
+          secureLog.info('🗣️ Speech recognition started');
           setTimeout(() => {
             recognition.stop();
           }, 1000); // Stop after 1 second
         };
 
         recognition.onresult = (event: any) => {
-          console.log('🗣️ Speech recognition result:', event);
+                      secureLog.info('🗣️ Speech recognition result:', event);
           this.addResult('Speech Recognition Test', true, undefined, {
             resultCount: event.results.length
           });
@@ -117,13 +119,13 @@ export class VoiceDebugger {
         };
 
         recognition.onerror = (event: any) => {
-          console.log('🗣️ Speech recognition error:', event);
+                      secureLog.info('🗣️ Speech recognition error:', event);
           this.addResult('Speech Recognition Test', false, event.error);
           resolve();
         };
 
         recognition.onend = () => {
-          console.log('🗣️ Speech recognition ended');
+                      secureLog.info('🗣️ Speech recognition ended');
           resolve();
         };
 
@@ -141,7 +143,7 @@ export class VoiceDebugger {
 
   private static async testSpeechSynthesis() {
     try {
-      console.log('🔊 Testing speech synthesis...');
+      secureLog.info('🔊 Testing speech synthesis...');
       
       if (!window.speechSynthesis) {
         this.addResult('Speech Synthesis', false, 'speechSynthesis not available');
@@ -188,7 +190,7 @@ export class VoiceDebugger {
 
   private static async testWebAudioAPI() {
     try {
-      console.log('🎵 Testing Web Audio API...');
+      secureLog.info('🎵 Testing Web Audio API...');
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       
       if (!AudioContext) {
@@ -234,12 +236,12 @@ export class VoiceDebugger {
   }
 
   static printSummary(): void {
-    console.log('\n🔍 === Voice Feature Debug Summary ===');
+    secureLog.info('\n🔍 === Voice Feature Debug Summary ===');
     this.results.forEach(result => {
-      console.log(`${result.supported ? '✅' : '❌'} ${result.feature}`);
-      if (result.error) console.log(`   Error: ${result.error}`);
-      if (result.details) console.log(`   Details:`, result.details);
+              secureLog.info(`${result.supported ? '✅' : '❌'} ${result.feature}`);
+        if (result.error) secureLog.info(`   Error: ${result.error}`);
+        if (result.details) secureLog.info(`   Details:`, result.details);
     });
-    console.log('=====================================\n');
+          secureLog.info('=====================================\n');
   }
 }

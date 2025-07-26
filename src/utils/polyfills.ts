@@ -1,5 +1,6 @@
 
 // Basic polyfills for browser compatibility
+import { secureLog } from './secureLog';
 export const initializePolyfills = () => {
   // Only run in browser environment
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
@@ -28,6 +29,6 @@ export const initializePolyfills = () => {
     }
 
   } catch (error) {
-    console.warn('Polyfill initialization failed:', error);
+    secureLog.warn('Polyfill initialization failed:', error);
   }
 };

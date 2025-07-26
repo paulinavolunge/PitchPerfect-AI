@@ -3,6 +3,8 @@
  * Utility functions for webhook integrations
  */
 
+import { secureLog } from './secureLog';
+
 interface SessionData {
   [key: string]: any;
 }
@@ -21,7 +23,7 @@ export const getStoredWebhookUrl = (provider: CRMProvider = "zapier"): string | 
       const urls = JSON.parse(storedUrls);
       return urls[provider];
     } catch (e) {
-      console.error("Error parsing stored webhook URLs:", e);
+      secureLog.error("Error parsing stored webhook URLs:", e);
       return undefined;
     }
   }
@@ -40,7 +42,7 @@ export const saveWebhookUrl = (provider: CRMProvider, url: string): void => {
     urls[provider] = url;
     localStorage.setItem('crm_webhook_urls', JSON.stringify(urls));
   } catch (e) {
-    console.error("Error saving webhook URL:", e);
+    secureLog.error("Error saving webhook URL:", e);
   }
 };
 
@@ -74,7 +76,7 @@ export const sendSessionToCRM = async (
     const webhookUrl = getWebhookUrl(provider);
     
     if (!webhookUrl) {
-      console.warn(`${provider} webhook URL not configured`);
+      secureLog.warn(`${provider} webhook URL not configured`);
       return { 
         success: false, 
         message: `${provider} webhook URL not configured` 
@@ -90,7 +92,7 @@ export const sendSessionToCRM = async (
       isPriority: sessionData.requestType === "pdf_recap" // Mark PDF recaps as priority
     };
     
-    console.log(`Sending session to ${provider} via webhook:`, payload);
+    secureLog.info(`Sending session to ${provider} via webhook:`, payload);
     
     const response = await fetch(webhookUrl, {
       method: "POST",
@@ -101,20 +103,20 @@ export const sendSessionToCRM = async (
     });
     
     if (response.ok) {
-      console.log(`✅ ${provider} webhook success`);
+      secureLog.info(`✅ ${provider} webhook success`);
       return { 
         success: true, 
         message: `Successfully pushed to ${provider}` 
       };
     } else {
-      console.error(`❌ ${provider} webhook failed:`, response.statusText);
+              secureLog.error(`❌ ${provider} webhook failed:`, response.statusText);
       return { 
         success: false, 
         message: `Webhook failed: ${response.statusText}` 
       };
     }
   } catch (error) {
-    console.error(`❌ ${provider} webhook error:`, error);
+    secureLog.error(`❌ ${provider} webhook error:`, error);
     return { 
       success: false, 
       message: `Error: ${error instanceof Error ? error.message : String(error)}` 
@@ -133,7 +135,7 @@ export const sendImmediateConfirmation = async (email: string): Promise<{ succes
     const webhookUrl = getWebhookUrl("zapier") || getWebhookUrl("custom");
     
     if (!webhookUrl) {
-      console.warn("No webhook URL configured for immediate notifications");
+      secureLog.warn("No webhook URL configured for immediate notifications");
       return { 
         success: false, 
         message: "No webhook URL configured for immediate notifications" 
@@ -150,7 +152,7 @@ export const sendImmediateConfirmation = async (email: string): Promise<{ succes
       priority: "high"
     };
     
-    console.log("Sending immediate confirmation via webhook:", payload);
+          secureLog.info("Sending immediate confirmation via webhook:", payload);
     
     const response = await fetch(webhookUrl, {
       method: "POST",
@@ -167,7 +169,7 @@ export const sendImmediateConfirmation = async (email: string): Promise<{ succes
       message: "Confirmation email request sent" 
     };
   } catch (error) {
-    console.error("Error sending immediate confirmation:", error);
+    secureLog.error("Error sending immediate confirmation:", error);
     return { 
       success: false, 
       message: `Error: ${error instanceof Error ? error.message : String(error)}` 

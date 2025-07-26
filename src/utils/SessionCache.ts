@@ -1,4 +1,6 @@
 
+import { secureLog } from './secureLog';
+
 const SESSION_CACHE_KEY = 'pitchperfect_session_history';
 
 export interface SessionHistoryItem {
@@ -26,7 +28,7 @@ export const SessionCache = {
     try {
       localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sessions));
     } catch (error) {
-      console.error('Error caching session history:', error);
+      secureLog.error('Error caching session history:', error);
     }
   },
 
@@ -38,7 +40,7 @@ export const SessionCache = {
       const cached = localStorage.getItem(SESSION_CACHE_KEY);
       return cached ? JSON.parse(cached) : [];
     } catch (error) {
-      console.error('Error retrieving cached session history:', error);
+      secureLog.error('Error retrieving cached session history:', error);
       return [];
     }
   },
@@ -56,7 +58,7 @@ export const SessionCache = {
       
       SessionCache.saveSessionHistory(limitedSessions);
     } catch (error) {
-      console.error('Error adding session to cache:', error);
+      secureLog.error('Error adding session to cache:', error);
     }
   },
 
@@ -67,7 +69,7 @@ export const SessionCache = {
     try {
       localStorage.removeItem(SESSION_CACHE_KEY);
     } catch (error) {
-      console.error('Error clearing session history cache:', error);
+      secureLog.error('Error clearing session history cache:', error);
     }
   }
 };
