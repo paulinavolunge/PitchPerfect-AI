@@ -3,8 +3,10 @@ import { config } from 'dotenv';
 config();
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://yourdomain.com',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 export async function handler(req: Request): Promise<Response> {
