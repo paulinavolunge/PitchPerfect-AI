@@ -1,5 +1,5 @@
 
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -8,6 +8,10 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const isDevelopment = mode === 'development';
+  
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+  const env = loadEnv(mode, process.cwd(), '');
   
   console.log('Vite config mode:', mode, { isProduction, isDevelopment });
   

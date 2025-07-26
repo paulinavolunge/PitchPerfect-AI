@@ -23,6 +23,7 @@ window.addEventListener('unhandledrejection', (event) => {
 // Initialize polyfills
 import { initializePolyfills } from './utils/polyfills';
 import { preloadCriticalResources, measureWebVitals } from './utils/performance';
+import { initializeApp } from './lib/init';
 
 console.log('[main.tsx] Starting application initialization...');
 
@@ -38,6 +39,14 @@ try {
   console.log('[main.tsx] Critical resources preloaded');
 } catch (error) {
   console.error('[main.tsx] Failed to preload critical resources:', error);
+}
+
+// Initialize third-party services
+try {
+  initializeApp();
+  console.log('[main.tsx] Third-party services initialized');
+} catch (error) {
+  console.error('[main.tsx] Failed to initialize third-party services:', error);
 }
 
 // Measure Web Vitals in development
