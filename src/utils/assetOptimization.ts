@@ -25,16 +25,6 @@ export function optimizeImageUrl(
   } = {},
   config: AssetOptimizationConfig = defaultConfig
 ): string {
-export function optimizeImageUrl(
-  originalUrl: string, 
-  options: {
-    width?: number;
-    height?: number;
-    quality?: number;
-    format?: 'webp' | 'jpg' | 'png';
-  } = {},
-  config: AssetOptimizationConfig = defaultConfig
-): string {
   if (!originalUrl) return '';
   
   // Validate URL format
@@ -49,7 +39,7 @@ export function optimizeImageUrl(
   if (config.enableCDN && config.cdnBaseUrl) {
     const params = new URLSearchParams();
     
-    if (options.width)  params.set('w', options.width.toString());
+    if (options.width) params.set('w', options.width.toString());
     if (options.height) params.set('h', options.height.toString());
     if (options.quality) params.set('q', options.quality.toString());
     if (options.format && config.enableWebP) params.set('f', options.format);
@@ -61,7 +51,6 @@ export function optimizeImageUrl(
   
   // For local development, return original URL
   return originalUrl;
-}
 }
 
 // Generate responsive image URLs
@@ -127,52 +116,6 @@ export function preloadCriticalAssets(assets: Array<{
   });
 }
 
-// Font optimization
-export function optimizeFontLoading(fontFamilies: string[]) {
-  if (typeof document === 'undefined') return;
-
-  // Get all stylesheets
-  const styleSheets = Array.from(document.styleSheets);
-
-  styleSheets.forEach(sheet => {
-    try {
-      const rules = Array.from(sheet.cssRules || []);
-      rules.forEach(rule => {
-        if (rule instanceof CSSFontFaceRule) {
-          const fontFamily = rule.style.getPropertyValue('font-family')
-            .replace(/['"]/g, '');
-
-          if (fontFamilies.includes(fontFamily)) {
-            rule.style.setProperty('font-display', 'swap');
-          }
-        }
-      });
-    } catch (e) {
-      // Handle cross-origin stylesheets
-      console.warn('Cannot access stylesheet:', e);
-    }
-  });
-}
-
-// Resource hints
-export function addResourceHints(domains: string[]) {
-  if (typeof document === 'undefined') return;
-  
-  domains.forEach(domain => {
-    // DNS prefetch
-    const dnsLink = document.createElement('link');
-    dnsLink.rel = 'dns-prefetch';
-    dnsLink.href = `//${domain}`;
-    document.head.appendChild(dnsLink);
-    
-    // Preconnect for critical domains
-    const preconnectLink = document.createElement('link');
-    preconnectLink.rel = 'preconnect';
-    preconnectLink.href = `https://${domain}`;
-    document.head.appendChild(preconnectLink);
-  });
-}
-
 // Performance monitoring
 export function measureAssetLoadTime(assetUrl: string): Promise<number> {
   return new Promise((resolve) => {
@@ -193,29 +136,6 @@ export function measureAssetLoadTime(assetUrl: string): Promise<number> {
   });
 }
 
-// Critical CSS inlining
-export function inlineCriticalCSS(criticalCSS: string) {
-  if (typeof document === 'undefined') return;
-  
-  const style = document.createElement('style');
-  style.textContent = criticalCSS;
-  style.setAttribute('data-critical', 'true');
-  document.head.appendChild(style);
-}
-
-// Service Worker for asset caching
-export function registerAssetCacheServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw-assets.js')
-      .then(registration => {
-        console.log('Asset cache SW registered:', registration);
-      })
-      .catch(error => {
-        console.log('Asset cache SW registration failed:', error);
-      });
-  }
-}
-
 // Bundle analysis helper
 export function analyzeAssetSizes() {
   if (typeof performance === 'undefined') return null;
@@ -225,7 +145,7 @@ export function analyzeAssetSizes() {
   return entries.map(entry => ({
     name: entry.name,
     size: entry.transferSize || 0,
-    loadTime: entry.loadEnd - entry.loadStart,
+    loadTime: entry.responseEnd - entry.responseStart,
     type: entry.initiatorType
   })).sort((a, b) => b.size - a.size);
 }
@@ -238,16 +158,5 @@ export function detectWebPSupport(): Promise<boolean> {
       resolve(webP.height === 2);
     };
     webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
-  });
-}
-
-// AVIF format detection
-export function detectAVIFSupport(): Promise<boolean> {
-  return new Promise((resolve) => {
-    const avif = new Image();
-    avif.onload = avif.onerror = () => {
-      resolve(avif.height === 2);
-    };
-    avif.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=';
   });
 }
