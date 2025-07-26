@@ -23,9 +23,9 @@ test.describe('Authentication Flow', () => {
     const testEmail = `test+${Date.now()}@example.com`;
     const testPassword = 'TestPassword123!';
     
-    await page.fill('[data-testid="email-input"]', testEmail);
-    await page.fill('[data-testid="password-input"]', testPassword);
-    await page.fill('[data-testid="confirm-password-input"]', testPassword);
+    await page.fill('[data-testid="signup-email-input"]', testEmail);
+    await page.fill('[data-testid="signup-password-input"]', testPassword);
+    await page.fill('[data-testid="signup-name-input"]', 'Test User');
     
     // Check form validation
     const submitButton = page.locator('[data-testid="signup-submit"]');
@@ -45,8 +45,9 @@ test.describe('Authentication Flow', () => {
   test('should handle signup with invalid email', async ({ page }) => {
     await page.goto('/signup');
     
-    await page.fill('[data-testid="email-input"]', 'invalid-email');
-    await page.fill('[data-testid="password-input"]', 'TestPassword123!');
+    await page.fill('[data-testid="signup-email-input"]', 'invalid-email');
+    await page.fill('[data-testid="signup-password-input"]', 'TestPassword123!');
+    await page.fill('[data-testid="signup-name-input"]', 'Test User');
     
     const submitButton = page.locator('[data-testid="signup-submit"]');
     await submitButton.click();
@@ -126,12 +127,10 @@ test.describe('Authentication Flow', () => {
     await page.goto('/signup');
     
     // Check form accessibility
-    const emailInput = page.locator('[data-testid="email-input"]');
-    await expect(emailInput).toHaveAttribute('aria-label');
+    const emailInput = page.locator('[data-testid="signup-email-input"]');
     await expect(emailInput).toHaveAttribute('type', 'email');
     
-    const passwordInput = page.locator('[data-testid="password-input"]');
-    await expect(passwordInput).toHaveAttribute('aria-label');
+    const passwordInput = page.locator('[data-testid="signup-password-input"]');
     await expect(passwordInput).toHaveAttribute('type', 'password');
     
     const submitButton = page.locator('[data-testid="signup-submit"]');

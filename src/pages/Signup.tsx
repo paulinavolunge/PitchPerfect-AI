@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { trackAuth } from '@/utils/posthog';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -79,6 +80,9 @@ const Signup = () => {
           description: "Please check your email for a confirmation link to complete your signup.",
         });
       } else if (data.session) {
+        // Track successful signup
+        trackAuth('signup', 'email');
+        
         toast({
           title: "Welcome!",
           description: "Your account has been created successfully.",
@@ -234,7 +238,7 @@ const Signup = () => {
               </div>
             </div>
 
-            <form onSubmit={handleEmailSignup} className="space-y-4">
+            <form onSubmit={handleEmailSignup} className="space-y-4" data-testid="signup-form">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Full Name</label>
                 <div className="relative">
@@ -247,6 +251,7 @@ const Signup = () => {
                     placeholder="Enter your full name"
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-blue"
                     required
+                    data-testid="signup-name-input"
                   />
                 </div>
               </div>
@@ -263,6 +268,7 @@ const Signup = () => {
                     placeholder="Enter your email"
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-blue"
                     required
+                    data-testid="signup-email-input"
                   />
                 </div>
               </div>
@@ -280,6 +286,7 @@ const Signup = () => {
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-blue"
                     required
                     minLength={6}
+                    data-testid="signup-password-input"
                   />
                 </div>
               </div>
@@ -288,6 +295,7 @@ const Signup = () => {
                 type="submit"
                 className="w-full bg-brand-green hover:bg-brand-green/90"
                 disabled={isLoading || isGoogleLoading}
+                data-testid="signup-submit"
               >
                 {isLoading ? (
                   <>
