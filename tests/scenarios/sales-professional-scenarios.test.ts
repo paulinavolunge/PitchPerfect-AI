@@ -251,9 +251,17 @@ test.describe('Sales Professional User Scenarios', () => {
       await page.getByRole('button', { name: /Download Report/i }).click();
       
       // Verify report generation
-      const download = await page.waitForEvent('download');
-      expect(download.suggestedFilename()).toContain('progress-report');
-      expect(download.suggestedFilename()).toContain('.pdf');
+      // Generate and download report with error handling
+      await page.getByRole('button', { name: /Download Report/i }).click();
+
+      // Verify report generation with timeout
+      try {
+        const download = await page.waitForEvent('download', { timeout: 15000 });
+        expect(download.suggestedFilename()).toContain('progress-report');
+        expect(download.suggestedFilename()).toContain('.pdf');
+      } catch (error) {
+        throw new Error(`Download failed: ${error.message}`);
+      }
     });
 
     test('share results with team', async ({ page }) => {
