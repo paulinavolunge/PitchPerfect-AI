@@ -154,6 +154,10 @@ test.describe('Sales Professional User Scenarios', () => {
         localStorage.setItem('total_sessions', '50');
         localStorage.setItem('subscription_plan', 'professional');
       });
+
+      // Verify localStorage was set correctly
+      const userLevel = await page.evaluate(() => localStorage.getItem('user_level'));
+      expect(userLevel).toBe('experienced');
     });
 
     test('practice advanced objection handling scenarios', async ({ page }) => {
