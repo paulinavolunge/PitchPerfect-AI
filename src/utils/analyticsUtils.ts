@@ -1,6 +1,7 @@
 
 // Analytics utility for PitchPerfect AI
 import { trackEvent } from './analytics';
+import { secureLog } from './secureLog';
 
 /**
  * Track demo activation events
@@ -8,7 +9,7 @@ import { trackEvent } from './analytics';
  */
 export const trackDemoActivation = (activationType: 'auto' | 'button' | 'scroll') => {
   try {
-    console.log(`Demo activated via: ${activationType}`);
+    secureLog.info(`Demo activated via: ${activationType}`);
     
     // Track event using our analytics utility
     trackEvent('demo_activated', {
@@ -24,7 +25,7 @@ export const trackDemoActivation = (activationType: 'auto' | 'button' | 'scroll'
     });
     localStorage.setItem('demo_activations', JSON.stringify(demoActivations));
   } catch (error) {
-    console.error('Error tracking demo activation:', error);
+    secureLog.error('Error tracking demo activation:', error);
   }
 };
 
@@ -34,11 +35,11 @@ export const trackDemoActivation = (activationType: 'auto' | 'button' | 'scroll'
  */
 export const trackVoiceResponseTime = (responseTimeMs: number) => {
   try {
-    console.log(`Voice response time: ${responseTimeMs}ms`);
+    secureLog.info(`Voice response time: ${responseTimeMs}ms`);
     
     // Alert if response time exceeds SLA
     if (responseTimeMs > 3000) {
-      console.warn(`Voice response time exceeded SLA: ${responseTimeMs}ms`);
+              secureLog.warn(`Voice response time exceeded SLA: ${responseTimeMs}ms`);
       // In production, this would trigger an alert system
     }
     
@@ -48,7 +49,7 @@ export const trackVoiceResponseTime = (responseTimeMs: number) => {
       'exceeded_sla': responseTimeMs > 3000
     });
   } catch (error) {
-    console.error('Error tracking voice response time:', error);
+    secureLog.error('Error tracking voice response time:', error);
   }
 };
 
@@ -60,14 +61,14 @@ export const trackVoiceResponseTime = (responseTimeMs: number) => {
 export const checkTranscriptionConfidence = (confidence: number): boolean => {
   // Track the confidence score
   try {
-    console.log(`Transcription confidence: ${confidence}`);
+    secureLog.info(`Transcription confidence: ${confidence}`);
     
     trackEvent('transcription_confidence', {
       'confidence': confidence,
       'below_threshold': confidence < 0.6
     });
   } catch (error) {
-    console.error('Error tracking transcription confidence:', error);
+    secureLog.error('Error tracking transcription confidence:', error);
   }
   
   // Return whether confidence is below threshold

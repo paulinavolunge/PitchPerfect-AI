@@ -1,4 +1,6 @@
 
+import { secureLog } from './secureLog';
+
 export class PerformanceMetrics {
   private static marks: Map<string, number> = new Map();
   private static measures: Map<string, number> = new Map();
@@ -15,7 +17,7 @@ export class PerformanceMetrics {
     const endTime = endMark ? this.marks.get(endMark) : Date.now();
     
     if (!startTime) {
-      console.warn(`Start mark "${startMark}" not found`);
+      secureLog.warn(`Start mark "${startMark}" not found`);
       return 0;
     }
 
@@ -26,7 +28,7 @@ export class PerformanceMetrics {
       try {
         performance.measure(name, startMark, endMark);
       } catch (error) {
-        console.warn('Performance measure failed:', error);
+        secureLog.warn('Performance measure failed:', error);
       }
     }
 
@@ -98,7 +100,7 @@ export class PerformanceMetrics {
     const metrics = this.getAllMetrics();
     
     // In production, send metrics to analytics service
-    console.log('Performance Metrics:', metrics);
+    secureLog.info('Performance Metrics:', metrics);
     
     // Optional: Send to analytics - check if gtag exists in window
     if (typeof window !== 'undefined' && 'gtag' in window && typeof (window as any).gtag === 'function') {

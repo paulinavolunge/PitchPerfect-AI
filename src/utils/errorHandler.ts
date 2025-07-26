@@ -1,5 +1,6 @@
 
 import { toast } from '@/hooks/use-toast';
+import { secureLog } from './secureLog';
 
 export interface APIError {
   message: string;
@@ -99,7 +100,7 @@ export class ErrorHandler {
     };
 
     // In production, you would send this to an error tracking service
-    console.error('Application Error:', errorInfo);
+    secureLog.error('Application Error:', errorInfo);
   }
 }
 

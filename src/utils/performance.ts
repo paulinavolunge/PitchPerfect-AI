@@ -1,5 +1,6 @@
 
 // Performance utilities for Core Web Vitals optimization
+import { secureLog } from './secureLog';
 export const preloadCriticalResources = () => {
   // Critical resources are already preloaded via Google Fonts
   // No additional font preloading needed
@@ -32,7 +33,7 @@ export const measureWebVitals = () => {
     new PerformanceObserver((list) => {
       const entries = list.getEntries();
       const lastEntry = entries[entries.length - 1];
-      console.log('LCP:', lastEntry.startTime);
+              secureLog.info('LCP:', lastEntry.startTime);
     }).observe({ entryTypes: ['largest-contentful-paint'] });
 
     // Measure Cumulative Layout Shift (CLS)
@@ -43,7 +44,7 @@ export const measureWebVitals = () => {
           clsValue += (entry as any).value;
         }
       }
-      console.log('CLS:', clsValue);
+              secureLog.info('CLS:', clsValue);
     }).observe({ entryTypes: ['layout-shift'] });
   }
 };

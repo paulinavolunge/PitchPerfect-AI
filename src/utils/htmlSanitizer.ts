@@ -1,6 +1,7 @@
 /**
  * HTML sanitization utilities for safe dynamic content
  */
+import { secureLog } from './secureLog';
 
 /**
  * Validates and sanitizes CSS strings for style injection
@@ -95,7 +96,7 @@ export const createSafeStyleProps = (css: string, validator?: (css: string) => s
     const sanitizedCSS = validator ? validator(css) : sanitizeCSSString(css);
     return { __html: sanitizedCSS };
   } catch (error) {
-    console.error('CSS validation failed:', error);
+    secureLog.error('CSS validation failed:', error);
     // Return empty style object as fallback
     return { __html: '' };
   }

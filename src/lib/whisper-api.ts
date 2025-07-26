@@ -1,9 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { secureLog } from '../utils/secureLog';
 
 export const whisperTranscribe = async (audioBlob: Blob): Promise<string> => {
   try {
-    console.log('Starting Whisper transcription, blob size:', audioBlob.size, 'type:', audioBlob.type);
+    secureLog.info('Starting Whisper transcription, blob size:', audioBlob.size, 'type:', audioBlob.type);
     
     // Validate blob
     if (audioBlob.size === 0) {
@@ -29,7 +30,7 @@ export const whisperTranscribe = async (audioBlob: Blob): Promise<string> => {
     }
     
     const base64Audio = btoa(chunks.join(''));
-    console.log('Audio converted to base64, length:', base64Audio.length);
+    secureLog.info('Audio converted to base64, length:', base64Audio.length);
 
     // Call our Supabase Edge Function for transcription
     const { data, error } = await supabase.functions.invoke('voice-to-text', {
@@ -40,7 +41,7 @@ export const whisperTranscribe = async (audioBlob: Blob): Promise<string> => {
     });
 
     if (error) {
-      console.error('Supabase function error:', error);
+      secureLog.error('Supabase function error:', error);
       throw new Error(`Transcription service error: ${error.message}`);
     }
 
@@ -48,10 +49,10 @@ export const whisperTranscribe = async (audioBlob: Blob): Promise<string> => {
       throw new Error('No transcription result received');
     }
 
-    console.log('Transcription successful:', data.text);
+          secureLog.info('Transcription successful:', data.text);
     return data.text.trim();
   } catch (error) {
-    console.error('Whisper transcription failed:', error);
+    secureLog.error('Whisper transcription failed:', error);
     
     // More specific error messages
     if (error instanceof Error) {

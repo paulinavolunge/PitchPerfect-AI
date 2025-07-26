@@ -2,6 +2,7 @@
  * Secure logging utilities for production safety
  * Conditionally logs based on environment and sanitizes sensitive data
  */
+import { secureLog } from './secureLog';
 
 // Environment detection
 const isDevelopment = import.meta.env.DEV || process.env.NODE_ENV === 'development';
@@ -54,9 +55,9 @@ const sanitizeData = (data: any): any => {
  * Secure console.log replacement
  * Only logs in development, sanitizes in production
  */
-export const secureLog = (...args: any[]) => {
+export const secureLogOld = (...args: any[]) => {
   if (isDevelopment) {
-    console.log(...args);
+    secureLog.info(...args);
   } else {
     // In production, could send to secure logging service
     // For now, we silently ignore or could send to monitoring
@@ -69,7 +70,7 @@ export const secureLog = (...args: any[]) => {
  */
 export const secureError = (...args: any[]) => {
   const sanitizedArgs = args.map(sanitizeData);
-  console.error(...sanitizedArgs);
+  secureLog.error(...sanitizedArgs);
 };
 
 /**
@@ -77,10 +78,10 @@ export const secureError = (...args: any[]) => {
  */
 export const secureWarn = (...args: any[]) => {
   if (isDevelopment) {
-    console.warn(...args);
+    secureLog.warn(...args);
   } else {
     const sanitizedArgs = args.map(sanitizeData);
-    console.warn(...sanitizedArgs);
+    secureLog.warn(...sanitizedArgs);
   }
 };
 
@@ -90,7 +91,7 @@ export const secureWarn = (...args: any[]) => {
  */
 export const devLog = (...args: any[]) => {
   if (isDevelopment) {
-    console.log('[DEV]', ...args);
+    secureLog.info('[DEV]', ...args);
   }
 };
 
@@ -103,7 +104,7 @@ export const securityLog = (event: string, data: any = {}) => {
   
   // In production, this would typically go to a security monitoring service
   if (isDevelopment) {
-    console.log(`[SECURITY] ${event}:`, sanitizedData);
+    secureLog.info(`[SECURITY] ${event}:`, sanitizedData);
   }
   
   // Could implement integration with security monitoring services here
