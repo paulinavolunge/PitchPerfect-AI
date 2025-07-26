@@ -84,16 +84,21 @@ test.describe('Sales Professional User Scenarios', () => {
       // Complete additional practice sessions
       for (let i = 0; i < 3; i++) {
         await page.getByRole('button', { name: /Practice Again/i }).click();
-        
+
+        // Wait for practice mode selection to be available
+        await expect(page.locator('[data-testid="mode-selection"]')).toBeVisible();
+
         // Alternate between voice and text
         if (i % 2 === 0) {
           await page.getByRole('button', { name: /Text Mode/i }).click();
+          await expect(page.locator('textarea')).toBeVisible();
           await page.fill('textarea', `Practice response ${i + 2}: I understand your concern about the price. Let me show you the ROI...`);
         } else {
           await page.getByRole('button', { name: /Voice Mode/i }).click();
+          await expect(page.getByRole('button', { name: /Use Sample Recording/i })).toBeVisible();
           await page.getByRole('button', { name: /Use Sample Recording/i }).click();
         }
-        
+
         await page.getByRole('button', { name: /Submit/i }).click();
         await expect(page.locator('[data-testid="ai-feedback"]')).toBeVisible({ timeout: 15000 });
       }
