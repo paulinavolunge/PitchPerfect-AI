@@ -13,7 +13,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:smoke": "playwright test tests/smoke",
     "test:accessibility": "playwright test tests/e2e/accessibility.spec.ts",
-    "audit:rls": "supabase db shell < src/database_rls_audit.sql || echo 'Please ensure Supabase CLI is installed and configured'"
+    "audit:rls": "supabase db shell < src/database_rls_audit.sql || echo 'Please ensure Supabase CLI is installed and configured'",
+    "deploy:supabase": "npx supabase functions deploy all"
   },
   "dependencies": {
     "@capacitor/android": "^7.2.0",
