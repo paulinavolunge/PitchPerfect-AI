@@ -5,8 +5,17 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+
 if (!JWT_SECRET) {
-  console.error('Missing JWT_SECRET in .env');
+  console.error('❌ JWT_SECRET environment variable is required');
+  console.log('💡 Add JWT_SECRET to your .env file');
+  process.exit(1);
+}
+
+if (!SUPABASE_URL) {
+  console.error('❌ VITE_SUPABASE_URL environment variable is required');
+  console.log('💡 Add VITE_SUPABASE_URL to your .env file');
   process.exit(1);
 }
 
@@ -19,7 +28,13 @@ const token = jwt.sign(
   { algorithm: 'HS256' }
 );
 
-fetch('http://127.0.0.1:54321/functions/v1/roleplay-ai-response', {
+const functionUrl = process.env.NODE_ENV === 'production' 
+  ? `${SUPABASE_URL}/functions/v1/roleplay-ai-response`
+  : 'http://127.0.0.1:54321/functions/v1/roleplay-ai-response';
+
+console.log(`Testing endpoint: ${functionUrl}`);
+
+fetch(functionUrl, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
