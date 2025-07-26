@@ -23,8 +23,17 @@ window.addEventListener('unhandledrejection', (event) => {
 // Initialize polyfills
 import { initializePolyfills } from './utils/polyfills';
 import { preloadCriticalResources, measureWebVitals } from './utils/performance';
+import { initSentry } from './utils/sentry';
 
 console.log('[main.tsx] Starting application initialization...');
+
+// Initialize Sentry before anything else
+try {
+  initSentry();
+  console.log('[main.tsx] Sentry initialized');
+} catch (error) {
+  console.error('[main.tsx] Failed to initialize Sentry:', error);
+}
 
 try {
   initializePolyfills();

@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { clearAllSessionData, clearUserSpecificData, initializeCleanSession, validateSessionIsolation } from '@/utils/sessionCleanup';
 import { SafeRPCService } from '@/services/SafeRPCService';
+import { setSentryUser } from '@/utils/sentry';
 
 interface AuthContextType {
   user: User | null;
