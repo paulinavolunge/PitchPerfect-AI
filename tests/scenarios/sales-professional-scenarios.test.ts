@@ -311,6 +311,10 @@ test.describe('Sales Professional User Scenarios', () => {
         localStorage.setItem('team_size', '10');
         localStorage.setItem('subscription_plan', 'enterprise');
       });
+
+      // Verify localStorage was set correctly
+      const userRole = await page.evaluate(() => localStorage.getItem('user_role'));
+      expect(userRole).toBe('team_lead');
     });
 
     test('set up team accounts', async ({ page }) => {
