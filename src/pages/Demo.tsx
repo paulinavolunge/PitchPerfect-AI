@@ -14,9 +14,9 @@ import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Footer from '@/components/Footer';
 
 // Lazy load heavy demo components
-const Footer = lazy(() => import('@/components/Footer'));
 const DemoSandbox = lazy(() => import('@/components/demo/DemoSandbox'));
 const PracticeObjection = lazy(() => import('@/components/demo/PracticeObjection'));
 const WaitlistModal = lazy(() => import('@/components/demo/WaitlistModal'));
@@ -38,8 +38,29 @@ const Demo = () => {
 
   useEffect(() => {
     console.log("Demo component mounted");
-    console.log("Demo page loaded with objection scenario:", objectionScenario);
-    console.log("Guest mode:", isGuestMode, "User:", user);
+    
+    // Preload lazy components to prevent ReferenceError
+    const preloadComponents = async () => {
+      try {
+        await Promise.all([
+          import('@/components/demo/DemoSandbox'),
+          import('@/components/demo/PracticeObjection'),
+          import('@/components/demo/DemoNavigation'),
+        ]);
+        // Preload lower priority components after a delay
+        setTimeout(async () => {
+          await Promise.all([
+            import('@/components/demo/WaitlistModal'),
+            import('@/components/GuestBanner'),
+            import('@/components/WebhookSettings'),
+          ]);
+        }, 500);
+      } catch (error) {
+        console.error('Error preloading demo components:', error);
+      }
+    };
+    
+    preloadComponents();
   }, []);
   
   const handleDemoComplete = (data?: any) => {
@@ -373,9 +394,7 @@ const Demo = () => {
             </div>
           </div>
         </main>
-        <Suspense fallback={<Skeleton className="h-32 w-full" />}>
-          <Footer />
-        </Suspense>
+        <Footer />
 
         <Suspense fallback={null}>
           <WaitlistModal 
