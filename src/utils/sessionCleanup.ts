@@ -8,6 +8,7 @@ export interface UserDataKeys {
   readonly analytics: readonly string[];
   readonly onboarding: readonly string[];
   readonly crm: readonly string[];
+  readonly routing: readonly string[];
 }
 
 // Define all localStorage keys used in the application
@@ -44,6 +45,11 @@ export const USER_DATA_KEYS: UserDataKeys = {
   ] as const,
   crm: [
     'crm_connections'
+  ] as const,
+  routing: [
+    'lastVisitedRoute',
+    'intendedRoute',
+    'routeTimestamp'
   ] as const
 } as const;
 
@@ -93,8 +99,8 @@ export const clearUserSpecificData = (userId?: string): void => {
  * Clear all session data including localStorage and sessionStorage
  * This is a comprehensive cleanup for logout
  */
-export const clearAllSessionData = (preserveConsent: boolean = true): void => {
-  console.log('🧹 Clearing all session data...', { preserveConsent });
+export const clearAllSessionData = (preserveConsent: boolean = true, preserveRouting: boolean = false): void => {
+  console.log('🧹 Clearing all session data...', { preserveConsent, preserveRouting });
 
   // Preserve consent data if requested
   let consentData: Record<string, string | null> = {};
@@ -108,9 +114,25 @@ export const clearAllSessionData = (preserveConsent: boolean = true): void => {
     });
   }
 
-  // Clear all localStorage except preserved consent
+  // Preserve routing data if requested
+  let routingData: Record<string, string | null> = {};
+  if (preserveRouting) {
+    USER_DATA_KEYS.routing.forEach(key => {
+      try {
+        routingData[key] = localStorage.getItem(key);
+      } catch (error) {
+        console.warn(`⚠️ Failed to preserve routing data for ${key}:`, error);
+      }
+    });
+  }
+
+  // Clear all localStorage except preserved data
   try {
-    [...USER_DATA_KEYS.general, ...USER_DATA_KEYS.userSpecific, ...USER_DATA_KEYS.onboarding, ...USER_DATA_KEYS.crm].forEach(key => {
+    const keysToRemove = preserveRouting 
+      ? [...USER_DATA_KEYS.general, ...USER_DATA_KEYS.userSpecific, ...USER_DATA_KEYS.onboarding, ...USER_DATA_KEYS.crm]
+      : [...USER_DATA_KEYS.general, ...USER_DATA_KEYS.userSpecific, ...USER_DATA_KEYS.onboarding, ...USER_DATA_KEYS.crm, ...USER_DATA_KEYS.routing];
+    
+    keysToRemove.forEach(key => {
       localStorage.removeItem(key);
     });
 
@@ -143,6 +165,20 @@ export const clearAllSessionData = (preserveConsent: boolean = true): void => {
           console.log(`✅ Restored consent data: ${key}`);
         } catch (error) {
           console.warn(`⚠️ Failed to restore consent data for ${key}:`, error);
+        }
+      }
+    });
+  }
+
+  // Restore routing data if preserved
+  if (preserveRouting) {
+    Object.entries(routingData).forEach(([key, value]) => {
+      if (value !== null) {
+        try {
+          localStorage.setItem(key, value);
+          console.log(`✅ Restored routing data: ${key}`);
+        } catch (error) {
+          console.warn(`⚠️ Failed to restore routing data for ${key}:`, error);
         }
       }
     });

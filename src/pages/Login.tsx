@@ -16,6 +16,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { getPostLoginRoute } from '@/utils/routePersistence';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -42,8 +43,9 @@ const Login = () => {
     console.log('Login: Auth state check', { user: !!user, loading });
     
     if (user && !loading) {
-      console.log('User already authenticated, redirecting to dashboard');
-      navigate('/dashboard', { replace: true });
+      console.log('User already authenticated, redirecting...');
+      const redirectTo = getPostLoginRoute();
+      navigate(redirectTo, { replace: true });
     }
   }, [user, loading, navigate]);
 
@@ -106,8 +108,9 @@ const Login = () => {
             domain: window.location.hostname
           });
 
-          console.log('Login: Successful sign in, redirecting to dashboard');
-          navigate('/dashboard', { replace: true });
+          console.log('Login: Successful sign in, redirecting...');
+          const redirectTo = getPostLoginRoute();
+          navigate(redirectTo, { replace: true });
 
         } else if (event === 'SIGNED_OUT') {
           setLoginError(null);

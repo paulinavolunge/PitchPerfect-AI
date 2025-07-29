@@ -17,6 +17,8 @@ import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
 import { initializeSecurity } from '@/utils/securityHeaders';
+import { useRoutePersistence } from '@/hooks/useRoutePersistence';
+import SessionRestorer from '@/components/auth/SessionRestorer';
 
 // Page imports
 import Index from '@/pages/Index';
@@ -78,6 +80,7 @@ const queryClient = new QueryClient({
 // Component to handle page tracking and security initialization
 const PageTrackingProvider = ({ children }: { children: React.ReactNode }) => {
   usePageTracking();
+  useRoutePersistence(); // Add route persistence tracking
   
   // Initialize security measures on app start
   React.useEffect(() => {
@@ -134,6 +137,9 @@ function App() {
                           
                           {/* Consent banner for analytics */}
                           <ConsentBanner />
+                          
+                          {/* Session restoration handler */}
+                          <SessionRestorer />
                           
                           <div className="min-h-screen bg-background font-sans antialiased">
                             <Routes>
