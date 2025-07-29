@@ -1,8 +1,9 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { Button } from '@/components/ui/button';
+import { saveIntendedRoute } from '@/utils/routePersistence';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth = true }) => {
   const { user, loading, initError } = useAuth();
   const { isGuestMode } = useGuestMode();
+  const location = useLocation();
 
   // Show loading state
   if (loading) {
@@ -63,6 +65,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth =
 
   // If auth is required and user is not authenticated (and not in guest mode)
   if (requireAuth && !user && !isGuestMode) {
+    // Save the route user was trying to access (including search params)
+    saveIntendedRoute(location.pathname, location.search);
     return <Navigate to="/login" replace />;
   }
 
