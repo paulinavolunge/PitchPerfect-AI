@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,20 +11,46 @@ import { LazySection } from '@/components/LazySection';
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
 import { trackEvent } from '@/utils/analytics';
+import Footer from '@/components/Footer';
+import TrustBadges from '@/components/TrustBadges';
 
 
 // Lazy load heavy components below the fold with prioritization
-const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
 const VideoWalkthrough = lazy(() => import('@/components/VideoWalkthrough'));
 const Testimonials = lazy(() => import('@/components/Testimonials'));
-const TrustBadges = lazy(() => import('@/components/TrustBadges'));
 const CompanyLogos = lazy(() => import('@/components/CompanyLogos'));
 const Features = lazy(() => import('@/components/Features'));
 const HowItWorks = lazy(() => import('@/components/HowItWorks'));
 
 const Index = () => {
   const navigate = useNavigate();
+
+  // Preload lazy components after initial render
+  useEffect(() => {
+    // Preload components to prevent ReferenceError
+    const preloadComponents = async () => {
+      try {
+        await Promise.all([
+          import('@/components/CompanyLogos'),
+          import('@/components/Features'),
+          import('@/components/HowItWorks'),
+        ]);
+        // Preload lower priority components after a delay
+        setTimeout(async () => {
+          await Promise.all([
+            import('@/components/PricingCTA'),
+            import('@/components/VideoWalkthrough'),
+            import('@/components/Testimonials'),
+          ]);
+        }, 1000);
+      } catch (error) {
+        console.error('Error preloading components:', error);
+      }
+    };
+    
+    preloadComponents();
+  }, []);
 
   const handleVoiceTrainingClick = () => {
     console.log("Voice Training button clicked - navigating to /voice-training");
@@ -244,9 +270,7 @@ const Index = () => {
           </div>
 </LazyLoadManager>
 
-<LazyLoadManager priority="low">
-  <Footer />
-</LazyLoadManager>
+<Footer />
 
         </main>
       </div>
