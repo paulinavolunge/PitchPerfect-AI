@@ -1,14 +1,5 @@
-// Polyfill for crypto.getRandomValues in Node for Vite
-import { randomBytes } from 'crypto';
-if (!globalThis.crypto) {
-  globalThis.crypto = {
-    getRandomValues: (array: any) => {
-      const bytes = randomBytes(array.length);
-      array.set(bytes);
-      return array;
-    }
-  } as any;
-}
+// vite.config.ts
+import './vite.polyfill' // ✅ Add this line at the very top before anything else
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
