@@ -1,3 +1,8 @@
+// Polyfill for Node.js crypto.getRandomValues
+if (!globalThis.crypto) {
+  const { webcrypto } = require('crypto')
+  globalThis.crypto = webcrypto
+}
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
