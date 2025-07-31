@@ -1,5 +1,5 @@
 // Polyfill for crypto.getRandomValues in Node for Vite
-const webcrypto = await import('crypto').then((m) => m.webcrypto);
+import { webcrypto } from 'crypto';
 if (!globalThis.crypto) {
   globalThis.crypto = webcrypto;
 }
