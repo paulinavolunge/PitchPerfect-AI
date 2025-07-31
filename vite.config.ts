@@ -9,7 +9,8 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-export default async function defineViteConfig({ mode }) {
+export default async function defineViteConfig({ mode }: { mode: 'development' | 'production' | 'test' }) {
+
   const isProduction = mode === 'production';
   const isDevelopment = mode === 'development';
 
