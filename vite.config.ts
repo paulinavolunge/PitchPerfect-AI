@@ -1,7 +1,13 @@
 // Polyfill for crypto.getRandomValues in Node for Vite
-import { webcrypto } from 'crypto';
+import { randomBytes } from 'crypto';
 if (!globalThis.crypto) {
-  globalThis.crypto = webcrypto;
+  globalThis.crypto = {
+    getRandomValues: (array: any) => {
+      const bytes = randomBytes(array.length);
+      array.set(bytes);
+      return array;
+    }
+  } as any;
 }
 
 import { defineConfig } from "vite";
