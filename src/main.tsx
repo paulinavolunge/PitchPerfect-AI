@@ -1,9 +1,7 @@
-
-import React from 'react';
+import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-
 
 // Global error handler
 window.addEventListener('error', (event) => {
@@ -58,25 +56,32 @@ function RootErrorFallback({ error }: { error: Error }) {
   );
 }
 
-class RootErrorBoundary extends React.Component<{
-  children: React.ReactNode
-}, { hasError: boolean, error?: Error }> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: undefined };
+function RootErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [error, setError] = React.useState<Error | null>(null);
+
+  React.useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      setError(event.error);
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      setError(new Error(event.reason));
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
+  if (error) {
+    return <RootErrorFallback error={error} />;
   }
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error: Error, info: any) {
-    console.error('[RootErrorBoundary] App failed to load:', error, info);
-  }
-  render() {
-    if (this.state.hasError && this.state.error) {
-      return <RootErrorFallback error={this.state.error} />;
-    }
-    return this.props.children;
-  }
+
+  return <>{children}</>;
 }
 
 const root = ReactDOM.createRoot(

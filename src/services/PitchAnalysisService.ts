@@ -45,7 +45,7 @@ export class PitchAnalysisService {
       return;
     }
 
-    this.analyser.getFloatTimeDomainData(this.dataArray);
+    this.analyser.getFloatTimeDomainData(this.dataArray as Float32Array);
     
     // Process audio data for pitch detection
     if (this.onAnalysisCallback) {
