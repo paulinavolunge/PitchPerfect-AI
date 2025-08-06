@@ -1,23 +1,23 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { SecurityMonitoringService } from '@/services/SecurityMonitoringService';
 
 interface Props {
-  children: ReactNode;
-  fallback?: (props: { error: Error; retry: () => void }) => ReactNode;
+  children: React.ReactNode;
+  fallback?: (props: { error: Error; retry: () => void }) => React.ReactNode;
   fallbackMessage?: string;
 }
 
 interface State {
   hasError: boolean;
   error?: Error;
-  errorInfo?: ErrorInfo;
+  errorInfo?: React.ErrorInfo;
   errorId: string;
 }
 
-class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { 
@@ -30,7 +30,7 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({
       error,
       errorInfo

@@ -1,5 +1,5 @@
-
-import { toast } from "sonner";
+import * as React from "react"
+import { Toaster as Sonner, toast } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
@@ -23,8 +23,5 @@ const Toaster = ({ ...props }: ToasterProps) => {
     />
   );
 };
-
-// Import Sonner directly in the component to resolve circular dependency
-import { Toaster as Sonner } from "sonner";
 
 export { Toaster, toast };
