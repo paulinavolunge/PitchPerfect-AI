@@ -17,6 +17,7 @@
     "deploy:supabase": "npx supabase functions deploy all"
   },
   "devDependencies": {
+    "@vitejs/plugin-react-swc": "^3.11.0",
     "vite": "^7.0.6"
   }
 }
