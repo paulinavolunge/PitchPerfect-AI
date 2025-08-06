@@ -16,5 +16,7 @@
     "audit:rls": "supabase db shell < src/database_rls_audit.sql || echo 'no audit file found'",
     "deploy:supabase": "npx supabase functions deploy all"
   },
-  "dependencies": {}
+  "devDependencies": {
+    "vite": "^7.0.6"
+  }
 }
