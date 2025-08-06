@@ -11,7 +11,7 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
   const isProduction = mode === 'production';
   const isDevelopment = mode === 'development';
 
-  console.log('Vite config mode:', mode, { isProduction, isDevelopment });
+  console.log('Vite config mode (restarted):', mode, { isProduction, isDevelopment });
 
   return defineConfig({
     server: {

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Medal, Users, ChartBarIncreasing } from 'lucide-react';
+import { Medal, Users, TrendingUp } from 'lucide-react';
 
 // Sample data for demonstration purposes
 // In a real app, this would come from database/API
@@ -39,7 +39,7 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({ showImprovementOnly
           Team Leaderboard
         </CardTitle>
         <div className="text-sm text-brand-dark/70 flex items-center gap-1.5">
-          <ChartBarIncreasing className="h-4 w-4" />
+          <TrendingUp className="h-4 w-4" />
           <span>By Improvement</span>
         </div>
       </CardHeader>

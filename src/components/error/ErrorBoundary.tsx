@@ -1,4 +1,3 @@
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -69,48 +68,44 @@ class ErrorBoundary extends Component<Props, State> {
         });
       }
 
-      const errorMessage = this.props.fallbackMessage || 
-        'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.';
-
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-4" role="alert">
-          <div className="max-w-md w-full">
-            <Alert variant="destructive" id={this.state.errorId}>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="max-w-md w-full mx-4">
+            <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Something went wrong</AlertTitle>
               <AlertDescription className="mt-2">
-                {errorMessage}
+                {this.props.fallbackMessage || 
+                  "We encountered an unexpected error. This has been logged and our team will investigate."}
               </AlertDescription>
             </Alert>
             
-            <div className="mt-4 flex gap-2" role="group" aria-labelledby="error-actions">
-              <span id="error-actions" className="sr-only">Error recovery actions</span>
+            <div className="mt-6 flex gap-3">
               <Button 
-                onClick={this.handleRetry} 
-                className="flex items-center gap-2"
-                aria-describedby={this.state.errorId}
-                aria-label="Try to recover from the error"
+                onClick={this.handleRetry}
+                variant="default"
+                className="flex-1"
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
               </Button>
               <Button 
-                variant="outline" 
                 onClick={this.handleRefresh}
-                aria-label="Refresh the entire page"
+                variant="outline"
+                className="flex-1"
               >
                 Refresh Page
               </Button>
             </div>
-            
+
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mt-4 p-4 bg-gray-100 rounded text-sm">
-                <summary className="font-medium cursor-pointer">
-                  Error Details (Development Mode)
+              <details className="mt-4 p-4 bg-gray-100 rounded-lg">
+                <summary className="cursor-pointer font-medium">
+                  Error Details (Development)
                 </summary>
-                <pre className="mt-2 whitespace-pre-wrap text-xs overflow-auto max-h-40">
+                <pre className="mt-2 text-xs overflow-auto">
                   {this.state.error.toString()}
-                  {this.state.errorInfo && this.state.errorInfo.componentStack}
+                  {this.state.errorInfo?.componentStack}
                 </pre>
               </details>
             )}

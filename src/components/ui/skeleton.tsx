@@ -1,15 +1,12 @@
-
 import { cn } from "@/lib/utils";
-
-interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "card" | "text" | "avatar" | "button";
-}
 
 function Skeleton({
   className,
   variant = "default",
   ...props
-}: SkeletonProps) {
+}: React.HTMLAttributes<HTMLDivElement> & {
+  variant?: "default" | "card" | "text" | "avatar" | "button";
+}) {
   return (
     <div
       className={cn(
