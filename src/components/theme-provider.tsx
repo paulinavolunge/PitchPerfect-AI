@@ -6,7 +6,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes"
 export function ThemeProvider({ 
   children, 
   ...props 
-}: { children: React.ReactNode; [key: string]: any }) {
+}: React.ComponentProps<typeof NextThemesProvider>) {
   // Force light mode only, no theme switching
   return (
     <NextThemesProvider 

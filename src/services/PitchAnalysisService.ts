@@ -23,7 +23,8 @@ export class PitchAnalysisService {
       const source = this.audioContext.createMediaStreamSource(stream);
       source.connect(this.analyser);
       
-      this.dataArray = new Float32Array(this.analyser.fftSize);
+      const arrayBuffer = new ArrayBuffer(this.analyser.fftSize * 4);
+      this.dataArray = new Float32Array(arrayBuffer);
       
     } catch (error) {
       throw new Error(`Failed to initialize pitch analysis: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -45,7 +46,7 @@ export class PitchAnalysisService {
       return;
     }
 
-    this.analyser.getFloatTimeDomainData(this.dataArray as Float32Array);
+    this.analyser.getFloatTimeDomainData(this.dataArray as any);
     
     // Process audio data for pitch detection
     if (this.onAnalysisCallback) {

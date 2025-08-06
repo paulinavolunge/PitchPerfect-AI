@@ -263,13 +263,14 @@ const Tips = () => {
           {salesTips.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {salesTips.map((tip, index) => (
-                <AISuggestionCard
-                  key={index}
-                  title={tip.title}
-                  description={tip.description}
-                  type={tip.type as 'tip' | 'script'}
-                  onApply={handleApplyTipOrScript}
-                />
+                <div key={index}>
+                  <AISuggestionCard
+                    title={tip.title}
+                    description={tip.description}
+                    type={tip.type as 'tip' | 'script'}
+                    onApply={handleApplyTipOrScript}
+                  />
+                </div>
               ))}
             </div>
           ) : (

@@ -28,7 +28,7 @@ const ScriptUpload: React.FC<ScriptUploadProps> = ({ onScriptUpload }) => {
         
         // Convert file to buffer
         const arrayBuffer = await file.arrayBuffer();
-        const buffer = new Uint8Array(arrayBuffer);
+        const buffer = Buffer.from(arrayBuffer);
         
         // Parse PDF
         const data = await pdfParse(buffer);
