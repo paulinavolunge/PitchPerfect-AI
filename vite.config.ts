@@ -4,7 +4,7 @@ import './vite.polyfill' // ✅ Add this line at the very top before anything el
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
+// import { componentTagger } from "lovable-tagger";
 
 export default async function defineViteConfig({ mode }: { mode: 'development' | 'production' | 'test' }) {
 
@@ -20,8 +20,6 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
     },
     plugins: [
       react(),
-      // Only include the Lovable tagger in development mode
-      !isProduction && isDevelopment && componentTagger(),
     ].filter(Boolean),
     resolve: {
       alias: {
