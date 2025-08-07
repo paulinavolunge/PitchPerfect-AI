@@ -49,7 +49,7 @@ export default defineConfig({
   ],
   webServer: process.env.CI ? undefined : {
     command: 'npm run dev',
-    port: 5173,
+    port: 8080,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
     stderr: 'pipe',
