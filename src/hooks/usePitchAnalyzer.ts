@@ -28,7 +28,7 @@ export const usePitchAnalyzer = (
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
-  const dataArrayRef = useRef<Float32Array | null>(null);
+  const dataArrayRef = useRef<Float32Array<ArrayBuffer> | null>(null);
 
   // Robust auto-correlation pitch detection algorithm
   const autoCorrelate = useCallback((buffer: Float32Array, sampleRate: number): PitchData => {
@@ -138,8 +138,8 @@ export const usePitchAnalyzer = (
       sourceRef.current.connect(analyserRef.current);
       
       // Initialize data array
-      dataArrayRef.current = new Float32Array(analyserRef.current.fftSize);
-      
+      const buf = new ArrayBuffer(analyserRef.current.fftSize * Float32Array.BYTES_PER_ELEMENT);
+      dataArrayRef.current = new Float32Array(buf);
       // Store stream reference
       streamRef.current = stream;
       
