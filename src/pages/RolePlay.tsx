@@ -11,6 +11,7 @@ import { Link, useLocation } from 'react-router-dom';
 import ConversationInterface from '@/components/roleplay/ConversationInterface';
 import ScenarioSelector from '@/components/roleplay/ScenarioSelector';
 import ScriptUpload from '@/components/roleplay/ScriptUpload';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 const RolePlay = () => {
   const location = useLocation();
@@ -46,35 +47,37 @@ const RolePlay = () => {
   if (sessionStarted) {
     return (
       <ResponsiveLayout>
-        <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
-          <div className="mb-4 sm:mb-6">
-            <Link 
-              to="/roleplay" 
-              className="inline-flex items-center text-brand-blue hover:text-brand-blue-dark mb-3 sm:mb-4"
-              onClick={() => setSessionStarted(false)}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Setup
-            </Link>
-            
-            <div className="bg-blue-50 border-l-4 border-blue-300 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-              <h2 className="font-semibold text-brand-dark mb-1 sm:mb-2 text-sm sm:text-base">
-                Practice Session: {scenario.industry} - {scenario.objection} Objection
-              </h2>
-              <p className="text-xs sm:text-sm text-brand-dark/70">
-                Difficulty: {scenario.difficulty} | Mode: {mode} | Voice Style: {voiceStyle}
-              </p>
+        <ErrorBoundary fallbackMessage="An error occurred during the roleplay session. Please refresh the page to try again.">
+          <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
+            <div className="mb-4 sm:mb-6">
+              <Link 
+                to="/roleplay" 
+                className="inline-flex items-center text-brand-blue hover:text-brand-blue-dark mb-3 sm:mb-4"
+                onClick={() => setSessionStarted(false)}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Setup
+              </Link>
+              
+              <div className="bg-blue-50 border-l-4 border-blue-300 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                <h2 className="font-semibold text-brand-dark mb-1 sm:mb-2 text-sm sm:text-base">
+                  Practice Session: {scenario.industry} - {scenario.objection} Objection
+                </h2>
+                <p className="text-xs sm:text-sm text-brand-dark/70">
+                  Difficulty: {scenario.difficulty} | Mode: {mode} | Voice Style: {voiceStyle}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <ConversationInterface
-            mode={mode}
-            scenario={scenario}
-            voiceStyle={voiceStyle}
-            volume={volume[0]}
-            userScript={userScript}
-          />
-        </div>
+            <ConversationInterface
+              mode={mode}
+              scenario={scenario}
+              voiceStyle={voiceStyle}
+              volume={volume[0]}
+              userScript={userScript}
+            />
+          </div>
+        </ErrorBoundary>
       </ResponsiveLayout>
     );
   }

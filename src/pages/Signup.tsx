@@ -60,7 +60,7 @@ const Signup = () => {
           data: {
             full_name: formData.fullName,
           },
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          emailRedirectTo: `${window.location.origin}/email-confirmed`
         }
       });
 
