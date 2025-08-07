@@ -4,7 +4,6 @@ import './vite.polyfill' // ✅ Add this line at the very top before anything el
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default async function defineViteConfig({ mode }: { mode: 'development' | 'production' | 'test' }) {
@@ -23,8 +22,7 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
     plugins: [
       tsconfigPaths(),
       react(),
-      mode === 'development' && componentTagger(),
-    ].filter(Boolean),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

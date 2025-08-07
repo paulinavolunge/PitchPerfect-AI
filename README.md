@@ -181,3 +181,35 @@ To run from source:
 # Go >= 1.22
 go run . help
 ```
+
+---
+
+## Runbook
+
+Environment
+- Configure environment variables in Netlify > Site settings > Build & deploy > Environment:
+  - SUPABASE_URL, SUPABASE_ANON_KEY
+  - OPENAI_API_KEY (if using AI features)
+  - STRIPE_SECRET_KEY and price IDs (if using billing)
+  - See .env.example for a reference list.
+
+Local Development
+- Install: npm ci
+- Dev server: npm run dev (Vite on http://localhost:8080)
+- Build: npm run build
+
+Testing
+- E2E: npm run test:e2e
+- UI runner: npm run test:e2e:ui
+- Smoke subset: npm run test:smoke
+- Reports: npm run test:e2e:report
+
+CI
+- Playwright runs on every push/PR to main/master
+- Lighthouse CI scheduled daily and manual trigger via Actions tab
+
+Deploy
+- Netlify auto-deploys from main
+- Security headers delivered via netlify.toml
+- Verify headers in DevTools > Network > Response headers
+
