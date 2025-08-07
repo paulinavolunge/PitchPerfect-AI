@@ -76,13 +76,17 @@ export class VoiceInputSecurity {
       audioBlob = null;
     }
     
-    // Clear any audio elements or contexts if they exist
+    // Secure cleanup of audio elements
     if (typeof window !== 'undefined') {
       const audioElements = document.querySelectorAll('audio');
       audioElements.forEach(element => {
-        element.pause();
-        element.src = '';
-        element.load();
+        try {
+          element.pause();
+          element.src = '';
+          element.load();
+        } catch (error) {
+          // Silently handle cleanup errors
+        }
       });
     }
   }

@@ -72,7 +72,7 @@ export const checkVoiceRateLimit = async (
       .from('voice_rate_limits')
       .upsert({
         user_id: userId,
-        ip_address: '127.0.0.1', // Will be updated by RLS if available
+        ip_address: 'unknown', // Will be detected server-side
         request_count: (data?.request_count || 0) + 1,
         window_start: data?.window_start || now,
         updated_at: now

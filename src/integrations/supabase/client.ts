@@ -10,7 +10,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase configuration is missing');
 }
 
-console.log('[Supabase] Initializing client with URL:', supabaseUrl);
+// Only log in development mode, never in production
+if (import.meta.env.DEV) {
+  console.log('[Supabase] Initializing client');
+}
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -50,4 +53,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-console.log('[Supabase] Client initialized successfully');
+// Only log in development mode
+if (import.meta.env.DEV) {
+  console.log('[Supabase] Client initialized successfully');
+}

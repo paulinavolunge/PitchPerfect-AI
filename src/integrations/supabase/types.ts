@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       auth_rate_limits: {
         Row: {
           blocked_until: string | null
@@ -598,6 +631,14 @@ export type Database = {
       is_verified_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      log_admin_activity: {
+        Args: {
+          p_action_type: string
+          p_target_user_id?: string
+          p_details?: Json
+        }
+        Returns: undefined
       }
       log_security_event: {
         Args: {

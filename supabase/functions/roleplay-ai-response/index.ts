@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://yourdomain.com',
+  'Access-Control-Allow-Origin': 'https://pitchperfectai.ai',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
@@ -38,6 +38,16 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
+    const rawBody = await req.text();
+    
+    // Validate request body size (max 10MB for chat)
+    if (rawBody.length > 10 * 1024 * 1024) {
+      return new Response(
+        JSON.stringify({ error: 'Request body too large' }),
+        { status: 413, headers: corsHeaders }
+      );
+    }
+
     const { 
       userInput, 
       scenario, 
@@ -45,7 +55,7 @@ serve(async (req) => {
       userScript, 
       conversationHistory = [],
       isReversedRole = false 
-    } = await req.json();
+    } = JSON.parse(rawBody);
 
     console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole });
 

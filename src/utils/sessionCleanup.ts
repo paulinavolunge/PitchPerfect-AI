@@ -187,11 +187,18 @@ export const initializeCleanSession = (newUserId: string): void => {
  * This can be used in development to ensure proper cleanup
  */
 export const validateSessionIsolation = (currentUserId?: string): boolean => {
+  // Always validate in production, optional in development
+  const shouldValidate = import.meta.env.PROD || import.meta.env.DEV;
+  
+  if (!shouldValidate) {
+    return true;
+  }
+
   const potentialLeaks: string[] = [];
 
   // Check for user-specific keys that don't match current user
   Object.keys(localStorage).forEach(key => {
-    if (key.includes('user_') || key.includes('streak_') || key.includes('progress_')) {
+    if (key.includes('user_') || key.includes('streak_') || key.includes('progress_') || key.includes('auth_')) {
       if (currentUserId && !key.includes(currentUserId)) {
         potentialLeaks.push(key);
       } else if (!currentUserId) {
@@ -211,6 +218,16 @@ export const validateSessionIsolation = (currentUserId?: string): boolean => {
 
   if (potentialLeaks.length > 0) {
     console.warn('🚨 Potential data leaks detected:', potentialLeaks);
+    // Auto-cleanup in production
+    if (import.meta.env.PROD) {
+      potentialLeaks.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          console.warn(`Failed to clean up leaked data: ${key}`, error);
+        }
+      });
+    }
     return false;
   }
 
