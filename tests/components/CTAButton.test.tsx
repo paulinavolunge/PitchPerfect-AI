@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { render, screen, fireEvent } from '@/utils/testUtils';
-import CTAButton from '@/components/ui/cta-button';
+import { render, screen, fireEvent } from '../../src/utils/testUtils';
+import CTAButton from '../../src/components/ui/cta-button';
 
 describe('CTAButton', () => {
   it('renders correctly with default props', () => {

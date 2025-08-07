@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["@testing-library/jest-dom"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../src/**/*"],
+  "exclude": ["node_modules"]
+}

@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { render, screen, fireEvent } from '@/utils/testUtils';
-import ErrorBoundary from '@/components/error/ErrorBoundary';
+import { render, screen, fireEvent } from '../../src/utils/testUtils';
+import ErrorBoundary from '../../src/components/error/ErrorBoundary';
 
 // Component that throws an error
 const ThrowError: React.FC<{ shouldThrow: boolean }> = ({ shouldThrow }) => {
