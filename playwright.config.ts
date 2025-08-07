@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
+  testMatch: ['**/tests/e2e/**/*.spec.ts', '**/tests/smoke/**/*.spec.ts'],
+  testIgnore: ['**/tests/components/**'],
 
   // Longer timeouts on CI
   timeout: process.env.CI ? 60_000 : 30_000,
@@ -18,7 +20,7 @@ export default defineConfig({
     // In CI hit the real site; locally hit Vite on 8080
     baseURL: process.env.CI
       ? 'https://pitchperfectai.ai'
-      : process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080',
+      : 'http://localhost:8080',
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
@@ -44,10 +46,7 @@ export default defineConfig({
     : {
         command: 'npm run dev',
         port: 8080,
-        reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
-        stderr: 'pipe',
-        stdout: 'pipe',
-        env: { PORT: '8080' }, // harmless if Vite already sets this
+        reuseExistingServer: true,
+        timeout: 180000,
       },
 });
