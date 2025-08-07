@@ -11,7 +11,7 @@ const corsHeaders = {
 
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) throw new Error('Missing authorization token');
+  if (!token) return null; // Allow guest users
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -19,7 +19,7 @@ const verifyAuth = async (request: Request) => {
   );
 
   const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error('Invalid token');
+  if (error || !user) return null; // Return null instead of throwing
 
   return user;
 };
@@ -31,9 +31,14 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
+    // Verify authentication (optional for demo)
     const user = await verifyAuth(req);
-    console.log('Authenticated user:', user.id);
+    if (user) {
+      console.log('Authenticated user:', user.id);
+    } else {
+      console.log('Guest user accessing demo');
+    }
+    
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
@@ -41,7 +46,7 @@ serve(async (req) => {
 
     const { response, inputType } = await req.json();
 
-    console.log('Demo feedback request:', { response, inputType });
+    console.log('Demo feedback request:', { response, inputType, isGuest: !user });
 
     const systemPrompt = `You are an expert sales coach providing feedback on demo responses. 
 
@@ -102,17 +107,6 @@ Focus on sales communication best practices:
 
   } catch (error) {
     console.error('Error in demo-feedback function:', error);
-    
-    // Handle authentication errors
-    if (error.message?.includes('authorization') || error.message?.includes('token')) {
-      return new Response(JSON.stringify({ 
-        error: 'Authentication required',
-        code: 'AUTH_ERROR'
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
     
     // Provide a fallback response
     const fallbackFeedback = "Great effort! Your response shows good understanding of the value proposition. Consider adding a specific example or case study to make your pitch even more compelling.";

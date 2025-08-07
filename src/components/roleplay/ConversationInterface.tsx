@@ -15,6 +15,7 @@ import { VoiceRecordingManager, startRealTimeSpeechRecognition, processVoiceInpu
 import { markPracticeComplete } from '@/utils/practiceCompletionHandler';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 interface Message {
   id: string;
