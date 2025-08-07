@@ -10,13 +10,14 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
 
   const isProduction = mode === 'production';
   const isDevelopment = mode === 'development';
+  const isTest = mode === 'test';
 
-  console.log('Vite config mode (restarted):', mode, { isProduction, isDevelopment });
+  console.log('Vite config mode (restarted):', mode, { isProduction, isDevelopment, isTest });
 
   return defineConfig({
     server: {
       host: "::",
-      port: 8080,
+      port: isTest ? 5173 : 8080,
     },
     plugins: [
       react(),

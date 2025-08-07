@@ -92,7 +92,7 @@ const Index = () => {
         <Navbar />
         
         <main>
-        <section id="main-content" className="pt-16 sm:pt-24 pb-12 sm:pb-16 relative overflow-hidden" role="main" aria-labelledby="hero-heading">
+        <section id="main-content" className="pt-16 sm:pt-24 pb-12 sm:pb-16 relative overflow-hidden" role="main" aria-labelledby="hero-heading" data-onboarding="hero">
           <div className="container mx-auto px-4 text-center relative z-10">
             <Badge className="mb-4 sm:mb-6 bg-primary-50 text-primary-700 border-primary-200 font-medium text-sm">
               <Sparkles className="h-3 w-3 mr-1" />

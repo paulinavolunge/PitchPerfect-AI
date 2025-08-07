@@ -13,10 +13,11 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [['github'], ['html']] : 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.CI ? 'https://pitchperfectai.ai' : 'http://localhost:5173',
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    ignoreHTTPSErrors: true,
   },
   projects: [
     {
@@ -46,7 +47,7 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
+  webServer: process.env.CI ? undefined : {
     command: 'npm run dev',
     port: 5173,
     reuseExistingServer: !process.env.CI,

@@ -258,6 +258,7 @@ const Signup = () => {
                   <input
                     type="email"
                     name="email"
+                    data-testid="email-input"
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
@@ -274,6 +275,7 @@ const Signup = () => {
                   <input
                     type="password"
                     name="password"
+                    data-testid="password-input"
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Create a password"
@@ -286,6 +288,7 @@ const Signup = () => {
 
               <Button 
                 type="submit"
+                data-testid="signup-submit"
                 className="w-full bg-brand-green hover:bg-brand-green/90"
                 disabled={isLoading || isGoogleLoading}
               >

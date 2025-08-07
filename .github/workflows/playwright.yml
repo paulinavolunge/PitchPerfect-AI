@@ -25,7 +25,9 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
 
       - name: Run Playwright tests
-        run: npx playwright test smoke/ --reporter=html
+        run: npm run test:smoke
+        env:
+          CI: true
 
       - name: Upload Playwright report
         if: always()
