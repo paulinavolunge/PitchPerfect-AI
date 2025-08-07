@@ -41,23 +41,34 @@ export function initCSPViolationReporting() {
   });
 }
 
-// Apply security headers to meta tags (for client-side enforcement)
+// Apply only meta-compatible security headers (limited CSP without problematic directives)
 export function applySecurityMetaTags() {
   const head = document.head;
   
-  // CSP meta tag
+  // CSP meta tag - only include directives that work in meta tags
+  const metaCompatibleCSP = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net https://cdn.gpteng.co https://www.youtube.com https://youtube.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: https:",
+    "connect-src 'self' https: wss: https://*.supabase.co",
+    "media-src 'self' blob: https:",
+    "font-src 'self' https://fonts.gstatic.com",
+    "frame-src 'self' https://www.youtube.com https://youtube.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "upgrade-insecure-requests",
+    "block-all-mixed-content"
+    // Note: frame-ancestors, report-uri, and other HTTP-only directives removed
+  ].join('; ');
+  
   const cspMeta = document.createElement('meta');
   cspMeta.httpEquiv = 'Content-Security-Policy';
-  cspMeta.content = SECURITY_HEADERS['Content-Security-Policy'];
+  cspMeta.content = metaCompatibleCSP;
   head.appendChild(cspMeta);
   
-  // X-Frame-Options
-  const frameMeta = document.createElement('meta');
-  frameMeta.httpEquiv = 'X-Frame-Options';
-  frameMeta.content = SECURITY_HEADERS['X-Frame-Options'];
-  head.appendChild(frameMeta);
-  
-  // Referrer Policy
+  // Referrer Policy (this one works in meta tags)
   const referrerMeta = document.createElement('meta');
   referrerMeta.name = 'referrer';
   referrerMeta.content = 'strict-origin-when-cross-origin';
