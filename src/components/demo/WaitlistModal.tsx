@@ -55,8 +55,8 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
         description: "Check your inbox for your pitch recap (first a quick confirmation, then the full PDF).",
       });
       
-      // Send immediate confirmation email
-      await sendImmediateConfirmation(email);
+      // Send immediate confirmation email (with optional session data)
+      await sendImmediateConfirmation(email, sessionData);
       
       // Send data to waitlist
       await addToWaitlist(email);

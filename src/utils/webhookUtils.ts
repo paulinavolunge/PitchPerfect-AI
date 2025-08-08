@@ -1,4 +1,6 @@
 
+import { supabase } from '@/integrations/supabase/client';
+
 /**
  * Utility functions for webhook integrations
  */
@@ -127,50 +129,55 @@ export const sendSessionToCRM = async (
  * @param email - The user's email address
  * @returns Promise resolving to the webhook response
  */
-export const sendImmediateConfirmation = async (email: string): Promise<{ success: boolean; message: string }> => {
+export const sendImmediateConfirmation = async (
+  email: string,
+  sessionData?: SessionData
+): Promise<{ success: boolean; message: string }> => {
   try {
-    // Get whatever webhook URL is configured for notifications
-    const webhookUrl = getWebhookUrl("zapier") || getWebhookUrl("custom");
-    
+    // Prefer using Supabase Edge Function to send email via Resend
+    const { data, error } = await supabase.functions.invoke('send-feedback-email', {
+      body: { email, sessionData },
+    });
+
+    if (!error) {
+      return { success: true, message: 'Confirmation email sent' };
+    }
+
+    console.warn('Edge function failed, falling back to webhook:', error?.message || error);
+
+    // Fallback: use configured webhook if available (Zapier or Custom)
+    const webhookUrl = getWebhookUrl('zapier') || getWebhookUrl('custom');
     if (!webhookUrl) {
-      console.warn("No webhook URL configured for immediate notifications");
-      return { 
-        success: false, 
-        message: "No webhook URL configured for immediate notifications" 
+      return {
+        success: false,
+        message: 'No email mechanism configured',
       };
     }
-    
-    // Create a transactional email payload
+
     const payload = {
       email,
-      subject: "Your PitchPerfect AI Recap is Being Generated",
-      messageType: "immediate_confirmation",
+      subject: 'Your PitchPerfect AI Recap is Being Generated',
+      messageType: 'immediate_confirmation',
       timestamp: new Date().toISOString(),
-      message: "Thank you for using PitchPerfect AI! Your pitch recap PDF is being generated and will be sent to you shortly.",
-      priority: "high"
+      message:
+        'Thank you for using PitchPerfect AI! Your pitch recap PDF is being generated and will be sent to you shortly.',
+      priority: 'high',
+      sessionData,
     };
-    
-    console.log("Sending immediate confirmation via webhook:", payload);
-    
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-      mode: "no-cors" // Add this to handle CORS
+      mode: 'no-cors',
     });
-    
-    // Since we're using no-cors, we won't get a proper response status
-    return { 
-      success: true, 
-      message: "Confirmation email request sent" 
-    };
+
+    return { success: true, message: 'Confirmation email request sent via webhook' };
   } catch (error) {
-    console.error("Error sending immediate confirmation:", error);
-    return { 
-      success: false, 
-      message: `Error: ${error instanceof Error ? error.message : String(error)}` 
+    console.error('Error sending immediate confirmation:', error);
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 };

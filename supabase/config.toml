@@ -338,3 +338,7 @@ verify_jwt = true
 [functions.voice-to-text]
 enabled = true
 verify_jwt = true
+
+[functions.send-feedback-email]
+enabled = true
+verify_jwt = false
