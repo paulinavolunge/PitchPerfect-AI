@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, startTransition } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import LazyLoadManager from '@/components/optimized/LazyLoadManager';
@@ -51,7 +51,7 @@ const Demo = () => {
     
     // Only show the waitlist modal for non-guest users
     if (!isGuestMode) {
-      setShowWaitlistModal(true);
+      startTransition(() => setShowWaitlistModal(true));
     }
     
     // Then send the data to CRM via webhook
@@ -304,7 +304,7 @@ const Demo = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setShowWebhookSettings(true)}
+                    onClick={() => startTransition(() => setShowWebhookSettings(true))}
                     className="flex items-center gap-1"
                   >
                     <Settings className="h-4 w-4" />
