@@ -432,7 +432,7 @@ const EnhancedFeedbackDisplay: React.FC<EnhancedFeedbackDisplayProps> = ({
                   </p>
                 </div>
                 <div className="text-right">
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={onClose} aria-label="Continue practicing and close feedback">
                     Continue Practicing
                   </Button>
                 </div>
