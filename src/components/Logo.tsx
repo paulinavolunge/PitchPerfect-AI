@@ -15,9 +15,9 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
   };
 
   const imageSizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10 md:w-12 md:h-12',
-    lg: 'w-12 h-12 md:w-14 md:h-14'
+    sm: 'h-7 w-auto',
+    md: 'h-8 md:h-10 w-auto',
+    lg: 'h-10 md:h-12 w-auto'
   };
 
   return (
@@ -37,7 +37,7 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
         decoding="async"
       />
       <span className="font-bold whitespace-nowrap">
-        Pitch<span className="text-blue-600 dark:text-green-500">Perfect</span> AI
+        Pitch<span className="text-primary">Perfect</span> AI
       </span>
     </div>
   );
