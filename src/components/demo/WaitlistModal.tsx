@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  
   
   // Default to "zapier" but check other providers if zapier is not configured
   const determineCRMProvider = (): CRMProvider => {
@@ -82,9 +82,8 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
           });
       }
       
-      // Close modal and navigate
+      // Close modal
       onOpenChange(false);
-      navigate('/signup');
     } catch (error) {
       console.error('Error processing request:', error);
       toast({
@@ -109,7 +108,7 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-brand-dark">
+            <label htmlFor="email" className="text-sm font-medium text-foreground">
               Email address
             </label>
             <Input
@@ -126,15 +125,16 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
           <DialogFooter className="pt-2">
             <Button 
               type="submit"
-              className="bg-brand-blue hover:bg-brand-blue/90 text-white w-full"
+              variant="default"
+              className="w-full"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Sending..." : "Send Me the Recap"}
             </Button>
           </DialogFooter>
           
-          <div className="text-center text-sm text-brand-dark/60">
-            <p>You can also <a href="/signup" className="text-brand-blue hover:underline">sign up</a> for a free account now</p>
+          <div className="text-center text-sm text-muted-foreground">
+            <p>You can also <a href="/signup" className="text-primary hover:underline">sign up</a> for a free account now</p>
           </div>
         </form>
       </DialogContent>
