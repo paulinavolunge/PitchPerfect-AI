@@ -44,6 +44,7 @@ const ConversationInterface = ({
   volume = 75,
   userScript
 }: ConversationInterfaceProps) => {
+  const [activeMode, setActiveMode] = useState<'voice' | 'text' | 'hybrid'>(mode);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -106,6 +107,11 @@ const ConversationInterface = ({
     return () => clearTimeout(timer);
   }, [initializeVoiceServices, sessionStartTime]);
 
+  // Keep local mode in sync with parent prop
+  useEffect(() => {
+    setActiveMode(mode);
+  }, [mode]);
+
   const startRecording = useCallback(async () => {
     if (!voiceManagerRef.current) {
       console.error('❌ Voice manager not initialized');
@@ -118,7 +124,7 @@ const ConversationInterface = ({
       setRealtimeTranscript('');
       setIsListening(true);
 
-      if (mode === 'voice' || mode === 'hybrid') {
+      if (activeMode === 'voice' || activeMode === 'hybrid') {
         const stopRealtime = startRealTimeSpeechRecognition(
           (transcript, isFinal) => {
             console.log('🗣️ Real-time transcript:', transcript, 'Final:', isFinal);
@@ -154,7 +160,7 @@ const ConversationInterface = ({
         variant: "destructive",
       });
     }
-  }, [mode, toast]);
+  }, [activeMode, toast]);
 
   const stopRecording = useCallback(async () => {
     if (!voiceManagerRef.current) {
@@ -494,8 +500,8 @@ const ConversationInterface = ({
 
       // Deduct credits for successful AI roleplay interaction
       if (user && !aiResponse.includes('fallback')) {
-        const creditsToDeduct = mode === 'voice' || mode === 'hybrid' ? 2 : 1;
-        const featureType = `roleplay_${mode}_${scenario?.objection || 'general'}`;
+        const creditsToDeduct = activeMode === 'voice' || activeMode === 'hybrid' ? 2 : 1;
+        const featureType = `roleplay_${activeMode}_${scenario?.objection || 'general'}`;
         
         console.log(`Deducting ${creditsToDeduct} credits for successful ${featureType}`);
         
@@ -506,28 +512,24 @@ const ConversationInterface = ({
         }
       }
 
-      // Generate enhanced feedback for every user response after the first exchange
-      if (scenario && userResponseCount >= 1) {
+      // Generate enhanced feedback for every user response (immediate feedback)
+      if (scenario) {
         console.log('🎯 Generating enhanced feedback for user response:', textToSend);
-        
         const enhancedFeedbackData = generateEnhancedFeedback(
           textToSend,
           currentObjectionText || scenario.objection,
           [...chatMessages, userMessage],
-          userResponseCount
+          userResponseCount + 1
         );
-        
         console.log('📊 Generated enhanced feedback:', enhancedFeedbackData);
         setEnhancedFeedback(enhancedFeedbackData);
-        
-        // Save session with enhanced feedback
+        // Save session with enhanced feedback (non-blocking UX)
         await saveSessionToDatabase(updatedMessages, enhancedFeedbackData);
-        
-        // Show enhanced feedback after a brief delay
+        // Show the feedback right away
         setTimeout(() => {
           console.log('🚀 Showing enhanced feedback display');
           setShowEnhancedFeedback(true);
-        }, 1500);
+        }, 300);
       }
 
       if (speechEnabled && aiResponse) {
@@ -685,7 +687,7 @@ const ConversationInterface = ({
             />
           </div>
           
-          {(mode === 'voice' || mode === 'hybrid') && (
+          {(activeMode === 'voice' || activeMode === 'hybrid') && (
             <Button
               onClick={isListening ? stopRecording : startRecording}
               variant={isListening ? "destructive" : "outline"}
