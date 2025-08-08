@@ -4,7 +4,7 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://*.supabase.co https://api.openai.com https://*.stripe.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'self';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.openai.com https://*.stripe.com wss:; frame-src 'self' https://www.youtube.com https://youtube.com; media-src 'self' blob: https:; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'self';"
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "microphone=(self), camera=()"

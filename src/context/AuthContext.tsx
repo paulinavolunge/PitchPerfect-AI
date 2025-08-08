@@ -153,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }, 0);
           
           // Check if this is a new user (after cleanup)
-          const hasCompletedOnboarding = localStorage.getItem('onboardingComplete');
+          const hasCompletedOnboarding = localStorage.getItem(`onboarding_completed_${session.user.id}`);
           if (!hasCompletedOnboarding) {
             setIsNewUser(true);
           }
@@ -425,6 +425,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🧹 Clearing all session data on logout...');
       clearAllSessionData(true);
       
+      // Also clear potential legacy keys used in tests or older clients
+      try {
+        localStorage.removeItem('supabase.auth.token');
+      } catch {}
+      
       // Clear local state
       setUser(null);
       setSession(null);
@@ -454,6 +459,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Even if there's an error, clear local data and redirect
       clearAllSessionData(true);
+      try {
+        localStorage.removeItem('supabase.auth.token');
+      } catch {}
       setUser(null);
       setSession(null);
       setCreditsRemaining(0);
@@ -472,10 +480,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user?.id) return;
     
     setIsNewUser(false);
-    // Use user-specific keys for onboarding completion
-    localStorage.setItem('onboardingComplete', 'true');
+    // Use a single, consistent key; also clean up legacy keys
+    const key = `onboarding_completed_${user.id}`;
+    localStorage.setItem(key, 'true');
     localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
-    localStorage.setItem(`user_${user.id}_onboarding_complete`, 'true');
+    // Cleanup legacy keys
+    localStorage.removeItem('onboardingComplete');
+    localStorage.removeItem(`user_${user.id}_onboarding_complete`);
   };
 
   const value = {

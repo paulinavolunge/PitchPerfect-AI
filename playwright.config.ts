@@ -17,10 +17,10 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html']] : 'html',
 
   use: {
-    // In CI hit the real site; locally hit Vite on 8080
+    // In CI hit the real site; locally hit preview on 8081
     baseURL: process.env.CI
       ? 'https://pitchperfectai.ai'
-      : 'http://localhost:8080',
+      : 'http://localhost:8081',
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
@@ -40,13 +40,17 @@ export default defineConfig({
     { name: 'webkit-mobile', use: { ...devices['iPhone X'] } },
   ],
 
-  // Only start the dev server locally; CI points to the deployed site
+  // Only start the server locally; CI points to the deployed site
   webServer: process.env.CI
     ? undefined
     : {
-        command: 'npm run dev',
-        port: 8080,
+        command: 'npm run build && npm run preview -- --port 8081',
+        port: 8081,
         reuseExistingServer: true,
         timeout: 180000,
+        env: {
+          VITE_SUPABASE_URL: 'https://ggpodadyycvmmxifqwlp.supabase.co',
+          VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY',
+        },
       },
 });

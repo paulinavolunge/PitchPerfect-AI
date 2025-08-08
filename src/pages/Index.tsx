@@ -124,8 +124,9 @@ const Index = () => {
                 variant="outline" 
                 size="lg"
                 className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 font-medium px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg"
-                    onClick={handleWatchDemoClick}
-                    data-onboarding="demo-button"
+                onClick={handleWatchDemoClick}
+                data-onboarding="demo-button"
+                aria-label="Watch Demo"
               >
                 <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
                 Watch 2-Min Demo

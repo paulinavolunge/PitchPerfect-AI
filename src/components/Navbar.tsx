@@ -206,6 +206,7 @@ const Navbar: React.FC = () => {
                       variant="ghost" 
                       className="relative h-8 w-8 rounded-full"
                       aria-label="User account menu"
+                      data-testid="user-menu"
                     >
                       <Avatar className="h-8 w-8">
                         <AvatarImage 
@@ -251,7 +252,7 @@ const Navbar: React.FC = () => {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer" data-testid="logout-button">
                       <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
                       Sign out
                     </DropdownMenuItem>
@@ -274,7 +275,7 @@ const Navbar: React.FC = () => {
                   onClick={handleSignup}
                   className="bg-primary-600 hover:bg-primary-700 text-white"
                 >
-                  <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
+                  <UserPlus className="mr-2 h-4 w-4" />
                   Sign Up Free
                 </Button>
               </>
@@ -321,6 +322,7 @@ const Navbar: React.FC = () => {
                           variant="outline"
                           onClick={handleSignOut}
                           className="w-full"
+                          data-testid="logout-button"
                         >
                           <LogIn className="mr-2 h-4 w-4" />
                           Sign Out
