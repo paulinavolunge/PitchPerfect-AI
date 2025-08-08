@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { componentTagger } from "lovable-tagger";
+
 export default async function defineViteConfig({ mode }: { mode: 'development' | 'production' | 'test' }) {
 
   const isProduction = mode === 'production';
@@ -17,13 +17,18 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
   return defineConfig({
     server: {
       host: "::",
-      port: isTest ? 5173 : 8080,
+      port: isTest ? 5173 : 8081,
+      strictPort: true,
+    },
+    preview: {
+      host: "::",
+      port: 8081,
+      strictPort: true,
     },
     plugins: [
       tsconfigPaths(),
       react(),
-      mode === 'development' && componentTagger(),
-    ].filter(Boolean),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

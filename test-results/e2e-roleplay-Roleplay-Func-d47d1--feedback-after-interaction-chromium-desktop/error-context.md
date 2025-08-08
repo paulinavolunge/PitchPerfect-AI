@@ -1,0 +1,67 @@
+# Page snapshot
+
+```yaml
+- img
+- heading "Your Privacy Matters" [level=3]
+- paragraph: We use cookies and similar technologies to improve your experience, analyze usage, and provide personalized content. You can manage your preferences at any time.
+- button:
+  - img
+- button "Customize":
+  - img
+  - text: Customize
+- button "Reject All"
+- button "Accept All"
+- paragraph:
+  - text: By continuing, you agree to our
+  - link "Privacy Policy":
+    - /url: /privacy
+  - text: and
+  - link "Terms of Service":
+    - /url: /terms
+- link "Back to Home":
+  - /url: /
+  - img
+  - text: Back to Home
+- heading "🤖 AI Roleplay Page" [level=1]
+- paragraph: 🎙 Ready to roleplay? Type a sales pitch or hit the mic to start practicing. We'll give instant feedback.
+- button "Close tooltip":
+  - img
+- tooltip "Help tooltip"
+- paragraph: Practice objection handling with realistic AI scenarios
+- button "microphone setup":
+  - img
+  - text: Microphone Setup
+- heading "Choose Your Practice Scenario" [level=3]:
+  - img
+  - text: Choose Your Practice Scenario
+- heading "Price Objection" [level=3]
+- text: Beginner
+- paragraph: Customer thinks your product is too expensive
+- button "Start Practice":
+  - img
+  - text: Start Practice
+- heading "Competitor Comparison" [level=3]
+- text: Intermediate
+- paragraph: Customer is comparing you to a competitor
+- button "Start Practice":
+  - img
+  - text: Start Practice
+- heading "Decision Maker Access" [level=3]
+- text: Advanced
+- paragraph: Need to reach the actual decision maker
+- button "Start Practice":
+  - img
+  - text: Start Practice
+- heading "How AI Roleplay Works" [level=3]:
+  - img
+  - text: How AI Roleplay Works
+- list:
+  - listitem: Select a practice scenario based on your skill level
+  - listitem: The AI will play the role of a realistic prospect
+  - listitem: Practice handling objections in real-time
+  - listitem: Receive detailed feedback on your responses
+  - listitem: Improve your objection handling skills
+- button "Open accessibility settings":
+  - img
+- region "Notifications alt+T"
+```

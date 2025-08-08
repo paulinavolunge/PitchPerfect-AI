@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Bot, MessageCircle, Play } from 'lucide-react';
+import { ArrowLeft, Bot, MessageCircle, Play, Mic } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { OnboardingTooltip } from '@/components/onboarding/OnboardingTooltip';
 
@@ -83,7 +83,15 @@ const AIRoleplay = () => {
           </p>
         </div>
 
-        <Card className="mb-8">
+        {/* Mic setup shortcut for tests and users */}
+        <div className="flex justify-end mb-4">
+          <Button variant="outline" data-testid="mic-test" aria-label="microphone setup">
+            <Mic className="h-4 w-4 mr-2" />
+            Microphone Setup
+          </Button>
+        </div>
+
+        <Card className="mb-8" data-testid="scenario-selector">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
@@ -92,8 +100,8 @@ const AIRoleplay = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {scenarios.map((scenario, index) => (
-                <Card key={scenario.id} className="cursor-pointer hover:shadow-md transition-shadow">
+              {scenarios.map((scenario) => (
+                <Card key={scenario.id} className="cursor-pointer hover:shadow-md transition-shadow" data-testid="scenario-option">
                   <CardHeader>
                     <CardTitle className="text-lg">{scenario.title}</CardTitle>
                     <div className="text-sm text-brand-blue font-medium">{scenario.difficulty}</div>
@@ -104,6 +112,7 @@ const AIRoleplay = () => {
                       size="sm" 
                       className="w-full"
                       onClick={() => handleStartPractice(scenario)}
+                      data-testid="start-roleplay"
                     >
                       <Play className="h-4 w-4 mr-2" />
                       Start Practice

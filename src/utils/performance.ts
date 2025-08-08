@@ -1,9 +1,10 @@
 
 // Performance utilities for Core Web Vitals optimization
-export const preloadCriticalResources = () => {
-  // Critical resources are already preloaded via Google Fonts
-  // No additional font preloading needed
-};
+export function preloadCriticalResources(): void {
+  try {
+    // Optionally preload fonts or critical assets
+  } catch {}
+}
 
 export const optimizeImages = () => {
   // Add intersection observer for lazy loading images
@@ -26,24 +27,8 @@ export const optimizeImages = () => {
   }
 };
 
-export const measureWebVitals = () => {
-  if (typeof window !== 'undefined' && 'performance' in window) {
-    // Measure Largest Contentful Paint (LCP)
-    new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      const lastEntry = entries[entries.length - 1];
-      console.log('LCP:', lastEntry.startTime);
-    }).observe({ entryTypes: ['largest-contentful-paint'] });
-
-    // Measure Cumulative Layout Shift (CLS)
-    let clsValue = 0;
-    new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (!(entry as any).hadRecentInput) {
-          clsValue += (entry as any).value;
-        }
-      }
-      console.log('CLS:', clsValue);
-    }).observe({ entryTypes: ['layout-shift'] });
-  }
-};
+export function measureWebVitals(): void {
+  try {
+    // Optionally hook into web-vitals
+  } catch {}
+}

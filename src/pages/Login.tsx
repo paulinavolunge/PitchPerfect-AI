@@ -16,6 +16,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { Helmet } from 'react-helmet-async';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -219,11 +220,14 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Login | PitchPerfect AI</title>
+      </Helmet>
       <Navbar />
       <main className="flex-grow pt-24 pb-12 flex items-center justify-center">
         <div className="container max-w-md px-4">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-brand-dark">Welcome Back to PitchPerfect AI</h1>
+            <h1 className="text-2xl font-bold text-brand-dark">Login to PitchPerfect AI</h1>
             <p className="text-brand-dark/70 mt-2">Sign in to access your account</p>
           </div>
 
@@ -309,6 +313,8 @@ const Login = () => {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
+                    aria-label="Email"
+                    data-testid="login-email"
                     {...register('email')}
                     className={errors.email ? 'border-red-500' : ''}
                   />
@@ -323,6 +329,8 @@ const Login = () => {
                     id="password"
                     type="password"
                     placeholder="Enter your password"
+                    aria-label="Password"
+                    data-testid="login-password"
                     {...register('password')}
                     className={errors.password ? 'border-red-500' : ''}
                   />
@@ -333,6 +341,7 @@ const Login = () => {
 
                 <Button 
                   type="submit"
+                  data-testid="login-submit"
                   disabled={isSubmitting}
                   className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-3 px-4 rounded-md shadow-md transition-all duration-150 flex items-center justify-center gap-2"
                 >
