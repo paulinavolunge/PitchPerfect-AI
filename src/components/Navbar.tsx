@@ -252,7 +252,7 @@ const Navbar: React.FC = () => {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer" data-testid="logout-button">
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer" data-testid="logout-button-menu">
                       <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
                       Sign out
                     </DropdownMenuItem>
@@ -322,7 +322,7 @@ const Navbar: React.FC = () => {
                           variant="outline"
                           onClick={handleSignOut}
                           className="w-full"
-                          data-testid="logout-button"
+                          data-testid="logout-button-mobile"
                         >
                           <LogIn className="mr-2 h-4 w-4" />
                           Sign Out

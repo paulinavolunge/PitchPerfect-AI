@@ -20,6 +20,11 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
       port: isTest ? 5173 : 8081,
       strictPort: true,
     },
+    preview: {
+      host: "::",
+      port: 8081,
+      strictPort: true,
+    },
     plugins: [
       tsconfigPaths(),
       react(),
