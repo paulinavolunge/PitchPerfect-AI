@@ -50,7 +50,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth =
             </Button>
             <Button variant="outline" onClick={() => {
               // Clear auth data and try again
-              localStorage.removeItem('sb-ggpodadyycvmmxifqwlp-auth-token');
+              try {
+                localStorage.removeItem('sb-ggpodadyycvmmxifqwlp-auth-token');
+                localStorage.removeItem('supabase.auth.token');
+              } catch {}
               window.location.reload();
             }}>
               Clear Cache & Retry
