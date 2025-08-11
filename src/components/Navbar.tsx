@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
 import { useGuestMode } from "@/context/GuestModeContext";
@@ -35,6 +36,7 @@ const Navbar: React.FC = () => {
       creditsRemaining,
       trialUsed,
     });
+    
   }, [user, isGuestMode, creditsRemaining, trialUsed]);
 
   const handleSignup = () => {
@@ -69,6 +71,7 @@ const Navbar: React.FC = () => {
       `${meta.first_name.charAt(0)}${meta.last_name.charAt(0)}` :
       meta?.name?.charAt(0) || user.email?.charAt(0).toUpperCase() || '';
   };
+
 
   const showAuthenticatedUI = Boolean(user) && user !== null && !isGuestMode;
 
@@ -105,6 +108,7 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
+   
           <Link 
             to="/" 
             className="flex items-center space-x-2"
@@ -140,6 +144,7 @@ const Navbar: React.FC = () => {
                   </>
                 ) : isGuestMode ? (
                   <>
+           
                     {guestModeItems.map((item) => (
                       <NavigationMenuItem key={item.name}>
                         <Link
@@ -175,7 +180,8 @@ const Navbar: React.FC = () => {
                     ))}
                   </>
                 )}
-              </NavigationMenuList>
+              </Navig
+                ationMenuList>
             </NavigationMenu>
           </div>
 
@@ -336,6 +342,7 @@ const Navbar: React.FC = () => {
                           key={item.name}
                           to={item.href}
                           className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            
                             location.pathname === item.href
                               ? 'text-brand-green bg-brand-green/10'
                               : 'text-brand-dark hover:text-brand-green hover:bg-brand-green/5'
@@ -370,7 +377,8 @@ const Navbar: React.FC = () => {
                           to={item.href}
                           className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                             location.pathname === item.href
-                              ? 'text-brand-green bg-brand-green/10'
+
+                            ? 'text-brand-green bg-brand-green/10'
                               : 'text-brand-dark hover:text-brand-green hover:bg-brand-green/5'
                           }`}
                         >
@@ -389,7 +397,8 @@ const Navbar: React.FC = () => {
                         <Button
                           onClick={handleSignup}
                           className="w-full bg-brand-green hover:bg-brand-green/90"
-                        >
+      
+                          >
                           <UserPlus className="mr-2 h-4 w-4" />
                           Sign Up Free
                         </Button>
@@ -407,3 +416,5 @@ const Navbar: React.FC = () => {
 };
 
 export default Navbar;
+
+
