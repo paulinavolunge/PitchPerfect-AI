@@ -180,8 +180,7 @@ const Navbar: React.FC = () => {
                     ))}
                   </>
                 )}
-              </Navig
-                ationMenuList>
+                </NavigationMenuList>
             </NavigationMenu>
           </div>
 
