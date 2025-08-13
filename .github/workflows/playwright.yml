@@ -25,9 +25,11 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
 
       - name: Run Playwright tests
-        run: npm run test:smoke
         env:
           CI: true
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npx playwright test
 
       - name: Upload Playwright report
         if: always()
