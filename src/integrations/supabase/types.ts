@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -582,9 +582,9 @@ export type Database = {
     Functions: {
       atomic_deduct_credits: {
         Args: {
-          p_user_id: string
-          p_feature_used: string
           p_credits_to_deduct?: number
+          p_feature_used: string
+          p_user_id: string
         }
         Returns: Json
       }
@@ -593,11 +593,11 @@ export type Database = {
         Returns: undefined
       }
       check_rate_limit: {
-        Args: { p_user_id: string; p_ip_address: unknown; p_action?: string }
+        Args: { p_action?: string; p_ip_address: unknown; p_user_id: string }
         Returns: Json
       }
       check_user_permission: {
-        Args: { p_user_id: string; p_required_role?: string }
+        Args: { p_required_role?: string; p_user_id: string }
         Returns: boolean
       }
       cleanup_expired_rate_limits: {
@@ -606,9 +606,9 @@ export type Database = {
       }
       deduct_credits_and_log_usage: {
         Args: {
-          p_user_id: string
-          p_feature_used: string
           p_credits_to_deduct: number
+          p_feature_used: string
+          p_user_id: string
         }
         Returns: boolean
       }
@@ -635,15 +635,15 @@ export type Database = {
       log_admin_activity: {
         Args: {
           p_action_type: string
-          p_target_user_id?: string
           p_details?: Json
+          p_target_user_id?: string
         }
         Returns: undefined
       }
       log_security_event: {
         Args: {
-          p_event_type: string
           p_event_details?: Json
+          p_event_type: string
           p_user_id?: string
         }
         Returns: undefined
@@ -653,7 +653,7 @@ export type Database = {
         Returns: string
       }
       secure_deduct_credits_and_log_usage: {
-        Args: { p_user_id: string; p_feature_used: string }
+        Args: { p_feature_used: string; p_user_id: string }
         Returns: Json
       }
       secure_validate_file_upload: {
