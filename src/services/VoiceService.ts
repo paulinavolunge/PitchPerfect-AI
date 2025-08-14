@@ -253,18 +253,49 @@ export class VoiceService {
   }
 
   private cleanup(): void {
+    // Stop all media tracks first
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('🛑 Stopped media track:', track.kind);
+      });
       this.stream = null;
     }
     
-    if (this.audioContext) {
-      this.audioContext.close();
+    // Disconnect audio nodes before closing context
+    if (this.microphone) {
+      try {
+        this.microphone.disconnect();
+      } catch (error) {
+        console.warn('Warning disconnecting microphone:', error);
+      }
+      this.microphone = null;
+    }
+    
+    if (this.analyser) {
+      try {
+        this.analyser.disconnect();
+      } catch (error) {
+        console.warn('Warning disconnecting analyser:', error);
+      }
+      this.analyser = null;
+    }
+    
+    // Close audio context last
+    if (this.audioContext && this.audioContext.state !== 'closed') {
+      try {
+        this.audioContext.close().then(() => {
+          console.log('🧹 AudioContext closed successfully');
+        }).catch(error => {
+          console.warn('Warning closing AudioContext:', error);
+        });
+      } catch (error) {
+        console.warn('Warning closing AudioContext:', error);
+      }
       this.audioContext = null;
     }
     
-    this.analyser = null;
-    this.microphone = null;
+    console.log('🧹 VoiceService cleanup completed');
   }
 
   async speak(
@@ -347,9 +378,15 @@ export class VoiceService {
   }
 
   dispose(): void {
+    console.log('🗑️ Disposing VoiceService...');
     this.stopRecording();
     this.stopSpeaking();
     this.cleanup();
+    
+    // Force garbage collection hint
+    if (typeof global !== 'undefined' && global.gc) {
+      global.gc();
+    }
   }
 }
 

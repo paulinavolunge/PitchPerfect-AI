@@ -46,10 +46,20 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     setIsSupported(voiceService.isVoiceSupported());
     
     return () => {
+      console.log('🧹 VoiceInput cleanup...');
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      
+      // Clean up voice service
       voiceService.dispose();
+      
+      // Force cleanup of any remaining resources
+      setTimeout(() => {
+        if (typeof global !== 'undefined' && global.gc) {
+          global.gc();
+        }
+      }, 100);
     };
   }, []);
 

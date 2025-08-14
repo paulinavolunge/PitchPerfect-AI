@@ -308,14 +308,30 @@ export class VoiceRecordingManager {
   }
 
   private cleanup(): void {
+    console.log('🧹 Starting VoiceRecordingManager cleanup...');
+    
+    // Stop all media tracks
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('🛑 Stopped track:', track.kind, track.readyState);
+      });
       this.stream = null;
     }
-    this.recorder = null;
+    
+    // Clear recorder
+    if (this.recorder) {
+      this.recorder.ondataavailable = null;
+      this.recorder.onstop = null;
+      this.recorder.onerror = null;
+      this.recorder = null;
+    }
+    
+    // Clear audio chunks to free memory
     this.audioChunks = [];
     this.isRecording = false;
-    console.log('🧹 Recording cleanup complete');
+    
+    console.log('🧹 VoiceRecordingManager cleanup complete');
   }
 
   isCurrentlyRecording(): boolean {

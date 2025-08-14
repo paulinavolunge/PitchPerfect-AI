@@ -104,7 +104,33 @@ const ConversationInterface = ({
       }
     }, 100);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      
+      // Cleanup voice services when component unmounts
+      console.log('🧹 ConversationInterface cleanup...');
+      
+      if (realtimeRecognitionRef.current) {
+        realtimeRecognitionRef.current();
+        realtimeRecognitionRef.current = null;
+      }
+      
+      if (voiceManagerRef.current) {
+        try {
+          if (voiceManagerRef.current.isCurrentlyRecording()) {
+            voiceManagerRef.current.stopRecording();
+          }
+        } catch (error) {
+          console.warn('Warning stopping recording in cleanup:', error);
+        }
+        voiceManagerRef.current = null;
+      }
+      
+      if (synthRef.current) {
+        synthRef.current.cancel();
+        synthRef.current = null;
+      }
+    };
   }, [initializeVoiceServices, sessionStartTime]);
 
   // Keep local mode in sync with parent prop
