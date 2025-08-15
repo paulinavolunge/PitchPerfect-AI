@@ -286,8 +286,8 @@ const Practice = () => {
         </div>
         
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-brand-dark mb-2">Practice Your Pitch</h1>
-          <p className="text-brand-dark/70">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Practice Your Pitch</h1>
+          <p className="text-muted-foreground">
             Record your sales pitch and get instant AI-powered feedback to improve your delivery.
           </p>
         </div>
@@ -296,10 +296,10 @@ const Practice = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardContent className="p-4 flex items-center">
-              <Zap className="h-8 w-8 text-brand-green mr-3" />
+              <Zap className="h-8 w-8 text-green-500 mr-3" />
               <div>
-                <p className="text-sm text-brand-dark/70">Credits Remaining</p>
-                <p className="text-2xl font-bold text-brand-dark">{creditsRemaining}</p>
+                <p className="text-sm text-muted-foreground">Credits Remaining</p>
+                <p className="text-2xl font-bold text-foreground">{creditsRemaining}</p>
               </div>
             </CardContent>
           </Card>
@@ -308,18 +308,18 @@ const Practice = () => {
             <CardContent className="p-4 flex items-center">
               <Trophy className="h-8 w-8 text-yellow-500 mr-3" />
               <div>
-                <p className="text-sm text-brand-dark/70">Current Streak</p>
-                <p className="text-2xl font-bold text-brand-dark">{streakCount}</p>
+                <p className="text-sm text-muted-foreground">Current Streak</p>
+                <p className="text-2xl font-bold text-foreground">{streakCount}</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4 flex items-center">
-              <Target className="h-8 w-8 text-brand-blue mr-3" />
+              <Target className="h-8 w-8 text-primary mr-3" />
               <div>
-                <p className="text-sm text-brand-dark/70">Best Score</p>
-                <p className="text-2xl font-bold text-brand-dark">{score || '--'}</p>
+                <p className="text-sm text-muted-foreground">Best Score</p>
+                <p className="text-2xl font-bold text-foreground">{score || '--'}</p>
               </div>
             </CardContent>
           </Card>
@@ -339,7 +339,7 @@ const Practice = () => {
                 <div className="flex space-x-4 mb-6">
                   <Button 
                     onClick={() => setPracticeMode('voice')}
-                    className="bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold py-3 px-6 rounded-xl shadow-lg"
+                    className="bg-primary hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg"
                   >
                     🎙️ Voice Practice
                   </Button>
@@ -366,42 +366,42 @@ const Practice = () => {
                   <Button 
                     variant="ghost" 
                     onClick={() => setPracticeMode('')}
-                    className="text-brand-dark/70 hover:text-brand-dark"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     ← Back to selection
                   </Button>
-                  <Badge variant="secondary" className="bg-brand-blue/10 text-brand-blue">
+                  <Badge variant="secondary" className="bg-primary/10 text-primary">
                     🎙️ Voice Practice Mode
                   </Badge>
                 </div>
 
                 {/* Welcome Card for First-Time Users */}
                 {!hasPermission && (
-                  <Card className="text-center py-8 bg-gradient-to-br from-brand-blue/5 to-brand-green/5 border-brand-blue/20">
+                  <Card className="text-center py-8 bg-gradient-to-br from-primary/5 to-green-500/5 border-primary/20">
                     <CardContent className="space-y-4">
-                      <div className="mx-auto w-16 h-16 bg-brand-blue/10 rounded-full flex items-center justify-center mb-4">
-                        <Mic className="h-8 w-8 text-brand-blue" />
+                      <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                        <Mic className="h-8 w-8 text-primary" />
                       </div>
-                      <h3 className="text-2xl font-bold text-brand-dark">🎤 Ready to sharpen your pitch?</h3>
-                      <p className="text-brand-dark/70 max-w-md mx-auto">
+                      <h3 className="text-2xl font-bold text-foreground">🎤 Ready to sharpen your pitch?</h3>
+                      <p className="text-muted-foreground max-w-md mx-auto">
                         Click the button below to record your first practice session.
                         We'll give you instant AI-powered feedback to help you grow.
                       </p>
                       
                       {/* What to Expect */}
                       <div className="bg-white/50 rounded-lg p-4 mt-6 max-w-sm mx-auto">
-                        <h4 className="font-semibold text-brand-dark mb-3">🧠 Here's what you'll get after recording:</h4>
-                        <div className="space-y-2 text-sm text-brand-dark/80">
+                        <h4 className="font-semibold text-foreground mb-3">🧠 Here's what you'll get after recording:</h4>
+                        <div className="space-y-2 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
-                            <span className="text-brand-green">✅</span>
+                            <span className="text-green-500">✅</span>
                             <span>Instant pitch score</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-brand-green">✅</span>
+                            <span className="text-green-500">✅</span>
                             <span>Strengths and areas to improve</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-brand-green">✅</span>
+                            <span className="text-green-500">✅</span>
                             <span>AI tips tailored to your tone & pacing</span>
                           </div>
                         </div>
@@ -463,7 +463,7 @@ const Practice = () => {
                   <Button 
                     variant="ghost" 
                     onClick={() => setPracticeMode('')}
-                    className="text-brand-dark/70 hover:text-brand-dark"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     ← Back to selection
                   </Button>
@@ -472,30 +472,30 @@ const Practice = () => {
                   </Badge>
                 </div>
 
-                <Card className="text-center py-8 bg-gradient-to-br from-purple-50 to-brand-blue/5 border-purple-200">
+                <Card className="text-center py-8 bg-gradient-to-br from-purple-50 to-primary/5 border-purple-200">
                   <CardContent className="space-y-4">
                     <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                       <MessageCircle className="h-8 w-8 text-purple-600" />
                     </div>
-                    <h3 className="text-2xl font-bold text-brand-dark">💬 Type your pitch below</h3>
-                    <p className="text-brand-dark/70 max-w-md mx-auto">
+                    <h3 className="text-2xl font-bold text-foreground">💬 Type your pitch below</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto">
                       Write out your sales pitch and get detailed AI feedback on your messaging and structure.
                     </p>
                     
                     {/* What to Expect */}
                     <div className="bg-white/50 rounded-lg p-4 mt-6 max-w-sm mx-auto">
-                      <h4 className="font-semibold text-brand-dark mb-3">🧠 Here's what you'll get after submitting:</h4>
-                      <div className="space-y-2 text-sm text-brand-dark/80">
+                      <h4 className="font-semibold text-foreground mb-3">🧠 Here's what you'll get after submitting:</h4>
+                      <div className="space-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
-                          <span className="text-brand-green">✅</span>
+                          <span className="text-green-500">✅</span>
                           <span>Instant pitch score</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-brand-green">✅</span>
+                          <span className="text-green-500">✅</span>
                           <span>Message structure analysis</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-brand-green">✅</span>
+                          <span className="text-green-500">✅</span>
                           <span>AI tips for clearer communication</span>
                         </div>
                       </div>
@@ -528,7 +528,7 @@ const Practice = () => {
                       maxLength={2000}
                     />
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-brand-dark/60">
+                      <span className="text-sm text-muted-foreground">
                         {textInput.length}/2000 characters
                       </span>
                       <button 
@@ -570,7 +570,7 @@ const Practice = () => {
                 <Badge variant="secondary" className="text-lg px-4 py-2 mr-4">
                   Analysis Complete!
                 </Badge>
-                <Button onClick={resetPractice} className="bg-brand-blue hover:bg-brand-blue/90">
+                <Button onClick={resetPractice} className="bg-primary hover:bg-primary-600">
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Practice Again
                 </Button>
@@ -590,8 +590,8 @@ const Practice = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-brand-green mb-2">{score}/100</div>
-                    <p className="text-brand-dark/70">
+                    <div className="text-4xl font-bold text-green-500 mb-2">{score}/100</div>
+                    <p className="text-muted-foreground">
                       {score >= 90 ? 'Excellent!' : 
                        score >= 80 ? 'Great job!' : 
                        score >= 70 ? 'Good work!' : 'Keep practicing!'}
@@ -608,7 +608,7 @@ const Practice = () => {
                   <CardTitle>Transcript</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-brand-dark/80 leading-relaxed">{transcript}</p>
+                  <p className="text-muted-foreground leading-relaxed">{transcript}</p>
                 </CardContent>
               </Card>
             )}
@@ -629,32 +629,32 @@ const Practice = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">✅</span>
                               <span className="font-medium">Clarity:</span>
-                              <span className="text-brand-dark/80">{feedbackData.clarity}</span>
+                              <span className="text-muted-foreground">{feedbackData.clarity}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">✅</span>
                               <span className="font-medium">Confidence:</span>
-                              <span className="text-brand-dark/80">{feedbackData.confidence}</span>
+                              <span className="text-muted-foreground">{feedbackData.confidence}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">✅</span>
                               <span className="font-medium">Persuasiveness:</span>
-                              <span className="text-brand-dark/80">{feedbackData.persuasiveness}</span>
+                              <span className="text-muted-foreground">{feedbackData.persuasiveness}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">✅</span>
                               <span className="font-medium">Tone/Emotion:</span>
-                              <span className="text-brand-dark/80">{feedbackData.tone}</span>
+                              <span className="text-muted-foreground">{feedbackData.tone}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">✅</span>
                               <span className="font-medium">Objection Handling:</span>
-                              <span className="text-brand-dark/80">{feedbackData.objectionHandling}</span>
+                              <span className="text-muted-foreground">{feedbackData.objectionHandling}</span>
                             </div>
                           </>
                         );
                       } catch {
-                        return <p className="text-brand-dark/80 leading-relaxed">{feedback}</p>;
+                        return <p className="text-muted-foreground leading-relaxed">{feedback}</p>;
                       }
                     })()}
                   </div>
