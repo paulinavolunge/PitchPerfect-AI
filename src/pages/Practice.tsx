@@ -339,7 +339,7 @@ const Practice = () => {
                 <div className="flex space-x-4 mb-6">
                   <Button 
                     onClick={() => setPracticeMode('voice')}
-                    className="bg-primary hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-6 rounded-xl shadow-lg"
                   >
                     🎙️ Voice Practice
                   </Button>
