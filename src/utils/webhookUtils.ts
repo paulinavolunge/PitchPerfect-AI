@@ -52,11 +52,14 @@ export const saveWebhookUrl = (provider: CRMProvider, url: string): void => {
  * @returns The webhook URL or undefined
  */
 export const getWebhookUrl = (provider: CRMProvider = "zapier"): string | undefined => {
-  // First check for environment variable (set at build time)
+  // Prefer Vite env at build time
+  const viteKey = `VITE_${provider.toUpperCase()}_WEBHOOK_URL` as const;
+  const viteUrl = (import.meta as any)?.env?.[viteKey];
+  if (viteUrl) return viteUrl as string;
+
+  // Legacy window ENV support
   const envUrl = (window as any)?.ENV?.[`${provider.toUpperCase()}_WEBHOOK_URL`];
-  if (envUrl) {
-    return envUrl;
-  }
+  if (envUrl) return envUrl;
   
   // Fall back to localStorage
   return getStoredWebhookUrl(provider);
