@@ -49,41 +49,23 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ open, onOpenChange, sessi
     setIsSubmitting(true);
     
     try {
-      // First show immediate confirmation
       toast({
         title: "PDF on its way!",
         description: "Check your inbox for your pitch recap (first a quick confirmation, then the full PDF).",
       });
       
-      // Send immediate confirmation email (with optional session data)
-      await sendImmediateConfirmation(email, sessionData);
+      // Fire-and-forget ancillary requests to avoid UI flicker
+      void sendImmediateConfirmation(email, sessionData).catch(() => {});
+      void addToWaitlist(email).catch(() => {});
       
-      // Send data to waitlist
-      await addToWaitlist(email);
-      
-      // Send session data to CRM immediately with the email
       if (sessionData) {
-        const enrichedData = {
-          ...sessionData,
-          email,
-          requestType: "pdf_recap"
-        };
-        
-        // Determine which CRM provider to use
+        const enrichedData = { ...sessionData, email, requestType: "pdf_recap" };
         const provider = determineCRMProvider();
-        
-        // Fire webhook without waiting
-        sendSessionToCRM(enrichedData, provider)
-          .then(webhookResult => {
-            // CRM webhook result logged
-          })
-          .catch(error => {
-            console.error(`CRM ${provider} webhook error:`, error);
-          });
+        void sendSessionToCRM(enrichedData, provider).catch(() => {});
       }
       
-      // Close modal
-      onOpenChange(false);
+      // Close modal after a short delay to ensure toast is visible and avoid layout flicker
+      setTimeout(() => onOpenChange(false), 300);
     } catch (error) {
       console.error('Error processing request:', error);
       toast({

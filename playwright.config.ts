@@ -45,8 +45,8 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 180000,
     env: {
-      VITE_SUPABASE_URL: 'https://ggpodadyycvmmxifqwlp.supabase.co',
-      VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY',
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || '',
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || '',
     },
   },
 });

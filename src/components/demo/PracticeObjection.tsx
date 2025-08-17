@@ -160,8 +160,20 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
     console.log("Stopping voice recording");
     
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.warn('Recognition stop error:', e);
+      }
       setIsListening(false);
+
+      // Ensure any active media tracks are stopped
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
+      }
       
       if (transcript.trim()) {
         toast({

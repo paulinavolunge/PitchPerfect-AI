@@ -4,16 +4,15 @@ import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 
 export function ThemeProvider({ 
-  children, 
-  ...props 
+  children
 }: React.ComponentProps<typeof NextThemesProvider>) {
-  // Force light mode only, no theme switching
   return (
     <NextThemesProvider 
       attribute="class" 
       defaultTheme="light" 
       enableSystem={false}
-      {...props}
+      themes={["light"]}
+      value={{ light: "light" }}
     >
       {children}
     </NextThemesProvider>

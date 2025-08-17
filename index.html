@@ -14,44 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
     <!-- Improved Google Analytics with proper consent logic -->
-    <script>
-      const hasConsent = localStorage.getItem('analytics-consent') === 'true';
-      console.log('Analytics consent status:', hasConsent);
-
-      if (hasConsent) {
-        console.log('Loading Google Tag Manager and Google Analytics');
-
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-          dataLayer.push(arguments);
-        }
-
-        const gaScript = document.createElement('script');
-        gaScript.async = true;
-        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y';
-        document.head.appendChild(gaScript);
-
-        (function(w,d,s,l,i){
-          w[l]=w[l]||[];
-          w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
-          const f=d.getElementsByTagName(s)[0];
-          const j=d.createElement(s);
-          const dl=l!='dataLayer'?'&l='+l:'';
-          j.async=true;
-          j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-          f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-P2ZQPJGM');
-
-        gtag('js', new Date());
-        gtag('config', 'G-HVCRJT504Y', {
-          debug_mode: true,
-          send_page_view: true
-        });
-      } else {
-        console.log('Analytics consent not given, skipping tracking setup');
-      }
-    </script>
+    <script src="/analytics.js" defer></script>
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
