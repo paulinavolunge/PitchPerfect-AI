@@ -17,7 +17,6 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html']] : 'html',
 
   use: {
-    // Always target a local preview server for deterministic tests
     baseURL: 'http://localhost:8081',
     trace: 'on-first-retry',
     video: 'retain-on-failure',
@@ -38,15 +37,11 @@ export default defineConfig({
     { name: 'webkit-mobile', use: { ...devices['iPhone X'] } },
   ],
 
-  // Start a production-like preview server in both local and CI runs
+  // Start a preview server (build should be done in workflow before this)
   webServer: {
-    command: 'npm run build && npm run preview -- --port 8081',
-    port: 8081,
-    reuseExistingServer: true,
+    command: 'npm run preview -- --port 8081',
+    url: 'http://localhost:8081',
+    reuseExistingServer: !process.env.CI,
     timeout: 180000,
-    env: {
-      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || '',
-      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || '',
-    },
   },
 });

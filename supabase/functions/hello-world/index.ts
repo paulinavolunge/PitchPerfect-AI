@@ -4,19 +4,43 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-console.log("Hello from Functions!")
+const corsHeaders = {
+  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://pitchperfectai.ai',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+}
+
+async function verifyAuth(request: Request) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '')
+  if (!token) throw new Error('Missing authorization token')
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!
+  )
+
+  const { data: { user }, error } = await supabase.auth.getUser(token)
+  if (error || !user) throw new Error('Invalid token')
+  return user
+}
 
 Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
   }
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  try {
+    const user = await verifyAuth(req)
+    const { name } = await req.json()
+    const data = { message: `Hello ${name}!`, user_id: user.id }
+    return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', ...corsHeaders } })
+  } catch (error: any) {
+    const status = error?.message?.includes('authorization') ? 401 : 500
+    return new Response(JSON.stringify({ error: error?.message || 'Unknown error' }), { status, headers: { 'Content-Type': 'application/json', ...corsHeaders } })
+  }
 })
 
 /* To invoke locally:
