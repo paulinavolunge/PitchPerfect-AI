@@ -86,6 +86,11 @@ export const generateAIResponse = async (
   
   try {
     console.log("🚀 Calling roleplay-ai-response edge function...");
+    console.log("📝 Request payload:", {
+      userInput: safeUserInput,
+      scenario: scenario,
+      conversationHistory: conversationHistory.slice(-6)
+    });
     
     // Call the secure Supabase Edge Function
     const { data, error } = await supabase.functions.invoke('roleplay-ai-response', {
@@ -103,12 +108,18 @@ export const generateAIResponse = async (
 
     if (error) {
       console.error('❌ Error calling roleplay AI function:', error);
-      throw new Error(error.message);
+      console.error('❌ Full error details:', JSON.stringify(error, null, 2));
+      throw new Error(`Edge function error: ${error.message || JSON.stringify(error)}`);
     }
 
-    if (!data || !data.response) {
-      console.error('❌ No response received from AI service');
-      throw new Error('No response received from AI service');
+    if (!data) {
+      console.error('❌ No data received from AI service');
+      throw new Error('No data received from AI service');
+    }
+
+    if (!data.response) {
+      console.error('❌ No response field in data:', data);
+      throw new Error('Invalid response format from AI service');
     }
 
     console.log("✅ AI response received:", data.response);
@@ -124,9 +135,11 @@ export const generateAIResponse = async (
 
   } catch (error) {
     console.error('💥 Failed to generate AI response:', error);
+    console.error('💥 Error type:', typeof error);
+    console.error('💥 Error details:', error);
     
-    // Enhanced fallback response with more context
-    return generateFallbackResponse(userInput, scenario, persona, conversationHistory);
+    // Return a more contextual response instead of generic fallback
+    return generateContextualFallbackResponse(userInput, scenario, persona, conversationHistory);
   }
 };
 
@@ -148,17 +161,19 @@ function getVoiceStyleFromPersona(persona: string): string {
   return 'friendly'; // default
 }
 
-// Enhanced fallback response generation for reversed roles
-function generateFallbackResponse(userInput: string, scenario: Scenario, persona: string, conversationHistory: Message[] = []): string {
-  console.log("🔄 Using fallback response generation for reversed roles");
+// Enhanced contextual fallback response that actually responds to user input
+function generateContextualFallbackResponse(userInput: string, scenario: Scenario, persona: string, conversationHistory: Message[] = []): string {
+  console.log("🔄 Using contextual fallback response generation");
+  console.log("📝 User input:", userInput);
+  console.log("📊 Scenario:", scenario.objection);
   
   const lowerInput = userInput.toLowerCase();
   const isFirstExchange = conversationHistory.length <= 1;
   
-  // If this is early in conversation, provide feedback on their objection handling
+  // If this is not the first exchange, provide contextual response based on user input
   if (!isFirstExchange) {
-    // Analyze their objection handling response based on actual input
-    return analyzeUserResponse(userInput, scenario, persona, conversationHistory);
+    // Generate contextual response based on actual user input
+    return generateContextualResponse(userInput, scenario, persona, conversationHistory);
   }
   
   // If this is the first exchange, present the initial objection
@@ -193,53 +208,46 @@ function generateFallbackResponse(userInput: string, scenario: Scenario, persona
   return objections[Math.floor(Math.random() * objections.length)];
 }
 
-// New function to analyze user response and provide contextual feedback
-function analyzeUserResponse(userInput: string, scenario: Scenario, persona: string, conversationHistory: Message[]): string {
+// Generate contextual response that actually addresses user input
+function generateContextualResponse(userInput: string, scenario: Scenario, persona: string, conversationHistory: Message[]): string {
+  console.log("🤖 Generating contextual response for:", userInput);
+  
   const lowerInput = userInput.toLowerCase();
-  const inputLength = userInput.trim().length;
-  
-  // Analyze response characteristics
-  const hasEmpathy = lowerInput.includes('understand') || lowerInput.includes('hear') || lowerInput.includes('appreciate');
-  const hasSpecifics = lowerInput.includes('example') || lowerInput.includes('specifically') || lowerInput.includes('case study');
-  const hasValue = lowerInput.includes('value') || lowerInput.includes('benefit') || lowerInput.includes('roi');
-  const hasQuestions = userInput.includes('?');
-  const isVeryShort = inputLength < 20;
-  const isGeneric = lowerInput.includes('great question') || lowerInput.includes('good point');
-  
-  // Get the last AI message to understand context
-  const lastAIMessage = conversationHistory.filter(msg => msg.sender === 'ai').pop();
   const objectionType = scenario.objection;
   
-  // Provide contextual feedback based on user's actual response
-  if (isVeryShort && lowerInput.includes('understand')) {
-    return `${persona}: Thanks for acknowledging that. What might help me feel more confident about moving forward is understanding how this specifically addresses my ${objectionType.toLowerCase()} concern. Can you walk me through that?`;
+  // Handle common sales responses contextually
+  if (lowerInput.includes('understand') || lowerInput.includes('appreciate')) {
+    return `${persona}: I can see you're trying to understand my position. That's good. But I still need concrete evidence about ${objectionType.toLowerCase()}. What specifically can you show me?`;
   }
   
-  if (isGeneric || isVeryShort) {
-    return `${persona}: I appreciate that, but I need more than just reassurance. Can you give me something concrete that addresses my specific concern about ${objectionType.toLowerCase()}?`;
+  if (lowerInput.includes('budget') || lowerInput.includes('cost') || lowerInput.includes('price')) {
+    return `${persona}: Well, budget is definitely a concern. We allocated $50K for this quarter, but your solution is coming in at $75K. How do you justify that difference?`;
   }
   
-  if (hasEmpathy && hasSpecifics) {
-    const positiveResponses = [
-      `${persona}: That's helpful - I can see you understand my position and you've given me something concrete to consider. Let me think about this... Actually, I have another concern: what about the implementation timeline?`,
-      `${persona}: You've made a good point there, and I appreciate the specific example. That does help address my concern. However, I'm still wondering about the long-term support - what happens if things go wrong?`,
-      `${persona}: Okay, that's more convincing. You've shown you understand my situation and provided real evidence. I'm starting to see the value, but I need to understand the next steps better.`
-    ];
-    return positiveResponses[Math.floor(Math.random() * positiveResponses.length)];
+  if (lowerInput.includes('timeline') || lowerInput.includes('when') || lowerInput.includes('time')) {
+    return `${persona}: Timing is tricky. We're already committed to other projects this quarter. Why can't this wait until next year when we have more bandwidth?`;
   }
   
-  if (hasEmpathy && !hasSpecifics) {
-    return `${persona}: I can tell you're listening to my concerns, which I appreciate. But I still need to see some concrete evidence or examples of how this has worked for others in similar situations. Can you share something specific?`;
+  if (lowerInput.includes('example') || lowerInput.includes('case') || lowerInput.includes('client')) {
+    return `${persona}: That's helpful context. But how do I know those examples will apply to our specific situation? Our business is quite different.`;
   }
   
-  if (hasSpecifics && !hasEmpathy) {
-    return `${persona}: The information you've shared is useful, but I feel like you jumped straight into your pitch without really acknowledging my concern. I need to feel heard before I can consider the solution.`;
+  if (lowerInput.includes('roi') || lowerInput.includes('return') || lowerInput.includes('value')) {
+    return `${persona}: ROI sounds good in theory, but I need to see hard numbers. What's the measurable impact in the first 6 months?`;
   }
   
-  if (hasQuestions) {
-    return `${persona}: Good - you're asking the right questions to understand my situation better. ${generateDiscoveryResponse(objectionType, scenario.difficulty)}`;
+  if (userInput.includes('?')) {
+    return `${persona}: That's a good question to ask. ${generateDiscoveryResponse(objectionType, scenario.difficulty)}`;
   }
   
+  // More specific responses based on objection type
+  if (objectionType === 'Price') {
+    return `${persona}: I hear what you're saying, but I still need to justify this to my CFO. The number needs to make sense. What's the bottom line value proposition?`;
+  }
+  
+  if (objectionType === 'Trust') {
+    return `${persona}: I appreciate your response, but I need references from companies similar to ours. Can you provide 2-3 clients I can speak with directly?`;
+  }
   // Default contextual response based on objection type
   const objectionSpecificResponses = {
     Price: `${persona}: You haven't really addressed why I should pay more when I have cheaper options. I need to see clear ROI or unique value that justifies the premium.`,
