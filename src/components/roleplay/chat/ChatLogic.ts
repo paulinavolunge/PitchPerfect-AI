@@ -18,32 +18,47 @@ interface Message {
 }
 
 export const getScenarioIntro = (scenario: Scenario, getAIPersona: () => string): string => {
+  return `${getAIPersona()}: Hello! I'm ready to roleplay as a potential client. I'll present objections and you can practice overcoming them. Let's begin!`;
+};
+
+export const generateFirstObjection = async (scenario: Scenario, getAIPersona: () => string): Promise<string> => {
+  const persona = getAIPersona();
+  
   if (scenario.custom) {
-    return `${getAIPersona()}: Hello! I'm ready to roleplay your custom scenario. I'll present objections as a potential client, and you can practice overcoming them. Let's begin!`;
+    return `${persona}: ${scenario.custom}`;
   }
   
-  const intros = {
-    Technology: "Hi there! I've been looking at your software solution, but I'm not convinced it's worth the investment right now.",
-    Retail: "Hello, I'm interested in your product, but I have some concerns before making a purchase.",
-    Healthcare: "Hi, our medical practice is considering new systems, but I'm not sure this is the right fit for us.",
-    Finance: "Hello, I'm evaluating financial services, but I'm not ready to make any changes yet.",
-    Manufacturing: "Good day, I'm reviewing options for our manufacturing company, but we're not in a hurry to decide.",
-    Education: "Hi there, our educational institution is looking at solutions, but budget is a major concern for us."
-  };
-  
   const objectionStatements = {
-    Price: "The cost seems too high for what we're getting. I can find cheaper alternatives elsewhere.",
-    Timing: "This isn't a priority right now. We have other things to focus on first.", 
-    Trust: "I've never heard of your company before. How do I know you'll be around in a year?",
-    Authority: "I'm not the decision maker here. My boss would never approve this.",
-    Competition: "I'm already talking to your competitors and they're offering better deals.",
-    Need: "I'm not convinced we actually need this solution. We're doing fine without it."
+    Price: [
+      "Your solution costs more than I budgeted for. I can get similar features elsewhere for 30% less. Why should I pay extra?",
+      "The pricing seems steep for a company our size. We're a small business and every dollar counts. Can you justify this investment?"
+    ],
+    Timing: [
+      "This isn't a good time for us. We just implemented a new system last year and aren't ready for another change.",
+      "I don't see the urgency. Our current process works fine, even if it's not perfect. Why do I need to act now?"
+    ],
+    Trust: [
+      "I've never heard of your company before today. How do I know you'll still be in business next year to support this?",
+      "Your company is too small for us to take a risk on. We need a proven vendor with a long track record."
+    ],
+    Authority: [
+      "I'm interested, but I don't make these decisions alone. My boss will never approve this without more justification.",
+      "This looks good, but I'll need to run it by our procurement team and they're very particular about vendors."
+    ],
+    Competition: [
+      "I'm already talking to [Competitor] and they're offering me a better deal. What makes you different?",
+      "Your competitor just quoted me 25% less for the same features. Can you match their price?"
+    ],
+    Need: [
+      "I'm not convinced we actually need this. We've been doing fine without it for years. Why change now?",
+      "This seems like a nice-to-have, not a must-have. We have bigger priorities right now."
+    ]
   };
   
-  const intro = intros[scenario.industry as keyof typeof intros] || intros.Technology;
-  const objection = objectionStatements[scenario.objection as keyof typeof objectionStatements] || objectionStatements.Need;
+  const objections = objectionStatements[scenario.objection as keyof typeof objectionStatements] || objectionStatements.Need;
+  const selectedObjection = objections[Math.floor(Math.random() * objections.length)];
   
-  return `${getAIPersona()}: ${intro} ${objection} What do you have to say about that?`;
+  return `${persona}: ${selectedObjection}`;
 };
 
 export const generateAIResponse = async (

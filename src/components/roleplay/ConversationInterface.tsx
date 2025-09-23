@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
 import MessageList from './chat/MessageList';
-import { generateAIResponse, getScenarioIntro } from './chat/ChatLogic';
+import { generateAIResponse, getScenarioIntro, generateFirstObjection } from './chat/ChatLogic';
 import { generateStructuredFeedback } from './chat/FeedbackGenerator';
 import { generateEnhancedFeedback } from './chat/EnhancedFeedbackGenerator';
 import FeedbackPanel from './FeedbackPanel';
@@ -461,11 +461,29 @@ const ConversationInterface = ({
         timestamp: new Date(),
       };
       setMessages([introMessage]);
-      setWaitingForUserResponse(true);
       
       if (speechEnabled) {
         speakText(introMessage.text);
       }
+      
+      // Automatically send the first objection after the greeting
+      setTimeout(async () => {
+        const objectionMessage = await generateFirstObjection(scenario, getAIPersona);
+        const objectionMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          text: objectionMessage,
+          sender: 'ai',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, objectionMsg]);
+        setWaitingForUserResponse(true);
+        
+        if (speechEnabled) {
+          // Small delay to let the first message finish
+          setTimeout(() => speakText(objectionMessage), 2000);
+        }
+      }, 1000); // 1 second delay after greeting
     }
   }, [scenario, speechEnabled, getAIPersona, speakText]);
 
