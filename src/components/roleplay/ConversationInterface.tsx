@@ -9,6 +9,7 @@ import { generateStructuredFeedback } from './chat/FeedbackGenerator';
 import { generateEnhancedFeedback } from './chat/EnhancedFeedbackGenerator';
 import FeedbackPanel from './FeedbackPanel';
 import EnhancedFeedbackDisplay from './EnhancedFeedbackDisplay';
+import FeedbackReflectionCard from './FeedbackReflectionCard';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { VoiceRecordingManager, startRealTimeSpeechRecognition, processVoiceInput } from '@/utils/voiceInput';
@@ -54,6 +55,7 @@ const ConversationInterface = ({
   const [voiceStatus, setVoiceStatus] = useState<'idle' | 'listening' | 'processing' | 'complete'>('idle');
   const [enhancedFeedback, setEnhancedFeedback] = useState<any>(null);
   const [showEnhancedFeedback, setShowEnhancedFeedback] = useState(false);
+  const [showReflectionCard, setShowReflectionCard] = useState(false);
   const [currentObjectionText, setCurrentObjectionText] = useState('');
   const [waitingForUserResponse, setWaitingForUserResponse] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
@@ -506,6 +508,7 @@ const ConversationInterface = ({
     setUserResponseCount(prev => prev + 1);
     
     setShowEnhancedFeedback(false);
+    setShowReflectionCard(false);
     
     if (voiceStatus === 'complete') {
       setTimeout(() => setVoiceStatus('idle'), 2000);
@@ -569,11 +572,11 @@ const ConversationInterface = ({
         setEnhancedFeedback(enhancedFeedbackData);
         // Save session with enhanced feedback (non-blocking UX)
         await saveSessionToDatabase(updatedMessages, enhancedFeedbackData);
-        // Show the feedback right away
+        // Show reflection card first, then feedback after user interaction or timeout
         setTimeout(() => {
-          console.log('🚀 Showing enhanced feedback display');
-          setShowEnhancedFeedback(true);
-        }, 300);
+          console.log('🤔 Showing reflection card first');
+          setShowReflectionCard(true);
+        }, 800);
       }
 
       if (speechEnabled && aiResponse) {
@@ -612,6 +615,11 @@ const ConversationInterface = ({
 
   const closeEnhancedFeedback = () => {
     setShowEnhancedFeedback(false);
+  };
+
+  const handleRevealFeedback = () => {
+    setShowReflectionCard(false);
+    setShowEnhancedFeedback(true);
   };
 
   useEffect(() => {
@@ -664,7 +672,16 @@ const ConversationInterface = ({
         </CardContent>
       </Card>
 
-      {/* Enhanced Feedback Display - Fixed positioning */}
+      {/* Reflection Card - Shows first */}
+      {showReflectionCard && (
+        <FeedbackReflectionCard
+          isVisible={showReflectionCard}
+          onRevealFeedback={handleRevealFeedback}
+          userResponse={messages.filter(m => m.sender === 'user').slice(-1)[0]?.text || ''}
+        />
+      )}
+
+      {/* Enhanced Feedback Display - Shows after reflection */}
       {enhancedFeedback && showEnhancedFeedback && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-background rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
