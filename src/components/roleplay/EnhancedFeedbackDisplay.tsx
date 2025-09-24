@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
@@ -17,7 +16,10 @@ import {
   Lightbulb,
   Copy,
   Trophy,
-  Zap
+  Zap,
+  Sparkles,
+  Award,
+  ArrowUp
 } from 'lucide-react';
 import { DetailedFeedback } from '../../types/feedback';
 
@@ -37,12 +39,9 @@ const EnhancedFeedbackDisplay: React.FC<EnhancedFeedbackDisplayProps> = ({
   onClose 
 }) => {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    exchange: true,
-    strengths: true,
+    exchange: false,
     quickFix: true,
-    growthPath: false,
     actionPlan: true,
-    nextOpportunities: false
   });
 
   const [copiedPrompt, setCopiedPrompt] = useState<string>('');
@@ -53,14 +52,48 @@ const EnhancedFeedbackDisplay: React.FC<EnhancedFeedbackDisplayProps> = ({
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const getProgressLevel = (score: number) => {
-    if (score >= 80) return { level: 'Expert', color: 'text-emerald-600', bgColor: 'bg-emerald-100', borderColor: 'border-emerald-200' };
-    if (score >= 60) return { level: 'Growing', color: 'text-blue-600', bgColor: 'bg-blue-100', borderColor: 'border-blue-200' };
-    return { level: 'Learning', color: 'text-orange-600', bgColor: 'bg-orange-100', borderColor: 'border-orange-200' };
+  const getSkillStage = (score: number) => {
+    if (score >= 80) return { 
+      stage: 'Pro', 
+      icon: '🌳', 
+      color: 'text-emerald-600', 
+      bgGradient: 'bg-gradient-to-br from-emerald-50 to-green-100', 
+      borderColor: 'border-emerald-200',
+      ringColor: 'ring-emerald-500/20',
+      celebration: 'Master Level Achieved! 🏆'
+    };
+    if (score >= 60) return { 
+      stage: 'Builder', 
+      icon: '🌿', 
+      color: 'text-blue-600', 
+      bgGradient: 'bg-gradient-to-br from-blue-50 to-cyan-100', 
+      borderColor: 'border-blue-200',
+      ringColor: 'ring-blue-500/20',
+      celebration: 'Strong Foundation Built! 💪'
+    };
+    if (score >= 40) return { 
+      stage: 'Growing', 
+      icon: '🌱', 
+      color: 'text-green-600', 
+      bgGradient: 'bg-gradient-to-br from-green-50 to-emerald-100', 
+      borderColor: 'border-green-200',
+      ringColor: 'ring-green-500/20',
+      celebration: 'Great Progress Made! 🚀'
+    };
+    return { 
+      stage: 'Foundation', 
+      icon: '🌰', 
+      color: 'text-orange-600', 
+      bgGradient: 'bg-gradient-to-br from-orange-50 to-amber-100', 
+      borderColor: 'border-orange-200',
+      ringColor: 'ring-orange-500/20',
+      celebration: 'Perfect Starting Point! ✨'
+    };
   };
 
-  const getXPPoints = (score: number) => {
-    return Math.max(10, Math.floor(score * 0.5));
+  const getSkillXP = (score: number, skillName: string) => {
+    const xp = Math.max(5, Math.floor(score * 0.6) + Math.random() * 10);
+    return Math.floor(xp);
   };
 
   const copyToClipboard = async (text: string, promptType: string) => {
@@ -73,347 +106,235 @@ const EnhancedFeedbackDisplay: React.FC<EnhancedFeedbackDisplayProps> = ({
     }
   };
 
-  const progressLevel = getProgressLevel(feedback.overallScore);
-  const xpPoints = getXPPoints(feedback.overallScore);
+  const skillStage = getSkillStage(feedback.overallScore);
+  const totalXP = getSkillXP(feedback.overallScore, 'overall');
 
-  // Sample micro-prompts for quick copy
-  const microPrompts = [
-    {
-      label: "Acknowledge Budget Concern",
-      text: "I completely understand why budget is a key factor for you..."
-    },
-    {
-      label: "Value Example",
-      text: "For example, our client reduced costs by 40% in 3 months."
-    },
+  // Enhanced micro-prompts with context
+  const contextualPrompts = [
     {
       label: "Empathy Bridge",
-      text: "I hear that this is really important to your team's success..."
+      text: "I completely understand why budget is a key factor for you - it shows you're being thoughtful about your investment.",
+      category: "Acknowledge"
+    },
+    {
+      label: "Value Pivot",
+      text: "Let me share how our client in a similar situation reduced their costs by 40% in the first quarter.",
+      category: "Reframe"
+    },
+    {
+      label: "Forward Movement", 
+      text: "What would need to be true about the ROI for this to make sense within your budget?",
+      category: "Engage"
     }
   ];
 
+  // Find the most positive thing to lead with
+  const leadingStrength = feedback.strengths.length > 0 
+    ? feedback.strengths[0].description 
+    : "You engaged with the objection - that's the first step to mastering this skill!";
+
+  const topImprovement = feedback.improvements.length > 0 
+    ? feedback.improvements[0] 
+    : null;
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Trophy className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold">Your Growth Report</h2>
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-0">
+        {/* Header - Celebration First */}
+        <div className={`${skillStage.bgGradient} border-b px-6 py-4 rounded-t-xl`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className={`p-3 bg-white/80 rounded-full ${skillStage.ringColor} ring-4`}>
+                <Trophy className={`h-6 w-6 ${skillStage.color}`} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  {skillStage.icon} {skillStage.celebration}
+                </h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  +{totalXP} XP earned • {skillStage.stage} level unlocked
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={onClose} className="bg-white/80 hover:bg-white">
+              Continue
+            </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Close
-          </Button>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Growth Score & XP */}
-          <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 border-primary/20">
+        <div className="p-6 space-y-4">
+          {/* Quick Wins Section - What you did well */}
+          <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50/50 to-green-50/50">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${progressLevel.bgColor}`}>
-                    <Trophy className={`h-6 w-6 ${progressLevel.color}`} />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">You're {progressLevel.level}! 🎉</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {feedback.sessionProgression.confidenceProgression}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`text-3xl font-bold ${progressLevel.color}`}>
-                    +{xpPoints} XP
-                  </div>
-                  <Badge className={`${progressLevel.bgColor} ${progressLevel.color} ${progressLevel.borderColor}`}>
-                    Level: {progressLevel.level}
-                  </Badge>
-                </div>
-              </div>
+              <CardTitle className="text-lg flex items-center gap-2 text-emerald-700">
+                <CheckCircle className="h-5 w-5" />
+                ✅ What You Nailed
+              </CardTitle>
             </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-3 p-3 bg-white/60 rounded-lg border border-emerald-200/50">
+                <Star className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
+                <p className="text-emerald-800 font-medium">{leadingStrength}</p>
+              </div>
+              {feedback.strengths.slice(1, 3).map((strength: any, idx: number) => (
+                <div key={idx} className="flex items-center gap-2 mt-2 text-sm text-emerald-700">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                  <span>{strength.description}</span>
+                </div>
+              ))}
+            </CardContent>
           </Card>
 
-          {/* Exchange Review */}
-          <Collapsible open={openSections.exchange} onOpenChange={() => toggleSection('exchange')}>
-            <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-accent/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <MessageSquare className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-base">Practice Round #{feedback.sessionProgression.responseNumber}</CardTitle>
+          {/* One Key Focus - Quick Fix */}
+          {topImprovement && (
+            <Card className="border-blue-200 bg-gradient-to-r from-blue-50/50 to-cyan-50/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2 text-blue-700">
+                  <Wrench className="h-5 w-5" />
+                  🔧 One Quick Level-Up
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="p-4 bg-white/60 rounded-lg border border-blue-200/50">
+                  <div className="flex items-start gap-3">
+                    <ArrowUp className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-medium text-blue-800 mb-2">
+                        Next time: {topImprovement.specificSuggestion}
+                      </p>
+                      <div className="p-3 bg-blue-100/50 rounded border border-blue-200">
+                        <p className="text-xs text-blue-700 font-medium mb-1">Try this:</p>
+                        <p className="text-sm text-blue-800 italic">"{topImprovement.example}"</p>
+                      </div>
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Action Plan - 3 Quick Steps */}
+          <Card className="border-purple-200 bg-gradient-to-r from-purple-50/50 to-indigo-50/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
+                <Target className="h-5 w-5" />
+                🎯 Your 3-Step Action Plan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3">
+                {contextualPrompts.map((prompt, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3 bg-white/60 rounded-lg border border-purple-200/50">
+                    <div className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shrink-0">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-medium text-purple-800 text-sm">{prompt.category}</p>
+                        <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
+                          {prompt.label}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-purple-700 mb-2">"{prompt.text}"</p>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-6 text-xs hover:bg-purple-100"
+                        onClick={() => copyToClipboard(prompt.text, `step-${idx}`)}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        {copiedPrompt === `step-${idx}` ? 'Copied!' : 'Copy'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Skill Progress - Gamified */}
+          <Card className="border-orange-200 bg-gradient-to-r from-orange-50/50 to-amber-50/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2 text-orange-700">
+                <Award className="h-5 w-5" />
+                📈 Skill Tree Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { skill: 'Empathy', score: feedback.responseAnalysis.tone.rating, icon: '❤️' },
+                  { skill: 'Clarity', score: feedback.responseAnalysis.clarity.rating, icon: '💡' },
+                  { skill: 'Technique', score: feedback.responseAnalysis.objectionHandling.rating, icon: '🎯' }
+                ].map((skill, idx) => {
+                  const xp = getSkillXP(skill.score, skill.skill.toLowerCase());
+                  const stage = getSkillStage(skill.score);
+                  return (
+                    <div key={idx} className="text-center p-3 bg-white/60 rounded-lg border border-orange-200/50">
+                      <div className="text-2xl mb-1">{skill.icon}</div>
+                      <p className="font-medium text-orange-800 text-sm">{skill.skill}</p>
+                      <p className="text-xs text-orange-700">+{xp} XP</p>
+                      <div className="mt-1 text-xs">
+                        <span className={`${stage.color} font-medium`}>{stage.stage}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Exchange Reference - Collapsible */}
+          <Collapsible open={openSections.exchange} onOpenChange={() => toggleSection('exchange')}>
+            <Card className="border-slate-200">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-slate-50 pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2 text-slate-700">
+                      <MessageSquare className="h-4 w-4" />
+                      💬 Review Exchange
+                    </CardTitle>
                     {openSections.exchange ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </div>
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                      <h4 className="font-medium text-orange-800 mb-2">Customer Challenge:</h4>
-                      <p className="text-orange-700 italic">"{objectionText}"</p>
-                    </div>
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-medium text-blue-800 mb-2">Your Response:</h4>
-                      <p className="text-blue-700">"{userResponse}"</p>
-                    </div>
+                <CardContent className="space-y-3">
+                  <div className="p-3 bg-orange-50 border border-orange-200 rounded text-sm">
+                    <p className="font-medium text-orange-800 mb-1">Customer:</p>
+                    <p className="text-orange-700 italic">"{objectionText}"</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                    <p className="font-medium text-blue-800 mb-1">Your Response:</p>
+                    <p className="text-blue-700">"{userResponse}"</p>
                   </div>
                 </CardContent>
               </CollapsibleContent>
             </Card>
           </Collapsible>
 
-          {/* ✅ What You Did Well */}
-          <Collapsible open={openSections.strengths} onOpenChange={() => toggleSection('strengths')}>
-            <Card className="border-emerald-200">
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-accent/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-emerald-600" />
-                      <CardTitle className="text-base text-emerald-700">✅ What You Did Well</CardTitle>
-                    </div>
-                    {openSections.strengths ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  {feedback.strengths.length > 0 ? (
-                    <div className="space-y-3">
-                      {feedback.strengths.map((strength: any, idx: number) => (
-                        <div key={idx} className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                          <div className="flex items-start gap-3">
-                            <Star className="h-5 w-5 text-emerald-600 mt-0.5" />
-                            <div className="flex-1">
-                              <p className="text-emerald-800 font-medium">{strength.description}</p>
-                              <Badge variant="secondary" className="mt-2 text-xs bg-emerald-100 text-emerald-700">
-                                {strength.impact} impact
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                      <p className="text-emerald-800">Great job getting started! Every expert began with their first practice round. 🌱</p>
-                    </div>
-                  )}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {/* 🔧 Next Quick Fix */}
-          <Collapsible open={openSections.quickFix} onOpenChange={() => toggleSection('quickFix')}>
-            <Card className="border-blue-200">
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-accent/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Wrench className="h-5 w-5 text-blue-600" />
-                      <CardTitle className="text-base text-blue-700">🔧 Next Quick Fix</CardTitle>
-                    </div>
-                    {openSections.quickFix ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  {feedback.improvements.length > 0 && (
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <Zap className="h-5 w-5 text-blue-600 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-blue-800 font-medium mb-2">
-                            Focus on: {feedback.improvements[0].description}
-                          </p>
-                          <p className="text-blue-700 text-sm mb-3">
-                            {feedback.improvements[0].specificSuggestion}
-                          </p>
-                          <div className="p-3 bg-white border border-blue-300 rounded text-sm">
-                            <p className="text-blue-800 font-medium mb-1">Try this approach:</p>
-                            <p className="text-blue-700 italic">"{feedback.improvements[0].example}"</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {/* 🚀 Growth Path */}
-          <Collapsible open={openSections.growthPath} onOpenChange={() => toggleSection('growthPath')}>
-            <Card className="border-purple-200">
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-accent/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Rocket className="h-5 w-5 text-purple-600" />
-                      <CardTitle className="text-base text-purple-700">🚀 Growth Path (Acknowledge → Reframe → Engage)</CardTitle>
-                    </div>
-                    {openSections.growthPath ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4">
-                    {/* Acknowledge */}
-                    <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                      <h4 className="font-medium text-purple-800 mb-2">1. Acknowledge</h4>
-                      <p className="text-purple-700 text-sm mb-2">Show empathy for their concern</p>
-                      <div className="p-3 bg-white border border-purple-300 rounded">
-                        <p className="text-purple-800 text-xs italic">"{microPrompts[0].text}"</p>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="mt-2 h-6 text-xs"
-                          onClick={() => copyToClipboard(microPrompts[0].text, 'acknowledge')}
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          {copiedPrompt === 'acknowledge' ? 'Copied!' : 'Copy'}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Reframe */}
-                    <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                      <h4 className="font-medium text-purple-800 mb-2">2. Reframe</h4>
-                      <p className="text-purple-700 text-sm mb-2">Shift perspective with value focus</p>
-                      <div className="p-3 bg-white border border-purple-300 rounded">
-                        <p className="text-purple-800 text-xs italic">"{microPrompts[1].text}"</p>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="mt-2 h-6 text-xs"
-                          onClick={() => copyToClipboard(microPrompts[1].text, 'reframe')}
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          {copiedPrompt === 'reframe' ? 'Copied!' : 'Copy'}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Engage */}
-                    <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                      <h4 className="font-medium text-purple-800 mb-2">3. Engage</h4>
-                      <p className="text-purple-700 text-sm mb-2">Ask questions to move forward</p>
-                      <div className="p-3 bg-white border border-purple-300 rounded">
-                        <p className="text-purple-800 text-xs italic">"{microPrompts[2].text}"</p>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="mt-2 h-6 text-xs"
-                          onClick={() => copyToClipboard(microPrompts[2].text, 'engage')}
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          {copiedPrompt === 'engage' ? 'Copied!' : 'Copy'}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {/* 🎯 Action Plan */}
-          <Collapsible open={openSections.actionPlan} onOpenChange={() => toggleSection('actionPlan')}>
-            <Card className="border-primary/30">
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-accent/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Target className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-base">🎯 Action Plan</CardTitle>
-                    </div>
-                    {openSections.actionPlan ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-primary mb-3">Apply these 3 steps in your next conversation:</h4>
-                    <div className="space-y-3">
-                      {feedback.coachingTips.immediate.slice(0, 3).map((tip: string, idx: number) => (
-                        <div key={idx} className="flex items-start gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                          <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
-                            {idx + 1}
-                          </div>
-                          <p className="text-sm text-primary/80">{tip}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {/* Next Opportunities (formerly Missed Opportunities) */}
-          {feedback.missedOpportunities.length > 0 && (
-            <Collapsible open={openSections.nextOpportunities} onOpenChange={() => toggleSection('nextOpportunities')}>
-              <Card className="border-orange-200">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Lightbulb className="h-5 w-5 text-orange-500" />
-                        <CardTitle className="text-base text-orange-700">💡 Next Opportunities</CardTitle>
-                      </div>
-                      {openSections.nextOpportunities ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {feedback.missedOpportunities.map((opportunity: any, idx: number) => (
-                        <div key={idx} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                          <h4 className="font-medium text-orange-800 mb-2">🌟 Next time, try this:</h4>
-                          <p className="text-orange-700 text-sm mb-3">{opportunity.betterApproach}</p>
-                          <div className="p-3 bg-white border border-orange-300 rounded">
-                            <p className="text-orange-800 text-xs font-medium mb-1">Example approach:</p>
-                            <p className="text-orange-700 text-sm italic">"{opportunity.example}"</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          )}
-
-          {/* Growth Summary */}
-          <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 border-emerald-200">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-emerald-600" />
-                👏 You're Growing!
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Growth Celebration Footer */}
+          <Card className={`${skillStage.bgGradient} border-0 shadow-lg`}>
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    <span className="font-medium text-foreground">Progress:</span> {feedback.sessionProgression.improvementTrend}
-                  </p>
-                  <p className="text-sm text-emerald-700 font-medium">
-                    You're showing steady growth — let's sharpen your technique next time! 🚀
-                  </p>
+                <div className="flex items-center gap-3">
+                  <Sparkles className={`h-5 w-5 ${skillStage.color}`} />
+                  <div>
+                    <p className="font-bold text-slate-800">
+                      👏 You're building real skills — keep practicing to reach {skillStage.stage === 'Foundation' ? 'Growing' : skillStage.stage === 'Growing' ? 'Builder' : skillStage.stage === 'Builder' ? 'Pro' : 'Master'} level!
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Next milestone: {feedback.sessionProgression.improvementTrend}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={onClose}>
-                    Keep Practicing!
-                  </Button>
-                </div>
+                <Button 
+                  className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg" 
+                  onClick={onClose}
+                >
+                  <Rocket className="h-4 w-4 mr-2" />
+                  Next Challenge!
+                </Button>
               </div>
             </CardContent>
           </Card>
