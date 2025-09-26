@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, startTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ChevronRight, Timer } from 'lucide-react';
@@ -21,12 +21,14 @@ const FeedbackReflectionCard: React.FC<FeedbackReflectionCardProps> = ({
     if (!isVisible) return;
 
     const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          setShowAutoReveal(true);
-          return 0;
-        }
-        return prev - 1;
+      startTransition(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            setShowAutoReveal(true);
+            return 0;
+          }
+          return prev - 1;
+        });
       });
     }, 1000);
 
@@ -36,7 +38,9 @@ const FeedbackReflectionCard: React.FC<FeedbackReflectionCardProps> = ({
   useEffect(() => {
     if (showAutoReveal) {
       const autoRevealTimer = setTimeout(() => {
-        onRevealFeedback();
+        startTransition(() => {
+          onRevealFeedback();
+        });
       }, 1000);
       return () => clearTimeout(autoRevealTimer);
     }
