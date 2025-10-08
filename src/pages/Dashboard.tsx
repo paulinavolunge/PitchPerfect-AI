@@ -1,34 +1,29 @@
 
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ArrowRight, FileAudio, Mic, Users, Bot, Check, BarChart3, Crown } from 'lucide-react';
-import AISuggestionCard from '@/components/AISuggestionCard';
-import DashboardStats from '@/components/DashboardStats';
-import UserSubscriptionStatus from '@/components/dashboard/UserSubscriptionStatus';
-import CreditBalanceTracker from '@/components/dashboard/CreditBalanceTracker';
+import { FileAudio, Mic, Users, Bot, Check, Crown, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Step } from 'react-joyride';
 import GuidedTour from '@/components/GuidedTour';
 import NewUserOnboarding from '@/components/onboarding/NewUserOnboarding';
 import MicrophoneTestModal from '@/components/dashboard/MicrophoneTestModal';
 import AIDisclosure from '@/components/AIDisclosure';
 import AISettingsModal from '@/components/AISettingsModal';
-import TiltCard from '@/components/animations/TiltCard';
 import { motion } from 'framer-motion';
 import ParallaxSection from '@/components/animations/ParallaxSection';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
-import RefreshAnimation from '@/components/dashboard/RefreshAnimation';
-import FadeTransition from '@/components/animations/FadeTransition';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import EmptyState from '@/components/dashboard/EmptyState';
 import { useGuestMode } from '@/context/GuestModeContext';
-import ErrorBoundary from '@/components/error/ErrorBoundary';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import CreditsBar from '@/components/dashboard/CreditsBar';
+import RecentSessions from '@/components/dashboard/RecentSessions';
+import QuickPractice from '@/components/dashboard/QuickPractice';
+import AiSuggestions from '@/components/dashboard/AiSuggestions';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const TOUR_STORAGE_KEY = 'pitchperfect_tour_completed';
 const TOUR_COOLDOWN_KEY = 'pitchperfect_tour_cooldown';
@@ -38,58 +33,25 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { isGuestMode } = useGuestMode();
   
-  // Get auth data - now safe to use directly since ProtectedRoute handles errors
+  // Get auth data
   const { 
     user, 
-    refreshSubscription, 
     isPremium, 
     creditsRemaining, 
-    trialUsed, 
-    loading, 
     isNewUser, 
-    markOnboardingComplete 
+    markOnboardingComplete,
+    refreshSubscription,
   } = useAuth();
 
-  // Local state - simplified with error protection
+  // Load dashboard data
+  const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
+
+  // Local state
   const [showTour, setShowTour] = useState(false);
   const [showMicTest, setShowMicTest] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [streakCount, setStreakCount] = useState(0);
-  const [dashboardData, setDashboardData] = useState({
-    pitchCount: 0,
-    winRate: null,
-    recentPitches: [],
-    objectionCategories: [
-      { category: 'Price', mastered: 0 },
-      { category: 'Timing', mastered: 0 },
-      { category: 'Competition', mastered: 0 },
-      { category: 'Need', mastered: 0 },
-    ],
-    hasData: false
-  });
-
-  // Add error logging for debugging
-  useEffect(() => {
-    try {
-      console.log('🔍 Dashboard Debug Info:', {
-        userExists: !!user,
-        userId: user?.id || 'null',
-        loading,
-        isNewUser,
-        creditsRemaining,
-        trialUsed,
-        isPremium,
-        isGuestMode,
-      });
-    } catch (error) {
-      console.error('❌ Error in debug logging:', error);
-    }
-  }, [user, loading, isNewUser, creditsRemaining, trialUsed, isPremium, isGuestMode]);
 
   const tourSteps: Step[] = [
     {
@@ -156,95 +118,12 @@ const Dashboard = () => {
     return hoursSinceCooldown > TOUR_COOLDOWN_HOURS;
   };
 
-  // Enhanced data loading with better error handling
+  // Initialize on mount
   useEffect(() => {
-    let mounted = true;
-    
-    const loadDashboardData = async () => {
-      try {
-        console.log('📊 Loading dashboard data...');
-        setIsLoading(true);
-        
-        // Dashboard data loading - wrap in try-catch
-        if (mounted) {
-          try {
-            const newStreakCount = Math.floor(Math.random() * 10);
-            const newDashboardData = {
-              pitchCount: user ? Math.floor(Math.random() * 5) : 0,
-              winRate: user ? Math.floor(Math.random() * 100) : null,
-              recentPitches: [
-                { name: 'Mon', count: Math.floor(Math.random() * 5) },
-                { name: 'Tue', count: Math.floor(Math.random() * 5) },
-                { name: 'Wed', count: Math.floor(Math.random() * 5) },
-                { name: 'Thu', count: Math.floor(Math.random() * 5) },
-                { name: 'Fri', count: Math.floor(Math.random() * 5) },
-                { name: 'Sat', count: Math.floor(Math.random() * 5) },
-                { name: 'Sun', count: Math.floor(Math.random() * 5) },
-              ],
-              objectionCategories: [
-                { category: 'Price', mastered: Math.floor(Math.random() * 100) },
-                { category: 'Timing', mastered: Math.floor(Math.random() * 100) },
-                { category: 'Competition', mastered: Math.floor(Math.random() * 100) },
-                { category: 'Need', mastered: Math.floor(Math.random() * 100) },
-              ],
-              hasData: user ? true : false
-            };
-            
-            setStreakCount(newStreakCount);
-            setDashboardData(newDashboardData);
-            console.log('✅ Dashboard data loaded successfully');
-          } catch (dataError) {
-            console.error('❌ Error setting dashboard data:', dataError);
-            // Set safe fallback data
-            setStreakCount(0);
-            setDashboardData({
-              pitchCount: 0,
-              winRate: null,
-              recentPitches: [],
-              objectionCategories: [
-                { category: 'Price', mastered: 0 },
-                { category: 'Timing', mastered: 0 },
-                { category: 'Competition', mastered: 0 },
-                { category: 'Need', mastered: 0 },
-              ],
-              hasData: false
-            });
-          }
-          
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('❌ Error loading dashboard data:', error);
-        if (mounted) {
-          setIsLoading(false);
-          // Ensure we always set safe defaults
-          setStreakCount(0);
-          setDashboardData({
-            pitchCount: 0,
-            winRate: null,
-            recentPitches: [],
-            objectionCategories: [
-              { category: 'Price', mastered: 0 },
-              { category: 'Timing', mastered: 0 },
-              { category: 'Competition', mastered: 0 },
-              { category: 'Need', mastered: 0 },
-            ],
-            hasData: false
-          });
-        }
-      }
-    };
-
-    // Add slight delay to allow auth context to stabilize
-    const timeoutId = setTimeout(() => {
-      loadDashboardData();
-    }, 100);
-    
-    return () => {
-      mounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [user]);
+    if (user) {
+      refreshSubscription();
+    }
+  }, [user, refreshSubscription]);
 
   useEffect(() => {
     const hasTourBeenCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
@@ -321,55 +200,6 @@ const Dashboard = () => {
     navigate('/practice');
   };
 
-  const refreshDashboardData = async (showAnimation = true) => {
-    if (showAnimation) {
-      setIsRefreshing(true);
-    }
-    
-    // Simulate refresh
-    setTimeout(() => {
-      setStreakCount(Math.floor(Math.random() * 10));
-      setIsRefreshing(false);
-    }, 1000);
-  };
-
-  const getContextualCTA = () => {
-    if (isGuestMode) {
-      return {
-        label: "Start Demo (Guest)",
-        route: "/demo"
-      };
-    }
-
-    if (!user) {
-      return {
-        label: "Sign Up for Free",
-        route: "/signup"
-      };
-    }
-
-    if (!trialUsed) {
-      return {
-        label: "Get 1 Free Pitch Analysis",
-        route: "/demo"
-      };
-    }
-
-    if (creditsRemaining > 0) {
-      return {
-        label: `Start New Practice (${creditsRemaining} credits)`,
-        route: "/practice"
-      };
-    }
-
-    return {
-      label: "Top Up Credits / Upgrade Plan",
-      route: "/pricing"
-    };
-  };
-
-  const contextualCTA = getContextualCTA();
-
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
@@ -414,18 +244,15 @@ const Dashboard = () => {
           >
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-brand-dark mb-1">Dashboard</h1>
-              <RefreshAnimation isRefreshing={isRefreshing} />
-              <div className="text-sm text-muted-foreground">
-                {!isLoading && (
-                  <button
-                    onClick={() => refreshDashboardData(true)}
-                    className="text-brand-blue hover:underline focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2 rounded"
-                    aria-label="Refresh dashboard data"
-                  >
-                    Refresh
-                  </button>
-                )}
-              </div>
+              {!isLoading && (
+                <button
+                  onClick={refetch}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  aria-label="Refresh dashboard data"
+                >
+                  <RefreshCw className="h-4 w-4 text-brand-blue" />
+                </button>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -483,213 +310,118 @@ const Dashboard = () => {
             </motion.div>
           )}
 
-          {user && (
+          {/* Credits warning bar */}
+          {user && !isLoading && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="mb-8"
+              className="mb-6"
             >
-              <ErrorBoundary fallbackMessage="Error loading credit balance. Please refresh the page.">
-                <CreditBalanceTracker />
-              </ErrorBoundary>
+              <CreditsBar credits={dashboardData.profile.credits} />
             </motion.div>
           )}
 
-          <Tabs 
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="mb-6"
-          >
-            <TabsList className="mb-4" role="tablist">
-              <TabsTrigger value="overview" role="tab">Overview</TabsTrigger>
-              <TabsTrigger value="history" role="tab">Session History</TabsTrigger>
-              <TabsTrigger value="analysis" role="tab">Detailed Analysis</TabsTrigger>
-            </TabsList>
+          {/* Error handling */}
+          {error && (
+            <Alert className="mb-6 border-red-200 bg-red-50">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="flex items-center justify-between">
+                <span className="text-red-800">{error}</span>
+                <Button onClick={refetch} variant="outline" size="sm" className="ml-4">
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
 
-            <FadeTransition show={true} duration={300}>
-              <div style={{ minHeight: isLoading ? '600px' : 'auto' }}>
-                {isLoading ? (
-                  <DashboardSkeleton />
-                ) : (
-                  <>
-                    <TabsContent value="overview" className="mt-0" role="tabpanel">
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <motion.div 
-                          className="mb-8"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.3 }}
-                        >
-                          <ErrorBoundary fallbackMessage="Error loading subscription status. Please refresh the page.">
-                            <UserSubscriptionStatus />
-                          </ErrorBoundary>
-                        </motion.div>
-
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.4 }}
-                        >
-                          {dashboardData.hasData ? (
-                            <ErrorBoundary fallbackMessage="Error loading dashboard statistics. Please refresh the page.">
-                              <DashboardStats 
-                                streakCount={streakCount} 
-                                pitchCount={dashboardData.pitchCount}
-                                winRate={dashboardData.winRate}
-                                recentPitches={dashboardData.recentPitches}
-                                objectionCategories={dashboardData.objectionCategories}
-                              />
-                            </ErrorBoundary>
-                          ) : (
-                            <EmptyState 
-                              title="No pitch data yet"
-                              description="Complete your first practice session to see your performance stats here."
-                              actionLabel={contextualCTA.label}
-                              actionRoute={contextualCTA.route}
-                              icon={<BarChart3 className="h-12 w-12 text-gray-300 mb-4" />}
-                            />
-                          )}
-                        </motion.div>
-                      </motion.div>
-                    </TabsContent>
-
-                    <TabsContent value="history" className="mt-0" role="tabpanel">
-                      <EmptyState 
-                        title="No practice sessions yet"
-                        description="Start your first practice session to see your history here."
-                        actionLabel={contextualCTA.label}
-                        actionRoute={contextualCTA.route}
-                        icon={<FileAudio className="h-12 w-12 text-gray-300 mb-4" />}
-                        secondaryAction={{
-                          label: "Try Roleplay Instead",
-                          route: "/roleplay"
-                        }}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="analysis" className="mt-0" role="tabpanel">
-                      <EmptyState 
-                        title="Analysis not available yet"
-                        description="Complete more practice sessions to unlock detailed performance analysis."
-                        actionLabel={contextualCTA.label}
-                        actionRoute={contextualCTA.route}
-                        icon={<BarChart3 className="h-12 w-12 text-gray-300 mb-4" />}
-                      />
-                    </TabsContent>
-                  </>
-                )}
-              </div>
-            </FadeTransition>
-          </Tabs>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <AIDisclosure 
-              variant="compact"
-              description="Your dashboard contains AI-generated insights and suggestions based on your practice sessions."
-              className="mb-6"
-            />
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-            <motion.div 
-              className="lg:col-span-2 space-y-8"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-            >
-              <Card className="overflow-hidden shadow-md">
-                <CardHeader className="bg-gradient-to-r from-brand-blue/10 to-brand-blue/5 pb-4">
-                  <CardTitle className="text-xl text-brand-dark">Recent Practice Sessions</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="text-center py-6" role="region" aria-live="polite">
-                    <p className="text-gray-500 mb-4">No practice sessions yet. Start your first practice to see your progress here.</p>
-                    <Button 
-                      onClick={() => navigate(contextualCTA.route)}
-                      className="bg-brand-green hover:bg-brand-green/90"
-                      aria-label="Start your first practice session"
-                    >
-                      {contextualCTA.label}
-                    </Button>
+          {/* Loading state */}
+          {isLoading ? (
+            <div className="mb-8">
+              <DashboardSkeleton />
+            </div>
+          ) : (
+            <>
+              {/* Stats summary - only show if there's data */}
+              {dashboardData.stats.hasData && (
+                <motion.div
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <p className="text-sm text-gray-500 mb-1">Total Sessions</p>
+                    <p className="text-3xl font-bold text-brand-dark">
+                      {dashboardData.stats.totalSessions}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div 
-              className="space-y-6"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-            >
-              <TiltCard tiltFactor={3} glareOpacity={0.1} className="bg-gradient-to-br from-brand-green/5 to-teal-100/20 border-brand-green/30 rounded-lg shadow-sm">
-                <div className="p-6 tour-step-1">
-                  <h3 className="text-xl font-medium mb-4 text-brand-dark">Quick Practice</h3>
-                  <p className="text-brand-dark/70 mb-6">
-                    Ready to improve your pitch skills? Start a new practice session now.
-                  </p>
-                  <div className="tour-step-2 space-y-3">
-                    <Button 
-                      className="w-full mb-4 bg-gradient-to-r from-[#008D95] to-[#33C3F0] hover:from-[#007a82] hover:to-[#22b2df] text-white hover:scale-105 transition-all" 
-                      onClick={() => navigate(contextualCTA.route)}
-                      aria-label="Start new practice session"
-                    >
-                      {contextualCTA.label}
-                    </Button>
-                    <Link to="/roleplay">
-                      <Button 
-                        variant="outline" 
-                        className="w-full hover:scale-105 transition-transform"
-                        aria-label="Try roleplay scenarios"
-                      >
-                        Try Roleplay Scenarios
-                      </Button>
-                    </Link>
+                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <p className="text-sm text-gray-500 mb-1">Average Score</p>
+                    <p className="text-3xl font-bold text-brand-dark">
+                      {dashboardData.stats.averageScore !== null 
+                        ? `${dashboardData.stats.averageScore}%` 
+                        : 'N/A'}
+                    </p>
                   </div>
-                </div>
-              </TiltCard>
+                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <p className="text-sm text-gray-500 mb-1">Credits Remaining</p>
+                    <p className="text-3xl font-bold text-brand-dark">
+                      {dashboardData.profile.credits}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
 
-              <div className="space-y-4 tour-step-3">
-                <h3 className="font-medium text-xl text-brand-dark">AI Suggestions</h3>
-
-                <TiltCard tiltFactor={2} className="bg-white rounded-lg shadow-sm border border-gray-100">
-                  <AISuggestionCard
-                    title="Use Benefit-Focused Language"
-                    description="Try framing features in terms of customer benefits using phrases like 'which means that you can...'"
-                    type="tip"
+              {/* Main content grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                {/* Left column - Recent Sessions */}
+                <motion.div 
+                  className="lg:col-span-2 space-y-8"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <RecentSessions 
+                    sessions={dashboardData.recentSessions}
+                    onStartPractice={handleStartPractice}
                   />
-                </TiltCard>
+                </motion.div>
 
-                <TiltCard tiltFactor={2} className="bg-white rounded-lg shadow-sm border border-gray-100">
-                  <AISuggestionCard
-                    title="Elevator Pitch Template"
-                    description="Our [product] helps [target audience] to [solve problem] by [unique approach] unlike [alternative]."
-                    type="script"
-                  />
-                </TiltCard>
+                {/* Right column - Quick Practice & AI Tips */}
+                <motion.div 
+                  className="space-y-6"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <div className="tour-step-1 tour-step-2">
+                    <QuickPractice 
+                      credits={dashboardData.profile.credits}
+                      onStartPractice={handleStartPractice}
+                    />
+                  </div>
 
-                <Link to="/tips">
-                  <Button 
-                    variant="outline" 
-                    className="w-full flex items-center justify-center gap-2 hover:scale-105 transition-transform"
-                    aria-label="View all practice tips"
-                  >
-                    View All Tips
-                    <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-                  </Button>
-                </Link>
+                  <div className="tour-step-3">
+                    <AiSuggestions tips={dashboardData.tips} />
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+
+              {/* AI Disclosure */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="mt-8"
+              >
+                <AIDisclosure 
+                  variant="compact"
+                  description="Your dashboard contains AI-generated insights and suggestions based on your practice sessions."
+                />
+              </motion.div>
+            </>
+          )}
         </div>
       </ParallaxSection>
 
