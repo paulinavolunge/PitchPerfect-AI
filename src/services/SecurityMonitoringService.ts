@@ -188,12 +188,20 @@ export class SecurityMonitoringService {
   }
 
   // Content Security Policy violation handler
-  static handleCSPViolation(violationData: any): void {
-    this.logSecurityEvent('csp_violation', {
-      blocked_uri: violationData.blockedURI,
-      violated_directive: violationData.violatedDirective,
-      source_file: violationData.sourceFile,
-      line_number: violationData.lineNumber
-    });
+  static async handleCSPViolation(violationData: any): Promise<void> {
+    // Get current user for CSP violation logging
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user?.id) {
+      await this.logSecurityEvent('csp_violation', {
+        blocked_uri: violationData.blockedURI,
+        violated_directive: violationData.violatedDirective,
+        source_file: violationData.sourceFile,
+        line_number: violationData.lineNumber
+      }, user.id);
+    } else {
+      // CSP violations from non-authenticated users are logged to console only
+      console.warn('[CSP Violation]', violationData);
+    }
   }
 }
