@@ -172,10 +172,16 @@ export class EnhancedSecurityService {
     userId?: string
   ): Promise<boolean> {
     try {
+      // SECURITY: user_id is now required for security logs
+      if (!userId) {
+        console.warn('[EnhancedSecurity] Skipping security event - user_id required:', eventType);
+        return false;
+      }
+
       const { error } = await supabase.rpc('log_security_event', {
         p_event_type: eventType,
         p_event_details: eventDetails,
-        p_user_id: userId || null
+        p_user_id: userId
       });
 
       if (error) {

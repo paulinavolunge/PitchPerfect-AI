@@ -2,7 +2,8 @@ import { SecurityMonitoringService } from '@/services/SecurityMonitoringService'
 
 // Security headers configuration
 export const SECURITY_HEADERS = {
-  'X-Frame-Options': 'DENY',
+  // Changed from DENY to SAMEORIGIN to allow Lovable editor iframe
+  'X-Frame-Options': 'SAMEORIGIN',
   'X-Content-Type-Options': 'nosniff', 
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
@@ -10,6 +11,8 @@ export const SECURITY_HEADERS = {
   'Permissions-Policy': 'microphone=(self), camera=(), geolocation=(), payment=()',
   'Content-Security-Policy': [
     "default-src 'self'",
+    // Note: 'unsafe-inline' required for Vite HMR and React inline styles in dev mode
+    // Note: 'unsafe-eval' required for some dependencies (Stripe, Supabase, analytics)
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net https://cdn.gpteng.co https://www.youtube.com https://youtube.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",

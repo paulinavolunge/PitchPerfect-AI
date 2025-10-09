@@ -37,6 +37,12 @@ export class SecurityMonitoringService {
     details: Record<string, any> = {},
     userId?: string
   ): Promise<void> {
+    // SECURITY: user_id is now required for security logs
+    if (!userId) {
+      console.warn('[SecurityMonitoring] Skipping security event - user_id required:', eventType);
+      return;
+    }
+
     const sanitizedDetails = this.sanitizeEventDetails(details);
     await SafeRPCService.logSecurityEvent(eventType, sanitizedDetails, userId);
   }
