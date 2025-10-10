@@ -1,0 +1,135 @@
+
+/* Mobile-specific fixes and optimizations */
+
+/* Prevent horizontal scrolling */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* iOS Safari fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Fix iOS viewport height issues */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix iOS safe area */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Prevent zoom on input focus */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (max-width: 768px) {
+  /* Ensure all interactive elements are touch-friendly */
+  button, [role="button"], a, input, textarea, select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve text readability on mobile */
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  /* Better spacing for mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Prevent text overflow */
+  h1, h2, h3, h4, h5, h6, p, span, div {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  /* Improve form elements on mobile */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"], 
+  textarea {
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    padding: 12px;
+    font-size: 16px;
+  }
+  
+  /* Better button styling for mobile */
+  button {
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  
+  /* Improve modal/dialog spacing on mobile */
+  [role="dialog"], .modal {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+  
+  /* Better table responsiveness */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  /* Improve dropdown menus on mobile */
+  [role="menu"], .dropdown-menu {
+    min-width: 200px;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+/* Landscape orientation fixes */
+@media (max-width: 768px) and (orientation: landscape) {
+  .min-h-screen {
+    min-height: 100vh;
+  }
+}
+
+/* Very small screens (320px and below) */
+@media (max-width: 320px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Fix for potential content shifting */
+* {
+  box-sizing: border-box;
+}
+
+/* Improve scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus indicators for mobile accessibility */
+@media (max-width: 768px) {
+  *:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}

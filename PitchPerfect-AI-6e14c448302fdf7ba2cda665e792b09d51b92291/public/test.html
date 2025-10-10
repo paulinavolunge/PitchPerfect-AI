@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: green;
+            font-size: 24px;
+            margin-bottom: 1rem;
+        }
+        .info {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success">✅ App hosting is working!</div>
+        <div class="info">This page loads without React, confirming the hosting environment is functional.</div>
+        <div class="info">Time loaded: <span id="timestamp"></span></div>
+        <button onclick="window.location.href='/'">Go to React App</button>
+        <button onclick="window.location.reload()" style="margin-left: 10px;">Reload Test</button>
+    </div>
+    
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        console.log('Test page loaded successfully at:', new Date().toISOString());
+    </script>
+</body>
+</html>
