@@ -1,202 +1,190 @@
-Copilot Instructions for AI Coding Agents — PitchPerfectAI.ai
-Project Overview
+# 🧠 Copilot Instructions for AI Coding Agents — PitchPerfectAI.ai
 
-PitchPerfect AI is a real-time sales training and objection-handling app built with React (Vite), TypeScript, TailwindCSS, and Supabase (Auth, DB, Edge Functions). Optional providers: OpenAI, Claude, ElevenLabs.
-Goal: roleplay sales calls (text/voice), generate feedback, track progress, and ship fast with clean, testable modules.
+## TL;DR Guardrails
+- **Stack:** React (Vite) + TypeScript + TailwindCSS + Supabase (Auth, DB, Edge Functions)
+- **Style:** Functional components, hooks, **light mode only**, Tailwind utilities (no CSS modules)
+- **Data:** Read/write via `src/lib/supabase/client.ts` (never instantiate Supabase ad-hoc)
+- **AI Calls:** Always go through adapters in `src/lib/ai/adapters` or Supabase Edge Functions (no secrets in client)
+- **Agents:** Implement `BaseAgent` in `src/lib/ai/agents` and register in `agentRegistry.ts`
+- **Validation:** Use **zod** before any network or AI call
+- **Errors:** Throw typed errors; surface user-safe messages; log via Supabase logger util
+- **Testing:** Vitest for unit, Playwright for E2E
+- **Commits:** Use Conventional Commits (`feat:`, `fix:`, `chore:`, etc.)
+- **Do not:** add WordPress/Elementor code, deep component trees (>3 levels), or raw provider calls from UI
 
-Architectural Patterns
+---
 
-Factory – Create/register AI agents (Chat, Objection, Feedback, Voice).
+## 🧱 Architectural Patterns
+- **Factory** – Create/register AI Agents (Chat, Objection, Feedback, Voice)
+- **Strategy** – Pluggable model/providers per feature (OpenAI/Claude/Gemini)
+- **Adapter** – Wrap SDKs (Supabase, OpenAI, ElevenLabs) behind interfaces
+- **Builder** – Prompt/payload builders for consistent requests
+- **Dependency Inversion** – Depend on interfaces; mock in tests
 
-Strategy – Pluggable model/providers per feature (OpenAI/Claude/Gemini).
+---
 
-Adapter – Wrap SDKs (Supabase, OpenAI, ElevenLabs) behind interfaces.
-
-Builder – Prompt/payload builders for consistent requests.
-
-Dependency Inversion – Depend on interfaces; mock in tests.
-
-Directory Map (authoritative)
+## 📁 Directory Map (Authoritative)
 src/
-  components/            # UI (Chat, Recorder, Feedback, Decks)
-  pages/                 # Routes (Home, Practice, Scenarios, Settings)
-  hooks/                 # useAuth, useRealtime, useAudio, etc.
-  contexts/              # User/Session/Theme (light-only)
-  lib/
-    ai/
-      agents/            # ObjectionAgent, FeedbackAgent, ScenarioAgent, VoiceAgent
-      strategies/        # model selection, scoring, tone rules
-      builder/           # promptBuilder.ts, payloadBuilder.ts
-      adapters/          # openai.ts, claude.ts, elevenlabs.ts
-    supabase/            # client, edge helpers, rls utils
-  utils/                  # validation, formatters, audioCache
-  constants/              # TEXT.ts, ROUTES.ts, MODELS.ts
-supabase/functions/       # server logic (proxy, scoring, secure ops)
+components/ # Chat, Recorder, Feedback, Decks, UI primitives
+pages/ # Home, Practice, Scenarios, Settings
+hooks/ # useAuth, useRealtime, useAudio, useAgent
+contexts/ # User/Session/Theme (light-only)
+lib/
+ai/
+agents/ # ObjectionAgent, FeedbackAgent, ScenarioAgent, VoiceAgent
+strategies/ # modelStrategy, scoring, tone rules
+builder/ # promptBuilder.ts, payloadBuilder.ts
+adapters/ # openai.ts, claude.ts, elevenlabs.ts
+supabase/ # client.ts, edge.ts, rls.ts, logger.ts
+utils/ # validators, formatters, audioCache, telemetry
+constants/ # TEXT.ts, ROUTES.ts, MODELS.ts
+supabase/functions/ # secure provider proxies, scoring, auth utils
 
-Dev Conventions
+---
 
-Light mode only (disable dark mode toggles).
+## 🧩 What Copilot Should Do (Task Recipes)
 
-Components: PascalCase; utils: camelCase; constants: UPPER_SNAKE_CASE.
+### ➕ Add a New AI Agent
+1. Create `src/lib/ai/agents/<Name>Agent.ts` implementing `BaseAgent`
+2. Register it in `agentRegistry.ts`
+3. Add defaults to `constants/MODELS.ts`
+4. Expose a hook `useAgent('<key>')` if needed
 
-Max nesting: 3 levels per component; lift state up or use context.
+### 🧠 Create a New Scenario Type
+1. Add JSON schema under `/data/scenarios/` (role, objectionType, difficulty, rubric)
+2. Render it in `pages/Practice` with filter controls
 
-Env: never hardcode keys. Use import.meta.env.VITE_* (client) and secrets in Edge Functions (server).
+### 🎙️ Wire Voice
+- Use `VoiceAgent` + `adapters/elevenlabs.ts`
+- Cache generated audio with `utils/audioCache.ts`
 
-Errors: throw typed errors; surface user-safe messages; log to Supabase.
+### ⚙️ Add a New Edge Function
+- Add folder `supabase/functions/<fn>/index.ts`
+- Validate input with **zod**
+- Verify JWT before any request
+- Never expose secrets to the client
 
-Commits: Conventional Commits (feat:, fix:, chore:, etc.).
+---
 
-Tasks for AI Agents (how to help)
+## 🪶 Coding Conventions
+- **Components:** `PascalCase`
+- **Utilities:** `camelCase`
+- **Constants:** `UPPER_SNAKE_CASE`
+- **Max Component Nesting:** 3 levels; lift state up or use Context
+- **Controlled Inputs Only**; avoid `any`
+- **Tailwind First**; extract primitives if classes repeat
+- **Light Mode Only** for iOS visibility
 
-Add a new AI agent
+---
 
-Create src/lib/ai/agents/<Name>Agent.ts implementing BaseAgent.
+## 🔒 Security & Env Rules
+- **RLS** enforced on all user tables
+- **JWT validation** required in every Edge Function
+- **Secrets** only in Edge Functions (never client)
+- **Env Vars:**
+  - Client: `VITE_*`
+  - Server: plain secret keys
+- **Rate Limits / Retries:** handled in `adapters/*`
+- **Error Logging:** via `src/lib/supabase/logger.ts` or safe console wrappers
 
-Register in src/lib/ai/agents/agentRegistry.ts.
+---
 
-Provide defaults in src/constants/MODELS.ts.
-
-Create a new scenario type
-
-Add JSON schema in /data/scenarios/ (role, objectionType, difficulty, rubric).
-
-Expose in pages/Practice with filter controls.
-
-Wire voice
-
-Use VoiceAgent + ElevenLabs adapter; cache files via utils/audioCache.ts.
-
-Edge Function
-
-Add supabase/functions/<fn>/index.ts with input validation and JWT check.
-
-Never expose secrets to the client; proxy provider calls here when needed.
-
-Code Contracts
-BaseAgent
-export interface BaseAgent<Input = any, Output = any> {
+## 🧪 Testing & Scripts
+- **Unit Tests:** Vitest (`npm run test`)
+- **E2E Tests:** Playwright (auth → practice → feedback)
+- **Type Checking:** `npm run typecheck`
+- **Scripts:**
+  ```bash
+  npm run dev       # Vite dev server
+  npm run build     # Production build
+  npm run test      # Unit tests
+  npm run typecheck # TypeScript check
+💡 Example Implementations
+BaseAgent Interface (src/lib/ai/agents/types.ts)
+export interface BaseAgent<Input = unknown, Output = unknown> {
   name: string;
-  run(input: Input, opts?: AgentOptions): Promise<Output>;
-  getPrompt?(input: Input): string;       // optional: used by builder
-  handleResponse?(raw: unknown): Output;  // optional: map provider -> app shape
+  run(input: Input, opts?: { model?: string; temperature?: number }): Promise<Output>;
+  getPrompt?(input: Input): string;
+  handleResponse?(raw: unknown): Output;
 }
 
-Agent Registry
+Agent Registry (src/lib/ai/agents/agentRegistry.ts)
 type AgentKey = 'objection' | 'feedback' | 'scenario' | 'voice';
 
+const registry = new Map<AgentKey, BaseAgent>();
+
 export const AgentRegistry = {
-  register(key: AgentKey, agent: BaseAgent) { /* ... */ },
-  get<T = BaseAgent>(key: AgentKey): T { /* ... */ }
+  register: (key: AgentKey, agent: BaseAgent) => {
+    registry.set(key, agent);
+  },
+  get<T extends BaseAgent>(key: AgentKey): T {
+    const agent = registry.get(key);
+    if (!agent) throw new Error(`Agent not registered: ${key}`);
+    return agent as T;
+  },
+  list() {
+    return Array.from(registry.keys());
+  },
 };
 
-Prompt Builder
+Prompt Builder Example (src/lib/ai/builder/promptBuilder.ts)
 const payload = promptBuilder()
   .system(systemText)
-  .messages([{ role:'user', content:userText }])
-  .model(modelId)
+  .messages([{ role: 'user', content: userText }])
+  .model(modelId ?? 'gpt-4o-mini')
   .temperature(0.6)
   .build();
 
-Example Usage
-// register
-import { AgentRegistry } from '@/lib/ai/agents';
-import { ObjectionAgent } from '@/lib/ai/agents/ObjectionAgent';
-AgentRegistry.register('objection', new ObjectionAgent());
+❌ Don’t Do This
 
-// call
-const agent = AgentRegistry.get('objection');
-const result = await agent.run({
-  transcript, productContext, tone: 'empathetic'
-});
+❌ Fetch Supabase directly from components
+→ ✅ Use lib/supabase/client.ts
 
-Security Rules (must follow)
+❌ Create one-off OpenAI calls in UI
+→ ✅ Use adapters or Edge Functions
 
-RLS enforced for all user tables; verify JWT in every Edge Function.
+❌ Add WordPress/Elementor or PHP code
 
-Secrets only in Edge Functions / server; never in client build.
+❌ Introduce dark mode or global mutable state
 
-Input validation with zod/yup before any provider call.
+❌ Return unvalidated provider output to UI (always zod-validate)
 
-Production logs: use a safe logger; no raw PII or tokens.
-
-Testing
-
-Unit: Vitest with mocks for AI + Supabase (src/tests/mocks).
-
-E2E: Playwright happy path (auth → practice → feedback).
-
-CI: run vite build, vitest run, and typecheck.
-
-Helpful Scripts
-
-npm run dev – Vite dev server
-
-npm run build – Production build
-
-npm run test – Vitest
-
-npm run typecheck – TS
-
-Provider Notes
-
-OpenAI/Claude: choose via strategies/modelStrategy.ts; default gpt-4o-mini for cost/speed.
-
-ElevenLabs: map tone/emotion from feedback scores.
-
-Rate limits: centralize retries/backoff in adapters.
-
-Files to Consult First
-
-src/lib/ai/agents/*
-
-src/lib/ai/builder/promptBuilder.ts
-
-src/lib/ai/strategies/*
-
-supabase/functions/*
-
-src/constants/*
-
-What NOT to do
-
-Don’t add WordPress/Elementor code or assumptions.
-
-Don’t introduce dark mode or deep component trees.
-
-Don’t call providers directly from components — route through adapters or Edge Functions.
-
-When in doubt
-
-Prefer small, typed modules; keep UI dumb, logic in lib/; write a test.
-
-Minimal ENV Checklist
-
-Client (.env):
-
+🌐 Minimal Env Checklist
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 
+# Server (Edge Functions secrets)
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+ELEVENLABS_API_KEY=
 
-Server (Edge Functions secrets):
+🧭 When in Doubt
 
-OPENAI_API_KEY
-ANTHROPIC_API_KEY
-ELEVENLABS_API_KEY
+Keep modules small, typed, and composable
 
-Collaboration
+Keep UI dumb; put logic in lib/
 
-If conventions are unclear, open a short PR updating this file and src/lib/ai/README.md.
+Always write or update a test when changing logic
 
-Changelog
+Follow the patterns in this doc before introducing new ones
 
-Keep this doc in PRs when adding agents, providers, or security changes.
+📘 Collaboration
 
-End of file
-Quick add steps
-# from repo root
-mkdir -p .github
-# create/overwrite the file with the contents above
-git add .github/copilot-instructions.md
-git commit -m "docs(copilot): instructions for PitchPerfectAI.ai (React+Supabase, agents, security)"
-git push
+If conventions evolve, update:
+
+.github/copilot-instructions.md
+
+src/lib/ai/README.md
+
+src/lib/ai/agents/types.ts
+
+Commit with:
+
+docs(copilot): update conventions or patterns
+
+
+End of Copilot Instructions
+
+
+---
+
