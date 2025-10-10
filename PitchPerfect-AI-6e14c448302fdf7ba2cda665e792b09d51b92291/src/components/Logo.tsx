@@ -22,7 +22,7 @@ const Logo = ({ size = 'md', className }: LogoProps) => {
 
   return (
     <div className={cn(
-      "flex items-center gap-3 font-semibold dark:text-white",
+      "flex items-center gap-3 font-semibold text-foreground",
       textSizeClasses[size],
       className
     )}>
