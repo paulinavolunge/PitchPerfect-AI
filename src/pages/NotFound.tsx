@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Helmet } from 'react-helmet-async';
 
 const NotFound = () => {
   const location = useLocation();
@@ -17,8 +18,16 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
+    <>
+      <Helmet>
+        <title>404 - Page Not Found | PitchPerfect AI</title>
+        <meta name="description" content="The page you're looking for doesn't exist. Return to PitchPerfect AI to practice and perfect your sales pitch with AI-powered roleplay scenarios." />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href={`${window.location.origin}/404`} />
+      </Helmet>
+      
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
       <main className="flex-grow flex items-center justify-center bg-gray-50 py-12">
         <div className="text-center px-4">
           <h1 className="text-6xl font-bold text-brand-dark mb-6">404</h1>
@@ -44,6 +53,7 @@ const NotFound = () => {
       </main>
       <Footer />
     </div>
+    </>
   );
 };
 
