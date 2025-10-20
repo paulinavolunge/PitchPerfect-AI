@@ -1,13 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://yourdomain.com',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -25,9 +19,11 @@ const verifyAuth = async (request: Request) => {
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(origin!) });
   }
 
   try {
@@ -102,7 +98,7 @@ Focus on sales communication best practices:
       timestamp: new Date().toISOString(),
       inputType
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(origin!), 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
@@ -117,7 +113,7 @@ Focus on sales communication best practices:
       error: error.message 
     }), {
       status: 200, // Still return 200 for fallback
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(origin!), 'Content-Type': 'application/json' },
     });
   }
 });

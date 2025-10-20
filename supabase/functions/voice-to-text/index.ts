@@ -1,12 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://yourdomain.com',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -24,9 +18,11 @@ const verifyAuth = async (request: Request) => {
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(origin!) });
   }
 
   try {
@@ -78,7 +74,7 @@ serve(async (req) => {
       user_id: user.id,
       timestamp: new Date().toISOString()
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(origin!), 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
@@ -91,7 +87,7 @@ serve(async (req) => {
         code: 'AUTH_ERROR'
       }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders(origin!), 'Content-Type': 'application/json' },
       });
     }
     
@@ -100,7 +96,7 @@ serve(async (req) => {
       fallback: true 
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(origin!), 'Content-Type': 'application/json' },
     });
   }
 });
