@@ -41,9 +41,30 @@ serve(async (req) => {
 
     const { response, inputType } = await req.json();
 
-    console.log('Demo feedback request:', { response, inputType, userId: user.id });
+    // Input validation
+    if (!response || typeof response !== 'string') {
+      throw new Error('Invalid response format');
+    }
+    if (response.length < 10) {
+      throw new Error('Response too short (minimum 10 characters)');
+    }
+    if (response.length > 1000) {
+      throw new Error('Response too long (maximum 1000 characters)');
+    }
 
-    const systemPrompt = `You are an expert sales coach providing feedback on demo responses. 
+    // Sanitize input - remove control characters and trim
+    const sanitizedResponse = response
+      .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+      .trim()
+      .substring(0, 1000);
+
+    console.log('Demo feedback request:', { 
+      responseLength: sanitizedResponse.length, 
+      inputType, 
+      userId: user.id 
+    });
+
+    const systemPrompt = `You are an expert sales coach providing feedback on demo responses.
 
 Analyze the user's response and provide constructive, encouraging feedback that:
 1. Highlights what they did well
@@ -61,8 +82,8 @@ Focus on sales communication best practices:
 - Use of examples and proof points`;
 
     const userPrompt = inputType === 'voice' 
-      ? `Please provide coaching feedback on this voice response from a sales demo: "${response}"`
-      : `Please provide coaching feedback on this text response from a sales demo: "${response}"`;
+      ? `Please provide coaching feedback on this voice response from a sales demo: "${sanitizedResponse}"`
+      : `Please provide coaching feedback on this text response from a sales demo: "${sanitizedResponse}"`;
 
     const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -101,13 +122,25 @@ Focus on sales communication best practices:
     });
 
   } catch (error) {
-    console.error('Error in demo-feedback function:', error);
+    console.error('[INTERNAL] Error in demo-feedback function:', error);
+    
+    // Provide user-friendly error messages without exposing internals
+    let userMessage = 'Unable to generate feedback at this time';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('too short') || error.message.includes('too long') || error.message.includes('Invalid')) {
+        userMessage = error.message;
+      } else if (error.message.includes('Authentication')) {
+        userMessage = 'Authentication failed';
+      }
+    }
+    
     // Provide a fallback response for error situations
     const fallbackFeedback = "Great effort! Your response shows good understanding of the value proposition. Consider adding a specific example or case study to make your pitch even more compelling.";
     return new Response(JSON.stringify({ 
       feedback: fallbackFeedback,
       fallback: true,
-      error: error.message 
+      error: userMessage
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { clearAllSessionData, clearUserSpecificData, initializeCleanSession, validateSessionIsolation } from '@/utils/sessionCleanup';
 import { SafeRPCService } from '@/services/SafeRPCService';
+import { getUserErrorMessage } from '@/types/errors';
 
 interface AuthContextType {
   user: User | null;
@@ -43,8 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Auth initialization error:', error);
-          setInitError(`Auth initialization failed: ${error.message}`);
+          console.error('[INTERNAL] Auth initialization error:', error);
+          setInitError(getUserErrorMessage(error));
         } else {
           console.log('AuthContext: Initial session loaded', !!initialSession);
           setSession(initialSession);
@@ -57,8 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        setInitError(`Failed to initialize auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error('[INTERNAL] Failed to initialize auth:', error);
+        setInitError(getUserErrorMessage(error));
       } finally {
         console.log('AuthContext: Setting loading to false');
         setLoading(false);

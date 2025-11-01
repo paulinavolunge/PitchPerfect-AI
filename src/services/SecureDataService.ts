@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { createSafeErrorResponse, SafeErrorResponse } from '@/types/errors';
 
 export interface SecureDataResponse<T = any> {
   success: boolean;
@@ -23,17 +24,14 @@ export class SecureDataService {
       });
 
       if (error) {
-        console.error('Credit deduction error:', error);
-        return { success: false, error: error.message };
+        console.error('[INTERNAL] Credit deduction error:', error);
+        return createSafeErrorResponse(error);
       }
 
       return { success: true, data };
     } catch (error) {
-      console.error('Credit deduction failed:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+      console.error('[INTERNAL] Credit deduction failed:', error);
+      return createSafeErrorResponse(error);
     }
   }
 
@@ -49,15 +47,14 @@ export class SecureDataService {
         .single();
 
       if (error) {
-        return { success: false, error: error.message };
+        console.error('[INTERNAL] User profile fetch error:', error);
+        return createSafeErrorResponse(error);
       }
 
       return { success: true, data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch user profile'
-      };
+      console.error('[INTERNAL] User profile fetch failed:', error);
+      return createSafeErrorResponse(error);
     }
   }
 
@@ -77,17 +74,14 @@ export class SecureDataService {
       });
 
       if (error) {
-        console.error('Security event logging failed:', error);
-        return { success: false, error: error.message };
+        console.error('[INTERNAL] Security event logging failed:', error);
+        return createSafeErrorResponse(error);
       }
 
       return { success: true, data };
     } catch (error) {
-      console.error('Security event logging error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to log security event'
-      };
+      console.error('[INTERNAL] Security event logging error:', error);
+      return createSafeErrorResponse(error);
     }
   }
 
@@ -103,15 +97,14 @@ export class SecureDataService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        return { success: false, error: error.message };
+        console.error('[INTERNAL] Pitch recordings fetch error:', error);
+        return createSafeErrorResponse(error);
       }
 
       return { success: true, data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch pitch recordings'
-      };
+      console.error('[INTERNAL] Pitch recordings fetch failed:', error);
+      return createSafeErrorResponse(error);
     }
   }
 
@@ -140,15 +133,14 @@ export class SecureDataService {
         .single();
 
       if (error) {
-        return { success: false, error: error.message };
+        console.error('[INTERNAL] Pitch recording creation error:', error);
+        return createSafeErrorResponse(error);
       }
 
       return { success: true, data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to create pitch recording'
-      };
+      console.error('[INTERNAL] Pitch recording creation failed:', error);
+      return createSafeErrorResponse(error);
     }
   }
 }

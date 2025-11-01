@@ -71,7 +71,6 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       text: data.text,
-      user_id: user.id,
       timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders(origin!), 'Content-Type': 'application/json' },
