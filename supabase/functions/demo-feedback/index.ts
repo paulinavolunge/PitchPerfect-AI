@@ -1,40 +1,39 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from "../_shared/cors.ts";
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://yourdomain.com',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+};
+
+// Strict authentication: fail if not authenticated!
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null; // Allow guest users
-
+  if (!token) throw new Error('Authentication required');
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
   );
-
   const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) return null; // Return null instead of throwing
-
+  if (error || !user) throw new Error('Invalid or missing authentication');
   return user;
 };
 
 serve(async (req) => {
-  const origin = req.headers.get("origin");
-  
-  // Handle CORS preflight requests
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders(origin!) });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication (optional for demo)
+    // Require authentication—no guests
     const user = await verifyAuth(req);
-    if (user) {
-      console.log('Authenticated user:', user.id);
-    } else {
-      console.log('Guest user accessing demo');
-    }
-    
+
+    console.log('Authenticated user:', user.id);
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
@@ -42,7 +41,7 @@ serve(async (req) => {
 
     const { response, inputType } = await req.json();
 
-    console.log('Demo feedback request:', { response, inputType, isGuest: !user });
+    console.log('Demo feedback request:', { response, inputType, userId: user.id });
 
     const systemPrompt = `You are an expert sales coach providing feedback on demo responses. 
 
@@ -98,22 +97,20 @@ Focus on sales communication best practices:
       timestamp: new Date().toISOString(),
       inputType
     }), {
-      headers: { ...corsHeaders(origin!), 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error in demo-feedback function:', error);
-    
-    // Provide a fallback response
+    // Provide a fallback response for error situations
     const fallbackFeedback = "Great effort! Your response shows good understanding of the value proposition. Consider adding a specific example or case study to make your pitch even more compelling.";
-    
     return new Response(JSON.stringify({ 
       feedback: fallbackFeedback,
       fallback: true,
       error: error.message 
     }), {
-      status: 200, // Still return 200 for fallback
-      headers: { ...corsHeaders(origin!), 'Content-Type': 'application/json' },
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
