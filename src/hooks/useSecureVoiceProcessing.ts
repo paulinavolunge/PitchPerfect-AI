@@ -38,16 +38,6 @@ export const useSecureVoiceProcessing = () => {
       // Sanitize input
       const sanitizedInput = sanitizeVoiceInput(rawInput);
 
-      // Log security event
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'voice_processing_started',
-        p_event_details: {
-          processing_type: processingType,
-          input_length: sanitizedInput.length,
-          user_id: user.id
-        }
-      });
-
       // Process the sanitized input (implement actual processing logic here)
       const result = {
         processedText: sanitizedInput,
@@ -55,30 +45,10 @@ export const useSecureVoiceProcessing = () => {
         type: processingType
       };
 
-      // Log successful processing
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'voice_processing_completed',
-        p_event_details: {
-          processing_type: processingType,
-          success: true,
-          user_id: user.id
-        }
-      });
-
       return { success: true, data: result };
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Processing failed';
-      
-      // Log failed processing
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'voice_processing_failed',
-        p_event_details: {
-          processing_type: processingType,
-          error: errorMessage,
-          user_id: user.id
-        }
-      });
 
       return { success: false, error: errorMessage };
     } finally {

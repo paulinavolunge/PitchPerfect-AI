@@ -45,10 +45,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) {
           console.error('Auth initialization error:', error);
           setInitError(`Auth initialization failed: ${error.message}`);
-          // Log security event for failed auth initialization
-          SafeRPCService.logSecurityEvent('auth_initialization_failed', { 
-            error: error.message 
-          });
         } else {
           console.log('AuthContext: Initial session loaded', !!initialSession);
           setSession(initialSession);
@@ -63,10 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Failed to initialize auth:', error);
         setInitError(`Failed to initialize auth: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                  // Log security event for auth system errors
-          SafeRPCService.logSecurityEvent('auth_system_error', { 
-            error: error instanceof Error ? error.message : 'Unknown error' 
-          });
       } finally {
         console.log('AuthContext: Setting loading to false');
         setLoading(false);
@@ -274,22 +266,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setCreditsRemaining(newProfile?.credits_remaining || 1);
             setTrialUsed(newProfile?.trial_used || false);
           }
-        } else {
-          console.error('Error loading user profile:', error);
-          
-          // Retry on temporary errors
-          if (retryCount < 3 && (error.code === 'PGRST301' || error.code === '500')) {
+          } else {
+            console.error('Error loading user profile:', error);
+            
+            // Retry on temporary errors
+            if (retryCount < 3 && (error.code === 'PGRST301' || error.code === '500')) {
             console.log('Temporary error, retrying profile load...');
             await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-            return loadUserProfile(userId, retryCount + 1);
-          }
-          
-                      // Log security event for profile access issues
-            SafeRPCService.logSecurityEvent('profile_access_failed', { 
-              error: error.message 
-            }, userId);
-          
-          // Use safe defaults
+              return loadUserProfile(userId, retryCount + 1);
+            }
+            
+            // Use safe defaults
           setCreditsRemaining(1); // Give new users 1 free credit
           setTrialUsed(false);
         }
@@ -319,11 +306,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return loadUserProfile(userId, retryCount + 1);
       }
-      
-              // Log security event for profile loading errors
-        SafeRPCService.logSecurityEvent('profile_loading_error', { 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        }, userId);
       
       // Use safe defaults on any error
       setCreditsRemaining(1); // Give new users 1 free credit
@@ -357,21 +339,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error starting free trial:', error);
-        // Log security event for trial activation failure
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'trial_activation_failed',
-          p_event_details: { error: error.message },
-          p_user_id: user.id
-        });
         return false;
       }
-
-      // Log successful trial activation
-      await supabase.rpc('log_security_event', {
-        p_event_type: 'trial_activated',
-        p_event_details: { credits_added: 10 },
-        p_user_id: user.id
-      });
 
       setTrialUsed(true);
       setCreditsRemaining(prev => prev + 10);
@@ -396,10 +365,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       } else {
         console.error('Credit deduction failed');
-        // Log security event for credit deduction failure
-        SafeRPCService.logSecurityEvent('credit_deduction_failed', { 
-          feature: featureType
-        }, user.id);
         return false;
       }
     } catch (error) {
@@ -413,13 +378,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Signing out user...');
       
       const currentUserId = user?.id;
-      
-      // Log security event for sign out
-      if (currentUserId) {
-        SafeRPCService.logSecurityEvent('user_signout_initiated', { 
-          clean_logout: true 
-        }, currentUserId);
-      }
       
       // Clear ALL session data including localStorage (preserve consent)
       console.log('🧹 Clearing all session data on logout...');

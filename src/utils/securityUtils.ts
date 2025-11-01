@@ -43,8 +43,6 @@ export const checkVoiceRateLimit = async (
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      // Log error securely without exposing details
-      await logSecurityEvent('rate_limit_check_failed', { error_code: error.code }, userId);
       return false; // Fail closed for security
     }
 
@@ -80,8 +78,6 @@ export const checkVoiceRateLimit = async (
 
     return true;
   } catch (error) {
-    // Log error securely and fail closed
-    await logSecurityEvent('rate_limit_system_error', { error: 'Rate limit check failed' }, userId);
     return false; // Fail closed for security
   }
 };
@@ -113,50 +109,6 @@ export const validateAudioFile = (file: File): { valid: boolean; error?: string 
       valid: false, 
       error: `Invalid file type. Allowed types: ${allowedTypes.join(', ')}` 
     };
-  }
-
-  return { valid: true };
-};
-
-export const logSecurityEvent = async (
-  eventType: string,
-  eventDetails: Record<string, any> = {},
-  userId?: string
-): Promise<void> => {
-  try {
-    await supabase.rpc('log_security_event', {
-      p_event_type: eventType,
-      p_event_details: eventDetails,
-      p_user_id: userId || null
-    });
-  } catch (error) {
-    // Silently fail - security logging should not break functionality
-    // In production, this could be sent to external monitoring
-  }
-};
-
-export const validateUserInput = (input: string): { valid: boolean; error?: string } => {
-  if (!input || typeof input !== 'string') {
-    return { valid: false, error: 'Input must be a non-empty string' };
-  }
-
-  if (input.length > 10000) {
-    return { valid: false, error: 'Input too long (max 10000 characters)' };
-  }
-
-  // Check for common injection patterns
-  const dangerousPatterns = [
-    /<script/i,
-    /javascript:/i,
-    /data:text\/html/i,
-    /vbscript:/i,
-    /on\w+\s*=/i
-  ];
-
-  for (const pattern of dangerousPatterns) {
-    if (pattern.test(input)) {
-      return { valid: false, error: 'Input contains potentially dangerous content' };
-    }
   }
 
   return { valid: true };
