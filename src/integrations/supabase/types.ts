@@ -21,7 +21,7 @@ export type Database = {
           created_at: string | null
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           target_user_id: string | null
           user_agent: string | null
         }
@@ -31,7 +31,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           target_user_id?: string | null
           user_agent?: string | null
         }
@@ -41,7 +41,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           target_user_id?: string | null
           user_agent?: string | null
         }
@@ -82,7 +82,7 @@ export type Database = {
           accessed_at: string
           client_info: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           operation: string
           record_id: string | null
           success: boolean | null
@@ -93,7 +93,7 @@ export type Database = {
           accessed_at?: string
           client_info?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           operation: string
           record_id?: string | null
           success?: boolean | null
@@ -104,7 +104,7 @@ export type Database = {
           accessed_at?: string
           client_info?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           operation?: string
           record_id?: string | null
           success?: boolean | null
@@ -232,7 +232,7 @@ export type Database = {
           action: string
           changed_by: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_role: string
           old_role: string | null
           target_user_id: string
@@ -243,7 +243,7 @@ export type Database = {
           action: string
           changed_by: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_role: string
           old_role?: string | null
           target_user_id: string
@@ -254,7 +254,7 @@ export type Database = {
           action?: string
           changed_by?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_role?: string
           old_role?: string | null
           target_user_id?: string
@@ -332,7 +332,7 @@ export type Database = {
           event_details: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string | null
         }
@@ -341,7 +341,7 @@ export type Database = {
           event_details?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -350,7 +350,7 @@ export type Database = {
           event_details?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -588,10 +588,7 @@ export type Database = {
         }
         Returns: Json
       }
-      check_privilege_escalation: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      check_privilege_escalation: { Args: never; Returns: undefined }
       check_rate_limit: {
         Args: { p_action?: string; p_ip_address: unknown; p_user_id: string }
         Returns: Json
@@ -600,10 +597,7 @@ export type Database = {
         Args: { p_required_role?: string; p_user_id: string }
         Returns: boolean
       }
-      cleanup_expired_rate_limits: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      cleanup_expired_rate_limits: { Args: never; Returns: number }
       deduct_credits_and_log_usage: {
         Args: {
           p_credits_to_deduct: number
@@ -612,26 +606,11 @@ export type Database = {
         }
         Returns: boolean
       }
-      initialize_admin_system: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_authenticated_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_emergency_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_verified_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      initialize_admin_system: { Args: never; Returns: undefined }
+      is_admin: { Args: never; Returns: boolean }
+      is_authenticated_user: { Args: never; Returns: boolean }
+      is_emergency_admin: { Args: never; Returns: boolean }
+      is_verified_admin: { Args: never; Returns: boolean }
       log_admin_activity: {
         Args: {
           p_action_type: string
@@ -665,10 +644,7 @@ export type Database = {
         }
         Returns: Json
       }
-      security_health_check: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      security_health_check: { Args: never; Returns: Json }
       validate_content_safety: {
         Args: { p_content: string; p_user_id?: string }
         Returns: Json

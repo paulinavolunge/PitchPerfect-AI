@@ -71,13 +71,6 @@ export const useEnhancedSecurity = () => {
     }
   }, [user?.id]);
 
-  const logSecurityEvent = useCallback(async (
-    eventType: string,
-    eventDetails: Record<string, any> = {}
-  ): Promise<boolean> => {
-    return EnhancedSecurityService.logSecurityEvent(eventType, eventDetails, user?.id);
-  }, [user?.id]);
-
   const validateAudioFile = useCallback((file: File) => {
     const result = EnhancedSecurityService.validateAudioFile(file);
     
@@ -108,7 +101,6 @@ export const useEnhancedSecurity = () => {
   return {
     secureDeductCredits,
     checkVoiceRateLimit,
-    logSecurityEvent,
     validateAudioFile,
     sanitizeVoiceInput,
     isProcessing,

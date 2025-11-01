@@ -7,7 +7,6 @@ import { SecurityMonitoringService } from '@/services/SecurityMonitoringService'
 export const {
   validateAudioFile,
   sanitizeVoiceInput,
-  logSecurityEvent,
   checkVoiceRateLimit,
   secureDeductCredits
 } = EnhancedSecurityService;
