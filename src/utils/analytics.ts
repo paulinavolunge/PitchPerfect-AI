@@ -1,64 +1,7 @@
-
 // Privacy-compliant Google Analytics implementation with enhanced debugging
 
-// Define global loadAnalytics function for dynamic consent updates
-window.loadAnalytics = function() {
-  console.log('🔧 Global loadAnalytics: Loading analytics after consent');
-  
-  if (!hasValidConsent()) {
-    console.log('❌ Global loadAnalytics: No valid consent');
-    return;
-  }
-
-  // Initialize dataLayer and gtag if not already done
-  window.dataLayer = window.dataLayer || [];
-  
-  if (!window.gtag) {
-    window.gtag = function() { 
-      console.log('📊 GA4 Event:', arguments);
-      window.dataLayer.push(arguments); 
-    };
-  }
-
-  // Load GA script if not already loaded
-  if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
-    console.log('🔧 Loading GA4 script...');
-    const gaScript = document.createElement('script') as HTMLScriptElement;
-    gaScript.async = true;
-    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y';
-    gaScript.onload = () => {
-      console.log('✅ GA4 script loaded successfully');
-    };
-    gaScript.onerror = () => {
-      console.error('❌ Failed to load GA4 script');
-    };
-    document.head.appendChild(gaScript);
-  }
-
-  // Configure GA4 after script loads
-  setTimeout(() => {
-    if (window.gtag) {
-      console.log('🔧 Configuring GA4...');
-      window.gtag('js', new Date());
-      window.gtag('config', 'G-HVCRJT504Y', {
-        debug_mode: true,
-        send_page_view: false,
-        anonymize_ip: true,
-        allow_google_signals: false,
-        allow_ad_personalization_signals: false
-      });
-      
-      console.log('✅ GA4 configured successfully');
-      
-      // Track current page
-      const currentPath = window.location.pathname + window.location.search;
-      trackPageView(currentPath);
-    } else {
-      console.error('❌ gtag function not available after script load');
-    }
-  }, 1000);
-};
-
+const GA_ID = 'G-HVCRJT504Y';
+const DEBUG_MODE = false; // Set to true for debugging
 // Initialize Google Analytics with debug mode and consent validation
 export const initGA = () => {
   try {
@@ -173,7 +116,7 @@ export const trackPageView = (path: string) => {
       page_path: path,
       page_title: document.title,
       page_location: window.location.href,
-      send_to: 'G-HVCRJT504Y'
+      send_to: GA_ID
     };
     
     // Send pageview to GA4
@@ -205,7 +148,7 @@ export const trackEvent = (
     
     const enhancedParams = {
       ...eventParams,
-      send_to: 'G-HVCRJT504Y'
+      send_to: GA_ID
     };
     
     // Send to GA4
@@ -278,5 +221,67 @@ export const autoInitAnalytics = () => {
     console.log('ℹ️ Analytics: No consent found, skipping initialization');
   }
 };
+
+// Define global loadAnalytics function after all dependencies are loaded
+window.loadAnalytics = function() {
+  console.log('🔧 Global loadAnalytics: Loading analytics after consent');
+  
+  if (!hasValidConsent()) {
+    console.log('❌ Global loadAnalytics: No valid consent');
+    return;
+  }
+
+  // Initialize dataLayer and gtag if not already done
+  window.dataLayer = window.dataLayer || [];
+  
+  if (!window.gtag) {
+    window.gtag = function() { 
+      if (DEBUG_MODE) console.log('📊 GA4 Event:', arguments);
+      window.dataLayer.push(arguments); 
+    };
+  }
+
+  // Load GA script if not already loaded
+  if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
+    console.log('🔧 Loading GA4 script...');
+    const gaScript = document.createElement('script') as HTMLScriptElement;
+    gaScript.async = true;
+    gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    gaScript.onload = () => {
+      console.log('✅ GA4 script loaded successfully');
+      configureGA4();
+    };
+    gaScript.onerror = () => {
+      console.error('❌ Failed to load GA4 script');
+    };
+    document.head.appendChild(gaScript);
+  } else {
+    // Script already loaded, just configure
+    configureGA4();
+  }
+};
+
+// Configure GA4 after script loads
+function configureGA4() {
+  if (window.gtag) {
+    console.log('🔧 Configuring GA4 with ID:', GA_ID);
+    window.gtag('js', new Date());
+    window.gtag('config', GA_ID, {
+      debug_mode: DEBUG_MODE,
+      send_page_view: false,
+      anonymize_ip: true,
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false
+    });
+    
+    console.log('✅ GA4 configured successfully');
+    
+    // Track current page
+    const currentPath = window.location.pathname + window.location.search;
+    trackPageView(currentPath);
+  } else {
+    console.error('❌ gtag function not available after script load');
+  }
+}
 
 // Type definitions are centralized in src/types/browser-apis.d.ts

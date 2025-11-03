@@ -17,7 +17,9 @@ export const PrivacyCompliantAnalytics = () => {
       // Delay page view tracking to ensure analytics is loaded
       setTimeout(() => {
         trackPageView(currentPath);
-      }, 1500);
+      }, 2000); // Increased delay for reliability
+    } else {
+      console.log('ℹ️ PrivacyCompliantAnalytics: No consent found. Please accept analytics cookies to enable tracking.');
     }
     
     // Set up debug check

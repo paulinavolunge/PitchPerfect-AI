@@ -23,13 +23,19 @@ export const ConsentBanner: React.FC = () => {
   useEffect(() => {
     const consent = localStorage.getItem('privacy-consent');
     if (!consent) {
-      setShowBanner(true);
+      // Show banner after a brief delay to ensure page is loaded
+      setTimeout(() => {
+        setShowBanner(true);
+        console.log('🍪 ConsentBanner: Showing consent banner (no prior consent found)');
+      }, 1000);
+    } else {
+      console.log('✅ ConsentBanner: Consent already given:', consent);
     }
     
     // Check if analytics consent already exists and trigger analytics
     const analyticsConsent = localStorage.getItem('analytics-consent');
     if (analyticsConsent === 'true') {
-      
+      console.log('✅ ConsentBanner: Analytics consent found, loading analytics...');
       if (typeof window.loadAnalytics === 'function') {
         // Delay slightly to ensure DOM is ready
         setTimeout(() => {
@@ -38,17 +44,25 @@ export const ConsentBanner: React.FC = () => {
       } else {
         console.warn('⚠️ ConsentBanner: window.loadAnalytics not available');
       }
+    } else {
+      console.log('ℹ️ ConsentBanner: No analytics consent. User needs to accept cookies.');
     }
   }, []);
 
   const saveConsent = (consentData: ConsentPreferences) => {
-    
+    console.log('💾 ConsentBanner: Saving consent preferences:', consentData);
     
     localStorage.setItem('privacy-consent', JSON.stringify(consentData));
     localStorage.setItem('marketing-consent', consentData.marketing.toString());
     
     // Use the analytics utility function to set consent properly
     setAnalyticsConsent(consentData.analytics);
+    
+    if (consentData.analytics) {
+      console.log('✅ ConsentBanner: Analytics enabled - Google Analytics will load');
+    } else {
+      console.log('❌ ConsentBanner: Analytics disabled');
+    }
     
     setShowBanner(false);
     setShowPreferences(false);
