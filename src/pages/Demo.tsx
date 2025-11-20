@@ -41,19 +41,19 @@ const Demo = () => {
     console.log("Demo page loaded with objection scenario:", objectionScenario);
     console.log("Guest mode:", isGuestMode, "User:", user);
   }, []);
-  
+
   const handleDemoComplete = (data?: any) => {
     console.log("Demo completed with data:", data);
     // Save session data
     if (data) {
       setSessionData(data);
     }
-    
+
     // Only show the waitlist modal for non-guest users
     if (!isGuestMode) {
       startTransition(() => setShowWaitlistModal(true));
     }
-    
+
     // Then send the data to CRM via webhook
     if (data) {
       sendSessionToCRM(data, crmProvider)
@@ -76,7 +76,7 @@ const Demo = () => {
   const savePracticeSession = async (practiceData: any) => {
     console.log('💾 savePracticeSession called with:', practiceData);
     console.log('👤 User:', user?.id, 'Guest mode:', isGuestMode);
-    
+
     if (!user?.id || isGuestMode) {
       console.log('❌ Skipping database save - guest mode or no user');
       return;
@@ -136,26 +136,26 @@ const Demo = () => {
     console.log('Objection practice submission:', input);
     console.log('Submission type:', input.type);
     console.log('Submission data:', input.data);
-    
+
     try {
       setHasError(false);
-      
+
       // Show immediate feedback that we're processing
       toast({
         title: "Processing Response",
         description: `Analyzing your ${input.type} response...`,
         duration: 3000,
       });
-      
+
       // Credits will be deducted AFTER successful AI response
-      
+
       // Simulate AI processing with a more realistic delay
       console.log('Starting AI analysis simulation...');
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Call AI feedback service
       const responseText = typeof input.data === 'string' ? input.data : 'Voice response processed';
-      
+
       let feedbackData;
       try {
         const { data, error } = await supabase.functions.invoke('demo-feedback', {
@@ -165,9 +165,12 @@ const Demo = () => {
           }
         });
 
+        console.log('API Response:', { data, error });
+
         if (error) {
-          console.error('Demo feedback error:', error);
-          throw new Error(error.message);
+          console.error('Demo feedback API error:', error);
+          console.error('Error details:', JSON.stringify(error, null, 2));
+          throw new Error(error.message || 'Failed to get AI feedback');
         }
 
         feedbackData = {
@@ -178,24 +181,24 @@ const Demo = () => {
           score: Math.floor(Math.random() * 3) + 7, // Still use random score for demo
           aiSuccess: !data.fallback // Track if this was from real AI
         };
-        
+
         // Deduct credits AFTER successful AI response
         if (!isGuestMode && user && !data.fallback) {
           const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
           const featureType = `demo_objection_${input.type}`;
-          
+
           console.log(`Deducting ${creditsToDeduct} credits for successful ${featureType}`);
-          
+
           const deducted = await deductUserCredits(featureType, creditsToDeduct);
           if (!deducted) {
             console.warn('Credit deduction failed after successful AI response');
             // Don't stop the flow - user already got the value
           }
         }
-        
+
       } catch (error) {
         console.error('AI feedback failed, using fallback:', error);
-        
+
         // Fallback to local feedback generation (no credit deduction for fallback)
         feedbackData = {
           type: input.type,
@@ -206,17 +209,17 @@ const Demo = () => {
           aiSuccess: false // Mark as fallback
         };
       }
-      
+
       console.log('Generated feedback data:', feedbackData);
-      
+
       setFeedback(feedbackData.feedback);
-      
+
       // Save practice session to database for authenticated users
       await savePracticeSession(feedbackData);
-      
+
       // Complete the demo with the feedback data
       handleDemoComplete(feedbackData);
-      
+
       // Show completion toast (separate from credit usage toast)
       toast({
         title: "Analysis Complete",
@@ -224,9 +227,9 @@ const Demo = () => {
         variant: "default",
         duration: 4000,
       });
-      
+
       console.log('Demo submission completed successfully');
-      
+
     } catch (error) {
       console.error('Error processing objection:', error);
       setHasError(true);
@@ -261,7 +264,7 @@ const Demo = () => {
     setFeedback(null);
     setSessionData(null);
   };
-  
+
   return (
     <>
       <Helmet>
@@ -273,11 +276,11 @@ const Demo = () => {
         <meta property="og:type" content="website" />
         <link rel="canonical" href={`${window.location.origin}/demo`} />
       </Helmet>
-      
+
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <Suspense fallback={<Skeleton className="h-16 w-full" />}>
-          <DemoNavigation 
+          <DemoNavigation
             currentStep={1}
             totalSteps={3}
             showProgress={true}
@@ -292,18 +295,18 @@ const Demo = () => {
         <main className="flex-grow pt-24 pb-12">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <AIDisclosure 
+              <AIDisclosure
                 title="AI-Powered Demo"
                 description="This demo features AI-generated feedback based on your speech. The analysis and suggestions are created by artificial intelligence and should be considered illustrative."
                 className="mb-6"
               />
-              
+
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
                 <div className="flex justify-between items-center mb-4">
                   <h1 className="text-2xl font-bold text-brand-dark">Try PitchPerfect AI - Objection Handling Practice</h1>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => startTransition(() => setShowWebhookSettings(true))}
                     className="flex items-center gap-1"
                   >
@@ -312,10 +315,10 @@ const Demo = () => {
                   </Button>
                 </div>
                 <p className="text-brand-dark/80 mb-6">
-                  Experience how PitchPerfect AI helps you improve your sales pitch. 
+                  Experience how PitchPerfect AI helps you improve your sales pitch.
                   Practice handling pricing objections using either voice or text input, and get instant feedback.
                 </p>
-                
+
                 {hasError ? (
                   <div className="text-center py-8">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
@@ -345,7 +348,7 @@ const Demo = () => {
                   </div>
                 )}
               </div>
-              
+
               {isGuestMode && sessionData && (
                 <div className="bg-brand-blue/10 rounded-lg p-6 text-center mb-8">
                   <h3 className="text-xl font-medium mb-2 text-brand-dark">Want to try more features?</h3>
@@ -353,13 +356,13 @@ const Demo = () => {
                     You're using PitchPerfect AI in guest mode. Try our role-playing feature or sign up to save your progress.
                   </p>
                   <div className="flex justify-center gap-3">
-                    <Button 
+                    <Button
                       onClick={handleTryMoreFeatures}
                       className="bg-brand-blue hover:bg-brand-blue/90"
                     >
                       Try Role-Playing
                     </Button>
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={() => navigate('/signup')}
                       className="flex items-center gap-2"
@@ -378,13 +381,13 @@ const Demo = () => {
         </Suspense>
 
         <Suspense fallback={null}>
-          <WaitlistModal 
-            open={showWaitlistModal} 
+          <WaitlistModal
+            open={showWaitlistModal}
             onOpenChange={setShowWaitlistModal}
             sessionData={sessionData}
           />
         </Suspense>
-        
+
         <Suspense fallback={null}>
           <WebhookSettings
             open={showWebhookSettings}

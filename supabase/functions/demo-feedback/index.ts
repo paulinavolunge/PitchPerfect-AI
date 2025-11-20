@@ -3,23 +3,35 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://yourdomain.com',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
 };
 
-// Strict authentication: fail if not authenticated!
+// Optional authentication: returns user if authenticated, null if guest
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) throw new Error('Authentication required');
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!
-  );
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error('Invalid or missing authentication');
-  return user;
+  if (!token) {
+    console.log('No auth token provided - proceeding as guest user');
+    return null; // Guest user
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!
+    );
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      console.log('Invalid auth token - proceeding as guest user');
+      return null; // Invalid token, treat as guest
+    }
+    return user; // Authenticated user
+  } catch (error) {
+    console.log('Auth verification error - proceeding as guest user:', error);
+    return null; // Error during auth, treat as guest
+  }
 };
 
 serve(async (req) => {
@@ -29,10 +41,15 @@ serve(async (req) => {
   }
 
   try {
-    // Require authentication—no guests
+    // Optional authentication - supports both authenticated and guest users
     const user = await verifyAuth(req);
+    const isGuest = user === null;
 
-    console.log('Authenticated user:', user.id);
+    if (isGuest) {
+      console.log('Processing demo feedback for guest user');
+    } else {
+      console.log('Processing demo feedback for authenticated user:', user.id);
+    }
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
@@ -58,10 +75,11 @@ serve(async (req) => {
       .trim()
       .substring(0, 1000);
 
-    console.log('Demo feedback request:', { 
-      responseLength: sanitizedResponse.length, 
-      inputType, 
-      userId: user.id 
+    console.log('Demo feedback request:', {
+      responseLength: sanitizedResponse.length,
+      inputType,
+      userId: isGuest ? 'guest' : user.id,
+      isGuest
     });
 
     const systemPrompt = `You are an expert sales coach providing feedback on demo responses.
@@ -81,7 +99,7 @@ Focus on sales communication best practices:
 - Addressing potential concerns
 - Use of examples and proof points`;
 
-    const userPrompt = inputType === 'voice' 
+    const userPrompt = inputType === 'voice'
       ? `Please provide coaching feedback on this voice response from a sales demo: "${sanitizedResponse}"`
       : `Please provide coaching feedback on this text response from a sales demo: "${sanitizedResponse}"`;
 
@@ -113,7 +131,7 @@ Focus on sales communication best practices:
 
     console.log('Generated feedback:', feedback);
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       feedback,
       timestamp: new Date().toISOString(),
       inputType
@@ -123,10 +141,10 @@ Focus on sales communication best practices:
 
   } catch (error) {
     console.error('[INTERNAL] Error in demo-feedback function:', error);
-    
+
     // Provide user-friendly error messages without exposing internals
     let userMessage = 'Unable to generate feedback at this time';
-    
+
     if (error instanceof Error) {
       if (error.message.includes('too short') || error.message.includes('too long') || error.message.includes('Invalid')) {
         userMessage = error.message;
@@ -134,10 +152,10 @@ Focus on sales communication best practices:
         userMessage = 'Authentication failed';
       }
     }
-    
+
     // Provide a fallback response for error situations
     const fallbackFeedback = "Great effort! Your response shows good understanding of the value proposition. Consider adding a specific example or case study to make your pitch even more compelling.";
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       feedback: fallbackFeedback,
       fallback: true,
       error: userMessage

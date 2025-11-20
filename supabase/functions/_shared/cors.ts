@@ -1,7 +1,8 @@
 const ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map(s => s.trim());
 
 export const corsHeaders = (origin?: string) => {
-  const allowed = origin && ORIGINS.includes(origin) ? origin : ORIGINS[0] ?? "";
+  // Allow wildcard for demo/public endpoints, otherwise validate origin
+  const allowed = origin && ORIGINS.includes(origin) ? origin : (ORIGINS.length > 0 ? ORIGINS[0] : "*");
   return {
     "Access-Control-Allow-Origin": allowed,
     "Vary": "Origin",

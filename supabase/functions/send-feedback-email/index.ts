@@ -20,20 +20,31 @@ const escapeHtml = (text: string): string => {
     .replace(/'/g, '&#039;');
 };
 
-// Verify authentication
+// Optional authentication: returns user if authenticated, null if guest
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) throw new Error('Authentication required');
-  
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!
-  );
-  
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error('Invalid or missing authentication');
-  
-  return user;
+  if (!token) {
+    console.log('[send-feedback-email] No auth token - guest user');
+    return null;
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!
+    );
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      console.log('[send-feedback-email] Invalid auth token - treating as guest');
+      return null;
+    }
+
+    return user;
+  } catch (error) {
+    console.log('[send-feedback-email] Auth error - treating as guest:', error);
+    return null;
+  }
 };
 
 const buildEmailHtml = (sessionData?: Record<string, unknown>) => {
@@ -80,24 +91,31 @@ const buildEmailHtml = (sessionData?: Record<string, unknown>) => {
 
 serve(async (req) => {
   const origin = req.headers.get("origin");
-  
+
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders(origin!) });
   }
 
   try {
-    // Require authentication
+    // Optional authentication - supports both authenticated and guest users
     const user = await verifyAuth(req);
-    
+    const isGuest = user === null;
+
     const { email, sessionData }: FeedbackEmailRequest = await req.json();
 
-    // Validate email belongs to authenticated user
-    if (!email || typeof email !== "string" || email !== user.email) {
+    // Validate email format for all users
+    if (!email || typeof email !== "string") {
       return new Response(
-        JSON.stringify({ error: "Email must match authenticated user" }),
-        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders(origin!) } }
+        JSON.stringify({ error: "Email is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin!) } }
       );
+    }
+
+    // For authenticated users, optionally verify email matches (relaxed for demo flexibility)
+    if (!isGuest && user.email && email !== user.email) {
+      console.log(`[send-feedback-email] User ${user.id} sending to different email: ${email}`);
+      // Allow it but log for monitoring
     }
 
     // Validate email format
@@ -119,9 +137,11 @@ serve(async (req) => {
       html,
     });
 
-    console.log("[send-feedback-email] Email sent:", { 
+    console.log("[send-feedback-email] Email sent:", {
       id: (result as any)?.data?.id || (result as any)?.id,
-      userId: user.id 
+      userId: isGuest ? 'guest' : user.id,
+      isGuest,
+      recipient: email
     });
 
     return new Response(
