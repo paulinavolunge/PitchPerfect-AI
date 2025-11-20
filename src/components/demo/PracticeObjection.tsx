@@ -172,29 +172,52 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
     }
   };
 
-  const handleSubmit = async () => {
-    console.log("Submitting objection response");
+  const handleSubmit = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    console.log("🎯 GET FEEDBACK BUTTON CLICKED");
+    console.log("Event:", e);
     console.log("Input mode:", inputMode);
     console.log("Transcript:", transcript);
     console.log("Text input:", textInput);
+    console.log("Is submitting:", isSubmitting);
     
+    // Prevent double submission
+    if (isSubmitting) {
+      console.log("❌ Already submitting, ignoring click");
+      return;
+    }
+
     const response = inputMode === 'voice' ? transcript.trim() : textInput.trim();
+    console.log("Response to submit:", response);
+    console.log("Response length:", response.length);
     
     if (!response) {
+      console.log("❌ No response provided");
       setError("Please provide a response before submitting.");
+      toast({
+        title: "Response Required",
+        description: "Please record or type your response first.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (response.length < 10) {
+      console.log("❌ Response too short");
       setError("Please provide a more detailed response (at least 10 characters).");
+      toast({
+        title: "Response Too Short",
+        description: "Please provide a more detailed response (at least 10 characters).",
+        variant: "destructive",
+      });
       return;
     }
 
+    console.log("✅ Validation passed, setting submitting state");
     setIsSubmitting(true);
     setError(null);
 
     try {
-      console.log(`Submitting ${inputMode} response:`, response);
+      console.log(`📤 Submitting ${inputMode} response:`, response);
       
       // Call the onSubmit prop with the response data
       await onSubmit({
@@ -202,14 +225,14 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
         data: response
       });
       
-      console.log("Response submitted successfully");
+      console.log("✅ Response submitted successfully");
       
       // Reset form after successful submission
       setTranscript('');
       setTextInput('');
       
     } catch (err) {
-      console.error("Submission error:", err);
+      console.error("❌ Submission error:", err);
       setError("Failed to submit response. Please try again.");
       
       toast({
@@ -218,6 +241,7 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
         variant: "destructive",
       });
     } finally {
+      console.log("🏁 Submission complete, resetting state");
       setIsSubmitting(false);
     }
   };
@@ -372,14 +396,25 @@ const PracticeObjection: React.FC<PracticeObjectionProps> = ({ scenario, onSubmi
 
       {/* Enhanced Submit Button */}
       {!isSubmitting ? (
-        <Button 
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          className="w-full strong-cta text-lg py-4"
-          size="lg"
-        >
-          Get Feedback
-        </Button>
+        <div className="space-y-2">
+          <Button 
+            onClick={(e) => {
+              console.log("🖱️ Button click event fired");
+              handleSubmit(e);
+            }}
+            disabled={!canSubmit}
+            className="w-full strong-cta text-lg py-4"
+            size="lg"
+            type="button"
+          >
+            Get Feedback
+          </Button>
+          {!canSubmit && currentResponse.length < 10 && (
+            <p className="text-sm text-amber-600 text-center font-medium">
+              Please provide at least 10 characters ({currentResponse.length}/10)
+            </p>
+          )}
+        </div>
       ) : (
         <div className="w-full py-4 text-lg text-center text-vibrant-blue-600 font-semibold">
           <div className="flex items-center justify-center gap-2">
