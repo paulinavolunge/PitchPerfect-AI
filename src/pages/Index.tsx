@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles } from 'lucide-react';
+import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles, Mic, MessageSquare, Target } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { LazyComponent } from '@/components/LazyComponent';
 import LazyLoadManager from '@/components/optimized/LazyLoadManager';
@@ -99,14 +99,16 @@ const Index = () => {
               AI-Powered Sales Training
             </Badge>
 
+            {/* UPDATED: Clearer value proposition */}
             <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight">
-              Master Your Sales Pitch<br />
-              <span className="text-primary-600">with AI Practice</span>
+              Practice Sales Objections with AI.<br />
+              <span className="text-primary-600">Get Feedback. Close More Deals.</span>
             </h1>
             
+            {/* UPDATED: 3-step process in description */}
             <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-              Practice objection handling and perfect your pitch with intelligent AI that responds like real prospects. 
-              Get instant feedback and watch your closing rate soar.
+              <strong>3 Simple Steps:</strong> 1) Record your pitch → 2) AI analyzes it in 30 seconds → 3) Get specific feedback to improve.
+              <span className="block mt-2 text-primary-600 font-semibold">Join 17+ sales professionals improving their close rate.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12">
@@ -150,6 +152,36 @@ const Index = () => {
             
             <div className="mt-6 sm:mt-8">
               <TrustBadges variant="compact" className="justify-center" />
+            </div>
+
+            {/* NEW: 3-Step Process Visual */}
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="text-center p-6 bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-primary-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Mic className="h-7 w-7 text-primary-600" />
+                </div>
+                <div className="bg-primary-600 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center mx-auto mb-3">1</div>
+                <h3 className="font-semibold mb-2 text-foreground">Record Your Pitch</h3>
+                <p className="text-sm text-muted-foreground">Text or voice - your choice. No setup required.</p>
+              </div>
+              
+              <div className="text-center p-6 bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-primary-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-7 w-7 text-primary-600" />
+                </div>
+                <div className="bg-primary-600 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center mx-auto mb-3">2</div>
+                <h3 className="font-semibold mb-2 text-foreground">AI Analyzes</h3>
+                <p className="text-sm text-muted-foreground">Get personalized feedback in 30 seconds.</p>
+              </div>
+              
+              <div className="text-center p-6 bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-primary-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Target className="h-7 w-7 text-primary-600" />
+                </div>
+                <div className="bg-primary-600 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center mx-auto mb-3">3</div>
+                <h3 className="font-semibold mb-2 text-foreground">Improve & Close</h3>
+                <p className="text-sm text-muted-foreground">Apply feedback to your real sales calls.</p>
+              </div>
             </div>
           </div>
         </section>
