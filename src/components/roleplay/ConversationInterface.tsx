@@ -561,24 +561,27 @@ const ConversationInterface = ({
 
       // Generate enhanced feedback for every user response (immediate feedback)
       if (scenario) {
-        const newResponseCount = userResponseCount + 1;
         console.log('🎯 Generating enhanced feedback for user response:', textToSend);
         const enhancedFeedbackData = generateEnhancedFeedback(
           textToSend,
           currentObjectionText || scenario.objection,
           [...chatMessages, userMessage],
-          newResponseCount
+          userResponseCount + 1
         );
         console.log('📊 Generated enhanced feedback:', enhancedFeedbackData);
         setEnhancedFeedback(enhancedFeedbackData);
         // Save session with enhanced feedback (non-blocking UX)
         await saveSessionToDatabase(updatedMessages, enhancedFeedbackData);
-        // Show reflection card only every 3 responses (3rd, 6th, 9th, etc.) to avoid disrupting conversation flow
-        if (newResponseCount % 3 === 0) {
+
+        // Show reflection card only every 3 responses (3rd, 6th, 9th, etc.)
+        const currentResponseNumber = userResponseCount + 1;
+        if (currentResponseNumber % 3 === 0) {
           setTimeout(() => {
-            console.log('🤔 Showing reflection card (response #' + newResponseCount + ')');
+            console.log(`🤔 Showing reflection card at response #${currentResponseNumber}`);
             setShowReflectionCard(true);
           }, 800);
+        } else {
+          console.log(`⏭️ Skipping reflection card at response #${currentResponseNumber} (will show at next multiple of 3)`);
         }
       }
 
