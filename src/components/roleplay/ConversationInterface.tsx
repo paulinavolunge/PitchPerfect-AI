@@ -561,22 +561,25 @@ const ConversationInterface = ({
 
       // Generate enhanced feedback for every user response (immediate feedback)
       if (scenario) {
+        const newResponseCount = userResponseCount + 1;
         console.log('🎯 Generating enhanced feedback for user response:', textToSend);
         const enhancedFeedbackData = generateEnhancedFeedback(
           textToSend,
           currentObjectionText || scenario.objection,
           [...chatMessages, userMessage],
-          userResponseCount + 1
+          newResponseCount
         );
         console.log('📊 Generated enhanced feedback:', enhancedFeedbackData);
         setEnhancedFeedback(enhancedFeedbackData);
         // Save session with enhanced feedback (non-blocking UX)
         await saveSessionToDatabase(updatedMessages, enhancedFeedbackData);
-        // Show reflection card first, then feedback after user interaction or timeout
-        setTimeout(() => {
-          console.log('🤔 Showing reflection card first');
-          setShowReflectionCard(true);
-        }, 800);
+        // Show reflection card only every 3 responses (3rd, 6th, 9th, etc.) to avoid disrupting conversation flow
+        if (newResponseCount % 3 === 0) {
+          setTimeout(() => {
+            console.log('🤔 Showing reflection card (response #' + newResponseCount + ')');
+            setShowReflectionCard(true);
+          }, 800);
+        }
       }
 
       if (speechEnabled && aiResponse) {
