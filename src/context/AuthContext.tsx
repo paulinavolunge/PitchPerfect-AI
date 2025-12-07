@@ -1,10 +1,11 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { clearAllSessionData, clearUserSpecificData, initializeCleanSession, validateSessionIsolation } from '@/utils/sessionCleanup';
 import { SafeRPCService } from '@/services/SafeRPCService';
 import { getUserErrorMessage } from '@/types/errors';
+import safeStorage from '@/utils/safeStorage';
 
 interface AuthContextType {
   user: User | null;
@@ -33,81 +34,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [trialUsed, setTrialUsed] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  
+  // Track if initial auth has been set to prevent race condition
+  const authInitialized = useRef(false);
+  const previousUserId = useRef<string | null>(null);
 
   useEffect(() => {
     console.log('AuthContext: Initializing auth state');
     
-    // Initialize auth state
-    const initializeAuth = async () => {
-      try {
-        console.log('AuthContext: Getting initial session...');
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('[INTERNAL] Auth initialization error:', error);
-          setInitError(getUserErrorMessage(error));
-        } else {
-          console.log('AuthContext: Initial session loaded', !!initialSession);
-          setSession(initialSession);
-          setUser(initialSession?.user ?? null);
-          
-          // Load user profile data if user exists
-          if (initialSession?.user?.id) {
-            console.log('AuthContext: Loading user profile for:', initialSession.user.id);
-            await loadUserProfile(initialSession.user.id);
-          }
-        }
-      } catch (error) {
-        console.error('[INTERNAL] Failed to initialize auth:', error);
-        setInitError(getUserErrorMessage(error));
-      } finally {
-        console.log('AuthContext: Setting loading to false');
-        setLoading(false);
-      }
-    };
-
-    // Add timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.error('Auth initialization timeout - attempting recovery');
-        // Instead of just setting error, try to check session one more time
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-            console.log('Session found in timeout recovery');
-            setSession(session);
-            setUser(session.user);
-            setLoading(false);
-            setInitError(null);
-            // Load profile in background
-            if (session.user?.id) {
-              loadUserProfile(session.user.id);
-            }
-          } else {
-            console.error('No session found in timeout recovery');
-            setInitError('Authentication initialization timed out. Please refresh the page.');
-            setLoading(false);
-          }
-        }).catch(err => {
-          console.error('Failed to recover from timeout:', err);
-          setInitError('Authentication initialization timed out. Please refresh the page.');
-          setLoading(false);
-        });
-      }
-    }, 30000); // Increased to 30 seconds
-
-    initializeAuth();
-
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  // Listen for auth changes in a separate effect
-  useEffect(() => {
+    // CRITICAL: Set up auth listener FIRST to prevent race condition
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('AuthContext: Auth state changed:', event, !!session);
+      (event, currentSession) => {
+        console.log('AuthContext: Auth state changed:', event, !!currentSession);
+        
+        // Mark as initialized once we receive any auth event
+        authInitialized.current = true;
         
         // Handle different auth events with proper data isolation
-        if (event === 'SIGNED_OUT' || (!session && user)) {
+        if (event === 'SIGNED_OUT' || (!currentSession && user)) {
           console.log('🧹 User signed out, clearing all session data...');
           
           // Clear all user-specific data (preserve consent)
@@ -120,77 +64,144 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTrialUsed(false);
           setIsNewUser(false);
           setInitError(null);
+          previousUserId.current = null;
           
           console.log('✅ Session data cleared for logout');
-        } else if (event === 'SIGNED_IN' && session?.user?.id) {
+          setLoading(false);
+        } else if (event === 'SIGNED_IN' && currentSession?.user?.id) {
           console.log('🚀 User signed in, initializing clean session...');
           
           // Check if this is a different user than before
-          const previousUser = user;
-          if (previousUser && previousUser.id !== session.user.id) {
+          if (previousUserId.current && previousUserId.current !== currentSession.user.id) {
             console.log('👤 Different user detected, clearing previous user data...');
-            clearUserSpecificData(previousUser.id);
+            clearUserSpecificData(previousUserId.current);
           }
           
+          previousUserId.current = currentSession.user.id;
+          
           // Initialize clean session for new user
-          initializeCleanSession(session.user.id);
+          initializeCleanSession(currentSession.user.id);
           
           // Update state
-          setSession(session);
-          setUser(session.user);
+          setSession(currentSession);
+          setUser(currentSession.user);
           setInitError(null);
           
-          // Load fresh user profile data
+          // Load fresh user profile data (deferred to avoid deadlock)
           setTimeout(() => {
-            loadUserProfile(session.user.id);
+            loadUserProfile(currentSession.user.id);
           }, 0);
           
-          // Check if this is a new user (after cleanup)
-          const hasCompletedOnboarding = localStorage.getItem(`onboarding_completed_${session.user.id}`);
+          // Check if this is a new user
+          const hasCompletedOnboarding = safeStorage.getItem(`onboarding_completed_${currentSession.user.id}`);
           if (!hasCompletedOnboarding) {
             setIsNewUser(true);
           }
           
           // Validate session isolation in development
-          if (process.env.NODE_ENV === 'development') {
-            setTimeout(() => validateSessionIsolation(session.user.id), 100);
+          if (import.meta.env.DEV) {
+            setTimeout(() => validateSessionIsolation(currentSession.user.id), 100);
           }
           
-          console.log('✅ Clean session initialized for user:', session.user.id);
-        } else if (event === 'TOKEN_REFRESHED' && session?.user?.id) {
+          console.log('✅ Clean session initialized for user:', currentSession.user.id);
+          setLoading(false);
+        } else if (event === 'TOKEN_REFRESHED' && currentSession?.user?.id) {
           // Token refresh - maintain current state but verify data integrity
-          setSession(session);
-          setUser(session.user);
+          setSession(currentSession);
+          setUser(currentSession.user);
           
           // Validate no data leakage occurred
-          if (process.env.NODE_ENV === 'development') {
-            validateSessionIsolation(session.user.id);
+          if (import.meta.env.DEV) {
+            validateSessionIsolation(currentSession.user.id);
           }
+        } else if (event === 'INITIAL_SESSION') {
+          // Handle initial session from getSession
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          if (currentSession?.user?.id) {
+            previousUserId.current = currentSession.user.id;
+            setTimeout(() => {
+              loadUserProfile(currentSession.user.id);
+            }, 0);
+            
+            const hasCompletedOnboarding = safeStorage.getItem(`onboarding_completed_${currentSession.user.id}`);
+            if (!hasCompletedOnboarding) {
+              setIsNewUser(true);
+            }
+          }
+          setLoading(false);
         } else {
           // Handle other events (PASSWORD_RECOVERY, etc.)
-          setSession(session);
-          setUser(session?.user ?? null);
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          setLoading(false);
         }
         
         // Log security events for auth state changes
-        if (session?.user?.id) {
+        if (currentSession?.user?.id) {
           setTimeout(() => {
             SafeRPCService.logSecurityEvent(`auth_${event}`, { 
-              user_id: session.user.id,
+              user_id: currentSession.user.id,
               session_isolated: true
-            }, session.user.id);
+            }, currentSession.user.id);
           }, 0);
         }
-        
-        setLoading(false);
       }
     );
 
+    // THEN get initial session
+    const initializeAuth = async () => {
+      try {
+        console.log('AuthContext: Getting initial session...');
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[INTERNAL] Auth initialization error:', error);
+          setInitError(getUserErrorMessage(error));
+          setLoading(false);
+        } else if (!authInitialized.current) {
+          // Only set if onAuthStateChange hasn't fired yet
+          console.log('AuthContext: Initial session loaded (before listener)', !!initialSession);
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          
+          if (initialSession?.user?.id) {
+            previousUserId.current = initialSession.user.id;
+            console.log('AuthContext: Loading user profile for:', initialSession.user.id);
+            await loadUserProfile(initialSession.user.id);
+            
+            const hasCompletedOnboarding = safeStorage.getItem(`onboarding_completed_${initialSession.user.id}`);
+            if (!hasCompletedOnboarding) {
+              setIsNewUser(true);
+            }
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('[INTERNAL] Failed to initialize auth:', error);
+        setInitError(getUserErrorMessage(error));
+        setLoading(false);
+      }
+    };
+
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (loading && !authInitialized.current) {
+        console.error('Auth initialization timeout - setting loading to false');
+        setLoading(false);
+        setInitError('Authentication initialization timed out. Please refresh the page.');
+      }
+    }, 15000); // 15 second timeout
+
+    initializeAuth();
+
     return () => {
+      clearTimeout(timeoutId);
       console.log('AuthContext: Cleaning up auth listener');
       subscription.unsubscribe();
     };
-  }, [user]);
+  }, []); // Empty dependency array - only run once
 
   const loadUserProfile = async (userId: string, retryCount = 0): Promise<void> => {
     try {
@@ -378,16 +389,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('AuthContext: Signing out user...');
       
-      const currentUserId = user?.id;
-      
       // Clear ALL session data including localStorage (preserve consent)
       console.log('🧹 Clearing all session data on logout...');
       clearAllSessionData(true);
       
-      // Also clear potential legacy keys used in tests or older clients
-      try {
-        localStorage.removeItem('supabase.auth.token');
-      } catch {}
+      // Also clear potential legacy keys
+      safeStorage.removeItem('supabase.auth.token');
       
       // Clear local state
       setUser(null);
@@ -395,6 +402,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCreditsRemaining(0);
       setTrialUsed(false);
       setIsNewUser(false);
+      previousUserId.current = null;
       
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
@@ -418,14 +426,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Even if there's an error, clear local data and redirect
       clearAllSessionData(true);
-      try {
-        localStorage.removeItem('supabase.auth.token');
-      } catch {}
+      safeStorage.removeItem('supabase.auth.token');
       setUser(null);
       setSession(null);
       setCreditsRemaining(0);
       setTrialUsed(false);
       setIsNewUser(false);
+      previousUserId.current = null;
       
       const targetUrl = window.location.hostname.includes('lovable.app') 
         ? 'https://pitchperfectai.lovable.app/' 
@@ -439,13 +446,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user?.id) return;
     
     setIsNewUser(false);
-    // Use a single, consistent key; also clean up legacy keys
+    // Use safe storage wrapper
     const key = `onboarding_completed_${user.id}`;
-    localStorage.setItem(key, 'true');
-    localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
+    safeStorage.setItem(key, 'true');
+    safeStorage.setItem('onboardingCompletedAt', new Date().toISOString());
     // Cleanup legacy keys
-    localStorage.removeItem('onboardingComplete');
-    localStorage.removeItem(`user_${user.id}_onboarding_complete`);
+    safeStorage.removeItem('onboardingComplete');
+    safeStorage.removeItem(`user_${user.id}_onboarding_complete`);
   };
 
   const value = {
