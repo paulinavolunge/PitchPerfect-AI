@@ -54,6 +54,7 @@ const Dashboard = () => {
   const [showAISettings, setShowAISettings] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [skipFocusMode, setSkipFocusMode] = useState(false);
+  const [forceShowNoCreditsModal, setForceShowNoCreditsModal] = useState(false);
 
   // NEW: Check if user should see focus mode (less than 3 sessions)
   const isNewUserForFocusMode = () => {
@@ -205,11 +206,10 @@ const Dashboard = () => {
   };
 
   const handleStartPractice = () => {
-    // Check credits first - if 0, EnhancedCreditsBar will show the upgrade modal
-    // Don't navigate or show scenario modal in this case
+    // Check credits first - if 0, show upgrade modal and stop
     if (!isPremium && (creditsRemaining ?? 0) === 0) {
-      // Trigger the no credits modal via EnhancedCreditsBar
-      return;
+      setForceShowNoCreditsModal(true);
+      return; // Stop execution here - don't proceed to practice
     }
 
     sessionStorage.setItem('startingPractice', 'true');
@@ -219,6 +219,10 @@ const Dashboard = () => {
     } else {
       navigate('/practice');
     }
+  };
+
+  const handleNoCreditsModalClose = () => {
+    setForceShowNoCreditsModal(false);
   };
 
   const handleMicTestComplete = () => {
@@ -503,6 +507,8 @@ const Dashboard = () => {
                       <EnhancedCreditsBar 
                         credits={dashboardData.profile.credits} 
                         isPremium={isPremium}
+                        forceShowNoCreditsModal={forceShowNoCreditsModal}
+                        onNoCreditsModalClose={handleNoCreditsModalClose}
                       />
                     </motion.div>
                   )}
