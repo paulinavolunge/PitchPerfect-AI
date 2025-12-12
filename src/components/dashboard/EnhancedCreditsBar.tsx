@@ -17,12 +17,16 @@ interface EnhancedCreditsBarProps {
   credits?: number;
   maxCredits?: number;
   isPremium?: boolean;
+  forceShowNoCreditsModal?: boolean;
+  onNoCreditsModalClose?: () => void;
 }
 
 const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({ 
   credits: propCredits, 
   maxCredits = 10,
-  isPremium: propIsPremium 
+  isPremium: propIsPremium,
+  forceShowNoCreditsModal = false,
+  onNoCreditsModalClose
 }) => {
   const navigate = useNavigate();
   const { creditsRemaining: authCredits, isPremium: authIsPremium } = useAuth();
@@ -53,6 +57,13 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
     return 'bg-primary-600';
   };
 
+  // Handle forced modal display from parent
+  useEffect(() => {
+    if (forceShowNoCreditsModal && !isPremium) {
+      setShowNoCreditsModal(true);
+    }
+  }, [forceShowNoCreditsModal, isPremium]);
+
   // Show modals based on credit count
   useEffect(() => {
     // Check if we've already shown the low credits warning this session
@@ -66,6 +77,11 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
       sessionStorage.setItem('lowCreditsWarningShown', 'true');
     }
   }, [creditsRemaining, isPremium, hasShownLowCreditsWarning]);
+
+  const handleNoCreditsModalClose = () => {
+    setShowNoCreditsModal(false);
+    onNoCreditsModalClose?.();
+  };
 
   return (
     <>
@@ -190,7 +206,10 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
       </Dialog>
 
       {/* No Credits Modal (blocking) */}
-      <Dialog open={showNoCreditsModal} onOpenChange={setShowNoCreditsModal}>
+      <Dialog open={showNoCreditsModal} onOpenChange={(open) => {
+        setShowNoCreditsModal(open);
+        if (!open) onNoCreditsModalClose?.();
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
@@ -223,7 +242,7 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
             <Button
               size="lg"
               onClick={() => {
-                setShowNoCreditsModal(false);
+                handleNoCreditsModalClose();
                 navigate('/pricing');
               }}
               className="bg-primary-600 hover:bg-primary-700"
@@ -233,7 +252,7 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
             </Button>
             <Button
               variant="outline"
-              onClick={() => setShowNoCreditsModal(false)}
+              onClick={handleNoCreditsModalClose}
             >
               Maybe Later
             </Button>
