@@ -205,6 +205,13 @@ const Dashboard = () => {
   };
 
   const handleStartPractice = () => {
+    // Check credits first - if 0, EnhancedCreditsBar will show the upgrade modal
+    // Don't navigate or show scenario modal in this case
+    if (!isPremium && (creditsRemaining ?? 0) === 0) {
+      // Trigger the no credits modal via EnhancedCreditsBar
+      return;
+    }
+
     sessionStorage.setItem('startingPractice', 'true');
 
     if (micCheckRequired()) {
@@ -516,16 +523,20 @@ const Dashboard = () => {
                       </div>
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                         <p className="text-sm text-gray-500 mb-1">Average Score</p>
-                        <p className="text-3xl font-bold text-brand-dark">
+                        <p className={`text-3xl font-bold ${
+                          dashboardData.stats.averageScore !== null 
+                            ? 'text-brand-dark' 
+                            : 'text-gray-400'
+                        }`}>
                           {dashboardData.stats.averageScore !== null 
                             ? `${dashboardData.stats.averageScore}%` 
                             : 'N/A'}
                         </p>
                       </div>
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-gray-500 mb-1">Credits Remaining</p>
+                        <p className="text-sm text-gray-500 mb-1">Credits</p>
                         <p className="text-3xl font-bold text-brand-dark">
-                          {dashboardData.profile.credits}
+                          {isPremium ? 'Unlimited' : `${dashboardData.profile.credits} / 10`}
                         </p>
                       </div>
                     </motion.div>
