@@ -129,15 +129,7 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
                 />
               </div>
               
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">
-                  {creditsRemaining === 0 
-                    ? 'No credits remaining' 
-                    : creditsRemaining === 1 
-                      ? '1 practice session left'
-                      : `${creditsRemaining} practice sessions left`
-                  }
-                </span>
+              <div className="flex justify-end items-center text-sm">
                 
                 {!isPremium && (
                   <Button

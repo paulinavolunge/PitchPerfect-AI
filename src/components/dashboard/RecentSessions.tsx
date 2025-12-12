@@ -68,7 +68,13 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({ sessions, onStartPracti
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-gray-100">
-          {sessions.map((session) => (
+          {sessions
+            .filter((session, index, arr) => {
+              if (index === 0) return true;
+              const prev = arr[index - 1];
+              return !(session.date === prev.date && session.scenario === prev.scenario);
+            })
+            .map((session) => (
             <div
               key={session.id}
               className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -92,8 +98,8 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({ sessions, onStartPracti
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {session.score !== null ? (
+              <div className="flex items-center gap-2">
+                  {session.score !== null && session.score > 0 ? (
                     <>
                       <TrendingUp className={`h-4 w-4 ${
                         session.score >= 70 ? 'text-green-600' : 
