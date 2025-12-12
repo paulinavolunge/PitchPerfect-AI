@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FileAudio, Clock, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RecentSession } from '@/hooks/use-dashboard-data';
-import { formatDistanceToNow } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 
 interface RecentSessionsProps {
   sessions: RecentSession[];
@@ -18,6 +18,19 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({ sessions, onStartPracti
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatSessionDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const time = format(date, 'h:mm a');
+    
+    if (isToday(date)) {
+      return `Today at ${time}`;
+    } else if (isYesterday(date)) {
+      return `Yesterday at ${time}`;
+    } else {
+      return format(date, 'MMM d') + ` at ${time}`;
+    }
   };
 
   if (sessions.length === 0) {
@@ -63,33 +76,42 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({ sessions, onStartPracti
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h4 className="font-medium text-brand-dark mb-1">
-                    {session.scenario}
-                  </h4>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium text-brand-dark">
+                      {session.scenario}
+                    </h4>
+                    <span className="text-xs text-gray-400">•</span>
+                    <span className="text-xs text-gray-500">
+                      {formatSessionDate(session.date)}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {formatDuration(session.duration)}
                     </span>
-                    <span className="text-xs">
-                      {formatDistanceToNow(new Date(session.date), { addSuffix: true })}
-                    </span>
                   </div>
                 </div>
-                {session.score !== null && (
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className={`h-4 w-4 ${
-                      session.score >= 70 ? 'text-green-600' : 
-                      session.score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                    }`} />
-                    <span className={`text-lg font-semibold ${
-                      session.score >= 70 ? 'text-green-600' : 
-                      session.score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {session.score}%
+                <div className="flex items-center gap-2">
+                  {session.score !== null ? (
+                    <>
+                      <TrendingUp className={`h-4 w-4 ${
+                        session.score >= 70 ? 'text-green-600' : 
+                        session.score >= 50 ? 'text-yellow-600' : 'text-red-600'
+                      }`} />
+                      <span className={`text-lg font-semibold ${
+                        session.score >= 70 ? 'text-green-600' : 
+                        session.score >= 50 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {session.score}%
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-400">
+                      --
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           ))}

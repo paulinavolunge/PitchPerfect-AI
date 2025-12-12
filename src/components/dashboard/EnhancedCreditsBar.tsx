@@ -80,7 +80,7 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
                 <Zap className="h-5 w-5 text-primary-600" />
               )}
               <span className="font-semibold text-foreground">
-                {isPremium ? 'Premium Plan' : 'Practice Credits'}
+                {isPremium ? 'Premium Plan' : 'Credits'}
               </span>
             </div>
             
