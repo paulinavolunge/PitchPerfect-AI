@@ -20,8 +20,6 @@ import { useGuestMode } from '@/context/GuestModeContext';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import EnhancedCreditsBar from '@/components/dashboard/EnhancedCreditsBar';
 import RecentSessions from '@/components/dashboard/RecentSessions';
-import QuickPractice from '@/components/dashboard/QuickPractice';
-import AiSuggestions from '@/components/dashboard/AiSuggestions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const TOUR_STORAGE_KEY = 'pitchperfect_tour_completed';
@@ -518,40 +516,18 @@ const Dashboard = () => {
                     </motion.div>
                   )}
 
-                  {/* Main content grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-                    {/* Left column - Recent Sessions */}
-                    <motion.div 
-                      className="lg:col-span-2 space-y-8"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                    >
-                      <RecentSessions 
-                        sessions={dashboardData.recentSessions}
-                        onStartPractice={handleStartPractice}
-                      />
-                    </motion.div>
-
-                    {/* Right column - Quick Practice & AI Tips */}
-                    <motion.div 
-                      className="space-y-6"
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                    >
-                      <div className="tour-step-1 tour-step-2">
-                        <QuickPractice 
-                          credits={dashboardData.profile.credits}
-                          onStartPractice={handleStartPractice}
-                        />
-                      </div>
-
-                      <div className="tour-step-3">
-                        <AiSuggestions tips={dashboardData.tips} />
-                      </div>
-                    </motion.div>
-                  </div>
+                  {/* Main content - Recent Sessions */}
+                  <motion.div 
+                    className="mt-8 tour-step-1 tour-step-2 tour-step-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                  >
+                    <RecentSessions 
+                      sessions={dashboardData.recentSessions}
+                      onStartPractice={handleStartPractice}
+                    />
+                  </motion.div>
 
                   {/* AI Disclosure */}
                   <motion.div
