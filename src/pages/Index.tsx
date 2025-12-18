@@ -42,9 +42,9 @@ const Index = () => {
   };
 
   const handleGetStartedClick = () => {
-    console.log("Get Started button clicked - navigating to /signup");
+    console.log("Get Started button clicked - navigating to /free-trial");
     trackEvent('cta_click', { button: 'get_started', location: 'homepage_hero' });
-    navigate('/signup');
+    navigate('/free-trial');
   };
 
   const handleWatchDemoClick = () => {
