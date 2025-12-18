@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { FileAudio, Mic, Users, Bot, Check, Crown, RefreshCw, AlertCircle, Play, Target, CheckCircle, Sparkles } from 'lucide-react';
+import { Check, Crown, RefreshCw, AlertCircle, Play, Target, CheckCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Step } from 'react-joyride';
@@ -12,7 +12,6 @@ import GuidedTour from '@/components/GuidedTour';
 import NewUserOnboarding from '@/components/onboarding/NewUserOnboarding';
 import MicrophoneTestModal from '@/components/dashboard/MicrophoneTestModal';
 import AIDisclosure from '@/components/AIDisclosure';
-import AISettingsModal from '@/components/AISettingsModal';
 import { motion } from 'framer-motion';
 import ParallaxSection from '@/components/animations/ParallaxSection';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
@@ -51,7 +50,6 @@ const Dashboard = () => {
   const [showTour, setShowTour] = useState(false);
   const [showMicTest, setShowMicTest] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
-  const [showAISettings, setShowAISettings] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [skipFocusMode, setSkipFocusMode] = useState(false);
   const [forceShowNoCreditsModal, setForceShowNoCreditsModal] = useState(false);
@@ -217,7 +215,7 @@ const Dashboard = () => {
     if (micCheckRequired()) {
       setShowMicTest(true);
     } else {
-      navigate('/practice');
+      navigate('/roleplay'); // Navigate to unified practice page
     }
   };
 
@@ -228,7 +226,7 @@ const Dashboard = () => {
   const handleMicTestComplete = () => {
     localStorage.setItem('lastMicCheck', Date.now().toString());
     setShowMicTest(false);
-    navigate('/practice');
+    navigate('/roleplay'); // Navigate to unified practice page
   };
 
   // Calculate session count for progress indicator
@@ -290,44 +288,16 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Only show full nav buttons for experienced users */}
+            {/* Simple Start Practice button for experienced users */}
             {!isNewUserForFocusMode() && (
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 hover:scale-105 transition-transform"
-                  onClick={() => navigate('/call-recordings')}
-                >
-                  <FileAudio size={16} />
-                  Call Recordings
-                </Button>
-
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 hover:scale-105 transition-transform"
-                  onClick={() => navigate('/practice')}
-                >
-                  <Mic size={16} />
-                  Practice Session
-                </Button>
-
-                <Button 
-                  className="flex items-center gap-2 bg-gradient-to-r from-brand-blue to-[#6d8fca] hover:from-[#4580dc] hover:to-[#5c7eb9] text-white hover:scale-105 transition-transform shadow-sm"
-                  onClick={() => navigate('/roleplay')}
-                >
-                  <Users size={16} />
-                  Role Play
-                </Button>
-
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 hover:scale-105 transition-transform border border-purple-200 hover:bg-purple-50"
-                  onClick={() => setShowAISettings(true)}
-                >
-                  <Bot size={16} className="text-purple-600" />
-                  AI Settings
-                </Button>
-              </div>
+              <Button
+                size="lg"
+                className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8"
+                onClick={handleStartPractice}
+              >
+                <Play className="h-5 w-5 mr-2" />
+                Start Practice Session
+              </Button>
             )}
           </motion.div>
 
@@ -603,11 +573,6 @@ const Dashboard = () => {
       </ParallaxSection>
 
       <Footer />
-
-      <AISettingsModal
-        open={showAISettings}
-        onOpenChange={setShowAISettings}
-      />
     </div>
   );
 };

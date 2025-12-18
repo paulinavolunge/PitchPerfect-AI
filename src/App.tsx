@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
@@ -165,7 +165,7 @@ function App() {
                               
                               {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
                               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                              <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
+                              <Route path="/practice" element={<Navigate to="/roleplay" replace />} />
                               <Route path="/roleplay" element={<ProtectedRoute><RolePlay /></ProtectedRoute>} />
                               <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
                               <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />

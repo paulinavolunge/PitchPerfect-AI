@@ -44,16 +44,10 @@ const MobileNavBar: React.FC = () => {
       active: location.pathname === '/progress'
     },
     {
-      label: 'History',
-      icon: FileText,
-      path: '/call-recordings',
-      active: location.pathname === '/call-recordings' || location.pathname === '/recordings'
-    },
-    {
       label: 'Profile',
       icon: User,
       path: '/progress',
-      active: location.pathname === '/progress' || location.pathname === '/profile'
+      active: false // Progress page doubles as profile
     }
   ];
   
