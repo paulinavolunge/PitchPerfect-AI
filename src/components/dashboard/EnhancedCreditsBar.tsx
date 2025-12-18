@@ -23,7 +23,7 @@ interface EnhancedCreditsBarProps {
 
 const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({ 
   credits: propCredits, 
-  maxCredits = 10,
+  maxCredits = 5, // Default to 5 free credits for new users
   isPremium: propIsPremium,
   forceShowNoCreditsModal = false,
   onNoCreditsModalClose
@@ -42,18 +42,18 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
   // Calculate progress percentage
   const progressPercentage = isPremium ? 100 : Math.min((creditsRemaining / maxCredits) * 100, 100);
   
-  // Determine status color
+  // Determine status color - only warn when 2 or fewer credits (after using 3+)
   const getStatusColor = () => {
     if (isPremium) return 'bg-gradient-to-r from-purple-500 to-indigo-500';
     if (creditsRemaining === 0) return 'bg-red-500';
-    if (creditsRemaining <= 3) return 'bg-orange-500';
+    if (creditsRemaining <= 2) return 'bg-orange-500';
     return 'bg-primary-600';
   };
 
   const getProgressColor = () => {
     if (isPremium) return 'bg-gradient-to-r from-purple-500 to-indigo-500';
     if (creditsRemaining === 0) return 'bg-red-500';
-    if (creditsRemaining <= 3) return 'bg-orange-500';
+    if (creditsRemaining <= 2) return 'bg-orange-500';
     return 'bg-primary-600';
   };
 
@@ -65,13 +65,15 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
   }, [forceShowNoCreditsModal, isPremium]);
 
   // Show modals based on credit count
+  // Only show low credits warning after user has used at least 3 credits (meaning 2 or fewer remaining)
   useEffect(() => {
     // Check if we've already shown the low credits warning this session
     const sessionWarningShown = sessionStorage.getItem('lowCreditsWarningShown');
     
     if (creditsRemaining === 0 && !isPremium) {
       setShowNoCreditsModal(true);
-    } else if (creditsRemaining <= 3 && creditsRemaining > 0 && !isPremium && !hasShownLowCreditsWarning && !sessionWarningShown) {
+    } else if (creditsRemaining <= 2 && creditsRemaining > 0 && !isPremium && !hasShownLowCreditsWarning && !sessionWarningShown) {
+      // Show warning when 2 or fewer credits remaining (meaning they've used 3+ of their 5 free credits)
       setShowLowCreditsModal(true);
       setHasShownLowCreditsWarning(true);
       sessionStorage.setItem('lowCreditsWarningShown', 'true');
@@ -86,7 +88,7 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
   return (
     <>
       {/* Credits Display Card */}
-      <Card className={`border-2 ${creditsRemaining <= 3 && !isPremium ? 'border-orange-200 bg-orange-50' : 'border-gray-100'} transition-colors duration-300`}>
+      <Card className={`border-2 ${creditsRemaining <= 2 && !isPremium ? 'border-orange-200 bg-orange-50' : 'border-gray-100'} transition-colors duration-300`}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -101,7 +103,7 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
             </div>
             
             <div className="flex items-center gap-3">
-              <span className={`text-2xl font-bold ${creditsRemaining === 0 && !isPremium ? 'text-red-600' : creditsRemaining <= 3 && !isPremium ? 'text-orange-600' : 'text-foreground'}`}>
+              <span className={`text-2xl font-bold ${creditsRemaining === 0 && !isPremium ? 'text-red-600' : creditsRemaining <= 2 && !isPremium ? 'text-orange-600' : 'text-foreground'}`}>
                 {isPremium ? (
                   <span className="flex items-center gap-1 text-purple-600">
                     <Sparkles className="h-5 w-5" />

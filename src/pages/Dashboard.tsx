@@ -386,7 +386,7 @@ const Dashboard = () => {
                       </div>
                       <CardTitle className="text-2xl">Welcome! Let's Get Started</CardTitle>
                       <p className="text-muted-foreground mt-2">
-                        Complete your first practice session to unlock all features
+                        You have <span className="font-semibold text-primary-600">{creditsRemaining ?? 5} free practice sessions</span>. Let's start with one!
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-6">
