@@ -24,6 +24,7 @@ import About from '@/pages/About';
 import Compare from '@/pages/Compare';
 import Pricing from '@/pages/Pricing';
 import Demo from '@/pages/Demo';
+import FreeTrial from '@/pages/FreeTrial';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import Dashboard from '@/pages/Dashboard';
@@ -143,6 +144,7 @@ function App() {
                               <Route path="/compare" element={<Compare />} />
                               {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
                               <Route path="/demo" element={<Demo />} />
+                              <Route path="/free-trial" element={<FreeTrial />} />
                               
                               {/* New functional routes */}
                               <Route path="/voice-training" element={<VoiceTraining />} />
