@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useNavigate } from 'react-router-dom';
-import { Play, Users, TrendingUp, Star, ArrowRight, Zap, Target, BarChart3, CheckCircle } from 'lucide-react';
+import { Play, TrendingUp, ArrowRight, Zap, Target, BarChart3, CheckCircle } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 import ParallaxSection from '@/components/animations/ParallaxSection';
 import TiltCard from '@/components/animations/TiltCard';
@@ -39,9 +39,9 @@ const Hero: React.FC = () => {
   };
 
   const statistics = [
-    { icon: Users, value: "10,000+", label: "Sales Professionals Trained" },
-    { icon: TrendingUp, value: "85%", label: "Average Improvement Rate" },
-    { icon: Star, value: "4.9/5", label: "User Satisfaction Rating" }
+    { icon: Zap, value: "30s", label: "Instant AI Feedback" },
+    { icon: TrendingUp, value: "Real", label: "Sales Scenarios" },
+    { icon: Target, value: "Free", label: "To Start Practicing" }
   ];
 
   const features = [
@@ -125,25 +125,6 @@ const Hero: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Enhanced Social Proof */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 pt-2 sm:pt-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex -space-x-2">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div 
-                          key={i} 
-                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-electric-blue-500 to-navy-600 border-2 border-white shadow-sm" 
-                        />
-                      ))}
-                    </div>
-                    <span className="text-navy-600 font-medium text-sm sm:text-base">Trusted by 10,000+ professionals</span>
-                  </div>
-                  <div className="hidden sm:block w-px h-5 bg-navy-200" />
-                  <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
-                    <span className="text-navy-600 font-medium text-sm sm:text-base">4.9/5 rating</span>
-                  </div>
-                </div>
               </div>
             </FadeTransition>
 
