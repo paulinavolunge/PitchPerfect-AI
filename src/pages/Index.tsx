@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play, CheckCircle, Star, Users, Zap, BarChart, Sparkles, Mic, MessageSquare, Target } from 'lucide-react';
+import { ArrowRight, Play, CheckCircle, Zap, BarChart, Sparkles, Mic, MessageSquare, Target, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { LazyComponent } from '@/components/LazyComponent';
 import LazyLoadManager from '@/components/optimized/LazyLoadManager';
@@ -17,9 +17,7 @@ import { trackEvent } from '@/utils/analytics';
 const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
 const VideoWalkthrough = lazy(() => import('@/components/VideoWalkthrough'));
-const Testimonials = lazy(() => import('@/components/Testimonials'));
 const TrustBadges = lazy(() => import('@/components/TrustBadges'));
-const CompanyLogos = lazy(() => import('@/components/CompanyLogos'));
 const Features = lazy(() => import('@/components/Features'));
 const HowItWorks = lazy(() => import('@/components/HowItWorks'));
 
@@ -108,7 +106,6 @@ const Index = () => {
             {/* UPDATED: 3-step process in description */}
             <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
               <strong>3 Simple Steps:</strong> 1) Record your pitch → 2) AI analyzes it in 30 seconds → 3) Get specific feedback to improve.
-              <span className="block mt-2 text-primary-600 font-semibold">Join 17+ sales professionals improving their close rate.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12">
@@ -247,15 +244,6 @@ const Index = () => {
           </div>
         </section>
 
-<LazyLoadManager priority="high" rootMargin="300px">
-  <CompanyLogos />
-</LazyLoadManager>
-
-<section id="testimonials" data-onboarding="testimonials">
-  <LazyLoadManager priority="normal" rootMargin="200px">
-    <Testimonials />
-  </LazyLoadManager>
-</section>
 
 <LazyLoadManager className="py-8 sm:py-12 bg-secondary-100" priority="normal">
   <div className="container mx-auto px-4">
