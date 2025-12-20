@@ -46,6 +46,7 @@ import Success from '@/pages/Success';
 import Cancel from '@/pages/Cancel';
 import TeamDashboard from '@/pages/TeamDashboard';
 import NotFound from '@/pages/NotFound';
+import SessionDetail from '@/pages/SessionDetail';
 import { isPricingEnabled, isSubscriptionEnabled } from '@/config/features';
 
 // Add new page imports
@@ -165,6 +166,7 @@ function App() {
                               
                               {/* Protected routes - IMPORTANT: Dashboard route is correctly configured */}
                               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                              <Route path="/practice/:sessionId" element={<ProtectedRoute><SessionDetail /></ProtectedRoute>} />
                               <Route path="/practice" element={<Navigate to="/roleplay" replace />} />
                               <Route path="/roleplay" element={<ProtectedRoute><RolePlay /></ProtectedRoute>} />
                               <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
