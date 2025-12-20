@@ -481,40 +481,30 @@ const Dashboard = () => {
                     </motion.div>
                   )}
 
-                  {/* Stats summary - only show if there's data */}
-                  {dashboardData.stats.hasData && (
-                    <motion.div
-                      className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                    >
-                      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-gray-500 mb-1">Total Sessions</p>
-                        <p className="text-3xl font-bold text-brand-dark">
-                          {dashboardData.stats.totalSessions}
-                        </p>
-                      </div>
-                      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-gray-500 mb-1">Average Score</p>
-                        <p className={`text-3xl font-bold ${
-                          dashboardData.stats.averageScore !== null 
-                            ? 'text-brand-dark' 
-                            : 'text-gray-400'
-                        }`}>
-                          {dashboardData.stats.averageScore !== null 
-                            ? `${dashboardData.stats.averageScore}%` 
-                            : 'N/A'}
-                        </p>
-                      </div>
-                      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-gray-500 mb-1">Credits</p>
-                        <p className="text-3xl font-bold text-brand-dark">
-                          {isPremium ? 'Unlimited' : `${dashboardData.profile.credits} / 10`}
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
+                  {/* Stats summary - only show meaningful data */}
+                  <motion.div
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                  >
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                      <p className="text-sm text-gray-500 mb-1">Sessions Completed</p>
+                      <p className="text-3xl font-bold text-brand-dark">
+                        {dashboardData.stats.totalSessions}
+                      </p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                      <p className="text-sm text-gray-500 mb-1">
+                        {dashboardData.recentSessions.length > 0 ? 'Last Practiced' : 'Credits Available'}
+                      </p>
+                      <p className="text-3xl font-bold text-brand-dark">
+                        {dashboardData.recentSessions.length > 0 
+                          ? new Date(dashboardData.recentSessions[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                          : isPremium ? 'Unlimited' : dashboardData.profile.credits}
+                      </p>
+                    </div>
+                  </motion.div>
 
                   {/* Main content - Recent Sessions */}
                   <motion.div 

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Mic, Play, Square, RotateCcw, Zap, Trophy, Target, MessageCircle, Send } from 'lucide-react';
+import { Mic, Play, Square, RotateCcw, Zap, Trophy, MessageCircle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { trackEvent } from '@/utils/analytics';
@@ -292,38 +292,16 @@ const Practice = () => {
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4 flex items-center">
-              <Zap className="h-8 w-8 text-green-500 mr-3" />
-              <div>
-                <p className="text-sm text-muted-foreground">Credits Remaining</p>
-                <p className="text-2xl font-bold text-foreground">{creditsRemaining}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 flex items-center">
-              <Trophy className="h-8 w-8 text-yellow-500 mr-3" />
-              <div>
-                <p className="text-sm text-muted-foreground">Current Streak</p>
-                <p className="text-2xl font-bold text-foreground">{streakCount}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 flex items-center">
-              <Target className="h-8 w-8 text-primary mr-3" />
-              <div>
-                <p className="text-sm text-muted-foreground">Best Score</p>
-                <p className="text-2xl font-bold text-foreground">{score || '--'}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Stats Card - Simple and useful */}
+        <Card className="mb-8">
+          <CardContent className="p-4 flex items-center">
+            <Zap className="h-8 w-8 text-green-500 mr-3" />
+            <div>
+              <p className="text-sm text-muted-foreground">Credits Remaining</p>
+              <p className="text-2xl font-bold text-foreground">{creditsRemaining}</p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Practice Interface */}
         {!analysisComplete ? (
