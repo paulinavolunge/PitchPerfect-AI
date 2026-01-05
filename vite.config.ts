@@ -17,12 +17,12 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
   return defineConfig({
     server: {
       host: "::",
-      port: isTest ? 5173 : 8081,
+      port: isTest ? 5173 : 8080,
       strictPort: true,
     },
     preview: {
       host: "::",
-      port: 8081,
+      port: 8080,
       strictPort: true,
     },
     plugins: [
@@ -71,7 +71,7 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
     },
     ...(isProduction && {
       esbuild: {
-        drop: ['console', 'debugger'],
+        drop: ['debugger'],
         legalComments: 'none',
       },
     }),

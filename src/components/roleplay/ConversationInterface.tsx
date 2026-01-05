@@ -141,26 +141,58 @@ const ConversationInterface = ({
   }, [mode]);
 
   const startRecording = useCallback(async () => {
-    if (!voiceManagerRef.current) {
-      console.error('❌ Voice manager not initialized');
-      return;
-    }
+    console.log('🎤 Mic button clicked -> startRecording');
 
     try {
+      // Ensure voice services are ready (fixes “first click does nothing”)
+      if (!voiceManagerRef.current) {
+        console.warn('🎤 Voice manager missing, initializing now...');
+        initializeVoiceServices();
+      }
+
+      if (!voiceManagerRef.current) {
+        const msg = 'Voice services are still initializing. Please try again in a moment.';
+        console.error('❌', msg);
+        toast({
+          title: 'Voice Not Ready',
+          description: msg,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       console.log('🎤 Starting voice recording...');
       setVoiceStatus('listening');
       setRealtimeTranscript('');
-      setIsListening(true);
 
+      const canRecordAudio = typeof MediaRecorder !== 'undefined';
+
+      // Request microphone permission FIRST (required for reliable mobile/desktop behavior)
+      if (canRecordAudio) {
+        console.log('🎤 Requesting microphone stream via getUserMedia/MediaRecorder...');
+        await voiceManagerRef.current.startRecording();
+        console.log('🎤 Microphone stream started');
+      } else {
+        console.warn('🎤 MediaRecorder not supported in this browser. Using SpeechRecognition-only mode.');
+      }
+
+      // Start real-time speech recognition (fills the input field live)
       if (activeMode === 'voice' || activeMode === 'hybrid') {
+        console.log('🗣️ Initializing SpeechRecognition (real-time transcript)...');
+
         const stopRealtime = startRealTimeSpeechRecognition(
           (transcript, isFinal) => {
             console.log('🗣️ Real-time transcript:', transcript, 'Final:', isFinal);
             setRealtimeTranscript(transcript);
-            if (isFinal && transcript.trim()) {
+
+            if (transcript.trim()) {
+              // Always mirror into the editable input field
               setInputText(transcript);
+            }
+
+            if (isFinal && transcript.trim()) {
               toast({
-                title: "Speech Captured",
+                title: 'Speech Captured',
                 description: `"${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`,
               });
             }
@@ -169,35 +201,33 @@ const ConversationInterface = ({
             console.warn('⚠️ Real-time recognition error:', error);
           }
         );
+
         realtimeRecognitionRef.current = stopRealtime;
       }
 
-      await voiceManagerRef.current.startRecording();
-      
+      setIsListening(true);
+
       toast({
-        title: "Recording Started",
-        description: "Speak now, click the microphone again to stop",
+        title: 'Listening...',
+        description: 'Speak now. Click the microphone again to stop.',
       });
     } catch (error) {
       console.error('❌ Error starting recording:', error);
       setVoiceStatus('idle');
       setIsListening(false);
+
       toast({
-        title: "Recording Error",
-        description: "Failed to access microphone. Please check permissions.",
-        variant: "destructive",
+        title: 'Recording Error',
+        description: 'Failed to access microphone. Please check permissions and try again.',
+        variant: 'destructive',
       });
     }
-  }, [activeMode, toast]);
+  }, [activeMode, initializeVoiceServices, toast]);
 
   const stopRecording = useCallback(async () => {
-    if (!voiceManagerRef.current) {
-      console.error('❌ Voice manager not initialized');
-      return;
-    }
+    console.log('🎤 Mic button clicked -> stopRecording');
 
-    console.log('🛑 Stopping recording...');
-    
+    // Stop SpeechRecognition first
     if (realtimeRecognitionRef.current) {
       realtimeRecognitionRef.current();
       realtimeRecognitionRef.current = null;
@@ -207,39 +237,60 @@ const ConversationInterface = ({
     setVoiceStatus('processing');
 
     try {
-      const audioBlob = await voiceManagerRef.current.stopRecording();
-      console.log('🎵 Audio blob received, size:', audioBlob.size);
+      const canRecordAudio = typeof MediaRecorder !== 'undefined';
 
-      if (realtimeTranscript.trim()) {
-        console.log('✅ Using real-time transcript:', realtimeTranscript);
-        setInputText(realtimeTranscript);
-        setVoiceStatus('complete');
-        toast({
-          title: "Voice Captured",
-          description: `"${realtimeTranscript.substring(0, 50)}${realtimeTranscript.length > 50 ? '...' : ''}"`,
-        });
-      } else {
+      // If we recorded audio, stop and (optionally) run Whisper fallback
+      if (canRecordAudio && voiceManagerRef.current?.isCurrentlyRecording()) {
+        console.log('🛑 Stopping MediaRecorder audio capture...');
+        const audioBlob = await voiceManagerRef.current.stopRecording();
+        console.log('🎵 Audio blob received, size:', audioBlob.size);
+
+        if (realtimeTranscript.trim()) {
+          console.log('✅ Using real-time transcript:', realtimeTranscript);
+          setInputText(realtimeTranscript);
+          setVoiceStatus('complete');
+          toast({
+            title: 'Voice Captured',
+            description: `"${realtimeTranscript.substring(0, 50)}${realtimeTranscript.length > 50 ? '...' : ''}"`,
+          });
+          return;
+        }
+
         console.log('🤖 Processing audio with Whisper...');
         const transcript = await processVoiceInput(audioBlob);
-        
+
         if (transcript && transcript.trim()) {
           setInputText(transcript);
           setVoiceStatus('complete');
           toast({
-            title: "Voice Processed",
+            title: 'Voice Processed',
             description: `"${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`,
           });
-        } else {
-          throw new Error('No speech detected in recording');
+          return;
         }
+
+        throw new Error('No speech detected in recording');
       }
+
+      // SpeechRecognition-only mode
+      if (realtimeTranscript.trim()) {
+        setInputText(realtimeTranscript);
+        setVoiceStatus('complete');
+        toast({
+          title: 'Voice Captured',
+          description: `"${realtimeTranscript.substring(0, 50)}${realtimeTranscript.length > 50 ? '...' : ''}"`,
+        });
+        return;
+      }
+
+      throw new Error('No speech detected');
     } catch (error) {
       console.error('❌ Voice processing error:', error);
       setVoiceStatus('idle');
       toast({
-        title: "Voice Processing Error",
-        description: error instanceof Error ? error.message : "Failed to process voice input",
-        variant: "destructive",
+        title: 'Voice Processing Error',
+        description: error instanceof Error ? error.message : 'Failed to process voice input',
+        variant: 'destructive',
       });
     }
   }, [realtimeTranscript, toast]);
