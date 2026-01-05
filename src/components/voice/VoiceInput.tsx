@@ -1,310 +1,297 @@
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AccessibleButton } from '@/components/ui/accessible-button';
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mic, MicOff, Volume2, VolumeX, AlertTriangle } from 'lucide-react';
-import { voiceService } from '@/services/VoiceService';
+import { Mic, MicOff, AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MicrophonePermissionHandler } from '@/components/permissions/MicrophonePermissionHandler';
-import { announceToScreenReader, generateUniqueId } from '@/utils/accessibility';
-import { ScreenReaderOnly } from '@/components/accessibility/ScreenReaderOnly';
 
 interface VoiceInputProps {
   onTranscript: (text: string, isFinal: boolean) => void;
-  onSpeakText?: (text: string) => void;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
-  showSpeechOutput?: boolean;
 }
+
+// Get the SpeechRecognition constructor
+const getSpeechRecognition = (): any => {
+  if (typeof window === 'undefined') return null;
+  return (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+};
 
 const VoiceInput: React.FC<VoiceInputProps> = ({
   onTranscript,
-  onSpeakText,
   disabled = false,
   placeholder = "Click the microphone to start speaking...",
   className,
-  showSpeechOutput = true
 }) => {
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
-  const [audioLevel, setAudioLevel] = useState<number>(0);
-  const [isSupported, setIsSupported] = useState<boolean>(false);
-  const [currentTranscript, setCurrentTranscript] = useState<string>('');
+  const [isSupported, setIsSupported] = useState(true);
+  const [currentTranscript, setCurrentTranscript] = useState('');
+  const [isRequesting, setIsRequesting] = useState(false);
   
-  const audioLevelRef = useRef<number>(0);
-  const animationFrameRef = useRef<number>();
-  
-  const micButtonId = useRef(generateUniqueId('mic-button')).current;
-  const speakButtonId = useRef(generateUniqueId('speak-button')).current;
-  const transcriptId = useRef(generateUniqueId('transcript')).current;
-  const errorId = useRef(generateUniqueId('voice-error')).current;
+  const recognitionRef = useRef<any>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
+  // Check browser support on mount
   useEffect(() => {
-    setIsSupported(voiceService.isVoiceSupported());
+    const SpeechRecognitionAPI = getSpeechRecognition();
+    if (!SpeechRecognitionAPI) {
+      setIsSupported(false);
+      setError('Voice input is not supported in this browser. Please use Chrome, Edge, or Safari.');
+    }
     
     return () => {
-      console.log('🧹 VoiceInput cleanup...');
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      
-      // Clean up voice service
-      voiceService.dispose();
-      
-      // Force cleanup of any remaining resources
-      setTimeout(() => {
-        if (typeof global !== 'undefined' && global.gc) {
-          global.gc();
+      // Cleanup on unmount
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {
+          // Ignore cleanup errors
         }
-      }, 100);
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
     };
   }, []);
 
-  const updateAudioLevel = useCallback((): void => {
-    if (isRecording) {
-      const level = voiceService.getAudioLevel();
-      setAudioLevel(level);
-      animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
-    }
-  }, [isRecording]);
-
-  useEffect(() => {
-    if (isRecording) {
-      updateAudioLevel();
-    } else {
-      setAudioLevel(0);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    }
-  }, [isRecording, updateAudioLevel]);
-
-  const handleStartRecording = async (): Promise<void> => {
-    if (!isSupported) {
-      const errorMsg = 'Voice input is not supported in this browser. Please use Chrome, Edge, or Safari.';
-      setError(errorMsg);
-      announceToScreenReader(errorMsg, 'assertive');
-      return;
-    }
-
-    setError(null);
-    announceToScreenReader('Starting voice recording...');
-    
+  const requestMicrophonePermission = async (): Promise<boolean> => {
     try {
-      await voiceService.startRecording(
-        {
-          continuous: true,
-          interimResults: true,
-          language: 'en-US'
-        },
-        {
-          onResult: (result) => {
-            setCurrentTranscript(result.transcript);
-            onTranscript(result.transcript, result.isFinal);
-            if (result.isFinal) {
-              announceToScreenReader(`Recorded: ${result.transcript}`);
-            }
-          },
-          onError: (error) => {
-            setError(error.message);
-            setIsRecording(false);
-            announceToScreenReader(`Recording error: ${error.message}`, 'assertive');
-          }
+      console.log('🎤 Requesting microphone permission...');
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      streamRef.current = stream;
+      console.log('🎤 Microphone permission granted');
+      return true;
+    } catch (err) {
+      console.error('🎤 Microphone permission denied:', err);
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError') {
+          setError('Microphone access denied. Please allow microphone access in your browser settings and try again.');
+        } else if (err.name === 'NotFoundError') {
+          setError('No microphone found. Please connect a microphone and try again.');
+        } else {
+          setError(`Microphone error: ${err.message}`);
         }
-      );
-      
-      setIsRecording(true);
-      setHasPermission(true);
-      announceToScreenReader('Recording started. Speak now.');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to start voice recording';
-      setError(errorMessage);
-      announceToScreenReader(`Failed to start recording: ${errorMessage}`, 'assertive');
-      
-      if (errorMessage.includes('permission') || errorMessage.includes('denied')) {
-        setHasPermission(false);
       }
+      return false;
     }
   };
 
-  const handleStopRecording = (): void => {
-    voiceService.stopRecording();
-    setIsRecording(false);
+  const startRecording = async () => {
+    if (disabled || !isSupported) return;
+    
+    setError(null);
     setCurrentTranscript('');
-    announceToScreenReader('Recording stopped.');
-  };
-
-  const handleSpeakText = async (text: string): Promise<void> => {
-    if (!onSpeakText || !text.trim()) return;
+    setIsRequesting(true);
     
     try {
-      setIsSpeaking(true);
-      announceToScreenReader('Starting text-to-speech...');
+      // Request microphone permission first
+      const hasPermission = await requestMicrophonePermission();
+      if (!hasPermission) {
+        setIsRequesting(false);
+        return;
+      }
       
-      await voiceService.speak(
-        text,
-        { rate: 1, pitch: 1, volume: 0.8 },
-        {
-          onStart: () => setIsSpeaking(true),
-          onEnd: () => {
-            setIsSpeaking(false);
-            announceToScreenReader('Text-to-speech completed.');
-          },
-          onError: (error) => {
-            const errorMsg = `Speech output error: ${error.message}`;
-            setError(errorMsg);
-            setIsSpeaking(false);
-            announceToScreenReader(errorMsg, 'assertive');
+      // Initialize speech recognition
+      const SpeechRecognitionAPI = getSpeechRecognition();
+      if (!SpeechRecognitionAPI) {
+        throw new Error('Speech recognition not supported');
+      }
+      
+      const recognition = new SpeechRecognitionAPI();
+      recognitionRef.current = recognition;
+      
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      
+      recognition.onstart = () => {
+        console.log('🎤 Speech recognition started');
+        setIsRecording(true);
+        setIsRequesting(false);
+      };
+      
+      recognition.onresult = (event: any) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const transcript = result[0].transcript;
+          
+          if (result.isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
           }
         }
-      );
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to speak text';
-      setError(errorMsg);
-      setIsSpeaking(false);
-      announceToScreenReader(errorMsg, 'assertive');
+        
+        const fullTranscript = finalTranscript || interimTranscript;
+        setCurrentTranscript(fullTranscript);
+        onTranscript(fullTranscript, !!finalTranscript);
+        
+        console.log('🗣️ Transcript:', fullTranscript, 'Final:', !!finalTranscript);
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('🎤 Speech recognition error:', event.error);
+        
+        let errorMessage = 'Speech recognition error';
+        switch (event.error) {
+          case 'not-allowed':
+            errorMessage = 'Microphone access denied. Please allow microphone access and try again.';
+            break;
+          case 'no-speech':
+            errorMessage = 'No speech detected. Please speak clearly and try again.';
+            break;
+          case 'audio-capture':
+            errorMessage = 'Audio capture failed. Please check your microphone.';
+            break;
+          case 'network':
+            errorMessage = 'Network error. Please check your internet connection.';
+            break;
+          default:
+            errorMessage = `Speech recognition error: ${event.error}`;
+        }
+        
+        setError(errorMessage);
+        setIsRecording(false);
+        setIsRequesting(false);
+      };
+      
+      recognition.onend = () => {
+        console.log('🎤 Speech recognition ended');
+        setIsRecording(false);
+        
+        // Clean up microphone stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+      };
+      
+      recognition.start();
+      console.log('🎤 Speech recognition starting...');
+      
+    } catch (err) {
+      console.error('🎤 Failed to start recording:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start recording');
+      setIsRecording(false);
+      setIsRequesting(false);
     }
   };
 
-  const handleStopSpeaking = (): void => {
-    voiceService.stopSpeaking();
-    setIsSpeaking(false);
-    announceToScreenReader('Text-to-speech stopped.');
+  const stopRecording = () => {
+    console.log('🎤 Stopping recording...');
+    
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Ignore stop errors
+      }
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    setIsRecording(false);
   };
 
-  const handlePermissionGranted = (): void => {
-    setHasPermission(true);
-    setError(null);
-    announceToScreenReader('Microphone permission granted.');
-  };
-
-  const handlePermissionDenied = (): void => {
-    setHasPermission(false);
-    const errorMsg = 'Microphone access is required for voice features';
-    setError(errorMsg);
-    announceToScreenReader(errorMsg, 'assertive');
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   };
 
   if (!isSupported) {
     return (
-      <Alert variant="destructive" className={className} role="alert">
+      <Alert variant="destructive" className={className}>
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          Voice features are not supported in this browser. Please use Chrome, Edge, or Safari for the best experience.
+          Voice input is not supported in this browser. Please use Chrome, Edge, or Safari.
         </AlertDescription>
       </Alert>
     );
   }
 
   return (
-    <MicrophonePermissionHandler
-      onPermissionGranted={handlePermissionGranted}
-      onPermissionDenied={handlePermissionDenied}
-    >
-      <section className={cn("space-y-4", className)} role="region" aria-labelledby="voice-input-heading">
-        <ScreenReaderOnly>
-          <h2 id="voice-input-heading">Voice Input Controls</h2>
-        </ScreenReaderOnly>
-        
-        {error && (
-          <Alert variant="destructive" role="alert" id={errorId}>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <AccessibleButton
-              id={micButtonId}
-              size="icon"
-              variant={isRecording ? "destructive" : "outline"}
-              onClick={isRecording ? handleStopRecording : handleStartRecording}
-              disabled={disabled}
-              className={cn(
-                "h-12 w-12 rounded-full transition-all duration-200",
-                isRecording && "animate-pulse shadow-lg shadow-red-300"
-              )}
-              ariaLabel={isRecording ? "Stop recording" : "Start recording"}
-              ariaDescribedBy={error ? errorId : undefined}
-            >
-              {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
-            </AccessibleButton>
-            
-            {isRecording && (
-              <div 
-                className="absolute inset-0 rounded-full border-4 border-red-400 animate-ping pointer-events-none"
-                style={{
-                  transform: `scale(${1 + audioLevel * 0.5})`,
-                  opacity: 0.3 + audioLevel * 0.7
-                }}
-                aria-hidden="true"
-              />
+    <div className={cn("space-y-4", className)}>
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <Button
+            type="button"
+            size="icon"
+            variant={isRecording ? "destructive" : "outline"}
+            onClick={toggleRecording}
+            disabled={disabled || isRequesting}
+            className={cn(
+              "h-12 w-12 rounded-full transition-all duration-200",
+              isRecording && "animate-pulse shadow-lg shadow-destructive/30"
             )}
-          </div>
-          
-          {showSpeechOutput && onSpeakText && (
-            <AccessibleButton
-              id={speakButtonId}
-              size="icon"
-              variant={isSpeaking ? "default" : "outline"}
-              onClick={isSpeaking ? handleStopSpeaking : () => handleSpeakText(currentTranscript)}
-              disabled={disabled || !currentTranscript.trim()}
-              className="h-12 w-12 rounded-full"
-              ariaLabel={isSpeaking ? "Stop speaking" : "Speak text"}
-              ariaDescribedBy={transcriptId}
-            >
-              {isSpeaking ? <VolumeX size={20} /> : <Volume2 size={20} />}
-            </AccessibleButton>
-          )}
-          
-          <div className="flex-1">
-            {isRecording ? (
-              <div className="flex flex-col space-y-2" role="status" aria-live="polite">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse" aria-hidden="true" />
-                  <span className="text-sm font-medium text-red-600">Recording...</span>
-                </div>
-                
-                <div className="w-full bg-gray-200 rounded-full h-2" role="progressbar" aria-label="Audio level">
-                  <div 
-                    className="bg-red-500 h-2 rounded-full transition-all duration-100"
-                    style={{ width: `${audioLevel * 100}%` }}
-                    aria-hidden="true"
-                  />
-                  <ScreenReaderOnly>Audio level: {Math.round(audioLevel * 100)}%</ScreenReaderOnly>
-                </div>
-                
-                {currentTranscript && (
-                  <p 
-                    id={transcriptId}
-                    className="text-sm text-gray-600 italic"
-                    aria-live="polite"
-                    aria-label="Current transcript"
-                  >
-                    "{currentTranscript}"
-                  </p>
-                )}
-              </div>
+            aria-label={isRecording ? "Stop recording" : "Start recording"}
+          >
+            {isRequesting ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : isRecording ? (
+              <MicOff className="h-5 w-5" />
             ) : (
-              <p className="text-sm text-gray-500" role="status">
-                {placeholder}
-              </p>
+              <Mic className="h-5 w-5" />
             )}
-          </div>
+          </Button>
+          
+          {isRecording && (
+            <div 
+              className="absolute inset-0 rounded-full border-4 border-destructive animate-ping pointer-events-none opacity-30"
+              aria-hidden="true"
+            />
+          )}
         </div>
         
-        <ScreenReaderOnly>
-          <div aria-live="polite" aria-atomic="true">
-            {isRecording && `Recording in progress. Audio level: ${Math.round(audioLevel * 100)}%`}
-            {isSpeaking && 'Text-to-speech in progress'}
-          </div>
-        </ScreenReaderOnly>
-      </section>
-    </MicrophonePermissionHandler>
+        <div className="flex-1">
+          {isRequesting ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Requesting microphone access...</span>
+            </div>
+          ) : isRecording ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 bg-destructive rounded-full animate-pulse" />
+                <span className="text-sm font-medium text-destructive">Recording... Speak now</span>
+              </div>
+              
+              {currentTranscript && (
+                <p className="text-sm text-muted-foreground italic">
+                  "{currentTranscript}"
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {placeholder}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
