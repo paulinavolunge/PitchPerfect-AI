@@ -1,0 +1,364 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Reset and Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #EBF4FF 0%, #DBEAFE 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Enhanced CSS Custom Properties */
+@layer base {
+  :root {
+    /* Vibrant Color Palette */
+    --primary-50: #EBF4FF;
+    --primary-500: #63A4FF;
+    --deep-navy: #1A2B50;
+    --neutral-base: #F4F6F8;
+
+    /* Light theme colors with stronger contrast */
+    --background: 0 0% 100%;
+    --foreground: 265 4% 12.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 265 4% 12.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 265 4% 12.9%;
+    --primary: 266 4% 20.8%;
+    --primary-foreground: 248 0.3% 98.4%;
+    --secondary: 248 0.7% 96.8%;
+    --secondary-foreground: 266 4% 20.8%;
+    --muted: 248 0.7% 96.8%;
+    --muted-foreground: 257 4.6% 55.4%;
+    --accent: 248 0.7% 96.8%;
+    --accent-foreground: 266 4% 20.8%;
+    --destructive: 27 24.5% 57.7%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 256 1.3% 92.9%;
+    --input: 256 1.3% 92.9%;
+    --ring: 257 4% 70.4%;
+    --radius: 0.375rem;
+    --chart-1: 41 22.2% 64.6%;
+    --chart-2: 185 11.8% 60%;
+    --chart-3: 227 7% 39.8%;
+    --chart-4: 84 18.9% 82.8%;
+    --chart-5: 70 18.8% 76.9%;
+    --sidebar: 248 0.3% 98.4%;
+    --sidebar-foreground: 265 4% 12.9%;
+    --sidebar-primary: 266 4% 20.8%;
+    --sidebar-primary-foreground: 248 0.3% 98.4%;
+    --sidebar-accent: 248 0.7% 96.8%;
+    --sidebar-accent-foreground: 266 4% 20.8%;
+    --sidebar-border: 256 1.3% 92.9%;
+    --sidebar-ring: 257 4% 70.4%;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
+  }
+  .dark {
+    --background: 0 0% 15%;
+    --foreground: 248 0.3% 98.4%;
+    --card: 266 4% 20.8%;
+    --card-foreground: 248 0.3% 98.4%;
+    --popover: 266 4% 20.8%;
+    --popover-foreground: 248 0.3% 98.4%;
+    --primary: 256 1.3% 92.9%;
+    --primary-foreground: 266 4% 20.8%;
+    --secondary: 260 4.1% 27.9%;
+    --secondary-foreground: 248 0.3% 98.4%;
+    --muted: 260 4.1% 27.9%;
+    --muted-foreground: 257 4% 70.4%;
+    --accent: 260 4.1% 27.9%;
+    --accent-foreground: 248 0.3% 98.4%;
+    --destructive: 22 19.1% 70.4%;
+    --destructive-foreground: 248 0.3% 98.4%;
+    --border: 0 0% 100% / 10%;
+    --input: 0 0% 100% / 15%;
+    --ring: 264 2.7% 55.1%;
+    --chart-1: 264 24.3% 48.8%;
+    --chart-2: 162 17% 69.6%;
+    --chart-3: 70 18.8% 76.9%;
+    --chart-4: 304 26.5% 62.7%;
+    --chart-5: 16 24.6% 64.5%;
+    --sidebar: 266 4% 20.8%;
+    --sidebar-foreground: 248 0.3% 98.4%;
+    --sidebar-primary: 264 24.3% 48.8%;
+    --sidebar-primary-foreground: 248 0.3% 98.4%;
+    --sidebar-accent: 260 4.1% 27.9%;
+    --sidebar-accent-foreground: 248 0.3% 98.4%;
+    --sidebar-border: 0 0% 100% / 10%;
+    --sidebar-ring: 264 2.7% 55.1%;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  }
+}
+
+/* Enhanced Component Styles with Better Contrast */
+@layer components {
+  .vibrant-card {
+    @apply bg-white rounded-xl shadow-vibrant-lg border border-primary-200/30 backdrop-blur-sm;
+  }
+
+  .hero-text {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-deep-navy to-primary-500 bg-clip-text text-transparent;
+  }
+
+  .vibrant-button {
+    @apply bg-gradient-to-r from-primary-500 via-primary-600 to-indigo-600 hover:from-primary-600 hover:via-primary-700 hover:to-indigo-700 text-white rounded-lg px-6 py-3 font-semibold transition-all duration-300 shadow-vibrant hover:shadow-vibrant-xl hover:scale-105;
+  }
+
+  .outline-button {
+    @apply border-2 border-primary-500 text-primary-600 hover:bg-gradient-to-r hover:from-primary-500 hover:to-primary-600 hover:text-white rounded-lg px-6 py-3 font-semibold transition-all duration-300 shadow-sm hover:shadow-vibrant;
+  }
+
+  .card-hover {
+    @apply hover:shadow-vibrant-xl hover:-translate-y-2 transition-all duration-300;
+  }
+
+  .gradient-bg {
+    @apply bg-gradient-to-br from-primary-50 via-primary-100 to-primary-200;
+  }
+
+  .strong-cta {
+    @apply bg-cta-gradient hover:bg-cta-gradient-hover text-white font-bold shadow-deep hover:shadow-vibrant-xl transition-all duration-300 transform hover:scale-105;
+  }
+}
+
+/* Enhanced Animations with More Impact */
+@keyframes strong-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes vibrant-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(99, 164, 255, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(99, 164, 255, 0.4); }
+}
+
+.animate-strong-bounce {
+  animation: strong-bounce 2s ease-in-out infinite;
+}
+
+.animate-vibrant-glow {
+  animation: vibrant-glow 3s ease-in-out infinite;
+}
+
+/* Enhanced Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--vibrant-blue-500);
+  outline-offset: 2px;
+}
+
+/* Responsive utilities */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Safe area for mobile devices */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Enhanced Accessibility Enhancements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High contrast mode */
+.high-contrast {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 10%;
+  --border: 0 0% 40%;
+  --primary: 220 100% 25%;
+  --primary-foreground: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+}
+
+.high-contrast * {
+  text-shadow: none !important;
+  box-shadow: 0 0 0 2px currentColor !important;
+}
+
+.high-contrast button,
+.high-contrast [role="button"] {
+  border: 3px solid currentColor !important;
+  font-weight: bold !important;
+}
+
+/* Font size adjustments */
+.font-large {
+  font-size: 1.125rem !important;
+}
+
+/* Onboarding highlight styles */
+.onboarding-highlight {
+  position: relative;
+  z-index: 999;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.font-xl {
+  font-size: 1.25rem !important;
+}
+
+/* Reduced motion */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Enhanced focus styles */
+*:focus-visible {
+  outline: 3px solid hsl(var(--primary)) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px hsl(var(--background)), 0 0 0 4px hsl(var(--primary)) !important;
+}
+
+/* Improved button focus states */
+button:focus-visible,
+[role="button"]:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px hsl(var(--background)), 0 0 0 4px hsl(var(--primary)), 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Skip links */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 12px 16px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  transition: top 0.3s ease;
+  font-weight: 600;
+  border: 2px solid transparent;
+}
+
+.skip-link:focus {
+  top: 6px;
+  border-color: hsl(var(--ring));
+}
+
+/* Improved link focus */
+a:focus-visible {
+  outline: 2px solid hsl(var(--primary)) !important;
+  outline-offset: 2px !important;
+  border-radius: 2px;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+/* Enhanced accessibility improvements */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --foreground: 0 0% 0%;
+    --background: 0 0% 100%;
+    --border: 0 0% 50%;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Onboarding highlight styles */
+.onboarding-highlight {
+  position: relative;
+  z-index: 9999;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

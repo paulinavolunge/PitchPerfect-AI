@@ -1,0 +1,483 @@
+
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { clearAllSessionData, clearUserSpecificData, initializeCleanSession, validateSessionIsolation } from '@/utils/sessionCleanup';
+import { SafeRPCService } from '@/services/SafeRPCService';
+import { getUserErrorMessage } from '@/types/errors';
+import safeStorage from '@/utils/safeStorage';
+
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+  isPremium: boolean;
+  creditsRemaining: number;
+  trialUsed: boolean;
+  isNewUser: boolean;
+  startFreeTrial: () => Promise<boolean>;
+  deductUserCredits: (featureType: string, credits: number) => Promise<boolean>;
+  refreshSubscription: () => Promise<void>;
+  markOnboardingComplete: () => void;
+  initError: string | null;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isPremium] = useState(false);
+  const [creditsRemaining, setCreditsRemaining] = useState(0);
+  const [trialUsed, setTrialUsed] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  
+  // Track if initial auth has been set to prevent race condition
+  const authInitialized = useRef(false);
+  const previousUserId = useRef<string | null>(null);
+
+  useEffect(() => {
+    console.log('AuthContext: Initializing auth state');
+    
+    // CRITICAL: Set up auth listener FIRST to prevent race condition
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log('AuthContext: Auth state changed:', event, !!currentSession);
+        
+        // Mark as initialized once we receive any auth event
+        authInitialized.current = true;
+        
+        // Handle different auth events with proper data isolation
+        if (event === 'SIGNED_OUT' || (!currentSession && user)) {
+          console.log('🧹 User signed out, clearing all session data...');
+          
+          // Clear all user-specific data (preserve consent)
+          clearAllSessionData(true);
+          
+          // Reset component state
+          setUser(null);
+          setSession(null);
+          setCreditsRemaining(0);
+          setTrialUsed(false);
+          setIsNewUser(false);
+          setInitError(null);
+          previousUserId.current = null;
+          
+          console.log('✅ Session data cleared for logout');
+          setLoading(false);
+        } else if (event === 'SIGNED_IN' && currentSession?.user?.id) {
+          console.log('🚀 User signed in, initializing clean session...');
+          
+          // Check if this is a different user than before
+          if (previousUserId.current && previousUserId.current !== currentSession.user.id) {
+            console.log('👤 Different user detected, clearing previous user data...');
+            clearUserSpecificData(previousUserId.current);
+          }
+          
+          previousUserId.current = currentSession.user.id;
+          
+          // Initialize clean session for new user
+          initializeCleanSession(currentSession.user.id);
+          
+          // Update state
+          setSession(currentSession);
+          setUser(currentSession.user);
+          setInitError(null);
+          
+          // Load fresh user profile data (deferred to avoid deadlock)
+          setTimeout(() => {
+            loadUserProfile(currentSession.user.id);
+          }, 0);
+          
+          // Check if this is a new user
+          const hasCompletedOnboarding = safeStorage.getItem(`onboarding_completed_${currentSession.user.id}`);
+          if (!hasCompletedOnboarding) {
+            setIsNewUser(true);
+          }
+          
+          // Validate session isolation in development
+          if (import.meta.env.DEV) {
+            setTimeout(() => validateSessionIsolation(currentSession.user.id), 100);
+          }
+          
+          console.log('✅ Clean session initialized for user:', currentSession.user.id);
+          setLoading(false);
+        } else if (event === 'TOKEN_REFRESHED' && currentSession?.user?.id) {
+          // Token refresh - maintain current state but verify data integrity
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          // Validate no data leakage occurred
+          if (import.meta.env.DEV) {
+            validateSessionIsolation(currentSession.user.id);
+          }
+        } else if (event === 'INITIAL_SESSION') {
+          // Handle initial session from getSession
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          if (currentSession?.user?.id) {
+            previousUserId.current = currentSession.user.id;
+            setTimeout(() => {
+              loadUserProfile(currentSession.user.id);
+            }, 0);
+            
+            const hasCompletedOnboarding = safeStorage.getItem(`onboarding_completed_${currentSession.user.id}`);
+            if (!hasCompletedOnboarding) {
+              setIsNewUser(true);
+            }
+          }
+          setLoading(false);
+        } else {
+          // Handle other events (PASSWORD_RECOVERY, etc.)
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          setLoading(false);
+        }
+        
+        // Log security events for auth state changes
+        if (currentSession?.user?.id) {
+          setTimeout(() => {
+            SafeRPCService.logSecurityEvent(`auth_${event}`, { 
+              user_id: currentSession.user.id,
+              session_isolated: true
+            }, currentSession.user.id);
+          }, 0);
+        }
+      }
+    );
+
+    // THEN get initial session
+    const initializeAuth = async () => {
+      try {
+        console.log('AuthContext: Getting initial session...');
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[INTERNAL] Auth initialization error:', error);
+          setInitError(getUserErrorMessage(error));
+          setLoading(false);
+        } else if (!authInitialized.current) {
+          // Only set if onAuthStateChange hasn't fired yet
+          console.log('AuthContext: Initial session loaded (before listener)', !!initialSession);
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          
+          if (initialSession?.user?.id) {
+            previousUserId.current = initialSession.user.id;
+            console.log('AuthContext: Loading user profile for:', initialSession.user.id);
+            await loadUserProfile(initialSession.user.id);
+            
+            const hasCompletedOnboarding = safeStorage.getItem(`onboarding_completed_${initialSession.user.id}`);
+            if (!hasCompletedOnboarding) {
+              setIsNewUser(true);
+            }
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('[INTERNAL] Failed to initialize auth:', error);
+        setInitError(getUserErrorMessage(error));
+        setLoading(false);
+      }
+    };
+
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (loading && !authInitialized.current) {
+        console.error('Auth initialization timeout - setting loading to false');
+        setLoading(false);
+        setInitError('Authentication initialization timed out. Please refresh the page.');
+      }
+    }, 15000); // 15 second timeout
+
+    initializeAuth();
+
+    return () => {
+      clearTimeout(timeoutId);
+      console.log('AuthContext: Cleaning up auth listener');
+      subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array - only run once
+
+  const loadUserProfile = async (userId: string, retryCount = 0): Promise<void> => {
+    try {
+      console.log('🔍 Loading user profile for:', userId, 'retry:', retryCount);
+      
+      // First, try to get the profile
+      const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('credits_remaining, trial_used')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.log('Profile error code:', error.code, 'message:', error.message);
+        
+        // Handle case where profile doesn't exist yet
+        if (error.code === 'PGRST116') {
+          console.log('⚠️ User profile not found, creating new profile...');
+          
+          // Try to create the profile
+          const { data: newProfile, error: insertError } = await supabase
+            .from('user_profiles')
+            .insert({ 
+              id: userId, 
+              credits_remaining: 1, // Free credit on signup
+              trial_used: false 
+            })
+            .select('credits_remaining, trial_used')
+            .single();
+            
+          if (insertError) {
+            console.warn('Could not create user profile:', insertError);
+            
+            // If creation failed due to race condition, retry after a delay
+            if (insertError.code === '23505' && retryCount < 3) { // Unique violation
+              console.log('Profile creation race condition detected, retrying...');
+              await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+              return loadUserProfile(userId, retryCount + 1);
+            }
+            
+            // If still failing, try upsert as last resort
+            if (retryCount < 2) {
+              console.log('Attempting upsert as fallback...');
+              const { data: upsertProfile, error: upsertError } = await supabase
+                .from('user_profiles')
+                .upsert({ 
+                  id: userId, 
+                  credits_remaining: 1,
+                  trial_used: false 
+                }, { 
+                  onConflict: 'id',
+                  ignoreDuplicates: false 
+                })
+                .select('credits_remaining, trial_used')
+                .single();
+                
+              if (upsertError) {
+                console.error('Upsert also failed:', upsertError);
+                // Use defaults if all creation attempts fail
+                setCreditsRemaining(1);
+                setTrialUsed(false);
+              } else if (upsertProfile) {
+                console.log('✅ Profile created via upsert:', upsertProfile);
+                setCreditsRemaining(upsertProfile.credits_remaining || 1);
+                setTrialUsed(upsertProfile.trial_used || false);
+              }
+            } else {
+              // Use defaults if creation fails after retries
+              setCreditsRemaining(1);
+              setTrialUsed(false);
+            }
+          } else {
+            console.log('✅ Created new user profile:', newProfile);
+            setCreditsRemaining(newProfile?.credits_remaining || 1);
+            setTrialUsed(newProfile?.trial_used || false);
+          }
+          } else {
+            console.error('Error loading user profile:', error);
+            
+            // Retry on temporary errors
+            if (retryCount < 3 && (error.code === 'PGRST301' || error.code === '500')) {
+            console.log('Temporary error, retrying profile load...');
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+              return loadUserProfile(userId, retryCount + 1);
+            }
+            
+            // Use safe defaults
+          setCreditsRemaining(1); // Give new users 1 free credit
+          setTrialUsed(false);
+        }
+      } else if (profile) {
+        console.log('✅ Loaded user profile:', profile);
+        setCreditsRemaining(profile.credits_remaining || 0);
+        setTrialUsed(profile.trial_used || false);
+      } else {
+        console.warn('No profile data returned');
+        
+        // Retry if no data returned
+        if (retryCount < 3) {
+          console.log('No profile data, retrying...');
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          return loadUserProfile(userId, retryCount + 1);
+        }
+        
+        setCreditsRemaining(1); // Give new users 1 free credit
+        setTrialUsed(false);
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error);
+      
+      // Retry on network errors
+      if (retryCount < 3) {
+        console.log('Network error, retrying profile load...');
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return loadUserProfile(userId, retryCount + 1);
+      }
+      
+      // Use safe defaults on any error
+      setCreditsRemaining(1); // Give new users 1 free credit
+      setTrialUsed(false);
+    }
+  };
+
+  const refreshSubscription = async (): Promise<void> => {
+    if (!user?.id) return;
+    
+    try {
+      await loadUserProfile(user.id);
+    } catch (error) {
+      console.error('Failed to refresh subscription:', error);
+    }
+  };
+
+  const startFreeTrial = async (): Promise<boolean> => {
+    if (!user?.id || trialUsed) {
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ 
+          trial_used: true,
+          credits_remaining: creditsRemaining + 10 // Add 10 trial credits
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error starting free trial:', error);
+        return false;
+      }
+
+      setTrialUsed(true);
+      setCreditsRemaining(prev => prev + 10);
+      return true;
+    } catch (error) {
+      console.error('Failed to start free trial:', error);
+      return false;
+    }
+  };
+
+  const deductUserCredits = async (featureType: string, credits: number): Promise<boolean> => {
+    if (!user?.id || creditsRemaining < credits) {
+      return false;
+    }
+
+    try {
+      // Use the secure function for credit deduction
+      const result = await SafeRPCService.deductCredits(user.id, featureType);
+      
+      if (result.success) {
+        setCreditsRemaining(result.remainingCredits);
+        return true;
+      } else {
+        console.error('Credit deduction failed');
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to deduct credits:', error);
+      return false;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      console.log('AuthContext: Signing out user...');
+      
+      // Clear ALL session data including localStorage (preserve consent)
+      console.log('🧹 Clearing all session data on logout...');
+      clearAllSessionData(true);
+      
+      // Also clear potential legacy keys
+      safeStorage.removeItem('supabase.auth.token');
+      
+      // Clear local state
+      setUser(null);
+      setSession(null);
+      setCreditsRemaining(0);
+      setTrialUsed(false);
+      setIsNewUser(false);
+      previousUserId.current = null;
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
+      }
+
+      console.log('AuthContext: User signed out successfully');
+      
+      // Redirect to appropriate domain
+      const targetUrl = window.location.hostname.includes('lovable.app') 
+        ? 'https://pitchperfectai.lovable.app/' 
+        : 'https://pitchperfectai.ai/';
+      
+      window.location.href = targetUrl;
+      
+    } catch (error) {
+      console.error('Sign out error:', error);
+      
+      // Even if there's an error, clear local data and redirect
+      clearAllSessionData(true);
+      safeStorage.removeItem('supabase.auth.token');
+      setUser(null);
+      setSession(null);
+      setCreditsRemaining(0);
+      setTrialUsed(false);
+      setIsNewUser(false);
+      previousUserId.current = null;
+      
+      const targetUrl = window.location.hostname.includes('lovable.app') 
+        ? 'https://pitchperfectai.lovable.app/' 
+        : 'https://pitchperfectai.ai/';
+      
+      window.location.href = targetUrl;
+    }
+  };
+
+  const markOnboardingComplete = () => {
+    if (!user?.id) return;
+    
+    setIsNewUser(false);
+    // Use safe storage wrapper
+    const key = `onboarding_completed_${user.id}`;
+    safeStorage.setItem(key, 'true');
+    safeStorage.setItem('onboardingCompletedAt', new Date().toISOString());
+    // Cleanup legacy keys
+    safeStorage.removeItem('onboardingComplete');
+    safeStorage.removeItem(`user_${user.id}_onboarding_complete`);
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    signOut,
+    isPremium,
+    creditsRemaining,
+    trialUsed,
+    isNewUser,
+    startFreeTrial,
+    deductUserCredits,
+    refreshSubscription,
+    markOnboardingComplete,
+    initError,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

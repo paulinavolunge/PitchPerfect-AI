@@ -1,0 +1,42 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> vite_react_shadcn_ts@0.0.0 build
+> vite build
+
+Vite config mode (restarted): production { isProduction: true, isDevelopment: false, isTest: false }
+vite v7.0.6 building for production...
+transforming...
+[plugin vite:resolve] Module "fs" has been externalized for browser compatibility, imported by "/workspace/PitchPerfect-AI/node_modules/pdf-parse/index.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+✓ 3066 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) /workspace/PitchPerfect-AI/src/components/Footer.tsx is dynamically imported by /workspace/PitchPerfect-AI/src/pages/Demo.tsx, /workspace/PitchPerfect-AI/src/pages/Index.tsx but also statically imported by /workspace/PitchPerfect-AI/src/components/ResponsiveLayout.tsx, /workspace/PitchPerfect-AI/src/pages/About.tsx, /workspace/PitchPerfect-AI/src/pages/CallRecordings.tsx, /workspace/PitchPerfect-AI/src/pages/Cancel.tsx, /workspace/PitchPerfect-AI/src/pages/Compare.tsx, /workspace/PitchPerfect-AI/src/pages/Dashboard.tsx, /workspace/PitchPerfect-AI/src/pages/DataSafety.tsx, /workspace/PitchPerfect-AI/src/pages/EmailConfirmed.tsx, /workspace/PitchPerfect-AI/src/pages/Login.tsx, /workspace/PitchPerfect-AI/src/pages/NotFound.tsx, /workspace/PitchPerfect-AI/src/pages/PasswordReset.tsx, /workspace/PitchPerfect-AI/src/pages/Pricing.tsx, /workspace/PitchPerfect-AI/src/pages/Privacy.tsx, /workspace/PitchPerfect-AI/src/pages/Progress.tsx, /workspace/PitchPerfect-AI/src/pages/Subscription.tsx, /workspace/PitchPerfect-AI/src/pages/Success.tsx, /workspace/PitchPerfect-AI/src/pages/TeamDashboard.tsx, /workspace/PitchPerfect-AI/src/pages/Terms.tsx, /workspace/PitchPerfect-AI/src/pages/Tips.tsx, /workspace/PitchPerfect-AI/src/pages/UpdatePassword.tsx, dynamic import will not move module into another chunk.
+
+computing gzip size...
+dist/index.html                                          4.79 kB │ gzip:   1.77 kB
+dist/assets/video-placeholder-optimized-Ctrokmm7.webp   48.66 kB
+dist/assets/styles-C4uY-PJl.css                        125.74 kB │ gzip:  19.48 kB
+dist/assets/PricingCTA-0T5X6HZo.js                       0.29 kB │ gzip:   0.22 kB
+dist/assets/demoUtils-CCXjGKq7.js                        0.55 kB │ gzip:   0.39 kB
+dist/assets/GuestBanner-BhuCM3Cw.js                      1.26 kB │ gzip:   0.64 kB
+dist/assets/DemoNavigation-CwkK1bcB.js                   1.44 kB │ gzip:   0.60 kB
+dist/assets/index-CPLwiC7L.js                            1.93 kB │ gzip:   1.02 kB
+dist/assets/CompanyLogos-B9h2t1bh.js                     2.02 kB │ gzip:   0.79 kB
+dist/assets/WaitlistModal-CObVqkwN.js                    2.13 kB │ gzip:   1.12 kB
+dist/assets/TrustBadges-CzRiO9zr.js                      2.27 kB │ gzip:   0.84 kB
+dist/assets/Features-qAcMYMAP.js                         2.84 kB │ gzip:   1.22 kB
+dist/assets/HowItWorks-Zk570tsu.js                       2.94 kB │ gzip:   1.25 kB
+dist/assets/VideoWalkthrough-BkpdFglL.js                 4.80 kB │ gzip:   1.85 kB
+dist/assets/WebhookSettings-CJQzMCVd.js                  5.84 kB │ gzip:   2.46 kB
+dist/assets/Testimonials-BjzTeQq8.js                     6.72 kB │ gzip:   2.72 kB
+dist/assets/PracticeObjection-D4fjd0DM.js                7.08 kB │ gzip:   2.52 kB
+dist/assets/DemoSandbox-BkUpZrrs.js                     16.99 kB │ gzip:   5.77 kB
+dist/assets/router-CVcQTvQK.js                          20.88 kB │ gzip:   7.90 kB
+dist/assets/analytics-Bee1koch.js                       25.17 kB │ gzip:   7.77 kB
+dist/assets/ui-CBgwoBJv.js                              50.30 kB │ gzip:  17.78 kB
+dist/assets/animations-B1urndfh.js                     108.24 kB │ gzip:  36.71 kB
+dist/assets/supabase-DG7C1FSc.js                       114.42 kB │ gzip:  31.45 kB
+dist/assets/vendor-C2LdtoKj.js                         141.41 kB │ gzip:  45.39 kB
+dist/assets/charts-Dkb3KKLa.js                         392.02 kB │ gzip: 107.47 kB
+dist/assets/index-CgfqSyHI.js                          731.77 kB │ gzip: 212.59 kB
+✓ built in 13.96s

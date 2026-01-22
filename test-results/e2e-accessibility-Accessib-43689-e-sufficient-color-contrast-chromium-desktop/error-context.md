@@ -1,0 +1,118 @@
+# Page snapshot
+
+```yaml
+- img
+- heading "Your Privacy Matters" [level=3]
+- paragraph: We use cookies and similar technologies to improve your experience, analyze usage, and provide personalized content. You can manage your preferences at any time.
+- button:
+  - img
+- button "Customize":
+  - img
+  - text: Customize
+- button "Reject All"
+- button "Accept All"
+- paragraph:
+  - text: By continuing, you agree to our
+  - link "Privacy Policy":
+    - /url: /privacy
+  - text: and
+  - link "Terms of Service":
+    - /url: /terms
+- link "Skip to main content":
+  - /url: "#main-content"
+- link "Skip to features":
+  - /url: "#features"
+- link "Skip to testimonials":
+  - /url: "#testimonials"
+- navigation:
+  - link "PitchPerfect AI - Home":
+    - /url: /
+    - text: PitchPerfect AI
+  - navigation "Main":
+    - list:
+      - listitem:
+        - link "About":
+          - /url: /about
+      - listitem:
+        - link "Compare":
+          - /url: /compare
+      - listitem:
+        - link "Demo":
+          - /url: /demo
+  - button "Log In":
+    - img
+    - text: Log In
+  - button "Sign Up Free":
+    - img
+    - text: Sign Up Free
+- main:
+  - main "Master Your Sales Pitch with AI Practice":
+    - img
+    - text: AI-Powered Sales Training
+    - heading "Master Your Sales Pitch with AI Practice" [level=1]
+    - paragraph: Practice objection handling and perfect your pitch with intelligent AI that responds like real prospects. Get instant feedback and watch your closing rate soar.
+    - button "Start Practicing Now - Free!"
+    - button "Watch Demo": Watch 2-Min Demo
+    - img
+    - text: No credit card required
+    - img
+    - text: Instant setup
+    - img
+    - text: Free trial included
+    - img
+    - text: SSL Secured
+    - img
+    - text: Privacy Protected
+    - img
+    - text: Verified Reviews
+  - heading "🚀 Featured on Product Hunt" [level=3]
+  - link "PitchPerfect AI - Perfect your sales objections with AI & close more deals | Product Hunt":
+    - /url: https://www.producthunt.com/products/pitchperfect-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-pitchperfect-ai-2
+    - img "PitchPerfect AI - Perfect your sales objections with AI & close more deals | Product Hunt"
+  - region "Why Sales Professionals Choose PitchPerfect AI":
+    - heading "Why Sales Professionals Choose PitchPerfect AI" [level=2]
+    - paragraph: Our AI understands sales conversations and provides the realistic practice you need to excel.
+    - button "Learn more about AI-Powered Practice":
+      - img
+      - heading "AI-Powered Practice" [level=3]
+      - paragraph: Practice with intelligent AI that adapts to your industry and responds like real prospects.
+    - button "Learn more about Instant Feedback":
+      - img
+      - heading "Instant Feedback" [level=3]
+      - paragraph: Get detailed analysis of your pitch delivery, pacing, and effectiveness immediately after each session.
+    - button "Learn more about Real Scenarios":
+      - img
+      - heading "Real Scenarios" [level=3]
+      - paragraph: Train with realistic objection handling scenarios based on actual sales situations.
+  - heading "Trusted by Sales Teams at Leading Companies" [level=3]
+  - paragraph:
+    - img
+    - text: Join 10,000+ sales professionals improving their pitch
+  - text: TF
+  - paragraph: TechFlow Solutions
+  - text: GD
+  - paragraph: Growth Dynamics
+  - text: SE
+  - paragraph: Swift Enterprise
+  - text: NC
+  - paragraph: Nexus Corp
+  - text: FT
+  - paragraph: Future Tech
+  - text: IS
+  - paragraph: Innovate Solutions
+  - img
+  - text: Enterprise Ready
+  - img
+  - text: Professional Grade
+  - img
+  - text: Team Collaboration
+  - img
+  - text: SSL Secured
+  - img
+  - text: Privacy Protected
+  - img
+  - text: Verified Reviews
+- button "Open accessibility settings":
+  - img
+- region "Notifications alt+T"
+```
