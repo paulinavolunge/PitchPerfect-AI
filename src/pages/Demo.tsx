@@ -239,8 +239,8 @@ const Demo = () => {
       // Save practice session to database for authenticated users
       await savePracticeSession(feedbackData);
 
-      // Complete the demo with the feedback data
-      handleDemoComplete(feedbackData);
+      // NOTE: Removed handleDemoComplete call to prevent PDF modal from showing after first response
+      // Users can practice multiple times without interruption
 
       // Show completion toast (separate from credit usage toast)
       toast({
@@ -266,16 +266,36 @@ const Demo = () => {
   };
 
   const generateFallbackFeedback = (response: string): string => {
-    // Generate more realistic feedback based on response content
-    if (response.toLowerCase().includes('value') || response.toLowerCase().includes('roi')) {
-      return "Excellent approach! You focused on value and ROI, which effectively addresses pricing concerns. Consider providing specific examples or metrics to strengthen your response further.";
-    } else if (response.toLowerCase().includes('understand') || response.toLowerCase().includes('budget')) {
-      return "Good empathetic approach. You acknowledged their budget concerns, which builds rapport. Try adding more concrete benefits and cost justification to overcome the objection.";
-    } else if (response.toLowerCase().includes('compare') || response.toLowerCase().includes('competition')) {
-      return "Smart strategy addressing the competitive landscape. Consider highlighting unique differentiators and long-term value proposition to justify the premium pricing.";
-    } else {
-      return "Good handling of the objection. Consider emphasizing value over cost and highlighting ROI to strengthen your response. Try to be more specific about benefits that justify the pricing.";
+    const lowerResponse = response.toLowerCase().trim();
+    const wordCount = response.trim().split(/\s+/).length;
+
+    // Handle very short responses (1-3 words)
+    if (wordCount <= 3) {
+      return `Your response "${response}" is too brief to effectively handle a pricing objection. Try providing a more detailed explanation that addresses the customer's concerns about cost. Include specific value propositions, ROI examples, or differentiation points to strengthen your pitch.`;
     }
+
+    // Handle vague/unclear responses
+    if (lowerResponse.match(/^(why not\?|ok|sure|maybe|fine|good|sounds good|nice)$/)) {
+      return `This response doesn't address the pricing objection. The customer expressed concern about the price being too high. You need to acknowledge their concern, explain the value proposition, and provide concrete reasons why your solution justifies the investment. Try again with a more substantive response.`;
+    }
+
+    // Positive keyword detection - value/ROI focus
+    if (lowerResponse.includes('value') || lowerResponse.includes('roi')) {
+      return "Excellent approach! You focused on value and ROI, which effectively addresses pricing concerns. Consider providing specific examples or metrics to strengthen your response further.";
+    }
+
+    // Empathy-based responses
+    if (lowerResponse.includes('understand') || lowerResponse.includes('budget')) {
+      return "Good empathetic approach. You acknowledged their budget concerns, which builds rapport. Try adding more concrete benefits and cost justification to overcome the objection.";
+    }
+
+    // Competitive positioning
+    if (lowerResponse.includes('compare') || lowerResponse.includes('competition')) {
+      return "Smart strategy addressing the competitive landscape. Consider highlighting unique differentiators and long-term value proposition to justify the premium pricing.";
+    }
+
+    // Default fallback for moderate responses
+    return "Good start! To improve this objection handling, try to: 1) Acknowledge the customer's budget concern, 2) Highlight specific value propositions that justify the price, and 3) Provide concrete examples of ROI or cost savings. Your response could benefit from more specific details about why your solution is worth the investment.";
   };
 
   const handleTryMoreFeatures = () => {
