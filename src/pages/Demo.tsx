@@ -271,31 +271,31 @@ const Demo = () => {
 
     // Handle very short responses (1-3 words)
     if (wordCount <= 3) {
-      return `Your response "${response}" is too brief to effectively handle a pricing objection. Try providing a more detailed explanation that addresses the customer's concerns about cost. Include specific value propositions, ROI examples, or differentiation points to strengthen your pitch.`;
+      return `Your response "${response}" is too brief to effectively handle a pricing objection. A strong response needs to acknowledge the concern, provide specific value, and guide next steps.\n\n**Try something like this instead:**\n"I understand price is a key consideration. Many of our clients felt the same way initially. What they found is that our solution actually reduces operational costs by 40% within the first quarter, which more than pays for the investment. For a company like yours, that typically translates to $50K+ in savings annually. Would it be helpful to see a detailed ROI breakdown specific to your situation?"`;
     }
 
     // Handle vague/unclear responses
     if (lowerResponse.match(/^(why not\?|ok|sure|maybe|fine|good|sounds good|nice)$/)) {
-      return `This response doesn't address the pricing objection. The customer expressed concern about the price being too high. You need to acknowledge their concern, explain the value proposition, and provide concrete reasons why your solution justifies the investment. Try again with a more substantive response.`;
+      return `This response doesn't address the pricing objection. The customer needs concrete reasons to justify the investment.\n\n**Here's a stronger response:**\n"I appreciate you being upfront about the price concern. Let me share why our clients see this as an investment rather than a cost. Our platform typically saves teams 15-20 hours per week in manual work. At your team's current size, that's roughly $75K annually in productivity gains. Plus, we include free implementation and dedicated support to ensure you see value from day one. What matters most to you - the time savings or the cost-reduction?"`;
     }
 
     // Positive keyword detection - value/ROI focus
     if (lowerResponse.includes('value') || lowerResponse.includes('roi')) {
-      return "Excellent approach! You focused on value and ROI, which effectively addresses pricing concerns. Consider providing specific examples or metrics to strengthen your response further.";
+      return "Excellent approach! You focused on value and ROI, which directly addresses pricing concerns. To make this even stronger, add specific numbers and a clear next step.\n\n**Example enhancement:**\n'Most clients see 3-5x ROI in the first year. For instance, one client in your industry reduced processing time by 60%, saving them $120K annually on a $40K investment. Would you be open to a 15-minute call where I can show you exactly how this would work for your team?'";
     }
 
     // Empathy-based responses
     if (lowerResponse.includes('understand') || lowerResponse.includes('budget')) {
-      return "Good empathetic approach. You acknowledged their budget concerns, which builds rapport. Try adding more concrete benefits and cost justification to overcome the objection.";
+      return "Good empathetic approach! You're building rapport by acknowledging their concern. Now strengthen it with concrete benefits.\n\n**Try this framework:**\n'I completely understand - budget is always a factor. What changed our clients' minds was seeing the actual numbers: most save 25-30% on their current solution within 6 months. We also offer flexible payment terms. If budget timing is the main concern, we could start with a pilot program at 50% cost. Would that make this more feasible for this quarter?'";
     }
 
     // Competitive positioning
     if (lowerResponse.includes('compare') || lowerResponse.includes('competition')) {
-      return "Smart strategy addressing the competitive landscape. Consider highlighting unique differentiators and long-term value proposition to justify the premium pricing.";
+      return "Smart strategy addressing competitors! Now differentiate by showing specific advantages.\n\n**Example:**\n'While cheaper options exist, here's what sets us apart: our clients see 2x faster implementation, 24/7 dedicated support, and most importantly, 40% better results on average. Company X switched from a competitor and saw their conversion rates jump from 12% to 19% in just 3 months. The price difference pays for itself in the first quarter. What specific capabilities matter most for your team?'";
     }
 
     // Default fallback for moderate responses
-    return "Good start! To improve this objection handling, try to: 1) Acknowledge the customer's budget concern, 2) Highlight specific value propositions that justify the price, and 3) Provide concrete examples of ROI or cost savings. Your response could benefit from more specific details about why your solution is worth the investment.";
+    return "Good start! Your response has potential but needs more specific value propositions and examples.\n\n**Here's how to strengthen it:**\n'I hear your concern about the price. Here's why it's worth it: our solution delivers an average 250% ROI within the first year. One recent client in your industry saw $180K in cost savings on a $60K investment. We also include free training, priority support, and quarterly strategy reviews. Our guarantee is simple: if you don't see measurable value in 90 days, we'll refund your investment. Does it make sense to schedule a quick demo so you can see the specific impact for your team?'";
   };
 
   const handleTryMoreFeatures = () => {
