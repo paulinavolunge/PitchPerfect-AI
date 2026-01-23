@@ -271,12 +271,12 @@ const Demo = () => {
 
     // Handle very short responses (1-3 words)
     if (wordCount <= 3) {
-      return `Your response "${response}" is too brief to effectively handle a pricing objection. A strong response needs to acknowledge the concern, provide specific value, and guide next steps.\n\n**Try something like this instead:**\n"I understand price is a key consideration. Many of our clients felt the same way initially. What they found is that our solution actually reduces operational costs by 40% within the first quarter, which more than pays for the investment. For a company like yours, that typically translates to $50K+ in savings annually. Would it be helpful to see a detailed ROI breakdown specific to your situation?"`;
+      return `⚠️ <strong>Too brief!</strong> A pricing objection needs a real answer.<br/><br/>🎯 <strong>Try this instead:</strong><br/>"I understand price is key. Our solution cuts operational costs by 40% in Q1—that's $50K+ savings annually for companies like yours. Want to see the ROI breakdown for your specific situation?"`;
     }
 
     // Handle vague/unclear responses
     if (lowerResponse.match(/^(why not\?|ok|sure|maybe|fine|good|sounds good|nice)$/)) {
-      return `This response doesn't address the pricing objection. The customer needs concrete reasons to justify the investment.\n\n**Here's a stronger response:**\n"I appreciate you being upfront about the price concern. Let me share why our clients see this as an investment rather than a cost. Our platform typically saves teams 15-20 hours per week in manual work. At your team's current size, that's roughly $75K annually in productivity gains. Plus, we include free implementation and dedicated support to ensure you see value from day one. What matters most to you - the time savings or the cost-reduction?"`;
+      return `❌ <strong>This doesn't address the objection.</strong> The customer needs concrete value, not vague responses.<br/><br/>💡 <strong>Say this instead:</strong><br/>"I appreciate your honesty about price. Here's why clients see this as investment, not cost: We save teams 15-20 hours weekly. That's $75K/year in productivity for your team size. Plus free implementation and dedicated support from day one. What matters more to you—time savings or cost reduction?"`;
     }
 
     // Positive keyword detection - value/ROI focus
@@ -286,16 +286,16 @@ const Demo = () => {
 
     // Empathy-based responses
     if (lowerResponse.includes('understand') || lowerResponse.includes('budget')) {
-      return "Good empathetic approach! You're building rapport by acknowledging their concern. Now strengthen it with concrete benefits.\n\n**Try this framework:**\n'I completely understand - budget is always a factor. What changed our clients' minds was seeing the actual numbers: most save 25-30% on their current solution within 6 months. We also offer flexible payment terms. If budget timing is the main concern, we could start with a pilot program at 50% cost. Would that make this more feasible for this quarter?'";
+      return `👏 <strong>Good empathy!</strong> You're building trust by acknowledging their concern.<br/><br/>💪 <strong>Now add this punch:</strong><br/>"Budget is always a factor—I get it. Our clients save 25-30% on current solutions within 6 months. We offer flexible payments too. If timing's the issue, let's start with a pilot at 50% cost. Work for this quarter?"`;
     }
 
     // Competitive positioning
     if (lowerResponse.includes('compare') || lowerResponse.includes('competition')) {
-      return "Smart strategy addressing competitors! Now differentiate by showing specific advantages.\n\n**Example:**\n'While cheaper options exist, here's what sets us apart: our clients see 2x faster implementation, 24/7 dedicated support, and most importantly, 40% better results on average. Company X switched from a competitor and saw their conversion rates jump from 12% to 19% in just 3 months. The price difference pays for itself in the first quarter. What specific capabilities matter most for your team?'";
+      return `🔥 <strong>Smart move</strong> addressing competitors head-on!<br/><br/>🚀 <strong>Differentiate like this:</strong><br/>"Yes, cheaper options exist. Here's why we're worth it: 2x faster implementation, 24/7 support, and 40% better results on average. Company X jumped from 12% to 19% conversion in 3 months after switching. The price difference paid for itself in Q1. What capabilities matter most to you?"`;
     }
 
     // Default fallback for moderate responses
-    return "Good start! Your response has potential but needs more specific value propositions and examples.\n\n**Here's how to strengthen it:**\n'I hear your concern about the price. Here's why it's worth it: our solution delivers an average 250% ROI within the first year. One recent client in your industry saw $180K in cost savings on a $60K investment. We also include free training, priority support, and quarterly strategy reviews. Our guarantee is simple: if you don't see measurable value in 90 days, we'll refund your investment. Does it make sense to schedule a quick demo so you can see the specific impact for your team?'";
+    return `✅ <strong>Good start!</strong> Now let's make it irresistible.<br/><br/>🎯 <strong>Try this approach:</strong><br/>"I hear your price concern. Here's the truth: 250% ROI in year one. Recent client in your industry: $180K savings on $60K investment. We include free training, priority support, quarterly strategy reviews. Zero risk: 90-day value guarantee or full refund. Quick demo to see your specific impact?"`;
   };
 
   const handleTryMoreFeatures = () => {
@@ -390,7 +390,7 @@ const Demo = () => {
                 {feedback && (
                   <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
                     <h3 className="font-medium text-green-800 mb-2 text-sm sm:text-base">AI Feedback</h3>
-                    <p className="text-green-700 text-sm sm:text-base leading-relaxed">{feedback}</p>
+                    <div className="text-green-700 text-sm sm:text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: feedback }} />
                   </div>
                 )}
               </div>
