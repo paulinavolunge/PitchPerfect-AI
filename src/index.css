@@ -322,12 +322,6 @@ a:focus-visible {
   border-radius: 0.25rem;
 }
 
-/* Touch targets */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
-}
-
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   :root {
@@ -344,14 +338,6 @@ a:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* Onboarding highlight styles */
-.onboarding-highlight {
-  position: relative;
-  z-index: 9999;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
 }
 
 @layer base {

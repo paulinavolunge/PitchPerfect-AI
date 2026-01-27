@@ -36,7 +36,7 @@ const Navbar: React.FC = () => {
       creditsRemaining,
       trialUsed,
     });
-    
+
   }, [user, isGuestMode, creditsRemaining, trialUsed]);
 
   const handleSignup = () => {
@@ -56,10 +56,10 @@ const Navbar: React.FC = () => {
     } catch (error) {
       console.error('Error during sign out:', error);
       // Force redirect even if there's an error
-      const targetUrl = window.location.hostname.includes('lovable.app') 
-        ? '/' 
+      const targetUrl = window.location.hostname.includes('lovable.app')
+        ? '/'
         : 'https://pitchperfectai.ai/';
-      
+
       window.location.href = targetUrl;
     }
   };
@@ -105,9 +105,9 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-   
-          <Link 
-            to="/" 
+
+          <Link
+            to="/"
             className="flex items-center space-x-2"
             aria-label="PitchPerfect AI - Home"
           >
@@ -127,11 +127,10 @@ const Navbar: React.FC = () => {
                       <NavigationMenuItem key={item.name}>
                         <Link
                           to={item.href}
-                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                            location.pathname === item.href
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${location.pathname === item.href
                               ? 'text-primary-600 bg-primary-50'
                               : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
-                          }`}
+                            }`}
                           aria-current={location.pathname === item.href ? 'page' : undefined}
                         >
                           {item.name}
@@ -141,16 +140,15 @@ const Navbar: React.FC = () => {
                   </>
                 ) : isGuestMode ? (
                   <>
-           
+
                     {guestModeItems.map((item) => (
                       <NavigationMenuItem key={item.name}>
                         <Link
                           to={item.href}
-                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                            location.pathname === item.href
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${location.pathname === item.href
                               ? 'text-primary-600 bg-primary-50'
                               : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
-                          }`}
+                            }`}
                           aria-current={location.pathname === item.href ? 'page' : undefined}
                         >
                           {item.name}
@@ -164,11 +162,10 @@ const Navbar: React.FC = () => {
                       <NavigationMenuItem key={item.name}>
                         <Link
                           to={item.href}
-                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                            location.pathname === item.href
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${location.pathname === item.href
                               ? 'text-primary-600 bg-primary-50'
                               : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
-                          }`}
+                            }`}
                           aria-current={location.pathname === item.href ? 'page' : undefined}
                         >
                           {item.name}
@@ -177,7 +174,7 @@ const Navbar: React.FC = () => {
                     ))}
                   </>
                 )}
-                </NavigationMenuList>
+              </NavigationMenuList>
             </NavigationMenu>
           </div>
 
@@ -204,15 +201,15 @@ const Navbar: React.FC = () => {
                 {/* User menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="relative h-8 w-8 rounded-full"
                       aria-label="User account menu"
                       data-testid="user-menu"
                     >
                       <Avatar className="h-8 w-8">
-                        <AvatarImage 
-                          src={user?.user_metadata?.avatar_url} 
+                        <AvatarImage
+                          src={user?.user_metadata?.avatar_url}
                           alt={`Profile picture of ${user?.user_metadata?.name || user?.email}`}
                         />
                         <AvatarFallback className="bg-primary-600 text-white text-xs">
@@ -286,9 +283,9 @@ const Navbar: React.FC = () => {
             {/* Mobile menu */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="lg:hidden"
                   aria-label="Open navigation menu"
                 >
@@ -310,11 +307,10 @@ const Navbar: React.FC = () => {
                         <Link
                           key={item.name}
                           to={item.href}
-                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                            location.pathname === item.href
-                              ? 'text-brand-green bg-brand-green/10'
-                              : 'text-brand-dark hover:text-brand-green hover:bg-brand-green/5'
-                          }`}
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${location.pathname === item.href
+                              ? 'text-primary-600 bg-primary-50'
+                              : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
+                            }`}
                         >
                           {item.name}
                         </Link>
@@ -337,12 +333,10 @@ const Navbar: React.FC = () => {
                         <Link
                           key={item.name}
                           to={item.href}
-                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                            
-                            location.pathname === item.href
-                              ? 'text-brand-green bg-brand-green/10'
-                              : 'text-brand-dark hover:text-brand-green hover:bg-brand-green/5'
-                          }`}
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${location.pathname === item.href
+                              ? 'text-primary-600 bg-primary-50'
+                              : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
+                            }`}
                         >
                           {item.name}
                         </Link>
@@ -358,7 +352,7 @@ const Navbar: React.FC = () => {
                         </Button>
                         <Button
                           onClick={handleSignup}
-                          className="w-full bg-brand-green hover:bg-brand-green/90"
+                          className="w-full bg-primary-600 hover:bg-primary-700 text-white"
                         >
                           <UserPlus className="mr-2 h-4 w-4" />
                           Sign Up Free
@@ -371,12 +365,10 @@ const Navbar: React.FC = () => {
                         <Link
                           key={item.name}
                           to={item.href}
-                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                            location.pathname === item.href
-
-                            ? 'text-brand-green bg-brand-green/10'
-                              : 'text-brand-dark hover:text-brand-green hover:bg-brand-green/5'
-                          }`}
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${location.pathname === item.href
+                              ? 'text-primary-600 bg-primary-50'
+                              : 'text-deep-navy hover:text-primary-600 hover:bg-primary-50'
+                            }`}
                         >
                           {item.name}
                         </Link>
@@ -392,9 +384,8 @@ const Navbar: React.FC = () => {
                         </Button>
                         <Button
                           onClick={handleSignup}
-                          className="w-full bg-brand-green hover:bg-brand-green/90"
-      
-                          >
+                          className="w-full bg-primary-600 hover:bg-primary-700 text-white"
+                        >
                           <UserPlus className="mr-2 h-4 w-4" />
                           Sign Up Free
                         </Button>
