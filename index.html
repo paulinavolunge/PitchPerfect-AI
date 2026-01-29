@@ -86,8 +86,9 @@
     
     <script>
       console.log('index.html: Script tag executed');
-      console.log('index.html: About to load main.tsx');
+      console.log('index.html: About to load startup watchdog + main.tsx');
     </script>
+    <script src="/startup-watchdog.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
