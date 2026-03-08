@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Mic, MicOff, Send, Volume2, VolumeX, Trophy, CheckCircle, AlertTriangle } from 'lucide-react';
 import MessageList from './chat/MessageList';
 import { generateAIResponse, getScenarioIntro, generateFirstObjection } from './chat/ChatLogic';
 import { generateStructuredFeedback } from './chat/FeedbackGenerator';
