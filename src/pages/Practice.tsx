@@ -120,7 +120,7 @@ const Practice = () => {
           body: {
             transcript: analysisText,
             practiceMode,
-            scenario: null, // Can be enhanced with actual scenario data
+            scenario: { industry: selectedIndustry, objection: selectedObjection, difficulty: selectedDifficulty },
             userContext: { userId: user?.id }
           }
         });
