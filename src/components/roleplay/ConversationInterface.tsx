@@ -544,6 +544,55 @@ const ConversationInterface = ({
     }
   }, [scenario, speechEnabled, getAIPersona, speakText]);
 
+  const endSessionAndScore = useCallback(async () => {
+    if (isAnalyzing || sessionEnded) return;
+
+    const userMessages = messages.filter(m => m.sender === 'user');
+    if (userMessages.length < 2) {
+      toast({ title: 'Not enough data', description: 'Send at least 2 responses before ending the session.', variant: 'destructive' });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      // Build transcript from conversation
+      const transcript = messages
+        .map(m => `${m.sender === 'user' ? 'User' : 'AI Prospect'}: ${m.text}`)
+        .join('\n\n');
+
+      const { data, error } = await supabase.functions.invoke('pitch-analysis', {
+        body: {
+          transcript,
+          practiceMode: activeMode,
+          scenario: scenario || { industry: 'Technology', objection: 'General', difficulty: 'Beginner' },
+          userContext: { userId: user?.id }
+        }
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data?.analysis) throw new Error('No analysis returned');
+
+      const analysis = data.analysis;
+      setSessionAnalysis(analysis);
+      setSessionEnded(true);
+
+      // Save session with AI score
+      await saveSessionToDatabase(messages, { ...analysis, score: analysis.overallScore });
+
+      // Deduct 1 credit for end-of-session analysis
+      if (user) {
+        await deductUserCredits('roleplay_session_analysis', 1);
+      }
+
+      toast({ title: 'Session Scored!', description: `Your overall score: ${analysis.overallScore}/100` });
+    } catch (err) {
+      console.error('End-session analysis error:', err);
+      toast({ title: 'Scoring Failed', description: 'Could not analyze your session. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [isAnalyzing, sessionEnded, messages, activeMode, scenario, user, saveSessionToDatabase, deductUserCredits, toast]);
+
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputText;
     if (!textToSend.trim() || isLoading) return;
