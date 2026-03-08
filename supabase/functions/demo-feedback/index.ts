@@ -193,9 +193,22 @@ Be constructive, encouraging, and specific. This is a demo user so keep feedback
     }
 
     // Provide a fallback response for error situations
-    const fallbackFeedback = "Great effort! Your response shows good understanding of the value proposition. Consider adding a specific example or case study to make your pitch even more compelling.";
+    const fallbackAnalysis = {
+      overallScore: 70,
+      categories: {
+        clarity: { score: 7, feedback: "Good clarity.", suggestions: ["Add more detail"] },
+        confidence: { score: 7, feedback: "Solid delivery.", suggestions: ["Be more assertive"] },
+        persuasiveness: { score: 7, feedback: "Decent pitch.", suggestions: ["Use concrete examples"] },
+        tone: { score: 7, feedback: "Professional tone.", suggestions: ["Stay conversational"] },
+        objectionHandling: { score: 6, feedback: "Could improve.", suggestions: ["Anticipate objections"] }
+      },
+      strengths: ["Clear communication", "Professional approach"],
+      improvements: ["Add specific examples", "Practice objection handling"],
+      recommendation: "Great effort! Consider adding a specific example or case study to make your pitch more compelling."
+    };
     return new Response(JSON.stringify({
-      feedback: fallbackFeedback,
+      feedback: fallbackAnalysis.recommendation,
+      analysis: fallbackAnalysis,
       fallback: true,
       error: userMessage
     }), {
