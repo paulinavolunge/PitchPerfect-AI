@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Mic, MicOff, Send, Volume2, VolumeX, Trophy, CheckCircle, AlertTriangle } from 'lucide-react';
 import MessageList from './chat/MessageList';
 import { generateAIResponse, getScenarioIntro, generateFirstObjection } from './chat/ChatLogic';
 import { generateStructuredFeedback } from './chat/FeedbackGenerator';
@@ -62,6 +63,9 @@ const ConversationInterface = ({
   const [hasProcessedInput, setHasProcessedInput] = useState(false);
   const [realtimeTranscript, setRealtimeTranscript] = useState('');
   const [userResponseCount, setUserResponseCount] = useState(0);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [sessionAnalysis, setSessionAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   const { user, deductUserCredits } = useAuth();
   const voiceManagerRef = useRef<VoiceRecordingManager | null>(null);
@@ -540,6 +544,55 @@ const ConversationInterface = ({
     }
   }, [scenario, speechEnabled, getAIPersona, speakText]);
 
+  const endSessionAndScore = useCallback(async () => {
+    if (isAnalyzing || sessionEnded) return;
+
+    const userMessages = messages.filter(m => m.sender === 'user');
+    if (userMessages.length < 2) {
+      toast({ title: 'Not enough data', description: 'Send at least 2 responses before ending the session.', variant: 'destructive' });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      // Build transcript from conversation
+      const transcript = messages
+        .map(m => `${m.sender === 'user' ? 'User' : 'AI Prospect'}: ${m.text}`)
+        .join('\n\n');
+
+      const { data, error } = await supabase.functions.invoke('pitch-analysis', {
+        body: {
+          transcript,
+          practiceMode: activeMode,
+          scenario: scenario || { industry: 'Technology', objection: 'General', difficulty: 'Beginner' },
+          userContext: { userId: user?.id }
+        }
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data?.analysis) throw new Error('No analysis returned');
+
+      const analysis = data.analysis;
+      setSessionAnalysis(analysis);
+      setSessionEnded(true);
+
+      // Save session with AI score
+      await saveSessionToDatabase(messages, { ...analysis, score: analysis.overallScore });
+
+      // Deduct 1 credit for end-of-session analysis
+      if (user) {
+        await deductUserCredits('roleplay_session_analysis', 1);
+      }
+
+      toast({ title: 'Session Scored!', description: `Your overall score: ${analysis.overallScore}/100` });
+    } catch (err) {
+      console.error('End-session analysis error:', err);
+      toast({ title: 'Scoring Failed', description: 'Could not analyze your session. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [isAnalyzing, sessionEnded, messages, activeMode, scenario, user, saveSessionToDatabase, deductUserCredits, toast]);
+
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputText;
     if (!textToSend.trim() || isLoading) return;
@@ -751,6 +804,100 @@ const ConversationInterface = ({
             />
           </div>
         </div>
+      )}
+
+      {/* End Session & Score Button */}
+      {!sessionEnded && messages.filter(m => m.sender === 'user').length >= 2 && (
+        <div className="flex justify-center mb-4">
+          <Button
+            onClick={endSessionAndScore}
+            disabled={isAnalyzing}
+            variant="default"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6"
+          >
+            {isAnalyzing ? (
+              <>
+                <div className="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                Analyzing Session...
+              </>
+            ) : (
+              <>
+                <Trophy className="h-4 w-4 mr-2" />
+                End Session & Get Score
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Session Analysis Results */}
+      {sessionEnded && sessionAnalysis && (
+        <Card className="mb-4 border-green-200 bg-green-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              Session Results
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Overall Score */}
+            <div className="text-center">
+              <div className="text-4xl font-bold text-green-600 mb-1">{sessionAnalysis.overallScore}/100</div>
+              <p className="text-sm text-muted-foreground">
+                {sessionAnalysis.overallScore >= 90 ? 'Outstanding!' :
+                 sessionAnalysis.overallScore >= 80 ? 'Great job!' :
+                 sessionAnalysis.overallScore >= 70 ? 'Good work!' : 'Keep practicing!'}
+              </p>
+            </div>
+
+            {/* Category Scores */}
+            {sessionAnalysis.categories && (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {Object.entries(sessionAnalysis.categories).map(([key, cat]: [string, any]) => (
+                  <div key={key} className="text-center p-2 bg-background rounded-lg border">
+                    <div className="text-lg font-bold text-foreground">{cat.score}/10</div>
+                    <div className="text-xs text-muted-foreground capitalize">{key === 'objectionHandling' ? 'Objections' : key}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Strengths */}
+            {sessionAnalysis.strengths?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-foreground flex items-center gap-1 mb-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" /> Strengths
+                </h4>
+                <ul className="space-y-1">
+                  {sessionAnalysis.strengths.map((s: string, i: number) => (
+                    <li key={i} className="text-sm text-muted-foreground">• {s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Improvements */}
+            {sessionAnalysis.improvements?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-foreground flex items-center gap-1 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" /> Areas to Improve
+                </h4>
+                <ul className="space-y-1">
+                  {sessionAnalysis.improvements.map((s: string, i: number) => (
+                    <li key={i} className="text-sm text-muted-foreground">• {s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Recommendation */}
+            {sessionAnalysis.recommendation && (
+              <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+                <p className="text-sm text-foreground italic">💡 {sessionAnalysis.recommendation}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       <div className="space-y-4">

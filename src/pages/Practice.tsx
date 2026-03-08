@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { Mic, Play, Square, RotateCcw, Zap, Trophy, MessageCircle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
@@ -32,6 +34,9 @@ const Practice = () => {
   const [hasPermission, setHasPermission] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [selectedIndustry, setSelectedIndustry] = useState('Technology');
+  const [selectedObjection, setSelectedObjection] = useState('Price');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('Beginner');
 
   // User-specific streak data with proper isolation
   useEffect(() => {
@@ -115,7 +120,7 @@ const Practice = () => {
           body: {
             transcript: analysisText,
             practiceMode,
-            scenario: null, // Can be enhanced with actual scenario data
+            scenario: { industry: selectedIndustry, objection: selectedObjection, difficulty: selectedDifficulty },
             userContext: { userId: user?.id }
           }
         });
@@ -299,6 +304,51 @@ const Practice = () => {
             <div>
               <p className="text-sm text-muted-foreground">Credits Remaining</p>
               <p className="text-2xl font-bold text-foreground">{creditsRemaining}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Scenario Context Selector */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Scenario Context</CardTitle>
+            <p className="text-sm text-muted-foreground">Set the context so AI feedback is tailored to your situation.</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Industry</Label>
+                <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['Technology', 'Healthcare', 'Finance', 'Retail', 'Manufacturing', 'Education'].map(i => (
+                      <SelectItem key={i} value={i}>{i}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Objection Type</Label>
+                <Select value={selectedObjection} onValueChange={setSelectedObjection}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['Price', 'Trust', 'Timing', 'Authority', 'Need', 'Competition'].map(o => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Difficulty</Label>
+                <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['Beginner', 'Intermediate', 'Advanced', 'Expert'].map(d => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
