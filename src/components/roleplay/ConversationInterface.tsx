@@ -806,6 +806,100 @@ const ConversationInterface = ({
         </div>
       )}
 
+      {/* End Session & Score Button */}
+      {!sessionEnded && messages.filter(m => m.sender === 'user').length >= 2 && (
+        <div className="flex justify-center mb-4">
+          <Button
+            onClick={endSessionAndScore}
+            disabled={isAnalyzing}
+            variant="default"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6"
+          >
+            {isAnalyzing ? (
+              <>
+                <div className="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                Analyzing Session...
+              </>
+            ) : (
+              <>
+                <Trophy className="h-4 w-4 mr-2" />
+                End Session & Get Score
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Session Analysis Results */}
+      {sessionEnded && sessionAnalysis && (
+        <Card className="mb-4 border-green-200 bg-green-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              Session Results
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Overall Score */}
+            <div className="text-center">
+              <div className="text-4xl font-bold text-green-600 mb-1">{sessionAnalysis.overallScore}/100</div>
+              <p className="text-sm text-muted-foreground">
+                {sessionAnalysis.overallScore >= 90 ? 'Outstanding!' :
+                 sessionAnalysis.overallScore >= 80 ? 'Great job!' :
+                 sessionAnalysis.overallScore >= 70 ? 'Good work!' : 'Keep practicing!'}
+              </p>
+            </div>
+
+            {/* Category Scores */}
+            {sessionAnalysis.categories && (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {Object.entries(sessionAnalysis.categories).map(([key, cat]: [string, any]) => (
+                  <div key={key} className="text-center p-2 bg-background rounded-lg border">
+                    <div className="text-lg font-bold text-foreground">{cat.score}/10</div>
+                    <div className="text-xs text-muted-foreground capitalize">{key === 'objectionHandling' ? 'Objections' : key}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Strengths */}
+            {sessionAnalysis.strengths?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-foreground flex items-center gap-1 mb-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" /> Strengths
+                </h4>
+                <ul className="space-y-1">
+                  {sessionAnalysis.strengths.map((s: string, i: number) => (
+                    <li key={i} className="text-sm text-muted-foreground">• {s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Improvements */}
+            {sessionAnalysis.improvements?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-foreground flex items-center gap-1 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" /> Areas to Improve
+                </h4>
+                <ul className="space-y-1">
+                  {sessionAnalysis.improvements.map((s: string, i: number) => (
+                    <li key={i} className="text-sm text-muted-foreground">• {s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Recommendation */}
+            {sessionAnalysis.recommendation && (
+              <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+                <p className="text-sm text-foreground italic">💡 {sessionAnalysis.recommendation}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="space-y-4">
         {/* Voice Status Display */}
         {voiceStatus !== 'idle' && getVoiceStatusDisplay()}
