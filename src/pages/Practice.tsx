@@ -308,6 +308,51 @@ const Practice = () => {
           </CardContent>
         </Card>
 
+        {/* Scenario Context Selector */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Scenario Context</CardTitle>
+            <p className="text-sm text-muted-foreground">Set the context so AI feedback is tailored to your situation.</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Industry</Label>
+                <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['Technology', 'Healthcare', 'Finance', 'Retail', 'Manufacturing', 'Education'].map(i => (
+                      <SelectItem key={i} value={i}>{i}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Objection Type</Label>
+                <Select value={selectedObjection} onValueChange={setSelectedObjection}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['Price', 'Trust', 'Timing', 'Authority', 'Need', 'Competition'].map(o => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Difficulty</Label>
+                <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['Beginner', 'Intermediate', 'Advanced', 'Expert'].map(d => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Practice Interface */}
         {!analysisComplete ? (
           <div className="space-y-6">
