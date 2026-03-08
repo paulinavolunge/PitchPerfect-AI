@@ -63,6 +63,9 @@ const ConversationInterface = ({
   const [hasProcessedInput, setHasProcessedInput] = useState(false);
   const [realtimeTranscript, setRealtimeTranscript] = useState('');
   const [userResponseCount, setUserResponseCount] = useState(0);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [sessionAnalysis, setSessionAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   const { user, deductUserCredits } = useAuth();
   const voiceManagerRef = useRef<VoiceRecordingManager | null>(null);
