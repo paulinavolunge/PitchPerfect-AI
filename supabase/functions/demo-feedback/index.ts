@@ -84,24 +84,35 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert sales coach providing feedback on demo responses.
 
-Analyze the user's response and provide constructive, encouraging feedback that:
-1. Highlights what they did well
-2. Suggests specific improvements
-3. Offers actionable advice for sales situations
-4. Maintains a positive, coaching tone
+Analyze the user's response and provide detailed, structured feedback.
 
-Keep feedback concise but specific - aim for 2-3 sentences that are immediately actionable.
+For each of these 5 categories, provide a score from 1-10 and specific feedback:
+1. **Clarity** - How clear and easy to understand is the message?
+2. **Confidence** - Does the delivery sound confident and authoritative?
+3. **Persuasiveness** - How compelling are the arguments and value proposition?
+4. **Tone** - Is the tone appropriate for the situation?
+5. **Objection Handling** - How well does it address potential concerns?
 
-Focus on sales communication best practices:
-- Value proposition clarity
-- Customer focus
-- Confidence and professionalism
-- Addressing potential concerns
-- Use of examples and proof points`;
+Return your analysis as a JSON object with this exact structure:
+{
+  "overallScore": number (1-100),
+  "categories": {
+    "clarity": { "score": number, "feedback": "string", "suggestions": ["string"] },
+    "confidence": { "score": number, "feedback": "string", "suggestions": ["string"] },
+    "persuasiveness": { "score": number, "feedback": "string", "suggestions": ["string"] },
+    "tone": { "score": number, "feedback": "string", "suggestions": ["string"] },
+    "objectionHandling": { "score": number, "feedback": "string", "suggestions": ["string"] }
+  },
+  "strengths": ["string"],
+  "improvements": ["string"],
+  "recommendation": "string"
+}
+
+Be constructive, encouraging, and specific. This is a demo user so keep feedback approachable.`;
 
     const userPrompt = inputType === 'voice'
-      ? `Please provide coaching feedback on this voice response from a sales demo: "${sanitizedResponse}"`
-      : `Please provide coaching feedback on this text response from a sales demo: "${sanitizedResponse}"`;
+      ? `Please analyze this voice response from a sales demo: "${sanitizedResponse}"`
+      : `Please analyze this text response from a sales demo: "${sanitizedResponse}"`;
 
     const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -115,8 +126,9 @@ Focus on sales communication best practices:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 300,
-        temperature: 0.7,
+        max_tokens: 1000,
+        temperature: 0.3,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -127,12 +139,39 @@ Focus on sales communication best practices:
     }
 
     const data = await apiResponse.json();
-    const feedback = data.choices[0].message.content;
+    const rawContent = data.choices[0].message.content;
 
-    console.log('Generated feedback:', feedback);
+    let analysis;
+    try {
+      analysis = JSON.parse(rawContent);
+    } catch {
+      console.error('Failed to parse AI response as JSON');
+      analysis = {
+        overallScore: 70,
+        categories: {
+          clarity: { score: 7, feedback: "Good clarity in your response.", suggestions: ["Add more specific details"] },
+          confidence: { score: 7, feedback: "Solid confidence level.", suggestions: ["Use more assertive language"] },
+          persuasiveness: { score: 7, feedback: "Decent persuasion.", suggestions: ["Include concrete examples"] },
+          tone: { score: 7, feedback: "Appropriate tone.", suggestions: ["Keep it conversational"] },
+          objectionHandling: { score: 6, feedback: "Could address concerns more directly.", suggestions: ["Anticipate common objections"] }
+        },
+        strengths: ["Clear communication", "Professional approach"],
+        improvements: ["Add specific examples", "Address potential objections proactively"],
+        recommendation: "Great start! Keep practicing to refine your pitch."
+      };
+    }
+
+    if (!analysis.overallScore) {
+      analysis.overallScore = Math.round(
+        Object.values(analysis.categories || {}).reduce((sum: number, cat: any) => sum + (cat.score || 7), 0) * 2
+      );
+    }
+
+    console.log('Generated structured feedback:', analysis);
 
     return new Response(JSON.stringify({
-      feedback,
+      feedback: analysis.recommendation || "Good effort! Keep practicing.",
+      analysis,
       timestamp: new Date().toISOString(),
       inputType
     }), {
@@ -154,9 +193,22 @@ Focus on sales communication best practices:
     }
 
     // Provide a fallback response for error situations
-    const fallbackFeedback = "Great effort! Your response shows good understanding of the value proposition. Consider adding a specific example or case study to make your pitch even more compelling.";
+    const fallbackAnalysis = {
+      overallScore: 70,
+      categories: {
+        clarity: { score: 7, feedback: "Good clarity.", suggestions: ["Add more detail"] },
+        confidence: { score: 7, feedback: "Solid delivery.", suggestions: ["Be more assertive"] },
+        persuasiveness: { score: 7, feedback: "Decent pitch.", suggestions: ["Use concrete examples"] },
+        tone: { score: 7, feedback: "Professional tone.", suggestions: ["Stay conversational"] },
+        objectionHandling: { score: 6, feedback: "Could improve.", suggestions: ["Anticipate objections"] }
+      },
+      strengths: ["Clear communication", "Professional approach"],
+      improvements: ["Add specific examples", "Practice objection handling"],
+      recommendation: "Great effort! Consider adding a specific example or case study to make your pitch more compelling."
+    };
     return new Response(JSON.stringify({
-      feedback: fallbackFeedback,
+      feedback: fallbackAnalysis.recommendation,
+      analysis: fallbackAnalysis,
       fallback: true,
       error: userMessage
     }), {
