@@ -34,6 +34,9 @@ const Practice = () => {
   const [hasPermission, setHasPermission] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [selectedIndustry, setSelectedIndustry] = useState('Technology');
+  const [selectedObjection, setSelectedObjection] = useState('Price');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('Beginner');
 
   // User-specific streak data with proper isolation
   useEffect(() => {
