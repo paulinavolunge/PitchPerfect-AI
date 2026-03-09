@@ -5,6 +5,40 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+// ---------------------------------------------------------------------------
+// IP-based rate limiting (in-memory, per instance)
+// Limit: 5 requests per IP per hour
+// ---------------------------------------------------------------------------
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+const ipRequestLog = new Map<string, number[]>();
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfterSeconds: number } {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const timestamps = (ipRequestLog.get(ip) ?? []).filter(t => t > windowStart);
+
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    const oldest = timestamps[0];
+    const retryAfterSeconds = Math.ceil((oldest + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    return { allowed: false, retryAfterSeconds };
+  }
+
+  timestamps.push(now);
+  ipRequestLog.set(ip, timestamps);
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
+function getClientIp(req: Request): string {
+  return (
+    req.headers.get('cf-connecting-ip') ||
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    req.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
+
 interface FeedbackEmailRequest {
   email: string;
   sessionData?: Record<string, unknown>;
@@ -97,6 +131,27 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders(origin!) });
   }
 
+  // Rate limiting
+  const clientIp = getClientIp(req);
+  const { allowed, retryAfterSeconds } = checkRateLimit(clientIp);
+
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({
+        error: 'Too many requests. Please try again later.',
+        retryAfter: retryAfterSeconds,
+      }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders(origin!),
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfterSeconds),
+        },
+      }
+    );
+  }
+
   try {
     // Optional authentication - supports both authenticated and guest users
     const user = await verifyAuth(req);
@@ -115,7 +170,6 @@ serve(async (req) => {
     // For authenticated users, optionally verify email matches (relaxed for demo flexibility)
     if (!isGuest && user.email && email !== user.email) {
       console.log(`[send-feedback-email] User ${user.id} sending to different email: ${email}`);
-      // Allow it but log for monitoring
     }
 
     // Validate email format
@@ -141,7 +195,8 @@ serve(async (req) => {
       id: (result as any)?.data?.id || (result as any)?.id,
       userId: isGuest ? 'guest' : user.id,
       isGuest,
-      recipient: email
+      recipient: email,
+      ip: clientIp,
     });
 
     return new Response(
