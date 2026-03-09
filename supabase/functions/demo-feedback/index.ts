@@ -9,9 +9,43 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
+// ---------------------------------------------------------------------------
+// IP-based rate limiting (in-memory, per instance)
+// Limit: 10 requests per IP per hour
+// ---------------------------------------------------------------------------
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+const ipRequestLog = new Map<string, number[]>();
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfterSeconds: number } {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const timestamps = (ipRequestLog.get(ip) ?? []).filter(t => t > windowStart);
+
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    const oldest = timestamps[0];
+    const retryAfterSeconds = Math.ceil((oldest + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    return { allowed: false, retryAfterSeconds };
+  }
+
+  timestamps.push(now);
+  ipRequestLog.set(ip, timestamps);
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
+function getClientIp(req: Request): string {
+  return (
+    req.headers.get('cf-connecting-ip') ||
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    req.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
+
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null; // Allow guest users
+  if (!token) return null;
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -19,7 +53,7 @@ const verifyAuth = async (request: Request) => {
   );
 
   const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) return null; // Return null instead of throwing
+  if (error || !user) return null;
 
   return user;
 };
@@ -30,15 +64,35 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Rate limiting — enforce before any expensive operations
+  const clientIp = getClientIp(req);
+  const { allowed, retryAfterSeconds } = checkRateLimit(clientIp);
+
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({
+        error: 'Too many requests. Please try again later.',
+        retryAfter: retryAfterSeconds,
+      }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfterSeconds),
+        },
+      }
+    );
+  }
+
   try {
-    // Verify authentication (optional for demo)
     const user = await verifyAuth(req);
     if (user) {
       console.log('Authenticated user:', user.id);
     } else {
       console.log('Guest user accessing demo');
     }
-    
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
@@ -46,7 +100,15 @@ serve(async (req) => {
 
     const { response, inputType } = await req.json();
 
-    console.log('Demo feedback request:', { response, inputType, isGuest: !user });
+    // Validate input before sending to OpenAI
+    if (!response || typeof response !== 'string' || response.trim().length < 10 || response.length > 1000) {
+      return new Response(
+        JSON.stringify({ error: 'Response must be between 10 and 1000 characters.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Demo feedback request:', { inputType, isGuest: !user, ip: clientIp });
 
     const systemPrompt = `You are an expert sales coach providing feedback on demo responses. 
 
@@ -65,7 +127,7 @@ Focus on sales communication best practices:
 - Addressing potential concerns
 - Use of examples and proof points`;
 
-    const userPrompt = inputType === 'voice' 
+    const userPrompt = inputType === 'voice'
       ? `Please provide coaching feedback on this voice response from a sales demo: "${response}"`
       : `Please provide coaching feedback on this text response from a sales demo: "${response}"`;
 
@@ -97,7 +159,7 @@ Focus on sales communication best practices:
 
     console.log('Generated feedback:', feedback);
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       feedback,
       timestamp: new Date().toISOString(),
       inputType
@@ -107,16 +169,15 @@ Focus on sales communication best practices:
 
   } catch (error) {
     console.error('Error in demo-feedback function:', error);
-    
-    // Provide a fallback response
+
     const fallbackFeedback = "Great effort! Your response shows good understanding of the value proposition. Consider adding a specific example or case study to make your pitch even more compelling.";
-    
-    return new Response(JSON.stringify({ 
+
+    return new Response(JSON.stringify({
       feedback: fallbackFeedback,
       fallback: true,
-      error: error.message 
+      error: error.message
     }), {
-      status: 200, // Still return 200 for fallback
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
