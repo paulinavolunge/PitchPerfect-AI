@@ -388,11 +388,13 @@ const Demo = () => {
                   </MicrophoneGuard>
                 )}
 
+                {feedback && (() => {
+                  const scoreValue = typeof (feedback as any) === 'string' ? null : null;
+                  // We need to extract score from feedbackData - store it in state
+                  return null;
+                })()}
                 {feedback && (
-                  <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h3 className="font-medium text-green-800 mb-2 text-sm sm:text-base">AI Feedback</h3>
-                    <div className="text-green-700 text-sm sm:text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: feedback }} />
-                  </div>
+                  <FeedbackDisplay feedback={feedback} />
                 )}
               </div>
 
