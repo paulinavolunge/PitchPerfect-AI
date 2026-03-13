@@ -150,12 +150,12 @@ const ConversationInterface = ({
     try {
       // Ensure voice services are ready (fixes “first click does nothing”)
       if (!voiceManagerRef.current) {
-        console.warn('🎤 Voice manager missing, initializing now...');
-        initializeVoiceServices();
+        console.warn('🎤 Voice manager missing, creating new instance...');
+        voiceManagerRef.current = new VoiceRecordingManager();
       }
 
       if (!voiceManagerRef.current) {
-        const msg = 'Voice services are still initializing. Please try again in a moment.';
+        const msg = 'Voice services failed to initialize. Please refresh the page.';
         console.error('❌', msg);
         toast({
           title: 'Voice Not Ready',
