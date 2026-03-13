@@ -226,7 +226,7 @@ const Demo = () => {
           response: responseText,
           timestamp: new Date().toISOString(),
           feedback: generateFallbackFeedback(responseText),
-          score: Math.floor(Math.random() * 3) + 7, // Demo score 7-10
+          score: null,
           aiSuccess: false // Mark as fallback
         };
       }
