@@ -197,7 +197,7 @@ const Demo = () => {
           response: responseText,
           timestamp: new Date().toISOString(),
           feedback: data.feedback || generateFallbackFeedback(responseText),
-          score: Math.floor(Math.random() * 3) + 7, // Still use random score for demo
+          score: data.score || null,
           aiSuccess: !data.fallback // Track if this was from real AI
         };
 
