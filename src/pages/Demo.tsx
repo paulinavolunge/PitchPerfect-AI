@@ -32,6 +32,7 @@ const Demo = () => {
   const [objectionScenario, setObjectionScenario] = useState("Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less.");
   const [hasError, setHasError] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedbackScore, setFeedbackScore] = useState<number | null>(null);
   const { isGuestMode } = useGuestMode();
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
@@ -177,7 +178,8 @@ const Demo = () => {
         const { data, error } = await supabase.functions.invoke('demo-feedback', {
           body: {
             response: responseText,
-            inputType: input.type
+            inputType: input.type,
+            objection: objectionScenario
           }
         });
 
@@ -196,7 +198,7 @@ const Demo = () => {
           response: responseText,
           timestamp: new Date().toISOString(),
           feedback: data.feedback || generateFallbackFeedback(responseText),
-          score: Math.floor(Math.random() * 3) + 7, // Still use random score for demo
+          score: data.score || null,
           aiSuccess: !data.fallback // Track if this was from real AI
         };
 
@@ -225,7 +227,7 @@ const Demo = () => {
           response: responseText,
           timestamp: new Date().toISOString(),
           feedback: generateFallbackFeedback(responseText),
-          score: Math.floor(Math.random() * 3) + 7, // Demo score 7-10
+          score: null,
           aiSuccess: false // Mark as fallback
         };
       }
@@ -235,6 +237,7 @@ const Demo = () => {
       }
 
       setFeedback(feedbackData.feedback);
+      setFeedbackScore(feedbackData.score);
 
       // Save practice session to database for authenticated users
       await savePracticeSession(feedbackData);
@@ -387,12 +390,31 @@ const Demo = () => {
                   </MicrophoneGuard>
                 )}
 
-                {feedback && (
-                  <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h3 className="font-medium text-green-800 mb-2 text-sm sm:text-base">AI Feedback</h3>
-                    <div className="text-green-700 text-sm sm:text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: feedback }} />
-                  </div>
-                )}
+                {feedback && (() => {
+                  const s = feedbackScore;
+                  const isLow = s !== null && s <= 3;
+                  const isMid = s !== null && s >= 4 && s <= 6;
+                  const isHigh = s !== null && s >= 7;
+                  const bgColor = isLow ? 'bg-red-50 border-red-200' : isMid ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200';
+                  const titleColor = isLow ? 'text-red-800' : isMid ? 'text-amber-800' : 'text-green-800';
+                  const textColor = isLow ? 'text-red-700' : isMid ? 'text-amber-700' : 'text-green-700';
+                  const scoreLabel = s === null ? '' : s >= 9 ? 'Excellent!' : s >= 7 ? 'Good response' : s >= 4 ? 'Needs improvement' : 'Poor — try again';
+
+                  return (
+                    <div className={`mt-4 sm:mt-6 p-3 sm:p-4 ${bgColor} border rounded-lg`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className={`font-medium ${titleColor} text-sm sm:text-base`}>AI Feedback</h3>
+                        {s !== null && (
+                          <div className="flex items-center gap-2">
+                            <span className={`text-2xl font-bold ${titleColor}`}>{s}/10</span>
+                            <span className={`text-xs font-medium ${textColor}`}>{scoreLabel}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className={`${textColor} text-sm sm:text-base leading-relaxed`} dangerouslySetInnerHTML={{ __html: feedback }} />
+                    </div>
+                  );
+                })()}
               </div>
 
               {isGuestMode && sessionData && (
