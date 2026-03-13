@@ -598,6 +598,7 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_rate_limits: { Args: never; Returns: number }
+      cleanup_old_log_data: { Args: never; Returns: undefined }
       deduct_credits_and_log_usage: {
         Args: {
           p_credits_to_deduct: number
@@ -627,6 +628,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      manage_subscription: {
+        Args: {
+          p_email: string
+          p_stripe_customer_id?: string
+          p_subscribed?: boolean
+          p_subscription_end?: string
+          p_subscription_tier?: string
+        }
+        Returns: Json
+      }
+      safe_create_profile: { Args: never; Returns: undefined }
       sanitize_error_message: {
         Args: { p_error_message: string }
         Returns: string
