@@ -237,6 +237,7 @@ const Demo = () => {
       }
 
       setFeedback(feedbackData.feedback);
+      setFeedbackScore(feedbackData.score);
 
       // Save practice session to database for authenticated users
       await savePracticeSession(feedbackData);
