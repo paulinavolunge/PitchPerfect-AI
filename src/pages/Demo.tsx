@@ -32,6 +32,7 @@ const Demo = () => {
   const [objectionScenario, setObjectionScenario] = useState("Your solution looks interesting, but honestly, it's priced higher than what we were expecting to pay. We have other options that cost less.");
   const [hasError, setHasError] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedbackScore, setFeedbackScore] = useState<number | null>(null);
   const { isGuestMode } = useGuestMode();
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
