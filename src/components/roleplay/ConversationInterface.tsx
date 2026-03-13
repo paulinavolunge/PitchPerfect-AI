@@ -181,32 +181,42 @@ const ConversationInterface = ({
       }
 
       // Start real-time speech recognition (fills the input field live)
+      // On mobile browsers without SpeechRecognition, this returns null and we rely on MediaRecorder + Whisper
       if (activeMode === 'voice' || activeMode === 'hybrid') {
-        console.log('🗣️ Initializing SpeechRecognition (real-time transcript)...');
+        const hasSpeechRecognition = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+        
+        if (hasSpeechRecognition) {
+          console.log('🗣️ Initializing SpeechRecognition (real-time transcript)...');
 
-        const stopRealtime = startRealTimeSpeechRecognition(
-          (transcript, isFinal) => {
-            console.log('🗣️ Real-time transcript:', transcript, 'Final:', isFinal);
-            setRealtimeTranscript(transcript);
+          const stopRealtime = startRealTimeSpeechRecognition(
+            (transcript, isFinal) => {
+              console.log('🗣️ Real-time transcript:', transcript, 'Final:', isFinal);
+              setRealtimeTranscript(transcript);
 
-            if (transcript.trim()) {
-              // Always mirror into the editable input field
-              setInputText(transcript);
+              if (transcript.trim()) {
+                setInputText(transcript);
+              }
+
+              if (isFinal && transcript.trim()) {
+                toast({
+                  title: 'Speech Captured',
+                  description: `"${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`,
+                });
+              }
+            },
+            (error) => {
+              console.warn('⚠️ Real-time recognition error:', error);
             }
+          );
 
-            if (isFinal && transcript.trim()) {
-              toast({
-                title: 'Speech Captured',
-                description: `"${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`,
-              });
-            }
-          },
-          (error) => {
-            console.warn('⚠️ Real-time recognition error:', error);
-          }
-        );
-
-        realtimeRecognitionRef.current = stopRealtime;
+          realtimeRecognitionRef.current = stopRealtime;
+        } else {
+          console.log('🎤 SpeechRecognition not available (mobile browser). Will use MediaRecorder + Whisper fallback.');
+          toast({
+            title: 'Recording Mode',
+            description: 'Using audio recording. Tap the mic again when done speaking.',
+          });
+        }
       }
 
       setIsListening(true);

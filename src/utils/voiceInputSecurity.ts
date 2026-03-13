@@ -45,9 +45,10 @@ export class VoiceInputSecurity {
       return false;
     }
     
-    // Check MIME type
-    const allowedTypes = ['audio/wav', 'audio/mp3', 'audio/webm', 'audio/ogg'];
-    if (!allowedTypes.includes(audioBlob.type)) {
+    // Check MIME type (use startsWith to handle codec suffixes like 'audio/webm;codecs=opus')
+    const allowedTypes = ['audio/wav', 'audio/mp3', 'audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg'];
+    const isValidType = allowedTypes.some(type => audioBlob.type.startsWith(type));
+    if (!isValidType) {
       console.warn('Invalid audio type:', audioBlob.type);
       return false;
     }
