@@ -177,7 +177,8 @@ const Demo = () => {
         const { data, error } = await supabase.functions.invoke('demo-feedback', {
           body: {
             response: responseText,
-            inputType: input.type
+            inputType: input.type,
+            objection: objectionScenario
           }
         });
 
