@@ -38,6 +38,7 @@ const Demo = () => {
   const { isGuestMode } = useGuestMode();
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
+  const { hasReachedLimit, incrementAttempt } = useFreeTrialLimit();
 
   useEffect(() => {
     if (import.meta.env.DEV) {
