@@ -14,6 +14,8 @@ import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
+import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 
 // Lazy load heavy demo components
 const Footer = lazy(() => import('@/components/Footer'));
