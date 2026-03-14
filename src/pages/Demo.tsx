@@ -250,8 +250,16 @@ const Demo = () => {
       setFeedback(feedbackData.feedback);
       setFeedbackScore(feedbackData.score);
 
-      // Save practice session to database for authenticated users
-      await savePracticeSession(feedbackData);
+      // Track attempt via useFreeTrialLimit (persists to Supabase or localStorage)
+      await incrementAttempt({
+        scenario_type: 'objection_handling',
+        difficulty: 'beginner',
+        industry: 'general',
+        duration_seconds: 60,
+        score: feedbackData.score,
+        transcript: { input_type: feedbackData.type, response_text: feedbackData.response, feedback: feedbackData.feedback },
+        feedback_data: { score: feedbackData.score, feedback: feedbackData.feedback, type: feedbackData.type, timestamp: feedbackData.timestamp },
+      });
 
       // NOTE: Removed handleDemoComplete call to prevent PDF modal from showing after first response
       // Users can practice multiple times without interruption
