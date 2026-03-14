@@ -67,7 +67,7 @@ export interface DashboardData {
 export function useDashboardData() {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData>({
-    profile: { credits: 0, trialUsed: false },
+    profile: { credits: 0, trialUsed: false, isPremium: false },
     recentSessions: [],
     tips: [],
     stats: { totalSessions: 0, averageScore: null, hasData: false },
