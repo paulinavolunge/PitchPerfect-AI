@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPremium] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const [creditsRemaining, setCreditsRemaining] = useState(0);
   const [trialUsed, setTrialUsed] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
@@ -210,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // First, try to get the profile
       const { data: profile, error } = await supabase
         .from('user_profiles')
-        .select('credits_remaining, trial_used')
+        .select('credits_remaining, trial_used, is_premium')
         .eq('id', userId)
         .single();
 
@@ -296,6 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('✅ Loaded user profile:', profile);
         setCreditsRemaining(profile.credits_remaining || 0);
         setTrialUsed(profile.trial_used || false);
+        setIsPremium(profile.is_premium ?? false);
       } else {
         console.warn('No profile data returned');
         

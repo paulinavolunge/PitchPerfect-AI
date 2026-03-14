@@ -27,6 +27,7 @@ const PitchRecordingSchema = z.object({
 const UserProfileSchema = z.object({
   credits_remaining: z.number(),
   trial_used: z.boolean(),
+  is_premium: z.boolean().nullable().optional(),
 });
 
 type PracticeSession = z.infer<typeof PracticeSessionSchema>;
@@ -52,6 +53,7 @@ export interface DashboardData {
   profile: {
     credits: number;
     trialUsed: boolean;
+    isPremium: boolean;
   };
   recentSessions: RecentSession[];
   tips: AITip[];
@@ -65,7 +67,7 @@ export interface DashboardData {
 export function useDashboardData() {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData>({
-    profile: { credits: 0, trialUsed: false },
+    profile: { credits: 0, trialUsed: false, isPremium: false },
     recentSessions: [],
     tips: [],
     stats: { totalSessions: 0, averageScore: null, hasData: false },
@@ -92,7 +94,7 @@ export function useDashboardData() {
       const [profileResult, sessionsResult, pitchesResult] = await Promise.all([
         supabase
           .from('user_profiles')
-          .select('credits_remaining, trial_used')
+          .select('credits_remaining, trial_used, is_premium')
           .eq('id', user.id)
           .single(),
         supabase
@@ -112,13 +114,14 @@ export function useDashboardData() {
       if (abortController.signal.aborted) return;
 
       // Validate and process profile data
-      let profile = { credits: 0, trialUsed: false };
+      let profile = { credits: 0, trialUsed: false, isPremium: false };
       if (profileResult.data) {
         try {
           const validated = UserProfileSchema.parse(profileResult.data);
           profile = {
             credits: validated.credits_remaining,
             trialUsed: validated.trial_used,
+            isPremium: validated.is_premium ?? false,
           };
         } catch (e) {
           console.error('[dashboard] Profile validation error:', e);
