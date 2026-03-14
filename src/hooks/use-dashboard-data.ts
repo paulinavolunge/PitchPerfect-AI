@@ -114,13 +114,14 @@ export function useDashboardData() {
       if (abortController.signal.aborted) return;
 
       // Validate and process profile data
-      let profile = { credits: 0, trialUsed: false };
+      let profile = { credits: 0, trialUsed: false, isPremium: false };
       if (profileResult.data) {
         try {
           const validated = UserProfileSchema.parse(profileResult.data);
           profile = {
             credits: validated.credits_remaining,
             trialUsed: validated.trial_used,
+            isPremium: validated.is_premium ?? false,
           };
         } catch (e) {
           console.error('[dashboard] Profile validation error:', e);

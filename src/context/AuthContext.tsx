@@ -296,6 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('✅ Loaded user profile:', profile);
         setCreditsRemaining(profile.credits_remaining || 0);
         setTrialUsed(profile.trial_used || false);
+        setIsPremium(profile.is_premium ?? false);
       } else {
         console.warn('No profile data returned');
         
