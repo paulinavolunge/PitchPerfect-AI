@@ -332,7 +332,26 @@ const Practice = () => {
           </CardContent>
         </Card>
 
-        {/* Scenario Context Selector */}
+        {/* Free Trial Limit Banner */}
+        {hasReachedLimit && (
+          <Card className="mb-8 border-destructive/50 bg-destructive/5">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <Lock className="h-6 w-6 text-destructive mr-3" />
+                <div>
+                  <p className="font-semibold text-foreground">Free attempt used</p>
+                  <p className="text-sm text-muted-foreground">
+                    You've used your {1} free practice attempt. Upgrade to get unlimited practice sessions.
+                  </p>
+                </div>
+              </div>
+              <Link to="/pricing">
+                <Button size="sm">Upgrade</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-lg">Scenario Context</CardTitle>
