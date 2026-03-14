@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS read_admin_status ON public.user_roles;
