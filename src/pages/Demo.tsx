@@ -482,6 +482,9 @@ const Demo = () => {
           />
         </Suspense>
       </div>
+
+      {/* Paywall modal */}
+      <UpgradePaywallModal open={hasReachedLimit} />
     </>
   );
 };
