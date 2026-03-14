@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Mic, Play, Square, RotateCcw, Zap, Trophy, MessageCircle, Send } from 'lucide-react';
+import { Mic, Play, Square, RotateCcw, Zap, Trophy, MessageCircle, Send, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { trackEvent } from '@/utils/analytics';
@@ -17,6 +17,8 @@ import { MicrophonePermissionHandler } from '@/components/permissions/Microphone
 import { AudioRecorder } from '@/components/recordings/AudioRecorder';
 import { useUserIsolation } from '@/hooks/useUserIsolation';
 import { supabase } from '@/integrations/supabase/client';
+import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
+import { Link } from 'react-router-dom';
 
 const Practice = () => {
   const { user, creditsRemaining, deductUserCredits } = useAuth();
