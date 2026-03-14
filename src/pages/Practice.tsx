@@ -25,7 +25,14 @@ const Practice = () => {
   const { user, creditsRemaining, deductUserCredits, isPremium } = useAuth();
   const { toast } = useToast();
   const { validateUserAccess, getUserSpecificKey, clearUserData } = useUserIsolation();
-  const { hasReachedLimit, remainingAttempts, incrementAttempt, loading: trialLoading } = useFreeTrialLimit();
+  const { hasReachedLimit, remainingAttempts, incrementAttempt, resetAttempts, loading: trialLoading } = useFreeTrialLimit();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check admin status once
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.rpc('is_verified_admin').then(({ data }) => setIsAdmin(!!data));
+  }, [user?.id]);
   const [practiceMode, setPracticeMode] = useState<'voice' | 'text' | ''>('');
   const [textInput, setTextInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -351,6 +358,25 @@ const Practice = () => {
               </Link>
             </CardContent>
           </Card>
+        )}
+
+        {/* Admin-only: reset free attempt counter for testing */}
+        {isAdmin && (
+          <div className="mb-4 flex items-center gap-2 p-3 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30">
+            <span className="text-xs text-muted-foreground">🛠 Admin testing:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                resetAttempts();
+                toast({ title: 'Counter Reset', description: 'Free attempt counter reset to 0.' });
+              }}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset Free Attempt
+            </Button>
+            <span className="text-xs text-muted-foreground">Attempts: {remainingAttempts} remaining</span>
+          </div>
         )}
 
         <Card className="mb-8">

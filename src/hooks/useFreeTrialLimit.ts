@@ -53,18 +53,22 @@ export function useFreeTrialLimit() {
     setAttemptCount(newCount);
 
     if (!user?.id) {
-      // Guest: persist in localStorage
       localStorage.setItem(LOCAL_STORAGE_KEY, newCount.toString());
     }
-    // For logged-in users, the count auto-increments when a row is inserted
-    // into practice_sessions, so no extra write needed here.
   }, [attemptCount, user?.id]);
+
+  // Admin-only: reset the local counter for testing
+  const resetAttempts = useCallback(() => {
+    setAttemptCount(0);
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+  }, []);
 
   return {
     attemptCount,
     hasReachedLimit,
     remainingAttempts,
     incrementAttempt,
+    resetAttempts,
     loading,
     FREE_ATTEMPT_LIMIT,
   };
