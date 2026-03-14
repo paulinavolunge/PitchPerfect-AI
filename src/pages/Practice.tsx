@@ -25,7 +25,14 @@ const Practice = () => {
   const { user, creditsRemaining, deductUserCredits, isPremium } = useAuth();
   const { toast } = useToast();
   const { validateUserAccess, getUserSpecificKey, clearUserData } = useUserIsolation();
-  const { hasReachedLimit, remainingAttempts, incrementAttempt, loading: trialLoading } = useFreeTrialLimit();
+  const { hasReachedLimit, remainingAttempts, incrementAttempt, resetAttempts, loading: trialLoading } = useFreeTrialLimit();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check admin status once
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.rpc('is_verified_admin').then(({ data }) => setIsAdmin(!!data));
+  }, [user?.id]);
   const [practiceMode, setPracticeMode] = useState<'voice' | 'text' | ''>('');
   const [textInput, setTextInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
