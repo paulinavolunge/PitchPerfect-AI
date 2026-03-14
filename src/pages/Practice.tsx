@@ -19,6 +19,7 @@ import { useUserIsolation } from '@/hooks/useUserIsolation';
 import { supabase } from '@/integrations/supabase/client';
 import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
 import { Link } from 'react-router-dom';
+import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 
 const Practice = () => {
   const { user, creditsRemaining, deductUserCredits, isPremium } = useAuth();
@@ -752,6 +753,9 @@ const Practice = () => {
           </div>
         )}
       </div>
+
+      {/* Paywall modal after free attempt is used */}
+      <UpgradePaywallModal open={analysisComplete && hasReachedLimit} />
     </ResponsiveLayout>
   );
 };
