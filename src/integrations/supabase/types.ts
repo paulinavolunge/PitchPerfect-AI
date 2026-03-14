@@ -499,6 +499,10 @@ export type Database = {
           created_at: string | null
           credits_remaining: number
           id: string
+          is_premium: boolean | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_plan: string | null
           trial_used: boolean
           updated_at: string | null
         }
@@ -506,6 +510,10 @@ export type Database = {
           created_at?: string | null
           credits_remaining?: number
           id: string
+          is_premium?: boolean | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_plan?: string | null
           trial_used?: boolean
           updated_at?: string | null
         }
@@ -513,6 +521,10 @@ export type Database = {
           created_at?: string | null
           credits_remaining?: number
           id?: string
+          is_premium?: boolean | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_plan?: string | null
           trial_used?: boolean
           updated_at?: string | null
         }
