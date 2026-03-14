@@ -161,6 +161,9 @@ const Practice = () => {
           // Don't show error - user already got the value
         }
 
+        // Track free trial attempt
+        incrementAttempt();
+
         // Format the feedback for display
         const formattedFeedback = {
           clarity: analysis.categories.clarity.feedback,
