@@ -21,9 +21,10 @@ import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
 import { Link } from 'react-router-dom';
 
 const Practice = () => {
-  const { user, creditsRemaining, deductUserCredits } = useAuth();
+  const { user, creditsRemaining, deductUserCredits, isPremium } = useAuth();
   const { toast } = useToast();
   const { validateUserAccess, getUserSpecificKey, clearUserData } = useUserIsolation();
+  const { hasReachedLimit, remainingAttempts, incrementAttempt, loading: trialLoading } = useFreeTrialLimit();
   const [practiceMode, setPracticeMode] = useState<'voice' | 'text' | ''>('');
   const [textInput, setTextInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
