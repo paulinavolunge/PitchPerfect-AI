@@ -379,6 +379,7 @@ const Practice = () => {
           </div>
         )}
 
+        <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-lg">Scenario Context</CardTitle>
             <p className="text-sm text-muted-foreground">Set the context so AI feedback is tailored to your situation.</p>
