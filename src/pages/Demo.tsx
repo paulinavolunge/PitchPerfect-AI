@@ -14,6 +14,8 @@ import AIDisclosure from '@/components/AIDisclosure';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
+import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 
 // Lazy load heavy demo components
 const Footer = lazy(() => import('@/components/Footer'));
@@ -36,6 +38,7 @@ const Demo = () => {
   const { isGuestMode } = useGuestMode();
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
+  const { hasReachedLimit, incrementAttempt } = useFreeTrialLimit();
 
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -148,8 +151,16 @@ const Demo = () => {
   const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
     if (import.meta.env.DEV) {
       console.log('Objection practice submission:', input);
-      console.log('Submission type:', input.type);
-      console.log('Submission data:', input.data);
+    }
+
+    // Gate: check free attempt limit before processing
+    if (hasReachedLimit) {
+      toast({
+        title: "Free Attempt Used",
+        description: "You've used your free practice attempt. Upgrade to continue.",
+        variant: "destructive",
+      });
+      return;
     }
 
     try {
@@ -239,8 +250,16 @@ const Demo = () => {
       setFeedback(feedbackData.feedback);
       setFeedbackScore(feedbackData.score);
 
-      // Save practice session to database for authenticated users
-      await savePracticeSession(feedbackData);
+      // Track attempt via useFreeTrialLimit (persists to Supabase or localStorage)
+      await incrementAttempt({
+        scenario_type: 'objection_handling',
+        difficulty: 'beginner',
+        industry: 'general',
+        duration_seconds: 60,
+        score: feedbackData.score,
+        transcript: { input_type: feedbackData.type, response_text: feedbackData.response, feedback: feedbackData.feedback },
+        feedback_data: { score: feedbackData.score, feedback: feedbackData.feedback, type: feedbackData.type, timestamp: feedbackData.timestamp },
+      });
 
       // NOTE: Removed handleDemoComplete call to prevent PDF modal from showing after first response
       // Users can practice multiple times without interruption
@@ -463,6 +482,9 @@ const Demo = () => {
           />
         </Suspense>
       </div>
+
+      {/* Paywall modal */}
+      <UpgradePaywallModal open={hasReachedLimit} />
     </>
   );
 };
