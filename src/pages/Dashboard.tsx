@@ -184,6 +184,7 @@ const Dashboard = () => {
               <div className="mb-8">
                 <RecentSessions
                   sessions={dashboardData?.recentSessions || []}
+                  onStartPractice={handleStartPractice}
                 />
               </div>
 
