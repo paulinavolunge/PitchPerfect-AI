@@ -184,7 +184,6 @@ const Dashboard = () => {
               <div className="mb-8">
                 <RecentSessions
                   sessions={dashboardData?.recentSessions || []}
-                  isLoading={false}
                 />
               </div>
 
