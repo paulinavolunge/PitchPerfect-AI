@@ -27,6 +27,7 @@ const PitchRecordingSchema = z.object({
 const UserProfileSchema = z.object({
   credits_remaining: z.number(),
   trial_used: z.boolean(),
+  is_premium: z.boolean().nullable().optional(),
 });
 
 type PracticeSession = z.infer<typeof PracticeSessionSchema>;
