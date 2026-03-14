@@ -754,8 +754,8 @@ const Practice = () => {
         )}
       </div>
 
-      {/* Paywall modal after free attempt is used */}
-      <UpgradePaywallModal open={analysisComplete && hasReachedLimit} />
+      {/* Paywall modal — shown immediately if limit reached, or after completing the free attempt */}
+      <UpgradePaywallModal open={hasReachedLimit} />
     </ResponsiveLayout>
   );
 };
