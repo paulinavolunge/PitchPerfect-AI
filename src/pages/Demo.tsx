@@ -151,8 +151,16 @@ const Demo = () => {
   const handleObjectionSubmit = async (input: { type: 'voice' | 'text'; data: Blob | string }) => {
     if (import.meta.env.DEV) {
       console.log('Objection practice submission:', input);
-      console.log('Submission type:', input.type);
-      console.log('Submission data:', input.data);
+    }
+
+    // Gate: check free attempt limit before processing
+    if (hasReachedLimit) {
+      toast({
+        title: "Free Attempt Used",
+        description: "You've used your free practice attempt. Upgrade to continue.",
+        variant: "destructive",
+      });
+      return;
     }
 
     try {
