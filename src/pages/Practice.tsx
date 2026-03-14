@@ -169,8 +169,15 @@ const Practice = () => {
           // Don't show error - user already got the value
         }
 
-        // Track free trial attempt
-        incrementAttempt();
+        // Track free trial attempt (persists to Supabase)
+        await incrementAttempt({
+          scenario_type: 'pitch_practice',
+          difficulty: selectedDifficulty.toLowerCase(),
+          industry: selectedIndustry,
+          score: analysis.overallScore,
+          transcript: { text: analysisText, mode: practiceMode },
+          feedback_data: analysis,
+        });
 
         // Format the feedback for display
         const formattedFeedback = {
