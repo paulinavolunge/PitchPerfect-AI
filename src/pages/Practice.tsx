@@ -753,6 +753,9 @@ const Practice = () => {
           </div>
         )}
       </div>
+
+      {/* Paywall modal after free attempt is used */}
+      <UpgradePaywallModal open={analysisComplete && hasReachedLimit} />
     </ResponsiveLayout>
   );
 };
