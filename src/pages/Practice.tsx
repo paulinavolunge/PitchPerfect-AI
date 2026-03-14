@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Mic, Play, Square, RotateCcw, Zap, Trophy, MessageCircle, Send } from 'lucide-react';
+import { Mic, Play, Square, RotateCcw, Zap, Trophy, MessageCircle, Send, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { trackEvent } from '@/utils/analytics';
@@ -17,11 +17,14 @@ import { MicrophonePermissionHandler } from '@/components/permissions/Microphone
 import { AudioRecorder } from '@/components/recordings/AudioRecorder';
 import { useUserIsolation } from '@/hooks/useUserIsolation';
 import { supabase } from '@/integrations/supabase/client';
+import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
+import { Link } from 'react-router-dom';
 
 const Practice = () => {
-  const { user, creditsRemaining, deductUserCredits } = useAuth();
+  const { user, creditsRemaining, deductUserCredits, isPremium } = useAuth();
   const { toast } = useToast();
   const { validateUserAccess, getUserSpecificKey, clearUserData } = useUserIsolation();
+  const { hasReachedLimit, remainingAttempts, incrementAttempt, loading: trialLoading } = useFreeTrialLimit();
   const [practiceMode, setPracticeMode] = useState<'voice' | 'text' | ''>('');
   const [textInput, setTextInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +84,15 @@ const Practice = () => {
       toast({
         title: "Authentication Required",
         description: "Please log in to analyze your pitch.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (hasReachedLimit) {
+      toast({
+        title: "Free Attempt Used",
+        description: "You've used your free practice attempt. Upgrade to continue practicing.",
         variant: "destructive",
       });
       return;
@@ -148,6 +160,9 @@ const Practice = () => {
           console.warn('Credit deduction failed after successful analysis');
           // Don't show error - user already got the value
         }
+
+        // Track free trial attempt
+        incrementAttempt();
 
         // Format the feedback for display
         const formattedFeedback = {
@@ -240,6 +255,15 @@ const Practice = () => {
       return;
     }
 
+    if (hasReachedLimit) {
+      toast({
+        title: "Free Attempt Used",
+        description: "You've used your free practice attempt. Upgrade to continue practicing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (creditsRemaining < 1) {
       toast({
         title: "Insufficient Credits",
@@ -308,7 +332,26 @@ const Practice = () => {
           </CardContent>
         </Card>
 
-        {/* Scenario Context Selector */}
+        {/* Free Trial Limit Banner */}
+        {hasReachedLimit && (
+          <Card className="mb-8 border-destructive/50 bg-destructive/5">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <Lock className="h-6 w-6 text-destructive mr-3" />
+                <div>
+                  <p className="font-semibold text-foreground">Free attempt used</p>
+                  <p className="text-sm text-muted-foreground">
+                    You've used your {1} free practice attempt. Upgrade to get unlimited practice sessions.
+                  </p>
+                </div>
+              </div>
+              <Link to="/pricing">
+                <Button size="sm">Upgrade</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-lg">Scenario Context</CardTitle>
