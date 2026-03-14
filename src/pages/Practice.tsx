@@ -360,7 +360,25 @@ const Practice = () => {
           </Card>
         )}
 
-        <Card className="mb-8">
+        {/* Admin-only: reset free attempt counter for testing */}
+        {isAdmin && (
+          <div className="mb-4 flex items-center gap-2 p-3 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30">
+            <span className="text-xs text-muted-foreground">🛠 Admin testing:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                resetAttempts();
+                toast({ title: 'Counter Reset', description: 'Free attempt counter reset to 0.' });
+              }}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset Free Attempt
+            </Button>
+            <span className="text-xs text-muted-foreground">Attempts: {remainingAttempts} remaining</span>
+          </div>
+        )}
+
           <CardHeader>
             <CardTitle className="text-lg">Scenario Context</CardTitle>
             <p className="text-sm text-muted-foreground">Set the context so AI feedback is tailored to your situation.</p>
