@@ -252,6 +252,15 @@ const Practice = () => {
       return;
     }
 
+    if (hasReachedLimit) {
+      toast({
+        title: "Free Attempt Used",
+        description: "You've used your free practice attempt. Upgrade to continue practicing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (creditsRemaining < 1) {
       toast({
         title: "Insufficient Credits",
