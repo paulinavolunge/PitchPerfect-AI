@@ -94,7 +94,7 @@ export function useDashboardData() {
       const [profileResult, sessionsResult, pitchesResult] = await Promise.all([
         supabase
           .from('user_profiles')
-          .select('credits_remaining, trial_used')
+          .select('credits_remaining, trial_used, is_premium')
           .eq('id', user.id)
           .single(),
         supabase
