@@ -53,6 +53,7 @@ export interface DashboardData {
   profile: {
     credits: number;
     trialUsed: boolean;
+    isPremium: boolean;
   };
   recentSessions: RecentSession[];
   tips: AITip[];
