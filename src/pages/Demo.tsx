@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense, lazy, startTransition } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
@@ -7,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Settings, UserPlus, RefreshCw } from 'lucide-react';
+import { Settings, UserPlus, RefreshCw, Lock, ArrowRight } from 'lucide-react';
 import MicrophoneGuard from '@/components/MicrophoneGuard';
 import { supabase } from '@/integrations/supabase/client';
 import AIDisclosure from '@/components/AIDisclosure';
@@ -39,6 +38,10 @@ const Demo = () => {
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
   const { hasReachedLimit, incrementAttempt } = useFreeTrialLimit();
+
+  // FIX: Separate state for showing paywall modal
+  // Only show when user TRIES to submit again, not immediately after first attempt
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -153,12 +156,14 @@ const Demo = () => {
       console.log('Objection practice submission:', input);
     }
 
-    // Gate: check free attempt limit before processing
+    // FIX: Gate check — if limit reached, show paywall modal NOW (on second attempt)
+    // This is when the user has already seen their feedback and tries again
     if (hasReachedLimit) {
+      setShowPaywall(true);
       toast({
-        title: "Free Attempt Used",
-        description: "You've used your free practice attempt. Upgrade to continue.",
-        variant: "destructive",
+        title: "Free Practice Complete",
+        description: "You've seen what PitchPerfect AI can do. Upgrade to keep improving.",
+        variant: "default",
       });
       return;
     }
@@ -409,6 +414,7 @@ const Demo = () => {
                   </MicrophoneGuard>
                 )}
 
+                {/* AI Feedback Display */}
                 {feedback && (() => {
                   const s = feedbackScore;
                   const isLow = s !== null && s <= 3;
@@ -434,6 +440,50 @@ const Demo = () => {
                     </div>
                   );
                 })()}
+
+                {/* FIX: Soft upgrade prompt BELOW the feedback — only after they've used their free attempt */}
+                {feedback && hasReachedLimit && (
+                  <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 sm:p-6 text-center">
+                    <div className="flex justify-center mb-3">
+                      <div className="bg-blue-100 rounded-full p-2">
+                        <Lock className="h-5 w-5 text-blue-600" />
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {feedbackScore !== null && feedbackScore <= 6
+                        ? `You scored ${feedbackScore}/10 — ready to improve?`
+                        : feedbackScore !== null && feedbackScore >= 7
+                        ? `Great score: ${feedbackScore}/10! Keep the momentum going.`
+                        : `Nice work! Want to keep practicing?`
+                      }
+                    </h3>
+                    <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                      Subscribers get unlimited practice across all scenarios, advanced AI coaching, and progress tracking to close more deals.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button
+                        size="lg"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6"
+                        onClick={() => navigate('/pricing')}
+                      >
+                        Unlock Unlimited Practice — $29/mo
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => navigate('/signup')}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Create Free Account
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-3">
+                      Cancel anytime · 30-day money-back guarantee · Secure checkout via Stripe
+                    </p>
+                  </div>
+                )}
               </div>
 
               {isGuestMode && sessionData && (
@@ -471,7 +521,6 @@ const Demo = () => {
           <WaitlistModal
             open={showWaitlistModal}
             onOpenChange={setShowWaitlistModal}
-            sessionData={sessionData}
           />
         </Suspense>
 
@@ -483,8 +532,8 @@ const Demo = () => {
         </Suspense>
       </div>
 
-      {/* Paywall modal */}
-      <UpgradePaywallModal open={hasReachedLimit} />
+      {/* FIX: Paywall modal only shows when user tries to submit AGAIN after seeing feedback */}
+      <UpgradePaywallModal open={showPaywall} />
     </>
   );
 };

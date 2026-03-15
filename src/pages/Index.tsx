@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play, CheckCircle, Zap, BarChart, Sparkles, Mic, MessageSquare, Target, Users } from 'lucide-react';
+import { ArrowRight, Play, CheckCircle, Zap, BarChart, Sparkles, Mic, MessageSquare, Target, Users, Shield } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { LazyComponent } from '@/components/LazyComponent';
 import LazyLoadManager from '@/components/optimized/LazyLoadManager';
@@ -37,32 +37,32 @@ const Index = () => {
   };
 
   const handleGetStartedClick = () => {
-    trackEvent('cta_click', { button: 'get_started', location: 'homepage_hero' });
-    navigate('/free-trial');
+    trackEvent('cta_click', { button: 'practice_free', location: 'homepage_hero' });
+    navigate('/demo');
   };
 
   const handleWatchDemoClick = () => {
-    trackEvent('cta_click', { button: 'watch_demo', location: 'homepage_hero' });
+    trackEvent('cta_click', { button: 'see_how_it_works', location: 'homepage_hero' });
     navigate('/demo');
   };
 
   const features = [
     {
       icon: <Zap className="h-6 w-6 text-primary-600" />,
-      title: "AI-Powered Practice",
-      description: "Practice with intelligent AI that adapts to your industry and responds like real prospects.",
+      title: "Tough AI Buyers That Push Back",
+      description: "No softball practice. Our AI responds like real prospects — with real objections, skepticism, and pushback that prepares you for the actual call.",
       onClick: handleVoiceTrainingClick
     },
     {
       icon: <BarChart className="h-6 w-6 text-primary-600" />,
-      title: "Instant Feedback",
-      description: "Get detailed analysis of your pitch delivery, pacing, and effectiveness immediately after each session.",
+      title: "Instant Scoring & Coaching",
+      description: "Get a score and specific feedback after every session. Know exactly where you lost the prospect and what to say differently next time.",
       onClick: handleAnalyticsClick
     },
     {
       icon: <Users className="h-6 w-6 text-primary-600" />,
-      title: "Real Scenarios",
-      description: "Train with realistic objection handling scenarios based on actual sales situations.",
+      title: "Real Sales Scenarios",
+      description: "Cold calls, discovery, demos, pricing objections, closing. Practice the exact conversation you're about to have.",
       onClick: handleAIRoleplayClick
     }
   ];
@@ -70,22 +70,22 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>PitchPerfect AI - Master Your Sales Pitch with AI Practice</title>
-        <meta name="description" content="Practice and perfect your sales pitch with AI-powered roleplay scenarios. Get instant feedback in 30 seconds and close more deals." />
+        <title>PitchPerfect AI - Stop Losing Deals Because You Weren't Ready</title>
+        <meta name="description" content="Practice sales objections with an AI that fights back. Get scored feedback in 30 seconds. Walk into every call ready. Free demo — no signup required." />
         <meta name="keywords" content="sales training, pitch practice, AI roleplay, objection handling, sales skills, sales coaching, revenue enablement" />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pitchperfectai.ai/" />
-        <meta property="og:title" content="PitchPerfect AI - Master Your Sales Pitch with AI" />
-        <meta property="og:description" content="Practice objections with AI. Get feedback in 30 seconds. Close more deals. No credit card required." />
+        <meta property="og:title" content="PitchPerfect AI - Stop Losing Deals Because You Weren't Ready" />
+        <meta property="og:description" content="Practice objections with an AI that fights back. Get scored feedback in 30 seconds. Free demo — no signup." />
         <meta property="og:image" content="https://pitchperfectai.ai/og-image.png" />
 
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://pitchperfectai.ai/" />
-        <meta property="twitter:title" content="PitchPerfect AI - Master Your Sales Pitch with AI" />
-        <meta property="twitter:description" content="Practice objections with AI. Get feedback in 30 seconds. Close more deals." />
+        <meta property="twitter:title" content="PitchPerfect AI - Stop Losing Deals Because You Weren't Ready" />
+        <meta property="twitter:description" content="Practice objections with an AI that fights back. Get scored feedback in 30 seconds. Free demo — no signup." />
         <meta property="twitter:image" content="https://pitchperfectai.ai/og-image.png" />
 
         {/* Structured Data for SEO */}
@@ -117,22 +117,25 @@ const Index = () => {
         <Navbar />
 
         <main>
+          {/* ============================================ */}
+          {/* HERO SECTION — Rewritten for pain + urgency  */}
+          {/* ============================================ */}
           <section id="main-content" className="pt-16 sm:pt-24 pb-12 sm:pb-16 relative overflow-hidden" role="main" aria-labelledby="hero-heading" data-onboarding="hero">
             <div className="container mx-auto px-4 text-center relative z-10">
               <Badge className="mb-4 sm:mb-6 bg-primary-50 text-primary-700 border-primary-200 font-medium text-sm">
                 <Sparkles className="h-3 w-3 mr-1" />
-                AI-Powered Sales Training
+                Your AI Sales Sparring Partner
               </Badge>
 
-              {/* UPDATED: Clearer value proposition */}
               <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight">
-                Practice Sales Objections with AI.<br />
-                <span className="text-primary-600">Get Feedback. Close More Deals.</span>
+                Stop Losing Deals Because<br />
+                <span className="text-primary-600">You Weren't Ready.</span>
               </h1>
 
-              {/* UPDATED: 3-step process in description */}
               <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-                <strong>3 Simple Steps:</strong> 1) Record your pitch → 2) AI analyzes it in 30 seconds → 3) Get specific feedback to improve.
+                PitchPerfect AI simulates your toughest prospects so you can practice
+                objection handling, cold calls, and demo pitches in 10 minutes —
+                <strong> before the real thing.</strong>
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12">
@@ -141,8 +144,7 @@ const Index = () => {
                   className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   onClick={handleGetStartedClick}
                 >
-                  <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
-                  Start Practicing Now - Free!
+                  Practice Your First Pitch Free
                   <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" aria-hidden="true" />
                 </Button>
 
@@ -155,22 +157,22 @@ const Index = () => {
                   data-testid="watch-demo-button"
                 >
                   <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
-                  Watch 2-Min Demo
+                  See How It Works
                 </Button>
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-600" />
-                  No credit card required
+                  No signup required
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-600" />
-                  Instant setup
+                  Takes 5 minutes
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-600" />
-                  Free trial included
+                  Free practice session included
                 </div>
               </div>
 
@@ -178,15 +180,15 @@ const Index = () => {
                 <TrustBadges variant="compact" className="justify-center" />
               </div>
 
-              {/* NEW: 3-Step Process Visual */}
+              {/* 3-Step Process — Rewritten for outcome focus */}
               <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 <div className="text-center p-6 bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow">
                   <div className="bg-primary-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <Mic className="h-7 w-7 text-primary-600" />
+                    <Target className="h-7 w-7 text-primary-600" />
                   </div>
                   <div className="bg-primary-600 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center mx-auto mb-3">1</div>
-                  <h3 className="font-semibold mb-2 text-foreground">Record Your Pitch</h3>
-                  <p className="text-sm text-muted-foreground">Text or voice - your choice. No setup required.</p>
+                  <h3 className="font-semibold mb-2 text-foreground">Pick Your Scenario</h3>
+                  <p className="text-sm text-muted-foreground">Cold call, pricing objection, demo close — choose what you need to nail right now.</p>
                 </div>
 
                 <div className="text-center p-6 bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow">
@@ -194,23 +196,97 @@ const Index = () => {
                     <MessageSquare className="h-7 w-7 text-primary-600" />
                   </div>
                   <div className="bg-primary-600 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center mx-auto mb-3">2</div>
-                  <h3 className="font-semibold mb-2 text-foreground">AI Analyzes</h3>
-                  <p className="text-sm text-muted-foreground">Get personalized feedback in 30 seconds.</p>
+                  <h3 className="font-semibold mb-2 text-foreground">Spar with a Tough AI Buyer</h3>
+                  <p className="text-sm text-muted-foreground">Our AI pushes back like a real prospect. No softballs. No scripts. Just real practice.</p>
                 </div>
 
                 <div className="text-center p-6 bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow">
                   <div className="bg-primary-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <Target className="h-7 w-7 text-primary-600" />
+                    <BarChart className="h-7 w-7 text-primary-600" />
                   </div>
                   <div className="bg-primary-600 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center mx-auto mb-3">3</div>
-                  <h3 className="font-semibold mb-2 text-foreground">Improve & Close</h3>
-                  <p className="text-sm text-muted-foreground">Apply feedback to your real sales calls.</p>
+                  <h3 className="font-semibold mb-2 text-foreground">Get Scored & Walk In Ready</h3>
+                  <p className="text-sm text-muted-foreground">See where you lost them, what to say differently, and go nail your real call.</p>
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="py-8 sm:py-12 bg-background">
+          {/* ============================================ */}
+          {/* WHY NOT JUST USE CHATGPT? — New section       */}
+          {/* ============================================ */}
+          <section className="py-12 sm:py-16 bg-secondary-50">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-8 sm:mb-10">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3">
+                  Why Not Just Practice Alone or Use ChatGPT?
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
+                  Because generic tools don't make you better at sales. Here's the difference:
+                </p>
+              </div>
+
+              {/* Comparison Table */}
+              <div className="max-w-4xl mx-auto overflow-x-auto">
+                <table className="w-full border-collapse bg-card rounded-xl overflow-hidden shadow-sm">
+                  <thead>
+                    <tr className="bg-primary-600 text-white">
+                      <th className="p-3 sm:p-4 text-left text-sm sm:text-base font-semibold"></th>
+                      <th className="p-3 sm:p-4 text-center text-sm sm:text-base font-semibold">Practice Alone</th>
+                      <th className="p-3 sm:p-4 text-center text-sm sm:text-base font-semibold">ChatGPT</th>
+                      <th className="p-3 sm:p-4 text-center text-sm sm:text-base font-semibold bg-primary-700">PitchPerfect AI ✓</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Realistic buyer pushback", "❌ No", "😐 Weak", "✅ Tough & structured"],
+                      ["Scores your performance", "❌ No", "❌ No", "✅ After every session"],
+                      ["Sales-specific scenarios", "❌ No", "😐 Generic", "✅ Cold call, demo, close"],
+                      ["Tracks your improvement", "❌ No", "❌ No", "✅ Dashboard & streaks"],
+                      ["Ready in 5 minutes", "😐 Maybe", "😐 Needs prompting", "✅ One click"],
+                    ].map(([feature, alone, chatgpt, ppai], i) => (
+                      <tr key={i} className={i % 2 === 0 ? 'bg-card' : 'bg-secondary-50/50'}>
+                        <td className="p-3 sm:p-4 text-sm sm:text-base font-medium text-foreground">{feature}</td>
+                        <td className="p-3 sm:p-4 text-center text-sm sm:text-base text-muted-foreground">{alone}</td>
+                        <td className="p-3 sm:p-4 text-center text-sm sm:text-base text-muted-foreground">{chatgpt}</td>
+                        <td className="p-3 sm:p-4 text-center text-sm sm:text-base font-medium text-primary-700 bg-primary-50/50">{ppai}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          {/* ============================================ */}
+          {/* URGENCY / WHY NOW section                    */}
+          {/* ============================================ */}
+          <section className="py-12 sm:py-16 bg-background">
+            <div className="container mx-auto px-4 text-center max-w-3xl">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
+                Your Next Sales Call Is Coming.
+              </h2>
+              <p className="text-lg sm:text-xl text-muted-foreground mb-6 leading-relaxed">
+                Every unpracticed pitch is a gamble. Every objection you haven't rehearsed is a deal you might lose.
+                The best sales professionals don't wing it — they prepare.
+              </p>
+              <p className="text-base text-muted-foreground mb-8">
+                PitchPerfect AI lets you practice the exact conversation you're about to have, so you walk in confident instead of hoping for the best.
+              </p>
+              <Button
+                size="lg"
+                className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                onClick={handleGetStartedClick}
+              >
+                Practice Your First Pitch Free
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+              <p className="text-sm text-muted-foreground mt-4">No signup required · Takes 5 minutes</p>
+            </div>
+          </section>
+
+          {/* Product Hunt badge */}
+          <section className="py-8 sm:py-12 bg-secondary-50">
             <div className="container mx-auto px-4 text-center">
               <h3 className="text-lg font-semibold text-foreground mb-4">
                 🚀 Featured on Product Hunt
@@ -227,14 +303,14 @@ const Index = () => {
             </div>
           </section>
 
-          <section id="features" className="py-12 sm:py-16 bg-secondary-50" aria-labelledby="features-heading">
+          <section id="features" className="py-12 sm:py-16 bg-background" aria-labelledby="features-heading">
             <div className="container mx-auto px-4">
               <div className="text-center mb-8 sm:mb-12">
                 <h2 id="features-heading" className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4">
-                  Why Sales Professionals Choose PitchPerfect AI
+                  Built for Sales Professionals Who Want to Win
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
-                  Our AI understands sales conversations and provides the realistic practice you need to excel.
+                  Not a generic AI chatbot. A practice partner designed specifically for the conversations that close deals.
                 </p>
               </div>
 
@@ -271,8 +347,52 @@ const Index = () => {
             </div>
           </section>
 
+          {/* ============================================ */}
+          {/* FAQ — Objection handling for buyers            */}
+          {/* ============================================ */}
+          <section className="py-12 sm:py-16 bg-secondary-50">
+            <div className="container mx-auto px-4 max-w-3xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-8 text-center">
+                Common Questions
+              </h2>
+              <div className="space-y-4">
+                {[
+                  {
+                    q: "Is this just ChatGPT with a sales prompt?",
+                    a: "No. PitchPerfect AI uses structured sales scenarios with built-in buyer personas, objection libraries, and a scoring system. ChatGPT gives you generic conversation. We give you a tough buyer who scores your performance and tells you exactly where you lost the deal."
+                  },
+                  {
+                    q: "Will AI feedback actually help me sell better?",
+                    a: "Our AI evaluates your pitch on specific criteria: objection handling, value articulation, closing technique, and confidence. You get a score and actionable suggestions after every session — not vague encouragement."
+                  },
+                  {
+                    q: "I don't have time to practice.",
+                    a: "A single session takes 5–10 minutes. Most users practice right before a scheduled call. Think of it as a warm-up, not a workout."
+                  },
+                  {
+                    q: "Why pay $29/month when the demo is free?",
+                    a: "The free demo gives you one session. Subscribers get unlimited practice, all scenario types, progress tracking, advanced coaching feedback, and the ability to drill specific weaknesses. One closed deal pays for years of PitchPerfect AI."
+                  },
+                  {
+                    q: "What if it doesn't work for me?",
+                    a: "Try the free demo first with no signup. If you subscribe and it's not helping you within 30 days, get a full refund — no questions asked."
+                  }
+                ].map((faq, i) => (
+                  <details key={i} className="bg-card rounded-lg border p-4 sm:p-5 group">
+                    <summary className="font-semibold text-foreground cursor-pointer list-none flex justify-between items-center">
+                      {faq.q}
+                      <span className="text-primary-600 group-open:rotate-180 transition-transform text-lg ml-2">▾</span>
+                    </summary>
+                    <p className="mt-3 text-muted-foreground text-sm sm:text-base leading-relaxed">
+                      {faq.a}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
 
-          <LazyLoadManager className="py-8 sm:py-12 bg-secondary-100" priority="normal">
+          <LazyLoadManager className="py-8 sm:py-12 bg-background" priority="normal">
             <div className="container mx-auto px-4">
               <TrustBadges variant="horizontal" />
             </div>
