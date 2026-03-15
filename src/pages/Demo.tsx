@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { sendSessionToCRM, CRMProvider } from '@/utils/webhookUtils';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Settings, UserPlus, RefreshCw, Lock, ArrowRight } from 'lucide-react';
+import { Settings, UserPlus, RefreshCw, Lock, ArrowRight, Mail, Sparkles } from 'lucide-react';
 import MicrophoneGuard from '@/components/MicrophoneGuard';
 import { supabase } from '@/integrations/supabase/client';
 import AIDisclosure from '@/components/AIDisclosure';
@@ -37,10 +37,16 @@ const Demo = () => {
   const { isGuestMode } = useGuestMode();
   const { user, deductUserCredits } = useAuth();
   const navigate = useNavigate();
-  const { hasReachedLimit, incrementAttempt } = useFreeTrialLimit();
+  const {
+    hasReachedLimit,
+    incrementAttempt,
+    isGuest,
+    remainingAttempts,
+    currentLimit,
+    FREE_ACCOUNT_MONTHLY_LIMIT,
+  } = useFreeTrialLimit();
 
-  // FIX: Separate state for showing paywall modal
-  // Only show when user TRIES to submit again, not immediately after first attempt
+  // Separate state for showing the hard paywall modal (only on second submit attempt)
   const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
@@ -55,21 +61,17 @@ const Demo = () => {
     if (import.meta.env.DEV) {
       console.log("Demo completed with data:", data);
     }
-    // Save session data
     if (data) {
       setSessionData(data);
     }
 
-    // Only show the waitlist modal for non-guest users
     if (!isGuestMode) {
       startTransition(() => setShowWaitlistModal(true));
     }
 
-    // Then send the data to CRM via webhook
     if (data) {
       sendSessionToCRM(data, crmProvider)
         .then(webhookResult => {
-          // Show appropriate toast
           if (webhookResult.success) {
             toast({
               title: "Session Recorded",
@@ -78,7 +80,6 @@ const Demo = () => {
             });
           } else {
             console.warn("CRM push failed:", webhookResult.message);
-            // No toast for failure in production to avoid confusing users
           }
         });
     }
@@ -86,13 +87,13 @@ const Demo = () => {
 
   const savePracticeSession = async (practiceData: any) => {
     if (import.meta.env.DEV) {
-      console.log('💾 savePracticeSession called with:', practiceData);
-      console.log('👤 User:', user?.id, 'Guest mode:', isGuestMode);
+      console.log('savePracticeSession called with:', practiceData);
+      console.log('User:', user?.id, 'Guest mode:', isGuestMode);
     }
 
     if (!user?.id || isGuestMode) {
       if (import.meta.env.DEV) {
-        console.log('❌ Skipping database save - guest mode or no user');
+        console.log('Skipping database save - guest mode or no user');
       }
       return;
     }
@@ -103,7 +104,7 @@ const Demo = () => {
         scenario_type: 'objection_handling',
         difficulty: 'beginner',
         industry: 'general',
-        duration_seconds: 60, // Estimated practice duration
+        duration_seconds: 60,
         score: practiceData.score,
         transcript: {
           input_type: practiceData.type,
@@ -118,10 +119,6 @@ const Demo = () => {
         },
         completed_at: new Date().toISOString()
       };
-
-      if (import.meta.env.DEV) {
-        console.log('Saving practice session to database:', sessionData);
-      }
 
       const { data, error } = await supabase
         .from('practice_sessions')
@@ -138,9 +135,6 @@ const Demo = () => {
         return;
       }
 
-      if (import.meta.env.DEV) {
-        console.log('Practice session saved successfully:', data);
-      }
       toast({
         title: "Progress Saved",
         description: "Your practice session has been saved to your dashboard!",
@@ -156,37 +150,41 @@ const Demo = () => {
       console.log('Objection practice submission:', input);
     }
 
-    // FIX: Gate check — if limit reached, show paywall modal NOW (on second attempt)
-    // This is when the user has already seen their feedback and tries again
+    // Gate: if limit reached, show appropriate prompt
     if (hasReachedLimit) {
-      setShowPaywall(true);
-      toast({
-        title: "Free Practice Complete",
-        description: "You've seen what PitchPerfect AI can do. Upgrade to keep improving.",
-        variant: "default",
-      });
+      if (isGuest) {
+        // Guest who used their 1 free demo - nudge to create account
+        toast({
+          title: "Create a free account to keep practicing",
+          description: `Get ${FREE_ACCOUNT_MONTHLY_LIMIT} practice sessions per month — free forever.`,
+          variant: "default",
+        });
+      } else {
+        // Free account user who used their 3 monthly sessions - show paywall
+        setShowPaywall(true);
+        toast({
+          title: "Monthly limit reached",
+          description: "Upgrade to get unlimited practice sessions.",
+          variant: "default",
+        });
+      }
       return;
     }
 
     try {
       setHasError(false);
 
-      // Show immediate feedback that we're processing
       toast({
         title: "Processing Response",
         description: `Analyzing your ${input.type} response...`,
         duration: 3000,
       });
 
-      // Credits will be deducted AFTER successful AI response
-
-      // Simulate AI processing with a more realistic delay
       if (import.meta.env.DEV) {
         console.log('Starting AI analysis simulation...');
       }
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Call AI feedback service
       const responseText = typeof input.data === 'string' ? input.data : 'Voice response processed';
 
       let feedbackData;
@@ -205,7 +203,6 @@ const Demo = () => {
 
         if (error) {
           console.error('Demo feedback API error:', error);
-          console.error('Error details:', JSON.stringify(error, null, 2));
           throw new Error(error.message || 'Failed to get AI feedback');
         }
 
@@ -215,47 +212,36 @@ const Demo = () => {
           timestamp: new Date().toISOString(),
           feedback: data.feedback || generateFallbackFeedback(responseText),
           score: data.score || null,
-          aiSuccess: !data.fallback // Track if this was from real AI
+          aiSuccess: !data.fallback
         };
 
-        // Deduct credits AFTER successful AI response
         if (!isGuestMode && user && !data.fallback) {
-          const creditsToDeduct = input.type === 'text' ? 1 : 2; // Voice costs more
+          const creditsToDeduct = input.type === 'text' ? 1 : 2;
           const featureType = `demo_objection_${input.type}`;
-
-          if (import.meta.env.DEV) {
-            console.log(`Deducting ${creditsToDeduct} credits for successful ${featureType}`);
-          }
 
           const deducted = await deductUserCredits(featureType, creditsToDeduct);
           if (!deducted) {
             console.warn('Credit deduction failed after successful AI response');
-            // Don't stop the flow - user already got the value
           }
         }
 
       } catch (error) {
         console.error('AI feedback failed, using fallback:', error);
 
-        // Fallback to local feedback generation (no credit deduction for fallback)
         feedbackData = {
           type: input.type,
           response: responseText,
           timestamp: new Date().toISOString(),
           feedback: generateFallbackFeedback(responseText),
           score: null,
-          aiSuccess: false // Mark as fallback
+          aiSuccess: false
         };
-      }
-
-      if (import.meta.env.DEV) {
-        console.log('Generated feedback data:', feedbackData);
       }
 
       setFeedback(feedbackData.feedback);
       setFeedbackScore(feedbackData.score);
 
-      // Track attempt via useFreeTrialLimit (persists to Supabase or localStorage)
+      // Track attempt
       await incrementAttempt({
         scenario_type: 'objection_handling',
         difficulty: 'beginner',
@@ -266,20 +252,12 @@ const Demo = () => {
         feedback_data: { score: feedbackData.score, feedback: feedbackData.feedback, type: feedbackData.type, timestamp: feedbackData.timestamp },
       });
 
-      // NOTE: Removed handleDemoComplete call to prevent PDF modal from showing after first response
-      // Users can practice multiple times without interruption
-
-      // Show completion toast (separate from credit usage toast)
       toast({
         title: "Analysis Complete",
         description: `Your ${input.type} response has been analyzed and feedback is ready.`,
         variant: "default",
         duration: 4000,
       });
-
-      if (import.meta.env.DEV) {
-        console.log('Demo submission completed successfully');
-      }
 
     } catch (error) {
       console.error('Error processing objection:', error);
@@ -296,32 +274,26 @@ const Demo = () => {
     const lowerResponse = response.toLowerCase().trim();
     const wordCount = response.trim().split(/\s+/).length;
 
-    // Handle very short responses (1-3 words)
     if (wordCount <= 3) {
       return `⚠️ <strong>Too brief!</strong> A pricing objection needs a real answer.<br/><br/>🎯 <strong>Try this instead:</strong><br/>"I understand price is key. Our solution cuts operational costs by 40% in Q1—that's $50K+ savings annually for companies like yours. Want to see the ROI breakdown for your specific situation?"`;
     }
 
-    // Handle vague/unclear responses
     if (lowerResponse.match(/^(why not\?|ok|sure|maybe|fine|good|sounds good|nice)$/)) {
       return `❌ <strong>This doesn't address the objection.</strong> The customer needs concrete value, not vague responses.<br/><br/>💡 <strong>Say this instead:</strong><br/>"I appreciate your honesty about price. Here's why clients see this as investment, not cost: We save teams 15-20 hours weekly. That's $75K/year in productivity for your team size. Plus free implementation and dedicated support from day one. What matters more to you—time savings or cost reduction?"`;
     }
 
-    // Positive keyword detection - value/ROI focus
     if (lowerResponse.includes('value') || lowerResponse.includes('roi')) {
       return "Excellent approach! You focused on value and ROI, which directly addresses pricing concerns. To make this even stronger, add specific numbers and a clear next step.\n\n**Example enhancement:**\n'Most clients see 3-5x ROI in the first year. For instance, one client in your industry reduced processing time by 60%, saving them $120K annually on a $40K investment. Would you be open to a 15-minute call where I can show you exactly how this would work for your team?'";
     }
 
-    // Empathy-based responses
     if (lowerResponse.includes('understand') || lowerResponse.includes('budget')) {
       return `👏 <strong>Good empathy!</strong> You're building trust by acknowledging their concern.<br/><br/>💪 <strong>Now add this punch:</strong><br/>"Budget is always a factor—I get it. Our clients save 25-30% on current solutions within 6 months. We offer flexible payments too. If timing's the issue, let's start with a pilot at 50% cost. Work for this quarter?"`;
     }
 
-    // Competitive positioning
     if (lowerResponse.includes('compare') || lowerResponse.includes('competition')) {
       return `🔥 <strong>Smart move</strong> addressing competitors head-on!<br/><br/>🚀 <strong>Differentiate like this:</strong><br/>"Yes, cheaper options exist. Here's why we're worth it: 2x faster implementation, 24/7 support, and 40% better results on average. Company X jumped from 12% to 19% conversion in 3 months after switching. The price difference paid for itself in Q1. What capabilities matter most to you?"`;
     }
 
-    // Default fallback for moderate responses
     return `✅ <strong>Good start!</strong> Now let's make it irresistible.<br/><br/>🎯 <strong>Try this approach:</strong><br/>"I hear your price concern. Here's the truth: 250% ROI in year one. Recent client in your industry: $180K savings on $60K investment. We include free training, priority support, quarterly strategy reviews. Zero risk: 90-day value guarantee or full refund. Quick demo to see your specific impact?"`;
   };
 
@@ -330,9 +302,6 @@ const Demo = () => {
   };
 
   const handleRetry = () => {
-    if (import.meta.env.DEV) {
-      console.log('Retrying demo...');
-    }
     setHasError(false);
     setFeedback(null);
     setSessionData(null);
@@ -392,6 +361,14 @@ const Demo = () => {
                   Practice handling pricing objections using either voice or text input, and get instant feedback.
                 </p>
 
+                {/* Session counter for logged-in free users */}
+                {user?.id && !hasReachedLimit && remainingAttempts !== Infinity && (
+                  <div className="mb-4 flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+                    <Sparkles className="h-4 w-4 text-blue-500" />
+                    <span>{remainingAttempts} of {currentLimit} free sessions remaining this month</span>
+                  </div>
+                )}
+
                 {hasError ? (
                   <div className="text-center py-8">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
@@ -441,8 +418,47 @@ const Demo = () => {
                   );
                 })()}
 
-                {/* FIX: Soft upgrade prompt BELOW the feedback — only after they've used their free attempt */}
-                {feedback && hasReachedLimit && (
+                {/* ================================================== */}
+                {/* POST-FEEDBACK PROMPTS — Different for each tier     */}
+                {/* ================================================== */}
+
+                {/* GUEST who used their 1 free demo — Prompt to create free account */}
+                {feedback && hasReachedLimit && isGuest && (
+                  <div className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-5 sm:p-6 text-center">
+                    <div className="flex justify-center mb-3">
+                      <div className="bg-emerald-100 rounded-full p-2">
+                        <Mail className="h-5 w-5 text-emerald-600" />
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {feedbackScore !== null && feedbackScore <= 6
+                        ? `You scored ${feedbackScore}/10 — want to keep improving?`
+                        : feedbackScore !== null && feedbackScore >= 7
+                        ? `Great start! ${feedbackScore}/10 — imagine where you'll be after 3 more sessions.`
+                        : `Nice work! Save your progress and keep practicing.`
+                      }
+                    </h3>
+                    <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                      Create a free account to get <strong>{FREE_ACCOUNT_MONTHLY_LIMIT} practice sessions every month</strong>, save your scores, and track your improvement over time.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button
+                        size="lg"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6"
+                        onClick={() => navigate('/signup')}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Create Free Account — {FREE_ACCOUNT_MONTHLY_LIMIT} Sessions/Month
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-3">
+                      Free forever · No credit card · Takes 30 seconds
+                    </p>
+                  </div>
+                )}
+
+                {/* LOGGED-IN FREE USER who used their monthly sessions — Prompt to upgrade */}
+                {feedback && hasReachedLimit && !isGuest && (
                   <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 sm:p-6 text-center">
                     <div className="flex justify-center mb-3">
                       <div className="bg-blue-100 rounded-full p-2">
@@ -451,14 +467,14 @@ const Demo = () => {
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {feedbackScore !== null && feedbackScore <= 6
-                        ? `You scored ${feedbackScore}/10 — ready to improve?`
+                        ? `You scored ${feedbackScore}/10 — you're getting better. Don't stop now.`
                         : feedbackScore !== null && feedbackScore >= 7
-                        ? `Great score: ${feedbackScore}/10! Keep the momentum going.`
-                        : `Nice work! Want to keep practicing?`
+                        ? `${feedbackScore}/10 — you're on a roll! Keep the momentum going.`
+                        : `You've used your ${currentLimit} free sessions this month.`
                       }
                     </h3>
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">
-                      Subscribers get unlimited practice across all scenarios, advanced AI coaching, and progress tracking to close more deals.
+                      Subscribers get <strong>unlimited practice</strong> across all scenarios, advanced AI coaching, and progress tracking to close more deals.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button
@@ -469,19 +485,18 @@ const Demo = () => {
                         Unlock Unlimited Practice — $29/mo
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => navigate('/signup')}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        Create Free Account
-                      </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-3">
                       Cancel anytime · 30-day money-back guarantee · Secure checkout via Stripe
                     </p>
+                  </div>
+                )}
+
+                {/* LOGGED-IN FREE USER with sessions remaining — Show remaining count */}
+                {feedback && !hasReachedLimit && !isGuest && remainingAttempts !== Infinity && (
+                  <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
+                    <Sparkles className="h-4 w-4 text-blue-500" />
+                    <span>{remainingAttempts} free session{remainingAttempts !== 1 ? 's' : ''} remaining this month · <button onClick={() => navigate('/pricing')} className="text-blue-600 hover:text-blue-700 underline">Get unlimited</button></span>
                   </div>
                 )}
               </div>
@@ -532,7 +547,7 @@ const Demo = () => {
         </Suspense>
       </div>
 
-      {/* FIX: Paywall modal only shows when user tries to submit AGAIN after seeing feedback */}
+      {/* Hard paywall modal — only for logged-in free users who try to submit again */}
       <UpgradePaywallModal open={showPaywall} />
     </>
   );

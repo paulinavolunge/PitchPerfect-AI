@@ -2,7 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
-const FREE_ATTEMPT_LIMIT = 1;
+// Tier limits
+const GUEST_ATTEMPT_LIMIT = 1;          // No account: 1 free demo
+const FREE_ACCOUNT_MONTHLY_LIMIT = 3;   // Free account: 3 sessions/month
+// Premium: unlimited (no limit check)
+
 const LOCAL_STORAGE_KEY = 'pitchperfect_guest_practice_count';
 
 export function useFreeTrialLimit() {
@@ -10,14 +14,22 @@ export function useFreeTrialLimit() {
   const [attemptCount, setAttemptCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
+  // Determine which limit applies
+  const currentLimit = user?.id ? FREE_ACCOUNT_MONTHLY_LIMIT : GUEST_ATTEMPT_LIMIT;
+
   const loadCount = useCallback(async () => {
     setLoading(true);
     try {
       if (user?.id) {
+        // For logged-in users: count practice sessions THIS MONTH only
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
         const { count, error } = await supabase
           .from('practice_sessions')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .gte('completed_at', startOfMonth);
 
         if (error) {
           console.error('Error fetching practice count:', error);
@@ -26,6 +38,7 @@ export function useFreeTrialLimit() {
           setAttemptCount(count ?? 0);
         }
       } else {
+        // For guests: use localStorage
         const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
         setAttemptCount(stored ? parseInt(stored, 10) : 0);
       }
@@ -41,8 +54,12 @@ export function useFreeTrialLimit() {
     loadCount();
   }, [loadCount]);
 
-  const hasReachedLimit = !isPremium && attemptCount >= FREE_ATTEMPT_LIMIT;
-  const remainingAttempts = Math.max(0, FREE_ATTEMPT_LIMIT - attemptCount);
+  // Premium users never hit limits
+  const hasReachedLimit = !isPremium && attemptCount >= currentLimit;
+  const remainingAttempts = isPremium ? Infinity : Math.max(0, currentLimit - attemptCount);
+
+  // Helper: is this a guest (not logged in)?
+  const isGuest = !user?.id;
 
   // Increment attempt: persists to Supabase for logged-in users, localStorage for guests
   const incrementAttempt = useCallback(async (practiceData?: {
@@ -89,8 +106,6 @@ export function useFreeTrialLimit() {
   const resetAttempts = useCallback(async () => {
     setAttemptCount(0);
     localStorage.removeItem(LOCAL_STORAGE_KEY);
-    // Note: does not delete practice_sessions rows — only resets local state
-    // so admin can re-test the paywall flow
   }, []);
 
   // Reload count from source (useful after reset)
@@ -104,6 +119,9 @@ export function useFreeTrialLimit() {
     resetAttempts,
     refreshCount,
     loading,
-    FREE_ATTEMPT_LIMIT,
+    isGuest,
+    currentLimit,
+    GUEST_ATTEMPT_LIMIT,
+    FREE_ACCOUNT_MONTHLY_LIMIT,
   };
 }
