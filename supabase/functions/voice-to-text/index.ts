@@ -96,7 +96,7 @@ serve(async (req) => {
     }
     
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: errMsg,
       fallback: true 
     }), {
       status: 500,

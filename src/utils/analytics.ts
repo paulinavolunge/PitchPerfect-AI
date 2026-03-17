@@ -169,6 +169,11 @@ export const trackEvent = (
   try {
     console.log('🎯 Analytics: Attempting to track event:', eventName, eventParams);
     
+    if (!isProductionHost()) {
+      console.log('ℹ️ Analytics: Skipping event — not production host');
+      return;
+    }
+    
     if (!hasValidConsent()) {
       console.log('❌ Analytics: No valid consent for event tracking');
       return;
