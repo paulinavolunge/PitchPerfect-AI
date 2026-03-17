@@ -92,7 +92,6 @@ function App() {
                 <Router>
                   <AuthProvider>
                     <OnboardingProvider>
-                      <AuthLoadingBoundary>
                         <GuestModeProvider>
                         <PageTrackingProvider>
                           <PrivacyCompliantAnalytics />
