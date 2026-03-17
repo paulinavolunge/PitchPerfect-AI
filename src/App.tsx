@@ -79,24 +79,7 @@ const PageTrackingProvider = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const AuthLoadingBoundary = ({ children }: { children: React.ReactNode }) => {
-  const [isReady, setIsReady] = React.useState(false);
-  React.useEffect(() => {
-    const timer = setTimeout(() => setIsReady(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-  if (!isReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Initializing...</p>
-        </div>
-      </div>
-    );
-  }
-  return <>{children}</>;
-};
+// AuthLoadingBoundary removed — was adding 100ms artificial delay
 
 function App() {
   return (
@@ -109,7 +92,6 @@ function App() {
                 <Router>
                   <AuthProvider>
                     <OnboardingProvider>
-                      <AuthLoadingBoundary>
                         <GuestModeProvider>
                         <PageTrackingProvider>
                           <PrivacyCompliantAnalytics />
@@ -175,8 +157,7 @@ function App() {
                           </div>
                         </PageTrackingProvider>
                       </GuestModeProvider>
-                    </AuthLoadingBoundary>
-                  </OnboardingProvider>
+                   </OnboardingProvider>
                 </AuthProvider>
                 </Router>
               </AccessibilityProvider>

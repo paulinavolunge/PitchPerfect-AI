@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" class="light">
   <head>
@@ -7,44 +6,38 @@
     <meta name="theme-color" content="#ffffff" />
     <link rel="icon" href="/favicon.ico" />
     <title>PitchPerfect AI</title>
-    
-    <!-- Optimized font loading - single request for all needed fonts -->
+
+    <!-- Preconnect to font origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
-    
-    <!-- Analytics is fully managed by src/utils/analytics.ts to avoid duplicate page views -->
+
+    <!-- Async font loading — only weights actually used, display=swap for no FOIT -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
+
+    <!-- Inline critical CSS for instant first paint -->
+    <style>
+      body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+      #root{min-height:100vh}
+      .root-loader{display:flex;align-items:center;justify-content:center;height:100vh}
+      .root-loader-inner{text-align:center}
+      .root-spinner{width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #2563eb;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+      @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    </style>
+
+    <!-- Analytics managed by src/utils/analytics.ts -->
   </head>
   <body>
-    
     <div id="root">
-      <!-- Fallback content while JavaScript loads -->
-      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif;">
-        <div style="text-align: center;">
-          <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-          <h2 style="color: #1f2937; font-size: 18px; margin: 0;">PitchPerfect AI</h2>
-          <p style="color: #6b7280; font-size: 14px; margin: 8px 0 0;">Loading JavaScript...</p>
-          <p style="color: #9ca3af; font-size: 12px; margin: 16px 0 0;">
-            If this message persists, check the console for errors or 
-            <a href="/test.html" style="color: #2563eb;">test the basic HTML version</a>
-          </p>
+      <div class="root-loader">
+        <div class="root-loader-inner">
+          <div class="root-spinner"></div>
+          <h2 style="color:#1f2937;font-size:18px;margin:0">PitchPerfect AI</h2>
+          <p style="color:#6b7280;font-size:14px;margin:8px 0 0">Loading...</p>
         </div>
       </div>
-      
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      </style>
     </div>
-    
-    <script>
-      console.log('index.html: Script tag executed');
-      console.log('index.html: About to load main.tsx');
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
