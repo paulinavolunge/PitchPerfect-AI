@@ -84,7 +84,8 @@ serve(async (req) => {
     console.error('Error in voice-to-text function:', error);
     
     // Handle authentication errors
-    if (error.message?.includes('authorization') || error.message?.includes('token')) {
+    const errMsg = (error as Error).message ?? '';
+    if (errMsg.includes('authorization') || errMsg.includes('token')) {
       return new Response(JSON.stringify({ 
         error: 'Authentication required',
         code: 'AUTH_ERROR'
