@@ -175,7 +175,7 @@ Focus on sales communication best practices:
     return new Response(JSON.stringify({
       feedback: fallbackFeedback,
       fallback: true,
-      error: error.message
+      error: (error as Error).message
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

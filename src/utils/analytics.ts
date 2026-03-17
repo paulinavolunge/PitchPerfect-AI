@@ -2,6 +2,29 @@
 
 const GA_ID = 'G-HVCRJT504Y';
 const DEBUG_MODE = false; // Set to true for debugging
+const PRODUCTION_HOSTNAME = 'pitchperfectai-02.lovable.app';
+
+// Strip internal query params (e.g. __lovable_token) from URLs
+function stripInternalParams(url: string): string {
+  try {
+    if (url.startsWith('/')) {
+      // Relative path — parse with dummy base
+      const u = new URL(url, 'https://x.com');
+      u.searchParams.delete('__lovable_token');
+      return u.pathname + (u.search || '') + (u.hash || '');
+    }
+    const u = new URL(url);
+    u.searchParams.delete('__lovable_token');
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+// Check if running on production domain
+function isProductionHost(): boolean {
+  return window.location.hostname === PRODUCTION_HOSTNAME;
+}
 // Initialize Google Analytics with debug mode and consent validation
 export const initGA = () => {
   try {
@@ -92,6 +115,12 @@ export const trackPageView = (path: string) => {
   try {
     console.log('📄 Analytics: Attempting to track page view:', path);
     
+    // Skip tracking on non-production domains to avoid polluting data
+    if (!isProductionHost()) {
+      console.log('ℹ️ Analytics: Skipping page view — not production host');
+      return;
+    }
+    
     if (!hasValidConsent()) {
       console.log('❌ Analytics: No valid consent for page view tracking');
       return;
@@ -112,10 +141,14 @@ export const trackPageView = (path: string) => {
       return;
     }
     
+    // Strip __lovable_token and other internal params from tracked URLs
+    const cleanPath = stripInternalParams(path);
+    const cleanLocation = stripInternalParams(window.location.href);
+    
     const pageData = {
-      page_path: path,
+      page_path: cleanPath,
       page_title: document.title,
-      page_location: window.location.href,
+      page_location: cleanLocation,
       send_to: GA_ID
     };
     
@@ -135,6 +168,11 @@ export const trackEvent = (
 ) => {
   try {
     console.log('🎯 Analytics: Attempting to track event:', eventName, eventParams);
+    
+    if (!isProductionHost()) {
+      console.log('ℹ️ Analytics: Skipping event — not production host');
+      return;
+    }
     
     if (!hasValidConsent()) {
       console.log('❌ Analytics: No valid consent for event tracking');
