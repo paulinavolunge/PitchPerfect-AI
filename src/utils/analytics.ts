@@ -112,10 +112,14 @@ export const trackPageView = (path: string) => {
       return;
     }
     
+    // Strip __lovable_token and other internal params from tracked URLs
+    const cleanPath = stripInternalParams(path);
+    const cleanLocation = stripInternalParams(window.location.href);
+    
     const pageData = {
-      page_path: path,
+      page_path: cleanPath,
       page_title: document.title,
-      page_location: window.location.href,
+      page_location: cleanLocation,
       send_to: GA_ID
     };
     
