@@ -71,7 +71,7 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
     },
     ...(isProduction && {
       esbuild: {
-        drop: ['debugger'],
+        drop: ['console', 'debugger'],
         legalComments: 'none',
       },
     }),
