@@ -115,6 +115,12 @@ export const trackPageView = (path: string) => {
   try {
     console.log('📄 Analytics: Attempting to track page view:', path);
     
+    // Skip tracking on non-production domains to avoid polluting data
+    if (!isProductionHost()) {
+      console.log('ℹ️ Analytics: Skipping page view — not production host');
+      return;
+    }
+    
     if (!hasValidConsent()) {
       console.log('❌ Analytics: No valid consent for page view tracking');
       return;
