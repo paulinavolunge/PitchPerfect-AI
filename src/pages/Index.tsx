@@ -545,7 +545,39 @@ const Index = () => {
             </div>
           </section>
 
-          <LazyLoadManager priority="low">
+          {/* FINAL CTA section */}
+          <section className="py-16 sm:py-20" style={{ backgroundColor: '#0F172A' }}>
+            <div className="container mx-auto px-4 max-w-3xl text-center">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+                Your next deal is this week. Are you walking in cold?
+              </h2>
+              <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                One 10-minute session. That's all it takes to feel the difference. No credit card, no commitment, no one watching.
+              </p>
+              <Button
+                size="lg"
+                className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 mb-6"
+                onClick={handleGetStartedClick}
+              >
+                Practice Your First Pitch Free →
+              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-slate-400">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-primary-400" />
+                  Free first session
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-primary-400" />
+                  No credit card
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-primary-400" />
+                  Under 10 minutes
+                </div>
+              </div>
+            </div>
+          </section>
+
             <Footer />
           </LazyLoadManager>
 
