@@ -208,7 +208,17 @@ const Index = () => {
             </div>
           </section>
 
-          {/* ============================================ */}
+          {/* Trust Bar */}
+          <div className="py-3 sm:py-4 border-t border-b border-border/50" style={{ backgroundColor: '#F8FAFC' }}>
+            <div className="container mx-auto px-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-[13px] sm:text-[14px] text-muted-foreground">
+                <span>🏢 Listed in Lohfeld Consulting AI Guide — $170B+ in proposals won</span>
+                <span>🔒 100% Private — No manager dashboards</span>
+                <span>🚀 Featured on Product Hunt</span>
+              </div>
+            </div>
+          </div>
+
           {/* WHY NOT JUST USE CHATGPT? — New section       */}
           {/* ============================================ */}
           <section className="py-12 sm:py-16 bg-secondary-50">
