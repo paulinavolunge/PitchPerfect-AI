@@ -487,7 +487,36 @@ const Index = () => {
             <VideoWalkthrough />
           </LazyLoadManager>
 
-          <LazyLoadManager className="py-12 sm:py-16" data-onboarding="pricing" priority="high" rootMargin="250px">
+          {/* FAQ / STRAIGHT ANSWERS section */}
+          <section className="py-12 sm:py-16" style={{ backgroundColor: '#F8FAFC' }}>
+            <div className="container mx-auto px-4 max-w-4xl">
+              <div className="text-center mb-8 sm:mb-10">
+                <Badge className="mb-4 bg-primary-50 text-primary-700 border-primary-200 font-medium text-sm">
+                  Straight Answers
+                </Badge>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3">
+                  You're Skeptical. Good — That Means You're a Real Salesperson.
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[
+                  { q: "I don't have time for this.", a: "A session takes under 10 minutes. That's less time than replaying a call you lost in your head on the drive home." },
+                  { q: "Will this actually help me close more?", a: "You practice against realistic objections before the real call. You walk in prepared instead of winging it. Preparation beats talent when talent doesn't prepare." },
+                  { q: "Why not just use ChatGPT?", a: "ChatGPT won't push back, won't score you, and won't run structured scenarios. It gives advice. We give reps. There's a difference between reading about pushups and doing them." },
+                  { q: "$29/month seems like a lot.", a: "It's less than the commission on one deal you'd lose by freezing on an objection you never practiced. One closed deal pays for years of PitchPerfect AI." },
+                  { q: "I've been selling for 15 years.", a: "The AI adapts. Veterans get harder pushback — multi-layered objections, misdirections, the kind of thing a VP of Procurement throws at you. This sharpens the edge, not teaches the basics." },
+                  { q: "What if I try it and it's not for me?", a: "Free first session. No credit card. Under 10 minutes. If it doesn't help, you've lost nothing except a few minutes." },
+                ].map((faq, i) => (
+                  <div key={i} className="bg-card rounded-xl border p-6 shadow-sm">
+                    <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">"{faq.q}"</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{faq.a}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
 
             <div className="container mx-auto px-4 max-w-3xl">
               <div className="mb-6 sm:mb-8">
