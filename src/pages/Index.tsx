@@ -128,14 +128,12 @@ const Index = () => {
               </Badge>
 
               <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight">
-                Stop Losing Deals Because<br />
-                <span className="text-primary-600">You Weren't Ready.</span>
+                You know your product. You just freeze<br />
+                when they <span className="text-primary-600">push back.</span>
               </h1>
 
               <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-                PitchPerfect AI simulates your toughest prospects so you can practice
-                objection handling, cold calls, and demo pitches in 10 minutes —
-                <strong> before the real thing.</strong>
+                PitchPerfect AI is your private sparring partner. Pick a sales scenario, practice against an AI buyer who pushes back, and get a performance score — all in under 10 minutes.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12">
@@ -144,8 +142,7 @@ const Index = () => {
                   className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   onClick={handleGetStartedClick}
                 >
-                  Practice Your First Pitch Free
-                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" aria-hidden="true" />
+                  Practice Your First Pitch Free →
                 </Button>
 
                 <Button
@@ -156,7 +153,6 @@ const Index = () => {
                   data-onboarding="demo-button"
                   data-testid="watch-demo-button"
                 >
-                  <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
                   See How It Works
                 </Button>
               </div>
@@ -164,15 +160,15 @@ const Index = () => {
               <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-600" />
-                  No signup required
+                  Free first session
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-600" />
-                  Takes 5 minutes
+                  No credit card
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-600" />
-                  Free practice session included
+                  Under 10 minutes
                 </div>
               </div>
 
