@@ -129,7 +129,7 @@ const Pricing = () => {
                     disabled={loading === 'solo'}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                   >
-                    {loading === 'solo' ? 'Processing...' : 'Get Solo Plan'}
+                    {loading === 'solo' ? 'Processing...' : 'Start Free, Then $29/mo →'}
                   </Button>
                 </CardContent>
               </Card>
