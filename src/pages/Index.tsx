@@ -527,6 +527,24 @@ const Index = () => {
             </div>
           </LazyLoadManager>
 
+          {/* FOUNDER NOTE section */}
+          <section className="py-12 sm:py-16" style={{ backgroundColor: '#F8FAFC' }}>
+            <div className="container mx-auto px-4 max-w-3xl">
+              <div className="flex flex-col sm:flex-row items-start gap-5 sm:gap-6">
+                <div className="w-14 h-14 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl font-bold text-white">P</span>
+                </div>
+                <div>
+                  <p className="text-base sm:text-lg text-foreground leading-relaxed italic mb-4">
+                    "I built PitchPerfect AI because I spent years as an Account Executive, handling objections on hundreds of sales calls and learning the hard way that preparation beats talent. Every rep deserves a sparring partner that tells them the truth — not a chatbot that says great job."
+                  </p>
+                  <p className="font-bold text-foreground">Paulina Vol — Founder</p>
+                  <p className="text-sm text-muted-foreground">Former Account Executive · 5+ years in B2B sales</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <LazyLoadManager priority="low">
             <Footer />
           </LazyLoadManager>
