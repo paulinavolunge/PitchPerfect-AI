@@ -578,6 +578,7 @@ const Index = () => {
             </div>
           </section>
 
+          <LazyLoadManager priority="low">
             <Footer />
           </LazyLoadManager>
 
