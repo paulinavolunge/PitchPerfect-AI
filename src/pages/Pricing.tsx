@@ -191,7 +191,7 @@ const Pricing = () => {
                     disabled={loading === 'team'}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                   >
-                    {loading === 'team' ? 'Processing...' : 'Get Team Plan'}
+                    {loading === 'team' ? 'Processing...' : 'Contact for Team Access'}
                   </Button>
                 </CardContent>
               </Card>

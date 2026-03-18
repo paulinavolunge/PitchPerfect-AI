@@ -45,7 +45,7 @@ const PricingCTA = () => {
           </Button>
           
           <p className="text-sm text-white/80 font-medium">
-            Starting at just $29 • 7-day money-back guarantee
+            Cancel anytime · Free first session on all plans
           </p>
         </div>
       </CardContent>
