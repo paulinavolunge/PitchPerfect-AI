@@ -16,10 +16,7 @@ import { trackEvent } from '@/utils/analytics';
 // Lazy load heavy components below the fold with prioritization
 const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
-const VideoWalkthrough = lazy(() => import('@/components/VideoWalkthrough'));
 const TrustBadges = lazy(() => import('@/components/TrustBadges'));
-const Features = lazy(() => import('@/components/Features'));
-const HowItWorks = lazy(() => import('@/components/HowItWorks'));
 
 const Index = () => {
   const navigate = useNavigate();
