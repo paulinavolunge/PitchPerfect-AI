@@ -582,7 +582,19 @@ const Index = () => {
             <Footer />
           </LazyLoadManager>
 
+          {/* Mobile sticky CTA bar */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-border p-3">
+            <Button
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 text-base"
+              onClick={handleGetStartedClick}
+            >
+              Practice Your First Pitch Free →
+            </Button>
+          </div>
+
         </main>
+        {/* Spacer for mobile sticky bar */}
+        <div className="h-16 md:hidden" />
       </div>
     </>
   );
