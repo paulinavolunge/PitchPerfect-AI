@@ -219,7 +219,40 @@ const Index = () => {
             </div>
           </div>
 
-          {/* WHY NOT JUST USE CHATGPT? — New section       */}
+          {/* THIS ISN'T CHATGPT — Comparison section */}
+          <section className="py-12 sm:py-16" style={{ backgroundColor: '#F8FAFC' }}>
+            <div className="container mx-auto px-4 max-w-4xl">
+              <div className="text-center mb-8 sm:mb-10">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3">
+                  This Isn't ChatGPT With a Sales Prompt.
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
+                  ChatGPT agrees with you, goes off-topic, and never pushes back. PitchPerfect AI runs structured sales scenarios with a scoring engine. You get a score, not a pep talk.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* ChatGPT Card */}
+                <div className="bg-card rounded-xl border p-6 sm:p-8 shadow-sm">
+                  <h3 className="text-lg font-bold text-foreground mb-4">ChatGPT Response</h3>
+                  <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-4 italic">
+                    "That's a great pitch! You're doing really well. Here are some tips to consider: try to be more empathetic, use the prospect's name, and remember to ask open-ended questions. Keep it up! 😊"
+                  </p>
+                  <p className="text-sm font-semibold text-destructive">✗ Generic advice. No pushback. No score.</p>
+                </div>
+
+                {/* PitchPerfect AI Card */}
+                <div className="rounded-xl p-6 sm:p-8 shadow-sm" style={{ backgroundColor: '#0f172a' }}>
+                  <h3 className="text-lg font-bold text-white mb-4">PitchPerfect AI Response</h3>
+                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-4 italic">
+                    "We already use [Competitor] and we're happy with them. I've got a board meeting in 20 minutes. Give me one concrete reason I should keep listening instead of hanging up."
+                  </p>
+                  <p className="text-sm font-semibold" style={{ color: '#22c55e' }}>✓ Realistic pushback. Scored 7.4/10. Specific feedback.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* ============================================ */}
           <section className="py-12 sm:py-16 bg-secondary-50">
             <div className="container mx-auto px-4">
