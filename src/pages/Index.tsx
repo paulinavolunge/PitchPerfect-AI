@@ -253,7 +253,53 @@ const Index = () => {
             </div>
           </section>
 
-          {/* ============================================ */}
+          {/* REAL SALES SCENARIOS section */}
+          <section className="py-12 sm:py-16" style={{ backgroundColor: '#F8FAFC' }}>
+            <div className="container mx-auto px-4 max-w-4xl">
+              <div className="text-center mb-8 sm:mb-10">
+                <Badge className="mb-4 bg-primary-50 text-primary-700 border-primary-200 font-medium text-sm">
+                  Real Sales Scenarios
+                </Badge>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3">
+                  Practice the Exact Call You're About to Make.
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
+                  Not generic communication tips. Real sales scenarios designed around the conversations that make or break your month.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-card rounded-xl border-l-4 border-l-primary-600 border p-6 shadow-sm">
+                  <h3 className="text-lg font-bold text-foreground mb-2">🎯 Cold Call — First 30 Seconds</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">Get past "I'm not interested" and earn the meeting. Practice your opener and handle instant rejection.</p>
+                </div>
+                <div className="bg-card rounded-xl border-l-4 border-l-primary-600 border p-6 shadow-sm">
+                  <h3 className="text-lg font-bold text-foreground mb-2">💰 Pricing Objection</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">Handle "That's too expensive" without flinching. Practice value framing and avoiding the discount trap.</p>
+                </div>
+                <div className="bg-card rounded-xl border-l-4 border-l-primary-600 border p-6 shadow-sm">
+                  <h3 className="text-lg font-bold text-foreground mb-2">🎤 Demo Close</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">Ask for the business when the demo goes well. Practice trial closes and handling "let me think about it."</p>
+                </div>
+                <div className="bg-card rounded-xl border-l-4 border-l-primary-600 border p-6 shadow-sm">
+                  <h3 className="text-lg font-bold text-foreground mb-2">🚪 Gatekeeper Bypass</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">Get past the front desk to the decision-maker with assertive-but-respectful techniques that work.</p>
+                </div>
+              </div>
+
+              <div className="text-center mt-8">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-primary-400 text-primary-700 hover:bg-primary-50 font-medium px-6 py-3 text-base sm:text-lg"
+                  onClick={() => navigate('/practice')}
+                >
+                  Start With Any Scenario — Free →
+                </Button>
+              </div>
+            </div>
+          </section>
+
           <section className="py-12 sm:py-16 bg-secondary-50">
             <div className="container mx-auto px-4">
               <div className="text-center mb-8 sm:mb-10">
