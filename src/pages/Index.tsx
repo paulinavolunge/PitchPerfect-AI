@@ -518,6 +518,7 @@ const Index = () => {
           </section>
 
 
+          <LazyLoadManager className="py-12 sm:py-16" data-onboarding="pricing" priority="high" rootMargin="250px">
             <div className="container mx-auto px-4 max-w-3xl">
               <div className="mb-6 sm:mb-8">
                 <TrustBadges variant="compact" className="justify-center mb-4 sm:mb-6" />
