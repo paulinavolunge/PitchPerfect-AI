@@ -90,13 +90,13 @@ const Pricing = () => {
             {/* Header */}
             <div className="text-center mb-12">
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Practice makes pipeline
+                Less Than One Lost Commission.
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
-                Every plan includes unlimited AI roleplay sessions, real-time scoring, and personalized feedback to sharpen your sales skills.
+                Your first session is free. After that, invest less than the price of a lunch meeting.
               </p>
               <Badge className="bg-green-100 text-green-800 border-green-300 px-4 py-1.5 text-sm font-medium">
-                3 free practice sessions included with every account — no card required
+                Cancel anytime · Free first session on all plans
               </Badge>
             </div>
 
