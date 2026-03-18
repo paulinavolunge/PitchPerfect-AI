@@ -27,11 +27,11 @@ const PricingCTA = () => {
         </div>
         
         <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">
-          Ready to Master Your Sales Pitch?
+          Less Than One Lost Commission.
         </h3>
         
         <p className="text-white/90 mb-8 max-w-md mx-auto text-lg leading-relaxed font-medium">
-          Join thousands of sales professionals who've improved their pitch with AI-powered practice and feedback.
+          Your first session is free. After that, invest less than the price of a lunch meeting.
         </p>
         
         <div className="space-y-4">
