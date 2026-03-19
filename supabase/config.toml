@@ -343,6 +343,14 @@ verify_jwt = true
 enabled = true
 verify_jwt = false
 
+[functions.roleplay-ai-response]
+enabled = true
+verify_jwt = false
+
+[functions.pitch-analysis]
+enabled = true
+verify_jwt = false
+
 [functions.demo-feedback]
 enabled = true
 verify_jwt = false

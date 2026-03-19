@@ -77,12 +77,13 @@ const Navbar: React.FC = () => {
 
   const userNavigationItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Progress', href: '/progress' },
     { name: 'Tips', href: '/tips' }
   ];
 
   const guestNavigationItems = [
+    { name: 'Practice', href: '/practice' },
     { name: 'About', href: '/about' },
     { name: 'Compare', href: '/compare' },
     ...(isPricingEnabled() ? [{ name: 'Pricing', href: '/pricing' }] : []),
@@ -90,13 +91,13 @@ const Navbar: React.FC = () => {
   ];
 
   const guestModeItems = [
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Demo', href: '/demo' }
   ];
 
   const mainNavItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Tips', href: '/tips' }
   ];
 

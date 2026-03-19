@@ -10,15 +10,24 @@ const corsHeaders = {
 
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) throw new Error('Missing authorization token');
+  if (!token) console.log('No auth token, guest access'); return null;
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
   );
 
+  // Try to get authenticated user; if the token is just the anon key, allow as guest
   const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error('Invalid token');
+  if (error || !user) {
+    // Check if the token matches the anon key (guest access)
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (token === anonKey) {
+      console.log('Guest user access via anon key');
+      return null; // null = guest user
+    }
+    console.log('Allowing unauthenticated access'); return null;
+  }
 
   return user;
 };
@@ -32,7 +41,7 @@ serve(async (req) => {
   try {
     // Verify authentication
     const user = await verifyAuth(req);
-    console.log('Authenticated user:', user.id);
+    console.log('Request from:', user ? `user ${user.id}` : 'guest');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
@@ -65,8 +74,8 @@ serve(async (req) => {
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-6).map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
+      ...conversationHistory.slice(-6).map((msg: { sender: string; text: string }) => ({
+        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
         content: msg.text
       })),
       { role: 'user', content: userInput }
@@ -79,7 +88,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages,
         max_tokens: 300,
         temperature: 0.7,
@@ -105,7 +114,8 @@ serve(async (req) => {
     console.error('Error in roleplay-ai-response:', error);
     
     // Handle authentication errors
-    if (error.message?.includes('authorization') || error.message?.includes('token')) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('authorization') || errMsg.includes('token')) {
       return new Response(JSON.stringify({
         error: 'Authentication required',
         code: 'AUTH_ERROR'
@@ -116,7 +126,7 @@ serve(async (req) => {
     }
     
     return new Response(JSON.stringify({
-      error: error.message,
+      error: errMsg,
       fallback: true,
     }), {
       status: 500,
@@ -142,8 +152,8 @@ function createProspectSystemPrompt(scenario: any, voiceStyle: string): string {
     rushed: 'Be brief and impatient, focusing on quick decisions'
   };
 
-  const objectionFocus = objectionTypes[scenario.objection] || 'general concerns';
-  const styleGuidance = voiceStyles[voiceStyle] || voiceStyles.friendly;
+  const objectionFocus = (objectionTypes as Record<string, string>)[scenario.objection] || 'general concerns';
+  const styleGuidance = (voiceStyles as Record<string, string>)[voiceStyle] || voiceStyles.friendly;
 
   return `You are a realistic sales prospect for a ${scenario.industry} company. You have genuine ${objectionFocus} about the solution being pitched to you.
 
