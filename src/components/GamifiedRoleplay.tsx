@@ -304,18 +304,47 @@ const GamifiedRoleplay: React.FC = () => {
     }
   }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI, stopSpeech, speakText]);
 
+  // ── Local fallback scoring ─────────────────────────────────
+  const computeLocalScore = useCallback((finalMessages: ChatMessage[]): number => {
+    const userMessages = finalMessages.filter(m => m.role === 'user');
+    const allUserText = userMessages.map(m => m.text.toLowerCase()).join(' ');
+    let score = 0;
+
+    // Did the rep acknowledge the objection? (+2)
+    const ackPatterns = /i understand|i hear you|that makes sense|i get that|totally fair|valid concern|appreciate|fair point|makes sense/;
+    if (ackPatterns.test(allUserText)) score += 2;
+
+    // Did they ask a discovery question? (+2)
+    const questionCount = userMessages.filter(m => m.text.includes('?')).length;
+    if (questionCount > 0) score += 2;
+
+    // Did they provide social proof or data? (+2)
+    const proofPatterns = /client|customer|company|percent|%|roi|result|case study|data|saved|increased|reduced|example|similar|industry/;
+    if (proofPatterns.test(allUserText)) score += 2;
+
+    // Did they propose a next step? (+2)
+    const nextStepPatterns = /next step|follow up|schedule|call|demo|meeting|pilot|trial|let me show|walk you through|send you|quick call/;
+    if (nextStepPatterns.test(allUserText)) score += 2;
+
+    // Did they stay professional throughout? (+2)
+    const unprofessional = /whatever|don't care|your loss|fine then|forget it|stupid/;
+    if (!unprofessional.test(allUserText)) score += 2;
+
+    return Math.max(1, Math.min(10, score));
+  }, []);
+
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
     if (!selectedObjection) return;
     setIsAiTyping(true);
 
     try {
-      // Build full transcript with objection context
+      // Build full transcript in Rep/Prospect format
       const transcript = finalMessages
-        .map(m => `${m.role === 'user' ? 'Sales Rep' : PROSPECT_NAME}: ${m.text}`)
+        .map(m => `${m.role === 'user' ? 'Rep' : 'Prospect'}: ${m.text}`)
         .join('\n');
 
-      // Use direct fetch for guest auth support (same pattern as callAI)
+      // Use direct fetch for guest auth support
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
 
@@ -340,10 +369,11 @@ const GamifiedRoleplay: React.FC = () => {
           transcript,
           practiceMode: 'text',
           scenario: {
-            objection: selectedObjection.label,
+            objection: selectedObjection.id,
             industry: 'general',
             difficulty: 'medium',
           },
+          context: 'sales roleplay objection handling practice',
         }),
       });
 
@@ -360,11 +390,20 @@ const GamifiedRoleplay: React.FC = () => {
 
         // pitch-analysis returns overallScore on a 1-100 scale; convert to 1-10
         const rawScore = parsed.overallScore ?? parsed.overall_score ?? parsed.score ?? 50;
-        const score10 = rawScore > 10 ? Math.round(rawScore / 10) : rawScore;
+        const apiScore = rawScore > 10 ? Math.round(rawScore / 10) : rawScore;
+
+        // Compute local fallback score based on conversation content
+        const localScore = computeLocalScore(finalMessages);
+
+        // Use the HIGHER of the two scores to avoid unfairly low ratings
+        // If API score seems suspiciously generic (always ~5), the local score corrects it
+        const finalScore = Math.max(apiScore, localScore);
+
+        console.log('[GamifiedRoleplay] Scoring:', { apiScore, localScore, finalScore });
 
         setDebrief({
-          won: score10 >= 7,
-          score: score10,
+          won: finalScore >= 7,
+          score: finalScore,
           strengths: parsed.strengths ?? ['Engaged with the prospect'],
           gaps: parsed.improvements ?? ['Could dig deeper into root concerns'],
           tip: parsed.recommendation ?? 'Focus on asking discovery questions before presenting solutions.',
@@ -373,12 +412,11 @@ const GamifiedRoleplay: React.FC = () => {
         throw new Error('No analysis data');
       }
     } catch (err) {
-      console.error('[GamifiedRoleplay] Debrief error:', err);
-      const userMsgCount = finalMessages.filter(m => m.role === 'user').length;
-      const score = Math.min(10, Math.max(3, userMsgCount + 2));
+      console.error('[GamifiedRoleplay] Debrief error, using local scoring:', err);
+      const localScore = computeLocalScore(finalMessages);
       setDebrief({
-        won: score >= 7,
-        score,
+        won: localScore >= 7,
+        score: localScore,
         strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
         gaps: ['Consider asking more discovery questions', 'Provide more specific evidence and ROI data'],
         tip: 'Next time, acknowledge the objection first before presenting your counter-argument.',
@@ -397,7 +435,7 @@ const GamifiedRoleplay: React.FC = () => {
       });
       refreshCount();
     }
-  }, [selectedObjection, incrementAttempt, refreshCount]);
+  }, [selectedObjection, incrementAttempt, refreshCount, computeLocalScore]);
 
   // ── Voice input ────────────────────────────────────────────
   const toggleVoice = useCallback(() => {
