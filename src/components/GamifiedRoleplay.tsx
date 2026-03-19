@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles } from 'lucide-react';
+import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
@@ -81,6 +81,37 @@ const GamifiedRoleplay: React.FC = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
+
+  // ── TTS: find a female voice ──────────────────────────────
+  const getPreferredVoice = useCallback((): SpeechSynthesisVoice | null => {
+    const synth = synthRef.current;
+    if (!synth) return null;
+    const voices = synth.getVoices();
+    const preferred = ['samantha', 'google us english female', 'microsoft zira', 'female'];
+    for (const pref of preferred) {
+      const match = voices.find(v => v.name.toLowerCase().includes(pref));
+      if (match) return match;
+    }
+    // fallback: any English voice
+    return voices.find(v => v.lang.startsWith('en')) || null;
+  }, []);
+
+  const speakText = useCallback((text: string) => {
+    const synth = synthRef.current;
+    if (!synth) return;
+    synth.cancel(); // stop any current speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    const voice = getPreferredVoice();
+    if (voice) utterance.voice = voice;
+    synth.speak(utterance);
+  }, [getPreferredVoice]);
+
+  const stopSpeech = useCallback(() => {
+    synthRef.current?.cancel();
+  }, []);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -187,6 +218,7 @@ const GamifiedRoleplay: React.FC = () => {
       };
       setMessages([prospectMsg]);
       setCurrentRound(1);
+      speakText(response);
     } catch (err) {
       console.error('[GamifiedRoleplay] Failed to get opening response:', err);
       setMessages([{
@@ -205,6 +237,9 @@ const GamifiedRoleplay: React.FC = () => {
   const sendMessage = useCallback(async () => {
     const text = userInput.trim();
     if (!text || isAiTyping || !selectedObjection) return;
+
+    // Stop any ongoing speech when user sends a message
+    stopSpeech();
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
@@ -238,6 +273,7 @@ const GamifiedRoleplay: React.FC = () => {
       const allMessages = [...updatedMessages, prospectMsg];
       setMessages(allMessages);
       setCurrentRound(nextRound);
+      speakText(response);
 
       // Auto-trigger debrief after the LAST round's AI response
       if (nextRound >= MAX_ROUNDS) {
@@ -266,7 +302,7 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI]);
+  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI, stopSpeech, speakText]);
 
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
@@ -386,6 +422,7 @@ const GamifiedRoleplay: React.FC = () => {
   };
 
   const reset = () => {
+    stopSpeech();
     setPhase('select-objection');
     setSelectedObjection(null);
     setMessages([]);
@@ -621,7 +658,17 @@ const GamifiedRoleplay: React.FC = () => {
                 }`}
               >
                 {msg.role === 'prospect' && (
-                  <span className="block text-xs font-semibold mb-1 opacity-70">{PROSPECT_NAME}</span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold opacity-70">{PROSPECT_NAME}</span>
+                    <button
+                      onClick={() => speakText(msg.text)}
+                      className="ml-2 p-0.5 rounded hover:bg-foreground/10 transition-colors"
+                      aria-label="Replay message"
+                      title="Replay message"
+                    >
+                      <Volume2 className="w-3.5 h-3.5 opacity-50 hover:opacity-100" />
+                    </button>
+                  </div>
                 )}
                 {msg.text}
               </div>

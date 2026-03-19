@@ -74,8 +74,8 @@ serve(async (req) => {
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-6).map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
+      ...conversationHistory.slice(-6).map((msg: { sender: string; text: string }) => ({
+        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
         content: msg.text
       })),
       { role: 'user', content: userInput }
@@ -114,7 +114,8 @@ serve(async (req) => {
     console.error('Error in roleplay-ai-response:', error);
     
     // Handle authentication errors
-    if (error.message?.includes('authorization') || error.message?.includes('token')) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('authorization') || errMsg.includes('token')) {
       return new Response(JSON.stringify({
         error: 'Authentication required',
         code: 'AUTH_ERROR'
@@ -125,7 +126,7 @@ serve(async (req) => {
     }
     
     return new Response(JSON.stringify({
-      error: error.message,
+      error: errMsg,
       fallback: true,
     }), {
       status: 500,
@@ -151,8 +152,8 @@ function createProspectSystemPrompt(scenario: any, voiceStyle: string): string {
     rushed: 'Be brief and impatient, focusing on quick decisions'
   };
 
-  const objectionFocus = objectionTypes[scenario.objection] || 'general concerns';
-  const styleGuidance = voiceStyles[voiceStyle] || voiceStyles.friendly;
+  const objectionFocus = (objectionTypes as Record<string, string>)[scenario.objection] || 'general concerns';
+  const styleGuidance = (voiceStyles as Record<string, string>)[voiceStyle] || voiceStyles.friendly;
 
   return `You are a realistic sales prospect for a ${scenario.industry} company. You have genuine ${objectionFocus} about the solution being pitched to you.
 
