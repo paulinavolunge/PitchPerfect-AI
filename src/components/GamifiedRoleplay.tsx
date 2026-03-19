@@ -413,7 +413,7 @@ const GamifiedRoleplay: React.FC = () => {
           <ul className="space-y-2">
             {debrief.strengths.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <ChevronRight className="w-4 h-4 mt-0.5 text-green-500 shrink-0" />
+                <ChevronRight className="w-4 h-4 mt-0.5 text-primary-600 shrink-0" />
                 {s}
               </li>
             ))}
