@@ -101,23 +101,45 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
+    // Send the FULL conversation history so the AI has complete context
     const conversationHistory = history.map(m => ({
       sender: m.role === 'user' ? 'user' : 'ai',
       text: m.text,
     }));
 
-    const { data, error } = await supabase.functions.invoke('roleplay-ai-response', {
-      body: {
-        userInput: userMsg,
-        scenario: { objection: selectedObjection?.label || 'Need', difficulty: 'medium', industry: 'general' },
-        voiceStyle: 'skeptical',
-        userScript: null,
-        conversationHistory: conversationHistory.slice(-6),
-        isReversedRole: true,
+    const payload = {
+      userInput: userMsg,
+      scenario: {
+        objection: selectedObjection?.label || 'Need',
+        difficulty: 'medium',
+        industry: 'general',
       },
+      voiceStyle: 'skeptical',
+      userScript: null,
+      conversationHistory, // full history, no slicing
+      isReversedRole: true,
+    };
+
+    console.log('[GamifiedRoleplay] Calling roleplay-ai-response with payload:', {
+      objection: payload.scenario.objection,
+      historyLength: conversationHistory.length,
+      userInput: userMsg.substring(0, 80),
     });
 
-    if (error || !data?.response) throw new Error('AI response failed');
+    const { data, error } = await supabase.functions.invoke('roleplay-ai-response', {
+      body: payload,
+    });
+
+    if (error) {
+      console.error('[GamifiedRoleplay] Edge function error:', error);
+      throw new Error(`Edge function error: ${error.message || JSON.stringify(error)}`);
+    }
+
+    if (!data?.response) {
+      console.error('[GamifiedRoleplay] No response in data:', data);
+      throw new Error('AI returned empty response');
+    }
+
     return data.response;
   }, [selectedObjection]);
 
