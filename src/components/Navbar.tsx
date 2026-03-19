@@ -77,7 +77,7 @@ const Navbar: React.FC = () => {
 
   const userNavigationItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Progress', href: '/progress' },
     { name: 'Tips', href: '/tips' }
   ];
