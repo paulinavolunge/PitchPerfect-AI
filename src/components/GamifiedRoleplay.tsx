@@ -213,7 +213,8 @@ const GamifiedRoleplay: React.FC = () => {
       };
       setMessages(prev => [...prev, prospectMsg]);
       setCurrentRound(nextRound);
-    } catch {
+    } catch (err) {
+      console.error('[GamifiedRoleplay] Failed to get AI response for round', nextRound, ':', err);
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         role: 'prospect',
