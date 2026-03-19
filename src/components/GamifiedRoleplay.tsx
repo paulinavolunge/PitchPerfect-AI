@@ -1,9 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight } from 'lucide-react';
+import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 
 // ── Types ──────────────────────────────────────────────────────
 interface ObjectionCard {
@@ -62,29 +66,6 @@ RULES:
 - Do NOT prefix your response with your name.`;
 }
 
-function buildDebriefPrompt(messages: ChatMessage[], objection: ObjectionCard): string {
-  const transcript = messages.map(m => `${m.role === 'user' ? 'Sales Rep' : PROSPECT_NAME}: ${m.text}`).join('\n');
-  return `You are a senior sales coach. Analyze this roleplay transcript where a sales rep tried to overcome a "${objection.label}" objection from ${PROSPECT_NAME}.
-
-TRANSCRIPT:
-${transcript}
-
-Respond ONLY with valid JSON matching this exact schema (no markdown, no code fences):
-{
-  "won": boolean,
-  "score": number (1-10),
-  "strengths": ["strength1", "strength2"],
-  "gaps": ["gap1", "gap2"],
-  "tip": "one actionable practice tip"
-}
-
-Scoring guide:
-- 1-3: Weak — generic responses, no discovery questions, gave up easily
-- 4-6: Average — some good moves but missed key opportunities
-- 7-8: Strong — good objection handling with evidence and questions
-- 9-10: Exceptional — masterful reframing, built genuine trust`;
-}
-
 // ── Component ──────────────────────────────────────────────────
 const GamifiedRoleplay: React.FC = () => {
   const [phase, setPhase] = useState<Phase>('select-objection');
@@ -96,9 +77,22 @@ const GamifiedRoleplay: React.FC = () => {
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const {
+    hasReachedLimit,
+    incrementAttempt,
+    isGuest,
+    remainingAttempts,
+    currentLimit,
+    FREE_ACCOUNT_MONTHLY_LIMIT,
+    refreshCount,
+  } = useFreeTrialLimit();
 
   // Auto-scroll chat
   useEffect(() => {
@@ -196,11 +190,6 @@ const GamifiedRoleplay: React.FC = () => {
       };
       setMessages(prev => [...prev, prospectMsg]);
       setCurrentRound(nextRound);
-
-      // Auto-debrief after prospect's final response at round 5
-      if (nextRound === MAX_ROUNDS) {
-        // Let user send one more reply before debriefing
-      }
     } catch {
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
@@ -230,7 +219,6 @@ const GamifiedRoleplay: React.FC = () => {
       });
 
       if (data?.analysis) {
-        // Try to parse structured debrief from analysis
         try {
           const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
           setDebrief({
@@ -253,7 +241,6 @@ const GamifiedRoleplay: React.FC = () => {
         throw new Error('No analysis data');
       }
     } catch {
-      // Fallback debrief
       const userMsgCount = finalMessages.filter(m => m.role === 'user').length;
       const score = Math.min(10, Math.max(3, userMsgCount + 2));
       setDebrief({
@@ -266,8 +253,18 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
       setPhase('debrief');
+
+      // Track the completed session attempt AFTER debrief
+      await incrementAttempt({
+        scenario_type: selectedObjection?.label ?? 'practice',
+        difficulty: 'medium',
+        industry: 'general',
+        duration_seconds: 0,
+        score: null,
+      });
+      refreshCount();
     }
-  }, [selectedObjection]);
+  }, [selectedObjection, incrementAttempt, refreshCount]);
 
   // ── Voice input ────────────────────────────────────────────
   const toggleVoice = useCallback(() => {
@@ -300,6 +297,29 @@ const GamifiedRoleplay: React.FC = () => {
   }, [isListening]);
 
   // ── Reset ──────────────────────────────────────────────────
+  const handleTryAnother = () => {
+    // After completing a session, check if the user has hit their limit
+    if (hasReachedLimit) {
+      if (isGuest) {
+        // Guest used their 1 free session — don't reset, show signup prompt (rendered in debrief)
+        return;
+      } else {
+        // Free user used their 3 monthly sessions — show paywall
+        setShowPaywall(true);
+        return;
+      }
+    }
+
+    // Still has attempts — reset normally
+    setPhase('select-objection');
+    setSelectedObjection(null);
+    setMessages([]);
+    setCurrentRound(0);
+    setUserInput('');
+    setDebrief(null);
+    setIsAiTyping(false);
+  };
+
   const reset = () => {
     setPhase('select-objection');
     setSelectedObjection(null);
@@ -318,6 +338,15 @@ const GamifiedRoleplay: React.FC = () => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Choose Your Challenge</h2>
           <p className="text-muted-foreground">Pick an objection to practice overcoming</p>
         </div>
+
+        {/* Session counter for logged-in free users */}
+        {user?.id && !hasReachedLimit && remainingAttempts !== Infinity && (
+          <div className="mb-6 flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted rounded-lg px-3 py-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span>{remainingAttempts} of {currentLimit} free sessions remaining this month</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {OBJECTIONS.map((obj) => (
             <motion.button
@@ -439,9 +468,40 @@ const GamifiedRoleplay: React.FC = () => {
           <p className="text-sm text-muted-foreground">{debrief.tip}</p>
         </div>
 
-        <Button onClick={reset} className="w-full bg-primary-500 hover:bg-primary-600 text-white">
-          <RotateCcw className="w-4 h-4 mr-2" /> Try Another Objection
-        </Button>
+        {/* Post-session gating: show appropriate CTA based on user state */}
+        {hasReachedLimit && isGuest ? (
+          // Guest used their 1 free session — prompt to create account
+          <div className="bg-muted border border-border rounded-xl p-5 mb-4 text-center">
+            <UserPlus className="w-8 h-8 mx-auto text-primary mb-2" />
+            <h3 className="font-semibold text-foreground mb-1">Want to keep practicing?</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create a free account and get {FREE_ACCOUNT_MONTHLY_LIMIT} practice sessions per month — free forever.
+            </p>
+            <Button onClick={() => navigate('/signup')} className="w-full bg-primary-500 hover:bg-primary-600 text-white">
+              <UserPlus className="w-4 h-4 mr-2" /> Create Free Account
+            </Button>
+          </div>
+        ) : hasReachedLimit && !isGuest ? (
+          // Free user hit their monthly limit — show upgrade prompt
+          <div className="bg-muted border border-border rounded-xl p-5 mb-4 text-center">
+            <Lock className="w-8 h-8 mx-auto text-primary mb-2" />
+            <h3 className="font-semibold text-foreground mb-1">Monthly limit reached</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              You've used all {currentLimit} free sessions this month. Upgrade for unlimited practice.
+            </p>
+            <Button onClick={() => setShowPaywall(true)} className="w-full bg-primary-500 hover:bg-primary-600 text-white">
+              <ArrowRight className="w-4 h-4 mr-2" /> View Plans
+            </Button>
+          </div>
+        ) : (
+          // Still has attempts — normal "Try Another" button
+          <Button onClick={handleTryAnother} className="w-full bg-primary-500 hover:bg-primary-600 text-white">
+            <RotateCcw className="w-4 h-4 mr-2" /> Try Another Objection
+          </Button>
+        )}
+
+        {/* Upgrade Paywall Modal */}
+        <UpgradePaywallModal open={showPaywall} />
       </div>
     );
   }
