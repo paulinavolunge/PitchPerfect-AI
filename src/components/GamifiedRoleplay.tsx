@@ -311,24 +311,25 @@ const GamifiedRoleplay: React.FC = () => {
     let score = 0;
 
     // Did the rep acknowledge the objection? (+2)
-    const ackPatterns = /i understand|i hear you|that makes sense|i get that|totally fair|valid concern|appreciate|fair point|makes sense/;
+    const ackPatterns = /understand|hear you|appreciate|that makes sense|i get that|totally fair|valid concern|fair point|makes sense|respect/i;
     if (ackPatterns.test(allUserText)) score += 2;
 
     // Did they ask a discovery question? (+2)
-    const questionCount = userMessages.filter(m => m.text.includes('?')).length;
-    if (questionCount > 0) score += 2;
+    const hasQuestion = userMessages.some(m => m.text.includes('?'));
+    if (hasQuestion) score += 2;
 
     // Did they provide social proof or data? (+2)
-    const proofPatterns = /client|customer|company|percent|%|roi|result|case study|data|saved|increased|reduced|example|similar|industry/;
+    const proofPatterns = /\d|%|\$|roi|clients|client|customers|customer|company|companies|percent|result|case study|data|saved|increased|reduced|example|similar|industry|revenue|growth|return/i;
     if (proofPatterns.test(allUserText)) score += 2;
 
     // Did they propose a next step? (+2)
-    const nextStepPatterns = /next step|follow up|schedule|call|demo|meeting|pilot|trial|let me show|walk you through|send you|quick call/;
+    const nextStepPatterns = /schedule|meeting|call|next step|demo|pilot|trial|let me show|walk you through|send you|quick call|follow up|set up|book|agenda/i;
     if (nextStepPatterns.test(allUserText)) score += 2;
 
-    // Did they stay professional throughout? (+2)
-    const unprofessional = /whatever|don't care|your loss|fine then|forget it|stupid/;
-    if (!unprofessional.test(allUserText)) score += 2;
+    // Did they stay professional and give substantive responses? (+2)
+    const unprofessional = /whatever|don't care|your loss|fine then|forget it|stupid/i;
+    const avgWordCount = userMessages.reduce((sum, m) => sum + m.text.split(/\s+/).length, 0) / (userMessages.length || 1);
+    if (!unprofessional.test(allUserText) && avgWordCount > 10) score += 2;
 
     return Math.max(1, Math.min(10, score));
   }, []);
