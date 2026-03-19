@@ -737,14 +737,16 @@ const GamifiedRoleplay: React.FC = () => {
                 {msg.role === 'prospect' && (
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold opacity-70">{PROSPECT_NAME}</span>
-                    <button
-                      onClick={() => speakText(msg.text)}
-                      className="ml-2 p-0.5 rounded hover:bg-foreground/10 transition-colors"
-                      aria-label="Replay message"
-                      title="Replay message"
-                    >
-                      <Volume2 className="w-3.5 h-3.5 opacity-50 hover:opacity-100" />
-                    </button>
+                    {inputMode === 'voice' && (
+                      <button
+                        onClick={() => speakText(msg.text)}
+                        className="ml-2 p-0.5 rounded hover:bg-foreground/10 transition-colors"
+                        aria-label="Replay message"
+                        title="Replay message"
+                      >
+                        <Volume2 className="w-3.5 h-3.5 opacity-50 hover:opacity-100" />
+                      </button>
+                    )}
                   </div>
                 )}
                 {msg.text}
