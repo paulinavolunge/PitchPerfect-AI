@@ -214,11 +214,31 @@ const Signup = () => {
           </Alert>
         )}
 
+        {/* Benefits section */}
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-brand-dark mb-2">
+            Start your free trial — no credit card required
+          </h1>
+          <p className="text-muted-foreground mb-4">Get 3 free practice sessions when you sign up</p>
+          <ul className="text-left space-y-2 max-w-xs mx-auto mb-2">
+            <li className="flex items-start gap-2 text-sm text-muted-foreground">
+              <span className="text-brand-green font-bold mt-0.5">✓</span>
+              AI-powered pitch feedback in real time
+            </li>
+            <li className="flex items-start gap-2 text-sm text-muted-foreground">
+              <span className="text-brand-green font-bold mt-0.5">✓</span>
+              Practice with realistic sales roleplay scenarios
+            </li>
+            <li className="flex items-start gap-2 text-sm text-muted-foreground">
+              <span className="text-brand-green font-bold mt-0.5">✓</span>
+              Track your progress and improve over time
+            </li>
+          </ul>
+        </div>
+
         <Card>
           <CardHeader className="text-center">
-            <h1 className="text-2xl font-bold">Create Account</h1>
-            <CardTitle className="text-xl mt-2">Sign Up for Free</CardTitle>
-            <p className="text-gray-600">Start practicing your sales pitch today</p>
+            <CardTitle className="text-xl">Create Your Free Account</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Google Sign Up Button */}

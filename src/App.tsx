@@ -100,18 +100,18 @@ function App() {
                           <div className="min-h-screen bg-background font-sans antialiased">
                             <Suspense fallback={<PageLoader />}>
                               <Routes>
-                                {/* Public routes */}
-                                <Route path="/" element={<Index />} />
-                                <Route path="/about" element={<About />} />
-                                <Route path="/compare" element={<Compare />} />
-                                {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
-                                <Route path="/demo" element={<Demo />} />
-                                <Route path="/free-trial" element={<FreeTrial />} />
+                                {/* Public routes — redirect to signup if not authenticated */}
+                                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                                <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+                                <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
+                                {isPricingEnabled() && <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />}
+                                <Route path="/demo" element={<ProtectedRoute><Demo /></ProtectedRoute>} />
+                                <Route path="/free-trial" element={<ProtectedRoute><FreeTrial /></ProtectedRoute>} />
                                 
                                 {/* New functional routes */}
-                                <Route path="/voice-training" element={<VoiceTraining />} />
-                                <Route path="/analytics" element={<Analytics />} />
-                                <Route path="/ai-roleplay" element={<AIRoleplay />} />
+                                <Route path="/voice-training" element={<ProtectedRoute><VoiceTraining /></ProtectedRoute>} />
+                                <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                                <Route path="/ai-roleplay" element={<ProtectedRoute><AIRoleplay /></ProtectedRoute>} />
                                 
                                 {/* Authentication routes */}
                                 <Route path="/login" element={<Login />} />

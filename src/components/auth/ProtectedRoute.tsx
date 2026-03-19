@@ -66,7 +66,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth =
 
   // If auth is required and user is not authenticated (and not in guest mode)
   if (requireAuth && !user && !isGuestMode) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/signup" replace />;
   }
 
   // Render children if all checks pass
