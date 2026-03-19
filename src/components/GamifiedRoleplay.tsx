@@ -218,6 +218,7 @@ const GamifiedRoleplay: React.FC = () => {
       };
       setMessages([prospectMsg]);
       setCurrentRound(1);
+      speakText(response);
     } catch (err) {
       console.error('[GamifiedRoleplay] Failed to get opening response:', err);
       setMessages([{
