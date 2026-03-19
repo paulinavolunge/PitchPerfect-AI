@@ -557,8 +557,16 @@ const GamifiedRoleplay: React.FC = () => {
           ) : (
             <XCircle className="w-16 h-16 mx-auto text-destructive mb-3" />
           )}
-          <h2 className="text-2xl font-bold text-foreground">{won ? 'Deal Won!' : 'Deal Lost'}</h2>
-          <p className="text-muted-foreground mt-1">{won ? 'You earned the prospect\'s trust.' : 'The prospect wasn\'t convinced this time.'}</p>
+          <h2 className="text-2xl font-bold text-foreground">
+            {won ? 'Deal Won!' : 'Deal Lost'}
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            {won
+              ? 'You earned the prospect\'s trust.'
+              : debrief.score >= 4
+                ? 'Getting closer! A few tweaks and you\'ll close it next time.'
+                : 'The prospect wasn\'t convinced.'}
+          </p>
         </motion.div>
 
         {/* Score */}
