@@ -399,7 +399,7 @@ const GamifiedRoleplay: React.FC = () => {
         // Use the HIGHER of the two scores to avoid unfairly low ratings
         const finalScore = Math.max(apiScore, localScore);
 
-        console.log('[GamifiedRoleplay] Scoring:', { rawScore, apiScore, localScore, finalScore });
+        console.log('API score:', apiScore, 'Local score:', localScore, 'Final:', finalScore);
 
         setDebrief({
           won: finalScore >= 7,
