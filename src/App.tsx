@@ -106,7 +106,7 @@ function App() {
                                 <Route path="/about" element={<About />} />
                                 <Route path="/compare" element={<Compare />} />
                                 {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
-                                <Route path="/demo" element={<Demo />} />
+                                <Route path="/demo" element={<Navigate to="/practice" replace />} />
                                 <Route path="/free-trial" element={<FreeTrial />} />
                                 
                                 {/* New functional routes */}
