@@ -302,7 +302,7 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI, stopSpeech, speakText]);
+  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI, stopSpeech, speakText, inputMode]);
 
   // ── Local fallback scoring ─────────────────────────────────
   const computeLocalScore = useCallback((finalMessages: ChatMessage[]): number => {
