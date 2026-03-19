@@ -422,6 +422,7 @@ const GamifiedRoleplay: React.FC = () => {
   };
 
   const reset = () => {
+    stopSpeech();
     setPhase('select-objection');
     setSelectedObjection(null);
     setMessages([]);
