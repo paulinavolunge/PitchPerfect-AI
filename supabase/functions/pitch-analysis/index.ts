@@ -40,7 +40,7 @@ serve(async (req) => {
   try {
     // Verify authentication
     const user = await verifyAuth(req);
-    console.log('Authenticated user:', user.id);
+    console.log('Request from:', user ? `user ${user.id}` : 'guest');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
