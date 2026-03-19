@@ -238,6 +238,9 @@ const GamifiedRoleplay: React.FC = () => {
     const text = userInput.trim();
     if (!text || isAiTyping || !selectedObjection) return;
 
+    // Stop any ongoing speech when user sends a message
+    stopSpeech();
+
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
