@@ -74,8 +74,8 @@ serve(async (req) => {
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-6).map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
+      ...conversationHistory.slice(-6).map((msg: { sender: string; text: string }) => ({
+        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
         content: msg.text
       })),
       { role: 'user', content: userInput }
