@@ -273,7 +273,7 @@ const GamifiedRoleplay: React.FC = () => {
       const allMessages = [...updatedMessages, prospectMsg];
       setMessages(allMessages);
       setCurrentRound(nextRound);
-      speakText(response);
+      if (inputMode === 'voice') speakText(response);
 
       // Auto-trigger debrief after the LAST round's AI response
       if (nextRound >= MAX_ROUNDS) {
