@@ -536,7 +536,7 @@ const GamifiedRoleplay: React.FC = () => {
             variant="outline"
             size="icon"
             onClick={toggleVoice}
-            className={isListening ? 'border-red-400 text-red-500 animate-pulse' : ''}
+            className={isListening ? 'border-destructive text-destructive animate-pulse' : ''}
             disabled={isAiTyping}
           >
             <Mic className="w-5 h-5" />
