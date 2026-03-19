@@ -83,6 +83,7 @@ const Navbar: React.FC = () => {
   ];
 
   const guestNavigationItems = [
+    { name: 'Practice', href: '/practice' },
     { name: 'About', href: '/about' },
     { name: 'Compare', href: '/compare' },
     ...(isPricingEnabled() ? [{ name: 'Pricing', href: '/pricing' }] : []),
