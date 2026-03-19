@@ -102,7 +102,7 @@ const GamifiedRoleplay: React.FC = () => {
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
     const conversationHistory = history.map(m => ({
-      sender: m.role === 'user' ? 'user' : 'ai',
+      sender: m.role === 'user' ? 'user' : 'assistant',
       text: m.text,
     }));
 
