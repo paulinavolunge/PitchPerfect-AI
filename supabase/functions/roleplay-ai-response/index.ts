@@ -114,7 +114,8 @@ serve(async (req) => {
     console.error('Error in roleplay-ai-response:', error);
     
     // Handle authentication errors
-    if (error.message?.includes('authorization') || error.message?.includes('token')) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('authorization') || errMsg.includes('token')) {
       return new Response(JSON.stringify({
         error: 'Authentication required',
         code: 'AUTH_ERROR'
@@ -125,7 +126,7 @@ serve(async (req) => {
     }
     
     return new Response(JSON.stringify({
-      error: error.message,
+      error: errMsg,
       fallback: true,
     }), {
       status: 500,
