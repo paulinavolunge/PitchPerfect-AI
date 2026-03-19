@@ -36,7 +36,7 @@ type InputMode = 'text' | 'voice';
 type Phase = 'select-objection' | 'select-mode' | 'conversation' | 'debrief';
 
 // ── Constants ──────────────────────────────────────────────────
-const MAX_ROUNDS = 5;
+const MAX_ROUNDS = 3;
 
 const OBJECTIONS: ObjectionCard[] = [
   { id: 'budget', label: 'Budget', emoji: '💰', description: '"We don\'t have the budget right now."' },
