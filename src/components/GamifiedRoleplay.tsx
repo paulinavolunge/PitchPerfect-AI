@@ -163,7 +163,8 @@ const GamifiedRoleplay: React.FC = () => {
       };
       setMessages([prospectMsg]);
       setCurrentRound(1);
-    } catch {
+    } catch (err) {
+      console.error('[GamifiedRoleplay] Failed to get opening response:', err);
       setMessages([{
         id: crypto.randomUUID(),
         role: 'prospect',
