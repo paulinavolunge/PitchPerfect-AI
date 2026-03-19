@@ -90,7 +90,7 @@ const Navbar: React.FC = () => {
   ];
 
   const guestModeItems = [
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Demo', href: '/demo' }
   ];
 
