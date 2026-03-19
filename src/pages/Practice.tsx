@@ -28,12 +28,7 @@ const Practice = () => {
       </main>
 
       {hasReachedLimit && (
-        <UpgradePaywallModal
-          open={true}
-          onOpenChange={() => {}}
-          remainingAttempts={remainingAttempts}
-          maxAttempts={currentLimit}
-        />
+        <UpgradePaywallModal open={true} />
       )}
     </>
   );
