@@ -388,18 +388,17 @@ const GamifiedRoleplay: React.FC = () => {
       if (data?.analysis) {
         const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
 
-        // pitch-analysis returns overallScore on a 1-100 scale; convert to 1-10
+        // pitch-analysis returns overallScore on a 1-100 scale; convert to X.X/10
         const rawScore = parsed.overallScore ?? parsed.overall_score ?? parsed.score ?? 50;
-        const apiScore = rawScore > 10 ? Math.round(rawScore / 10) : rawScore;
+        const apiScore = rawScore > 10 ? Math.round(rawScore) / 10 : rawScore;
 
         // Compute local fallback score based on conversation content
         const localScore = computeLocalScore(finalMessages);
 
         // Use the HIGHER of the two scores to avoid unfairly low ratings
-        // If API score seems suspiciously generic (always ~5), the local score corrects it
         const finalScore = Math.max(apiScore, localScore);
 
-        console.log('[GamifiedRoleplay] Scoring:', { apiScore, localScore, finalScore });
+        console.log('[GamifiedRoleplay] Scoring:', { rawScore, apiScore, localScore, finalScore });
 
         setDebrief({
           won: finalScore >= 7,
