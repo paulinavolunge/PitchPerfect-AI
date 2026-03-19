@@ -152,8 +152,8 @@ function createProspectSystemPrompt(scenario: any, voiceStyle: string): string {
     rushed: 'Be brief and impatient, focusing on quick decisions'
   };
 
-  const objectionFocus = objectionTypes[scenario.objection] || 'general concerns';
-  const styleGuidance = voiceStyles[voiceStyle] || voiceStyles.friendly;
+  const objectionFocus = (objectionTypes as Record<string, string>)[scenario.objection] || 'general concerns';
+  const styleGuidance = (voiceStyles as Record<string, string>)[voiceStyle] || voiceStyles.friendly;
 
   return `You are a realistic sales prospect for a ${scenario.industry} company. You have genuine ${objectionFocus} about the solution being pitched to you.
 

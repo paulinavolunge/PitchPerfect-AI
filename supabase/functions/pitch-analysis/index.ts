@@ -184,7 +184,8 @@ Provide detailed analysis and scoring as requested.`;
     console.error('Error in pitch-analysis function:', error);
     
     // Handle authentication errors
-    if (error.message?.includes('authorization') || error.message?.includes('token')) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('authorization') || errMsg.includes('token')) {
       return new Response(JSON.stringify({ 
         error: 'Authentication required',
         code: 'AUTH_ERROR'
@@ -195,7 +196,7 @@ Provide detailed analysis and scoring as requested.`;
     }
     
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: errMsg,
       fallback: true 
     }), {
       status: 500,
