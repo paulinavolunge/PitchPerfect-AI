@@ -220,7 +220,7 @@ const GamifiedRoleplay: React.FC = () => {
 
     const nextRound = currentRound + 1;
 
-    // If we've hit max rounds, go to debrief
+    // If we've exceeded max rounds, go straight to debrief (no more AI calls)
     if (nextRound > MAX_ROUNDS) {
       setIsAiTyping(false);
       await runDebrief(updatedMessages);
@@ -235,17 +235,34 @@ const GamifiedRoleplay: React.FC = () => {
         text: response,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, prospectMsg]);
+      const allMessages = [...updatedMessages, prospectMsg];
+      setMessages(allMessages);
       setCurrentRound(nextRound);
+
+      // Auto-trigger debrief after the LAST round's AI response
+      if (nextRound >= MAX_ROUNDS) {
+        setIsAiTyping(false);
+        await runDebrief(allMessages);
+        return;
+      }
     } catch (err) {
       console.error('[GamifiedRoleplay] Failed to get AI response for round', nextRound, ':', err);
-      setMessages(prev => [...prev, {
+      const fallbackMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'prospect',
         text: "I'm running short on time. Let's wrap this up — what's the bottom line?",
         timestamp: new Date(),
-      }]);
+      };
+      const allMessages = [...updatedMessages, fallbackMsg];
+      setMessages(allMessages);
       setCurrentRound(nextRound);
+
+      // Even on error, auto-trigger debrief if this was the last round
+      if (nextRound >= MAX_ROUNDS) {
+        setIsAiTyping(false);
+        await runDebrief(allMessages);
+        return;
+      }
     } finally {
       setIsAiTyping(false);
     }
