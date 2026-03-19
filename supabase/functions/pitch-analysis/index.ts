@@ -19,7 +19,14 @@ const verifyAuth = async (request: Request) => {
   );
 
   const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error('Invalid token');
+  if (error || !user) {
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (token === anonKey) {
+      console.log('Guest user access via anon key');
+      return null;
+    }
+    throw new Error('Invalid token');
+  }
 
   return user;
 };
@@ -33,7 +40,7 @@ serve(async (req) => {
   try {
     // Verify authentication
     const user = await verifyAuth(req);
-    console.log('Authenticated user:', user.id);
+    console.log('Request from:', user ? `user ${user.id}` : 'guest');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
