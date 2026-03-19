@@ -17,8 +17,17 @@ const verifyAuth = async (request: Request) => {
     Deno.env.get('SUPABASE_ANON_KEY')!
   );
 
+  // Try to get authenticated user; if the token is just the anon key, allow as guest
   const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error('Invalid token');
+  if (error || !user) {
+    // Check if the token matches the anon key (guest access)
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (token === anonKey) {
+      console.log('Guest user access via anon key');
+      return null; // null = guest user
+    }
+    throw new Error('Invalid token');
+  }
 
   return user;
 };
