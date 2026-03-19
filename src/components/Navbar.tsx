@@ -77,7 +77,7 @@ const Navbar: React.FC = () => {
 
   const userNavigationItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Progress', href: '/progress' },
     { name: 'Tips', href: '/tips' }
   ];
@@ -90,13 +90,13 @@ const Navbar: React.FC = () => {
   ];
 
   const guestModeItems = [
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Demo', href: '/demo' }
   ];
 
   const mainNavItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Tips', href: '/tips' }
   ];
 

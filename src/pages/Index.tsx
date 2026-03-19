@@ -42,7 +42,7 @@ const Index = () => {
 
   const handleGetStartedClick = () => {
     trackEvent('cta_click', { button: 'practice_free', location: 'homepage_hero' });
-    navigate('/demo');
+    navigate('/practice');
   };
 
   const handleWatchDemoClick = () => {
