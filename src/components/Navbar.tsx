@@ -96,7 +96,7 @@ const Navbar: React.FC = () => {
 
   const mainNavItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Practice', href: '/roleplay' },
+    { name: 'Practice', href: '/practice' },
     { name: 'Tips', href: '/tips' }
   ];
 
