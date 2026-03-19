@@ -302,7 +302,7 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI]);
+  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI, stopSpeech, speakText]);
 
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
