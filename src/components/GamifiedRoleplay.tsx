@@ -310,38 +310,70 @@ const GamifiedRoleplay: React.FC = () => {
     setIsAiTyping(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('pitch-analysis', {
-        body: {
-          transcript: finalMessages.map(m => `${m.role === 'user' ? 'Sales Rep' : PROSPECT_NAME}: ${m.text}`).join('\n'),
-          industry: 'general',
-          difficulty: 'medium',
-          scenarioType: selectedObjection.label,
+      // Build full transcript with objection context
+      const transcript = finalMessages
+        .map(m => `${m.role === 'user' ? 'Sales Rep' : PROSPECT_NAME}: ${m.text}`)
+        .join('\n');
+
+      // Use direct fetch for guest auth support (same pattern as callAI)
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
+
+      let authToken = supabaseAnonKey;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.access_token) {
+          authToken = sessionData.session.access_token;
+        }
+      } catch (e) {
+        console.warn('[GamifiedRoleplay] Could not get session for debrief, using anon key:', e);
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/pitch-analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+          'apikey': supabaseAnonKey,
         },
+        body: JSON.stringify({
+          transcript,
+          practiceMode: 'text',
+          scenario: {
+            objection: selectedObjection.label,
+            industry: 'general',
+            difficulty: 'medium',
+          },
+        }),
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[GamifiedRoleplay] pitch-analysis error:', response.status, errorText);
+        throw new Error(`pitch-analysis error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
       if (data?.analysis) {
-        try {
-          const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
-          setDebrief({
-            won: (parsed.score ?? parsed.overall_score ?? 5) >= 7,
-            score: parsed.score ?? parsed.overall_score ?? 5,
-            strengths: parsed.strengths ?? parsed.positive_points ?? ['Engaged with the prospect'],
-            gaps: parsed.gaps ?? parsed.improvements ?? ['Could dig deeper into root concerns'],
-            tip: parsed.tip ?? parsed.practice_tip ?? 'Focus on asking discovery questions before presenting solutions.',
-          });
-        } catch {
-          setDebrief({
-            won: false,
-            score: 5,
-            strengths: ['Completed the roleplay session'],
-            gaps: ['Review could not be fully parsed'],
-            tip: 'Try to ask more discovery questions in your next session.',
-          });
-        }
+        const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
+
+        // pitch-analysis returns overallScore on a 1-100 scale; convert to 1-10
+        const rawScore = parsed.overallScore ?? parsed.overall_score ?? parsed.score ?? 50;
+        const score10 = rawScore > 10 ? Math.round(rawScore / 10) : rawScore;
+
+        setDebrief({
+          won: score10 >= 7,
+          score: score10,
+          strengths: parsed.strengths ?? ['Engaged with the prospect'],
+          gaps: parsed.improvements ?? ['Could dig deeper into root concerns'],
+          tip: parsed.recommendation ?? 'Focus on asking discovery questions before presenting solutions.',
+        });
       } else {
         throw new Error('No analysis data');
       }
-    } catch {
+    } catch (err) {
+      console.error('[GamifiedRoleplay] Debrief error:', err);
       const userMsgCount = finalMessages.filter(m => m.role === 'user').length;
       const score = Math.min(10, Math.max(3, userMsgCount + 2));
       setDebrief({
