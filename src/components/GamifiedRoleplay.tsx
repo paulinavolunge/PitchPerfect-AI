@@ -610,7 +610,7 @@ const GamifiedRoleplay: React.FC = () => {
         <div className="bg-card border border-border rounded-xl p-5 mb-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-muted-foreground">Overall Score</span>
-            <span className="text-2xl font-bold text-foreground">{debrief.score}/10</span>
+            <span className="text-2xl font-bold text-foreground">{debrief.score.toFixed(1)}/10</span>
           </div>
           <Progress value={debrief.score * 10} className="h-2" />
         </div>
