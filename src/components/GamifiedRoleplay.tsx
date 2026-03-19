@@ -101,7 +101,6 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
-    // Send the FULL conversation history so the AI has complete context
     const conversationHistory = history.map(m => ({
       sender: m.role === 'user' ? 'user' : 'ai',
       text: m.text,
@@ -116,24 +115,49 @@ const GamifiedRoleplay: React.FC = () => {
       },
       voiceStyle: 'skeptical',
       userScript: null,
-      conversationHistory, // full history, no slicing
+      conversationHistory,
       isReversedRole: true,
     };
 
-    console.log('[GamifiedRoleplay] Calling roleplay-ai-response with payload:', {
+    console.log('[GamifiedRoleplay] Calling roleplay-ai-response:', {
       objection: payload.scenario.objection,
       historyLength: conversationHistory.length,
       userInput: userMsg.substring(0, 80),
     });
 
-    const { data, error } = await supabase.functions.invoke('roleplay-ai-response', {
-      body: payload,
+    // Use fetch() directly so we can set the Authorization header for guest users
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
+    const functionUrl = `${supabaseUrl}/functions/v1/roleplay-ai-response`;
+
+    // Determine auth token: use user's JWT if logged in, otherwise anon key
+    let authToken = supabaseAnonKey;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.access_token) {
+        authToken = sessionData.session.access_token;
+      }
+    } catch (e) {
+      console.warn('[GamifiedRoleplay] Could not get session, using anon key:', e);
+    }
+
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+        'apikey': supabaseAnonKey,
+      },
+      body: JSON.stringify(payload),
     });
 
-    if (error) {
-      console.error('[GamifiedRoleplay] Edge function error:', error);
-      throw new Error(`Edge function error: ${error.message || JSON.stringify(error)}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[GamifiedRoleplay] Edge function HTTP error:', response.status, errorText);
+      throw new Error(`Edge function error: ${response.status} - ${errorText}`);
     }
+
+    const data = await response.json();
 
     if (!data?.response) {
       console.error('[GamifiedRoleplay] No response in data:', data);
