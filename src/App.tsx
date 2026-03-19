@@ -45,6 +45,7 @@ const Cancel = React.lazy(() => import('@/pages/Cancel'));
 const TeamDashboard = React.lazy(() => import('@/pages/TeamDashboard'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 const SessionDetail = React.lazy(() => import('@/pages/SessionDetail'));
+const Practice = React.lazy(() => import('@/pages/Practice'));
 const VoiceTraining = React.lazy(() => import('@/pages/VoiceTraining'));
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
 const AIRoleplay = React.lazy(() => import('@/pages/AIRoleplay'));
@@ -123,7 +124,7 @@ function App() {
                                 {/* Protected routes */}
                                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                                 <Route path="/practice/:sessionId" element={<ProtectedRoute><SessionDetail /></ProtectedRoute>} />
-                                <Route path="/practice" element={<Navigate to="/roleplay" replace />} />
+                                <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
                                 <Route path="/roleplay" element={<ProtectedRoute><RolePlay /></ProtectedRoute>} />
                                 <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
                                 <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
