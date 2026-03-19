@@ -81,6 +81,37 @@ const GamifiedRoleplay: React.FC = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
+
+  // ── TTS: find a female voice ──────────────────────────────
+  const getPreferredVoice = useCallback((): SpeechSynthesisVoice | null => {
+    const synth = synthRef.current;
+    if (!synth) return null;
+    const voices = synth.getVoices();
+    const preferred = ['samantha', 'google us english female', 'microsoft zira', 'female'];
+    for (const pref of preferred) {
+      const match = voices.find(v => v.name.toLowerCase().includes(pref));
+      if (match) return match;
+    }
+    // fallback: any English voice
+    return voices.find(v => v.lang.startsWith('en')) || null;
+  }, []);
+
+  const speakText = useCallback((text: string) => {
+    const synth = synthRef.current;
+    if (!synth) return;
+    synth.cancel(); // stop any current speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    const voice = getPreferredVoice();
+    if (voice) utterance.voice = voice;
+    synth.speak(utterance);
+  }, [getPreferredVoice]);
+
+  const stopSpeech = useCallback(() => {
+    synthRef.current?.cancel();
+  }, []);
 
   const { user } = useAuth();
   const navigate = useNavigate();
