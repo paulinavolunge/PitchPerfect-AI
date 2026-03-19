@@ -218,7 +218,7 @@ const GamifiedRoleplay: React.FC = () => {
       };
       setMessages([prospectMsg]);
       setCurrentRound(1);
-      speakText(response);
+      if (inputMode === 'voice') speakText(response);
     } catch (err) {
       console.error('[GamifiedRoleplay] Failed to get opening response:', err);
       setMessages([{
@@ -231,7 +231,7 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [selectedObjection, callAI]);
+  }, [selectedObjection, callAI, inputMode, speakText]);
 
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async () => {
@@ -273,7 +273,7 @@ const GamifiedRoleplay: React.FC = () => {
       const allMessages = [...updatedMessages, prospectMsg];
       setMessages(allMessages);
       setCurrentRound(nextRound);
-      speakText(response);
+      if (inputMode === 'voice') speakText(response);
 
       // Auto-trigger debrief after the LAST round's AI response
       if (nextRound >= MAX_ROUNDS) {
@@ -302,7 +302,7 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI, stopSpeech, speakText]);
+  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI, stopSpeech, speakText, inputMode]);
 
   // ── Local fallback scoring ─────────────────────────────────
   const computeLocalScore = useCallback((finalMessages: ChatMessage[]): number => {
@@ -311,24 +311,25 @@ const GamifiedRoleplay: React.FC = () => {
     let score = 0;
 
     // Did the rep acknowledge the objection? (+2)
-    const ackPatterns = /i understand|i hear you|that makes sense|i get that|totally fair|valid concern|appreciate|fair point|makes sense/;
+    const ackPatterns = /understand|hear you|appreciate|that makes sense|i get that|totally fair|valid concern|fair point|makes sense|respect/i;
     if (ackPatterns.test(allUserText)) score += 2;
 
     // Did they ask a discovery question? (+2)
-    const questionCount = userMessages.filter(m => m.text.includes('?')).length;
-    if (questionCount > 0) score += 2;
+    const hasQuestion = userMessages.some(m => m.text.includes('?'));
+    if (hasQuestion) score += 2;
 
     // Did they provide social proof or data? (+2)
-    const proofPatterns = /client|customer|company|percent|%|roi|result|case study|data|saved|increased|reduced|example|similar|industry/;
+    const proofPatterns = /\d|%|\$|roi|clients|client|customers|customer|company|companies|percent|result|case study|data|saved|increased|reduced|example|similar|industry|revenue|growth|return/i;
     if (proofPatterns.test(allUserText)) score += 2;
 
     // Did they propose a next step? (+2)
-    const nextStepPatterns = /next step|follow up|schedule|call|demo|meeting|pilot|trial|let me show|walk you through|send you|quick call/;
+    const nextStepPatterns = /schedule|meeting|call|next step|demo|pilot|trial|let me show|walk you through|send you|quick call|follow up|set up|book|agenda/i;
     if (nextStepPatterns.test(allUserText)) score += 2;
 
-    // Did they stay professional throughout? (+2)
-    const unprofessional = /whatever|don't care|your loss|fine then|forget it|stupid/;
-    if (!unprofessional.test(allUserText)) score += 2;
+    // Did they stay professional and give substantive responses? (+2)
+    const unprofessional = /whatever|don't care|your loss|fine then|forget it|stupid/i;
+    const avgWordCount = userMessages.reduce((sum, m) => sum + m.text.split(/\s+/).length, 0) / (userMessages.length || 1);
+    if (!unprofessional.test(allUserText) && avgWordCount > 10) score += 2;
 
     return Math.max(1, Math.min(10, score));
   }, []);
@@ -398,7 +399,7 @@ const GamifiedRoleplay: React.FC = () => {
         // Use the HIGHER of the two scores to avoid unfairly low ratings
         const finalScore = Math.max(apiScore, localScore);
 
-        console.log('[GamifiedRoleplay] Scoring:', { rawScore, apiScore, localScore, finalScore });
+        console.log('API score:', apiScore, 'Local score:', localScore, 'Final:', finalScore);
 
         setDebrief({
           won: finalScore >= 7,
@@ -737,14 +738,16 @@ const GamifiedRoleplay: React.FC = () => {
                 {msg.role === 'prospect' && (
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold opacity-70">{PROSPECT_NAME}</span>
-                    <button
-                      onClick={() => speakText(msg.text)}
-                      className="ml-2 p-0.5 rounded hover:bg-foreground/10 transition-colors"
-                      aria-label="Replay message"
-                      title="Replay message"
-                    >
-                      <Volume2 className="w-3.5 h-3.5 opacity-50 hover:opacity-100" />
-                    </button>
+                    {inputMode === 'voice' && (
+                      <button
+                        onClick={() => speakText(msg.text)}
+                        className="ml-2 p-0.5 rounded hover:bg-foreground/10 transition-colors"
+                        aria-label="Replay message"
+                        title="Replay message"
+                      >
+                        <Volume2 className="w-3.5 h-3.5 opacity-50 hover:opacity-100" />
+                      </button>
+                    )}
                   </div>
                 )}
                 {msg.text}
