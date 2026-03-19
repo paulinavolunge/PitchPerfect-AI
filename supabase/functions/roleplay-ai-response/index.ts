@@ -10,7 +10,7 @@ const corsHeaders = {
 
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) throw new Error('Missing authorization token');
+  if (!token) console.log('No auth token, guest access'); return null;
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -26,7 +26,7 @@ const verifyAuth = async (request: Request) => {
       console.log('Guest user access via anon key');
       return null; // null = guest user
     }
-    throw new Error('Invalid token');
+    console.log('Allowing unauthenticated access'); return null;
   }
 
   return user;
@@ -88,7 +88,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages,
         max_tokens: 300,
         temperature: 0.7,
