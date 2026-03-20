@@ -527,7 +527,9 @@ const GamifiedRoleplay: React.FC = () => {
     }
   }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech]);
 
-  // ── Voice input ────────────────────────────────────────────
+  // Keep ref always pointing to latest runDebrief
+  runDebriefRef.current = runDebrief;
+
   // Bug 3 fix: Always create a fresh SpeechRecognition instance each time.
   // Bug 4 fix: No silence timer — user taps mic to stop or clicks Send.
   // Bug 2 fix: Properly separate final vs interim results without duplication.
