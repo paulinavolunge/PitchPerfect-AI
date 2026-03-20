@@ -1032,6 +1032,7 @@ const GamifiedRoleplay: React.FC = () => {
             onClick={toggleVoice}
             className={isListening ? 'border-destructive text-destructive animate-pulse' : ''}
             disabled={isAiTyping}
+            title={isListening ? 'Stop listening' : 'Start voice input'}
           >
             <Mic className="w-5 h-5" />
           </Button>
@@ -1043,12 +1044,20 @@ const GamifiedRoleplay: React.FC = () => {
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
           onFocus={() => setTimeout(scrollToBottom, 300)}
-          placeholder={isListening ? 'Listening…' : 'Type your response…'}
+          placeholder={isListening ? 'Listening… tap Send when done' : 'Type your response…'}
           disabled={isAiTyping}
           className="flex-1 rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
         />
         <Button
-          onClick={sendMessage}
+          onClick={() => {
+            // If still listening, stop recognition first, then send
+            if (isListening) {
+              try { recognitionRef.current?.stop(); } catch (_) {}
+              recognitionRef.current = null;
+              setIsListening(false);
+            }
+            sendMessage();
+          }}
           disabled={!userInput.trim() || isAiTyping}
           className="bg-primary-500 hover:bg-primary-600 text-white rounded-xl px-5"
         >
