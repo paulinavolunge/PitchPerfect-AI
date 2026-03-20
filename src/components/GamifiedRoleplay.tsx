@@ -818,13 +818,16 @@ const GamifiedRoleplay: React.FC = () => {
           </Button>
         )}
         <input
+          ref={inputRef}
           type="text"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+          onFocus={() => setTimeout(scrollToBottom, 300)}
           placeholder={isListening ? 'Listening…' : 'Type your response…'}
           disabled={isAiTyping}
           className="flex-1 rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+        />
         />
         <Button
           onClick={sendMessage}
