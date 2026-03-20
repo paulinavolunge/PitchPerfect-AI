@@ -307,7 +307,7 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [selectedObjection, callAI, inputMode, speakText]);
+  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle]);
 
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async () => {
