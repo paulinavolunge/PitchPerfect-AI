@@ -127,10 +127,33 @@ const GamifiedRoleplay: React.FC = () => {
     refreshCount,
   } = useFreeTrialLimit();
 
-  // Auto-scroll chat
+  // Auto-scroll chat to bottom
+  const scrollToBottom = useCallback(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isAiTyping]);
+    scrollToBottom();
+  }, [messages, isAiTyping, scrollToBottom]);
+
+  // Handle mobile virtual keyboard resize
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const handleResize = () => {
+      scrollToBottom();
+    };
+    viewport.addEventListener('resize', handleResize);
+    return () => viewport.removeEventListener('resize', handleResize);
+  }, [scrollToBottom]);
+
+  // Scroll to top when debrief appears
+  useEffect(() => {
+    if (phase === 'debrief') {
+      window.scrollTo(0, 0);
+      chatContainerRef.current?.scrollTo(0, 0);
+    }
+  }, [phase]);
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
