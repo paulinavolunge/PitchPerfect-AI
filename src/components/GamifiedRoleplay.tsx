@@ -589,7 +589,7 @@ const GamifiedRoleplay: React.FC = () => {
   };
 
   // ── Render: Objection Selection ────────────────────────────
-  if (phase === 'select-objection') {
+   if (phase === 'select-objection') {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center mb-8">
@@ -597,13 +597,35 @@ const GamifiedRoleplay: React.FC = () => {
           <p className="text-muted-foreground">Pick an objection to practice overcoming</p>
         </div>
 
-        {/* Session counter for logged-in free users */}
         {user?.id && !hasReachedLimit && remainingAttempts !== Infinity && (
           <div className="mb-6 flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted rounded-lg px-3 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <span>{remainingAttempts} of {currentLimit} free sessions remaining this month</span>
           </div>
         )}
+
+        {/* Build Your Own card */}
+        <div className="mb-6">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setIsCustomMode(true);
+              setSelectedObjection(null);
+              setPhase('custom-form');
+            }}
+            className="w-full flex items-center gap-4 p-5 rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 text-left shadow-sm hover:shadow-md hover:border-primary/50 transition-all"
+          >
+            <span className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 shrink-0">
+              <Star className="w-6 h-6 text-primary" />
+            </span>
+            <div>
+              <span className="font-semibold text-foreground text-base">Build Your Own Scenario</span>
+              <span className="block text-sm text-muted-foreground mt-0.5">Practice with YOUR real product, buyer, and objection</span>
+            </div>
+            <ArrowRight className="w-5 h-5 text-muted-foreground ml-auto shrink-0" />
+          </motion.button>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {OBJECTIONS.map((obj) => (
@@ -612,6 +634,8 @@ const GamifiedRoleplay: React.FC = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
+                setIsCustomMode(false);
+                setCustomScenario(null);
                 setSelectedObjection(obj);
                 setPhase('select-mode');
               }}
@@ -622,6 +646,76 @@ const GamifiedRoleplay: React.FC = () => {
               <span className="text-sm text-muted-foreground leading-snug">{obj.description}</span>
             </motion.button>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render: Custom Scenario Form ──────────────────────────
+  if (phase === 'custom-form') {
+    const canStart = customForm.product.trim() && customForm.objection.trim();
+    return (
+      <div className="max-w-lg mx-auto p-6">
+        <h2 className="text-2xl font-bold text-foreground mb-2 text-center">Build Your Scenario</h2>
+        <p className="text-muted-foreground text-center mb-6">Fill in the details to create a realistic practice session</p>
+
+        <div className="space-y-4 mb-8">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">What do you sell?</label>
+            <input
+              type="text"
+              value={customForm.product}
+              onChange={(e) => setCustomForm(f => ({ ...f, product: e.target.value }))}
+              placeholder="e.g. CRM software, marketing services, insurance"
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Who are you selling to?</label>
+            <input
+              type="text"
+              value={customForm.buyerTitle}
+              onChange={(e) => setCustomForm(f => ({ ...f, buyerTitle: e.target.value }))}
+              placeholder="e.g. VP of Sales, small business owner, IT Director"
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">What industry?</label>
+            <input
+              type="text"
+              value={customForm.industry}
+              onChange={(e) => setCustomForm(f => ({ ...f, industry: e.target.value }))}
+              placeholder="e.g. SaaS, healthcare, construction"
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">What objection do you hear most?</label>
+            <input
+              type="text"
+              value={customForm.objection}
+              onChange={(e) => setCustomForm(f => ({ ...f, objection: e.target.value }))}
+              placeholder="e.g. We already have a solution, It's too expensive"
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => { setPhase('select-objection'); setIsCustomMode(false); }} className="flex-1">
+            Back
+          </Button>
+          <Button
+            onClick={() => {
+              setCustomScenario({ ...customForm });
+              setPhase('select-mode');
+            }}
+            disabled={!canStart}
+            className="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
+          >
+            Continue <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
         </div>
       </div>
     );
