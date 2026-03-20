@@ -24,6 +24,13 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+interface CustomScenario {
+  product: string;
+  buyerTitle: string;
+  industry: string;
+  objection: string;
+}
+
 interface DebriefData {
   won: boolean;
   score: number;
@@ -33,7 +40,7 @@ interface DebriefData {
 }
 
 type InputMode = 'text' | 'voice';
-type Phase = 'select-objection' | 'select-mode' | 'conversation' | 'debrief';
+type Phase = 'select-objection' | 'custom-form' | 'select-mode' | 'conversation' | 'debrief';
 
 // ── Constants ──────────────────────────────────────────────────
 const MAX_ROUNDS = 3;
