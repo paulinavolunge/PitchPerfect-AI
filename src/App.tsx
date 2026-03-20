@@ -17,8 +17,10 @@ import { initializeSecurity } from '@/utils/securityHeaders';
 import { isPricingEnabled, isSubscriptionEnabled } from '@/config/features';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
+// Eager import for homepage (critical path — avoid extra round trip for FCP)
+import Index from '@/pages/Index';
+
 // Lazy page imports
-const Index = React.lazy(() => import('@/pages/Index'));
 const About = React.lazy(() => import('@/pages/About'));
 const Compare = React.lazy(() => import('@/pages/Compare'));
 const Pricing = React.lazy(() => import('@/pages/Pricing'));
