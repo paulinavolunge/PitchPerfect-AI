@@ -186,6 +186,7 @@ const GamifiedRoleplay: React.FC = () => {
   useEffect(() => {
     if (phase === 'debrief') {
       stopSpeech();
+      if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
       window.scrollTo(0, 0);
       chatContainerRef.current?.scrollTo(0, 0);
     }
@@ -419,8 +420,8 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
-    if (!selectedObjection && !isCustomMode) return;
-    stopSpeech(); // Bug 5: immediately stop TTS when debrief starts
+    stopSpeech(); // immediately stop TTS when debrief starts
+    if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
     setIsAiTyping(true);
 
     try {
@@ -538,7 +539,7 @@ const GamifiedRoleplay: React.FC = () => {
     // If currently listening, do a manual stop
     if (isListening) {
       isManualStopRef.current = true;
-      try { recognitionRef.current?.stop(); } catch (_) {}
+      try { recognitionRef.current?.abort(); } catch (_) {}
       recognitionRef.current = null;
       setIsListening(false);
       return;
@@ -546,6 +547,12 @@ const GamifiedRoleplay: React.FC = () => {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
+
+    // Bug 3 fix: fully stop and destroy any lingering previous instance before creating a new one
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch (_) {}
+      recognitionRef.current = null;
+    }
 
     isManualStopRef.current = false;
 
@@ -555,31 +562,26 @@ const GamifiedRoleplay: React.FC = () => {
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 1;
 
-    let committedText = '';
-
+    // Bug 2 fix: rebuild the full transcript from scratch on every onresult event
     recognition.onresult = (event: any) => {
-      let newCommitted = '';
-      let currentInterim = '';
+      let fullTranscript = '';
       for (let i = 0; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          newCommitted += event.results[i][0].transcript;
-        } else {
-          currentInterim += event.results[i][0].transcript;
-        }
+        fullTranscript += event.results[i][0].transcript;
       }
-      committedText = newCommitted;
-      setUserInput(committedText + currentInterim);
+      setUserInput(fullTranscript);
     };
 
     recognition.onerror = (event: any) => {
       console.warn('[Voice] recognition error:', event.error);
       if (event.error === 'no-speech' || event.error === 'aborted') return;
-      recognitionRef.current = null;
-      setIsListening(false);
+      if (recognitionRef.current === recognition) {
+        recognitionRef.current = null;
+        setIsListening(false);
+      }
     };
 
     recognition.onend = () => {
-      // If NOT a manual stop, auto-restart to keep listening
+      // If NOT a manual stop and this is still the active instance, auto-restart
       if (!isManualStopRef.current && recognitionRef.current === recognition) {
         try {
           recognition.start();
@@ -588,12 +590,12 @@ const GamifiedRoleplay: React.FC = () => {
           console.warn('[Voice] failed to auto-restart:', e);
         }
       }
-      // Manual stop or restart failed — finalize
-      if (committedText.trim()) {
-        setUserInput(committedText);
+      // Bug 3 fix: only clean up if this is still the active instance
+      // (prevents old instance's onend from killing a newly created instance)
+      if (recognitionRef.current === recognition) {
+        recognitionRef.current = null;
+        setIsListening(false);
       }
-      recognitionRef.current = null;
-      setIsListening(false);
     };
 
     recognitionRef.current = recognition;
@@ -1061,10 +1063,10 @@ const GamifiedRoleplay: React.FC = () => {
         />
         <Button
           onClick={() => {
-            // Manual stop: set flag, stop recognition, then send
+            // Manual stop: set flag, abort recognition, then send
             if (isListening) {
               isManualStopRef.current = true;
-              try { recognitionRef.current?.stop(); } catch (_) {}
+              try { recognitionRef.current?.abort(); } catch (_) {}
               recognitionRef.current = null;
               setIsListening(false);
             }
