@@ -535,9 +535,10 @@ const GamifiedRoleplay: React.FC = () => {
   // Bug 2 fix: Properly separate final vs interim results without duplication.
 
   const toggleVoice = useCallback(() => {
-    // If currently listening, stop and keep whatever text is in the input
+    // If currently listening, do a manual stop
     if (isListening) {
-      try { recognitionRef.current?.abort(); } catch (_) {}
+      isManualStopRef.current = true;
+      try { recognitionRef.current?.stop(); } catch (_) {}
       recognitionRef.current = null;
       setIsListening(false);
       return;
@@ -546,18 +547,17 @@ const GamifiedRoleplay: React.FC = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    // Bug 3: Create a brand-new instance every time
+    isManualStopRef.current = false;
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 1;
 
-    // Bug 2 fix: Track finalized text separately so interim never duplicates
-    let committedText = ''; // accumulates only isFinal results
+    let committedText = '';
 
     recognition.onresult = (event: any) => {
-      // Rebuild committed text from all final results
       let newCommitted = '';
       let currentInterim = '';
       for (let i = 0; i < event.results.length; i++) {
@@ -568,20 +568,27 @@ const GamifiedRoleplay: React.FC = () => {
         }
       }
       committedText = newCommitted;
-      // Show committed + current interim (interim is replaced each time, never accumulated)
       setUserInput(committedText + currentInterim);
     };
 
     recognition.onerror = (event: any) => {
       console.warn('[Voice] recognition error:', event.error);
-      // 'no-speech' is not fatal — keep listening
-      if (event.error === 'no-speech') return;
+      if (event.error === 'no-speech' || event.error === 'aborted') return;
       recognitionRef.current = null;
       setIsListening(false);
     };
 
     recognition.onend = () => {
-      // Finalize: set input to only committed (final) text, drop any trailing interim
+      // If NOT a manual stop, auto-restart to keep listening
+      if (!isManualStopRef.current && recognitionRef.current === recognition) {
+        try {
+          recognition.start();
+          return;
+        } catch (e) {
+          console.warn('[Voice] failed to auto-restart:', e);
+        }
+      }
+      // Manual stop or restart failed — finalize
       if (committedText.trim()) {
         setUserInput(committedText);
       }
