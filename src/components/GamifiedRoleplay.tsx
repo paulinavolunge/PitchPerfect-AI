@@ -56,17 +56,17 @@ const OBJECTIONS: ObjectionCard[] = [
 
 const PROSPECT_NAMES = [
   { first: 'Dana', last: 'Kowalski' },
-  { first: 'Marcus', last: 'Chen' },
   { first: 'Priya', last: 'Nair' },
-  { first: 'James', last: 'Okafor' },
   { first: 'Samira', last: 'Hadid' },
-  { first: 'Tomás', last: 'Reyes' },
   { first: 'Rachel', last: 'Brennan' },
-  { first: 'Kenji', last: 'Watanabe' },
   { first: 'Elena', last: 'Petrov' },
-  { first: 'David', last: 'Lundgren' },
   { first: 'Aisha', last: 'Mwangi' },
-  { first: 'Carlos', last: 'Navarro' },
+  { first: 'Sofia', last: 'Reyes' },
+  { first: 'Lauren', last: 'Chen' },
+  { first: 'Mei', last: 'Watanabe' },
+  { first: 'Olivia', last: 'Navarro' },
+  { first: 'Fatima', last: 'Al-Rashid' },
+  { first: 'Keiko', last: 'Tanaka' },
 ];
 
 const DEFAULT_PROSPECT_TITLE = 'VP of Operations';
