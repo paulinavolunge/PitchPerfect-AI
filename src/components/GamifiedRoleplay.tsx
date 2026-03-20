@@ -843,7 +843,7 @@ const GamifiedRoleplay: React.FC = () => {
             className="flex justify-start"
           >
             <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-md flex items-center gap-1">
-              <span className="block text-xs font-semibold text-muted-foreground mb-1">{PROSPECT_NAME}</span>
+              <span className="block text-xs font-semibold text-muted-foreground mb-1">{currentProspectName}</span>
               <div className="flex gap-1 ml-2">
                 {[0, 1, 2].map((i) => (
                   <motion.span
