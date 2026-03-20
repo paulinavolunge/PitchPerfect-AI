@@ -42,6 +42,7 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
       sourcemap: isDevelopment,
       target: 'es2020',
       cssCodeSplit: true,
+      modulePreload: false,
       rollupOptions: {
         output: {
           manualChunks: {
