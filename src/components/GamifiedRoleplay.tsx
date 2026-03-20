@@ -264,7 +264,7 @@ const GamifiedRoleplay: React.FC = () => {
     }
 
     return data.response;
-  }, [selectedObjection]);
+  }, [selectedObjection, customScenario, isCustomMode, currentProspectName]);
 
   // ── Start conversation ─────────────────────────────────────
   const startConversation = useCallback(async () => {
