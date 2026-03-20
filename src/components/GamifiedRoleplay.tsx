@@ -273,9 +273,15 @@ const GamifiedRoleplay: React.FC = () => {
     setIsAiTyping(true);
 
     try {
+      const systemPrompt = isCustomMode
+        ? '' // custom prompt is built server-side
+        : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle);
+      const openingLine = isCustomMode && customScenario
+        ? `I'm a sales rep and I'd like to talk to you about ${customScenario.product}. Can I have a few minutes of your time?`
+        : `I'm a sales rep and I'd like to talk to you about our solution. Can I have a few minutes of your time?`;
       const response = await callAI(
-        buildSystemPrompt(selectedObjection),
-        `I'm a sales rep and I'd like to talk to you about our solution. Can I have a few minutes of your time?`,
+        systemPrompt,
+        openingLine,
         []
       );
       const prospectMsg: ChatMessage = {
