@@ -715,7 +715,7 @@ const GamifiedRoleplay: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto flex flex-col" style={{ height: '100dvh', padding: '0 1.5rem' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 pt-4 shrink-0">
         <div>
           <h2 className="text-lg font-bold text-foreground">{PROSPECT_NAME}</h2>
           <p className="text-xs text-muted-foreground">{PROSPECT_TITLE} · {selectedObjection?.label} objection</p>
