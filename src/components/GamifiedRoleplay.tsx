@@ -80,6 +80,8 @@ const GamifiedRoleplay: React.FC = () => {
   const [showPaywall, setShowPaywall] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
 
@@ -125,10 +127,33 @@ const GamifiedRoleplay: React.FC = () => {
     refreshCount,
   } = useFreeTrialLimit();
 
-  // Auto-scroll chat
+  // Auto-scroll chat to bottom
+  const scrollToBottom = useCallback(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isAiTyping]);
+    scrollToBottom();
+  }, [messages, isAiTyping, scrollToBottom]);
+
+  // Handle mobile virtual keyboard resize
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const handleResize = () => {
+      scrollToBottom();
+    };
+    viewport.addEventListener('resize', handleResize);
+    return () => viewport.removeEventListener('resize', handleResize);
+  }, [scrollToBottom]);
+
+  // Scroll to top when debrief appears
+  useEffect(() => {
+    if (phase === 'debrief') {
+      window.scrollTo(0, 0);
+      chatContainerRef.current?.scrollTo(0, 0);
+    }
+  }, [phase]);
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
@@ -688,9 +713,9 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── Render: Conversation ───────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto p-6 flex flex-col h-[80vh]">
+    <div className="max-w-2xl mx-auto flex flex-col" style={{ height: '100dvh', padding: '0 1.5rem' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 pt-4 shrink-0">
         <div>
           <h2 className="text-lg font-bold text-foreground">{PROSPECT_NAME}</h2>
           <p className="text-xs text-muted-foreground">{PROSPECT_TITLE} · {selectedObjection?.label} objection</p>
@@ -705,8 +730,7 @@ const GamifiedRoleplay: React.FC = () => {
         </Button>
       </div>
 
-      {/* Round dots */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 shrink-0">
         {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
           <div
             key={i}
@@ -719,7 +743,7 @@ const GamifiedRoleplay: React.FC = () => {
       </div>
 
       {/* Chat messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1" style={{ WebkitOverflowScrolling: 'touch' }}>
         <AnimatePresence>
           {messages.map((msg) => (
             <motion.div
@@ -781,8 +805,7 @@ const GamifiedRoleplay: React.FC = () => {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className="flex gap-2 items-end">
+      <div className="flex gap-2 items-end sticky bottom-0 bg-background pb-4 pt-2 shrink-0">
         {inputMode === 'voice' && (
           <Button
             variant="outline"
@@ -795,10 +818,12 @@ const GamifiedRoleplay: React.FC = () => {
           </Button>
         )}
         <input
+          ref={inputRef}
           type="text"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+          onFocus={() => setTimeout(scrollToBottom, 300)}
           placeholder={isListening ? 'Listening…' : 'Type your response…'}
           disabled={isAiTyping}
           className="flex-1 rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
