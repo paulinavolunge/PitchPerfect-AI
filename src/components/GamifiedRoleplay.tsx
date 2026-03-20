@@ -339,7 +339,11 @@ const GamifiedRoleplay: React.FC = () => {
     }
 
     try {
-      const response = await callAI(buildSystemPrompt(selectedObjection), text, updatedMessages);
+      const response = await callAI(
+        isCustomMode ? '' : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle),
+        text,
+        updatedMessages
+      );
       const prospectMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'prospect',
