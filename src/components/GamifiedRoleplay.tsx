@@ -96,6 +96,10 @@ RULES:
 const GamifiedRoleplay: React.FC = () => {
   const [phase, setPhase] = useState<Phase>('select-objection');
   const [selectedObjection, setSelectedObjection] = useState<ObjectionCard | null>(null);
+  const [customScenario, setCustomScenario] = useState<CustomScenario | null>(null);
+  const [isCustomMode, setIsCustomMode] = useState(false);
+  const [customForm, setCustomForm] = useState<CustomScenario>({ product: '', buyerTitle: '', industry: '', objection: '' });
+  const [prospectInfo] = useState(() => pickRandomProspect());
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
@@ -104,6 +108,9 @@ const GamifiedRoleplay: React.FC = () => {
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+
+  const currentProspectName = isCustomMode ? prospectInfo.name : prospectInfo.name;
+  const currentProspectTitle = isCustomMode && customScenario?.buyerTitle ? customScenario.buyerTitle : prospectInfo.title;
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
