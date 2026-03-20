@@ -336,7 +336,7 @@ const GamifiedRoleplay: React.FC = () => {
     // If we've exceeded max rounds, go straight to debrief (no more AI calls)
     if (nextRound > MAX_ROUNDS) {
       setIsAiTyping(false);
-      await runDebrief(updatedMessages);
+      await runDebriefRef.current!(updatedMessages);
       return;
     }
 
@@ -360,7 +360,7 @@ const GamifiedRoleplay: React.FC = () => {
       // Auto-trigger debrief after the LAST round's AI response
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        await runDebrief(allMessages);
+        await runDebriefRef.current!(allMessages);
         return;
       }
     } catch (err) {
@@ -378,7 +378,7 @@ const GamifiedRoleplay: React.FC = () => {
       // Even on error, auto-trigger debrief if this was the last round
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        await runDebrief(allMessages);
+        await runDebriefRef.current!(allMessages);
         return;
       }
     } finally {
