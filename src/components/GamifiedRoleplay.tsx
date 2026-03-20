@@ -805,8 +805,7 @@ const GamifiedRoleplay: React.FC = () => {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className="flex gap-2 items-end">
+      <div className="flex gap-2 items-end sticky bottom-0 bg-background pb-4 pt-2 shrink-0">
         {inputMode === 'voice' && (
           <Button
             variant="outline"
