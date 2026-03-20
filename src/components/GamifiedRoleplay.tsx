@@ -1061,8 +1061,9 @@ const GamifiedRoleplay: React.FC = () => {
         />
         <Button
           onClick={() => {
-            // If still listening, stop recognition first, then send
+            // Manual stop: set flag, stop recognition, then send
             if (isListening) {
+              isManualStopRef.current = true;
               try { recognitionRef.current?.stop(); } catch (_) {}
               recognitionRef.current = null;
               setIsListening(false);
