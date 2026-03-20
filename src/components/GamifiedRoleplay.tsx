@@ -418,6 +418,7 @@ const GamifiedRoleplay: React.FC = () => {
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
     if (!selectedObjection && !isCustomMode) return;
+    stopSpeech(); // Bug 5: immediately stop TTS when debrief starts
     setIsAiTyping(true);
 
     try {
