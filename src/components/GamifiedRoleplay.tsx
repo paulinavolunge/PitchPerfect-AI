@@ -180,13 +180,14 @@ const GamifiedRoleplay: React.FC = () => {
     return () => viewport.removeEventListener('resize', handleResize);
   }, [scrollToBottom]);
 
-  // Scroll to top when debrief appears
+  // Scroll to top and stop TTS when debrief appears
   useEffect(() => {
     if (phase === 'debrief') {
+      stopSpeech();
       window.scrollTo(0, 0);
       chatContainerRef.current?.scrollTo(0, 0);
     }
-  }, [phase]);
+  }, [phase, stopSpeech]);
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
@@ -382,7 +383,7 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [userInput, isAiTyping, selectedObjection, messages, currentRound, callAI, stopSpeech, speakText, inputMode]);
+  }, [userInput, isAiTyping, selectedObjection, isCustomMode, customScenario, messages, currentRound, callAI, stopSpeech, speakText, inputMode, currentProspectName, currentProspectTitle]);
 
   // ── Local fallback scoring ─────────────────────────────────
   const computeLocalScore = useCallback((finalMessages: ChatMessage[]): number => {
@@ -524,8 +525,12 @@ const GamifiedRoleplay: React.FC = () => {
   }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore]);
 
   // ── Voice input ────────────────────────────────────────────
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const SILENCE_TIMEOUT_MS = 3500; // 3.5 seconds of silence before finalizing
+
   const toggleVoice = useCallback(() => {
     if (isListening) {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       recognitionRef.current?.stop();
       setIsListening(false);
       return;
@@ -535,22 +540,50 @@ const GamifiedRoleplay: React.FC = () => {
     if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setUserInput(prev => prev + transcript);
-      setIsListening(false);
+    let finalTranscript = '';
+
+    const resetSilenceTimer = () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = setTimeout(() => {
+        recognition.stop();
+      }, SILENCE_TIMEOUT_MS);
     };
 
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      finalTranscript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interim += result[0].transcript;
+        }
+      }
+      // Show interim + final in the input
+      setUserInput(finalTranscript + interim);
+      // Reset silence timer on every speech event
+      resetSilenceTimer();
+    };
+
+    recognition.onerror = () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      setIsListening(false);
+    };
+    recognition.onend = () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      setIsListening(false);
+    };
 
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
+    // Start initial silence timer in case user doesn't speak
+    resetSilenceTimer();
   }, [isListening]);
 
   // ── Reset ──────────────────────────────────────────────────
