@@ -28,7 +28,18 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
     plugins: [
       tsconfigPaths(),
       react(),
-    ],
+      // Make CSS non-render-blocking in production builds
+      isProduction && {
+        name: 'async-css',
+        enforce: 'post' as const,
+        transformIndexHtml(html: string) {
+          return html.replace(
+            /<link rel="stylesheet"([^>]*?)href="([^"]+\.css)"([^>]*?)\/?>/g,
+            '<link rel="stylesheet"$1href="$2"$3 media="print" onload="this.media=\'all\'">'
+          );
+        },
+      },
+    ].filter(Boolean),
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
