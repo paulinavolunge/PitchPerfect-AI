@@ -627,7 +627,7 @@ const GamifiedRoleplay: React.FC = () => {
       <div className="max-w-md mx-auto p-6 text-center">
         <h2 className="text-2xl font-bold text-foreground mb-2">How do you want to respond?</h2>
         <p className="text-muted-foreground mb-6">
-          You'll face <strong className="text-foreground">{PROSPECT_NAME}</strong>, {PROSPECT_TITLE}
+          You'll face <strong className="text-foreground">{currentProspectName}</strong>, {currentProspectTitle}
         </p>
         <p className="text-sm text-muted-foreground mb-8 px-4 py-3 rounded-lg bg-muted">
           Objection: {selectedObjection?.description}
