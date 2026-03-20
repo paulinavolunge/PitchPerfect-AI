@@ -116,6 +116,7 @@ const GamifiedRoleplay: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const runDebriefRef = useRef<(msgs: ChatMessage[]) => Promise<void>>();
   const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
 
   // ── TTS: find a female voice ──────────────────────────────
@@ -335,7 +336,7 @@ const GamifiedRoleplay: React.FC = () => {
     // If we've exceeded max rounds, go straight to debrief (no more AI calls)
     if (nextRound > MAX_ROUNDS) {
       setIsAiTyping(false);
-      await runDebrief(updatedMessages);
+      await runDebriefRef.current!(updatedMessages);
       return;
     }
 
@@ -359,7 +360,7 @@ const GamifiedRoleplay: React.FC = () => {
       // Auto-trigger debrief after the LAST round's AI response
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        await runDebrief(allMessages);
+        await runDebriefRef.current!(allMessages);
         return;
       }
     } catch (err) {
@@ -377,7 +378,7 @@ const GamifiedRoleplay: React.FC = () => {
       // Even on error, auto-trigger debrief if this was the last round
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        await runDebrief(allMessages);
+        await runDebriefRef.current!(allMessages);
         return;
       }
     } finally {
@@ -418,6 +419,7 @@ const GamifiedRoleplay: React.FC = () => {
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
     if (!selectedObjection && !isCustomMode) return;
+    stopSpeech(); // Bug 5: immediately stop TTS when debrief starts
     setIsAiTyping(true);
 
     try {
@@ -522,16 +524,20 @@ const GamifiedRoleplay: React.FC = () => {
       });
       refreshCount();
     }
-  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore]);
+  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech]);
 
-  // ── Voice input ────────────────────────────────────────────
-  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const SILENCE_TIMEOUT_MS = 3500; // 3.5 seconds of silence before finalizing
+  // Keep ref always pointing to latest runDebrief
+  runDebriefRef.current = runDebrief;
+
+  // Bug 3 fix: Always create a fresh SpeechRecognition instance each time.
+  // Bug 4 fix: No silence timer — user taps mic to stop or clicks Send.
+  // Bug 2 fix: Properly separate final vs interim results without duplication.
 
   const toggleVoice = useCallback(() => {
+    // If currently listening, stop and keep whatever text is in the input
     if (isListening) {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      recognitionRef.current?.stop();
+      try { recognitionRef.current?.abort(); } catch (_) {}
+      recognitionRef.current = null;
       setIsListening(false);
       return;
     }
@@ -539,51 +545,52 @@ const GamifiedRoleplay: React.FC = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
+    // Bug 3: Create a brand-new instance every time
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
 
-    let finalTranscript = '';
-
-    const resetSilenceTimer = () => {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = setTimeout(() => {
-        recognition.stop();
-      }, SILENCE_TIMEOUT_MS);
-    };
+    // Bug 2 fix: Track finalized text separately so interim never duplicates
+    let committedText = ''; // accumulates only isFinal results
 
     recognition.onresult = (event: any) => {
-      let interim = '';
-      finalTranscript = '';
+      // Rebuild committed text from all final results
+      let newCommitted = '';
+      let currentInterim = '';
       for (let i = 0; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+        if (event.results[i].isFinal) {
+          newCommitted += event.results[i][0].transcript;
         } else {
-          interim += result[0].transcript;
+          currentInterim += event.results[i][0].transcript;
         }
       }
-      // Show interim + final in the input
-      setUserInput(finalTranscript + interim);
-      // Reset silence timer on every speech event
-      resetSilenceTimer();
+      committedText = newCommitted;
+      // Show committed + current interim (interim is replaced each time, never accumulated)
+      setUserInput(committedText + currentInterim);
     };
 
-    recognition.onerror = () => {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    recognition.onerror = (event: any) => {
+      console.warn('[Voice] recognition error:', event.error);
+      // 'no-speech' is not fatal — keep listening
+      if (event.error === 'no-speech') return;
+      recognitionRef.current = null;
       setIsListening(false);
     };
+
     recognition.onend = () => {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      // Finalize: set input to only committed (final) text, drop any trailing interim
+      if (committedText.trim()) {
+        setUserInput(committedText);
+      }
+      recognitionRef.current = null;
       setIsListening(false);
     };
 
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-    // Start initial silence timer in case user doesn't speak
-    resetSilenceTimer();
   }, [isListening]);
 
   // ── Reset ──────────────────────────────────────────────────
@@ -1028,6 +1035,7 @@ const GamifiedRoleplay: React.FC = () => {
             onClick={toggleVoice}
             className={isListening ? 'border-destructive text-destructive animate-pulse' : ''}
             disabled={isAiTyping}
+            title={isListening ? 'Stop listening' : 'Start voice input'}
           >
             <Mic className="w-5 h-5" />
           </Button>
@@ -1039,12 +1047,20 @@ const GamifiedRoleplay: React.FC = () => {
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
           onFocus={() => setTimeout(scrollToBottom, 300)}
-          placeholder={isListening ? 'Listening…' : 'Type your response…'}
+          placeholder={isListening ? 'Listening… tap Send when done' : 'Type your response…'}
           disabled={isAiTyping}
           className="flex-1 rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
         />
         <Button
-          onClick={sendMessage}
+          onClick={() => {
+            // If still listening, stop recognition first, then send
+            if (isListening) {
+              try { recognitionRef.current?.stop(); } catch (_) {}
+              recognitionRef.current = null;
+              setIsListening(false);
+            }
+            sendMessage();
+          }}
           disabled={!userInput.trim() || isAiTyping}
           className="bg-primary-500 hover:bg-primary-600 text-white rounded-xl px-5"
         >
