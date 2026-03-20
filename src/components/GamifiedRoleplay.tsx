@@ -420,7 +420,7 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
-    stopSpeech(); // immediately stop TTS when debrief starts
+    stopSpeech();
     if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
     setIsAiTyping(true);
 
@@ -531,14 +531,11 @@ const GamifiedRoleplay: React.FC = () => {
   // Keep ref always pointing to latest runDebrief
   runDebriefRef.current = runDebrief;
 
-  // Bug 3 fix: Always create a fresh SpeechRecognition instance each time.
-  // Bug 4 fix: No silence timer — user taps mic to stop or clicks Send.
-  // Bug 2 fix: Properly separate final vs interim results without duplication.
-
   const toggleVoice = useCallback(() => {
     // If currently listening, do a manual stop
     if (isListening) {
       isManualStopRef.current = true;
+      try { recognitionRef.current?.stop(); } catch (_) {}
       try { recognitionRef.current?.abort(); } catch (_) {}
       recognitionRef.current = null;
       setIsListening(false);
@@ -548,8 +545,9 @@ const GamifiedRoleplay: React.FC = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    // Bug 3 fix: fully stop and destroy any lingering previous instance before creating a new one
+    // Create a brand new instance every time — stop and abort any lingering previous one
     if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (_) {}
       try { recognitionRef.current.abort(); } catch (_) {}
       recognitionRef.current = null;
     }
@@ -562,13 +560,18 @@ const GamifiedRoleplay: React.FC = () => {
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 1;
 
-    // Bug 2 fix: rebuild the full transcript from scratch on every onresult event
     recognition.onresult = (event: any) => {
-      let fullTranscript = '';
+      let finalTranscript = '';
+      let interimTranscript = '';
       for (let i = 0; i < event.results.length; i++) {
-        fullTranscript += event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
       }
-      setUserInput(fullTranscript);
+      // Replace the entire input value, never append
+      setUserInput(finalTranscript + interimTranscript);
     };
 
     recognition.onerror = (event: any) => {
@@ -590,8 +593,7 @@ const GamifiedRoleplay: React.FC = () => {
           console.warn('[Voice] failed to auto-restart:', e);
         }
       }
-      // Bug 3 fix: only clean up if this is still the active instance
-      // (prevents old instance's onend from killing a newly created instance)
+      // Only clean up if this is still the active instance
       if (recognitionRef.current === recognition) {
         recognitionRef.current = null;
         setIsListening(false);
@@ -1063,9 +1065,10 @@ const GamifiedRoleplay: React.FC = () => {
         />
         <Button
           onClick={() => {
-            // Manual stop: set flag, abort recognition, then send
+            // Manual stop: set flag, stop+abort recognition, then send
             if (isListening) {
               isManualStopRef.current = true;
+              try { recognitionRef.current?.stop(); } catch (_) {}
               try { recognitionRef.current?.abort(); } catch (_) {}
               recognitionRef.current = null;
               setIsListening(false);
