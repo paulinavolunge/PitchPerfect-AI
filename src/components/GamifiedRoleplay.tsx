@@ -513,15 +513,15 @@ const GamifiedRoleplay: React.FC = () => {
 
       // Track the completed session attempt AFTER debrief
       await incrementAttempt({
-        scenario_type: selectedObjection?.label ?? 'practice',
+        scenario_type: isCustomMode && customScenario ? `custom: ${customScenario.objection}` : (selectedObjection?.label ?? 'practice'),
         difficulty: 'medium',
-        industry: 'general',
+        industry: isCustomMode && customScenario ? customScenario.industry : 'general',
         duration_seconds: 0,
         score: null,
       });
       refreshCount();
     }
-  }, [selectedObjection, incrementAttempt, refreshCount, computeLocalScore]);
+  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore]);
 
   // ── Voice input ────────────────────────────────────────────
   const toggleVoice = useCallback(() => {
