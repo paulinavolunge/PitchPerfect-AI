@@ -3,28 +3,26 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
- 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
 };
 
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) console.log('No auth token, guest access'); return null;
+  if (!token) { console.log('No auth token, guest access'); return null; }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
   );
 
-  // Try to get authenticated user; if the token is just the anon key, allow as guest
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) {
-    // Check if the token matches the anon key (guest access)
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     if (token === anonKey) {
       console.log('Guest user access via anon key');
-      return null; // null = guest user
+      return null;
     }
     console.log('Allowing unauthenticated access'); return null;
   }
@@ -33,13 +31,11 @@ const verifyAuth = async (request: Request) => {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication
     const user = await verifyAuth(req);
     console.log('Request from:', user ? `user ${user.id}` : 'guest');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -49,7 +45,6 @@ serve(async (req) => {
 
     const rawBody = await req.text();
     
-    // Validate request body size (max 10MB for chat)
     if (rawBody.length > 10 * 1024 * 1024) {
       return new Response(
         JSON.stringify({ error: 'Request body too large' }),
@@ -63,13 +58,22 @@ serve(async (req) => {
       voiceStyle, 
       userScript, 
       conversationHistory = [],
-      isReversedRole = false 
+      isReversedRole = false,
+      customProduct,
+      customBuyerTitle,
+      customIndustry,
+      customObjection,
+      prospectName,
     } = JSON.parse(rawBody);
 
-    console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole });
+    console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName });
+
+    const isCustom = !!(customProduct || customBuyerTitle || customIndustry || customObjection);
 
     const systemPrompt = isReversedRole 
-      ? createProspectSystemPrompt(scenario, voiceStyle)
+      ? (isCustom
+          ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
+          : createProspectSystemPrompt(scenario, voiceStyle))
       : createSalespersonSystemPrompt(scenario, voiceStyle);
 
     const messages = [
@@ -113,7 +117,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in roleplay-ai-response:', error);
     
-    // Handle authentication errors
     const errMsg = error instanceof Error ? error.message : String(error);
     if (errMsg.includes('authorization') || errMsg.includes('token')) {
       return new Response(JSON.stringify({
@@ -134,6 +137,36 @@ serve(async (req) => {
     });
   }
 });
+
+function createCustomProspectPrompt(custom: {
+  customProduct?: string;
+  customBuyerTitle?: string;
+  customIndustry?: string;
+  customObjection?: string;
+  prospectName?: string;
+}): string {
+  const name = custom.prospectName || 'the prospect';
+  const title = custom.customBuyerTitle || 'decision-maker';
+  const industry = custom.customIndustry || 'business';
+  const product = custom.customProduct || 'the solution';
+  const objection = custom.customObjection || 'general concerns';
+
+  return `You are ${name}, a ${title} at a mid-market ${industry} company. A sales rep is pitching you ${product}. You are skeptical, busy, and protective of your budget.
+
+Your core objection is: "${objection}"
+
+Your personality: direct, slightly impatient, but fair — you'll engage if the rep earns it.
+
+RULES:
+- Stay in character at all times. Never break character or mention you are an AI.
+- Push back realistically using the objection above. Ground your pushback in realistic ${industry} concerns.
+- Keep responses to 2-4 sentences max.
+- If the rep gives weak or generic answers, push harder.
+- If the rep provides genuine value, concrete proof, or asks insightful questions, soften slightly.
+- Never fully agree until the rep truly earns it.
+- Do NOT prefix your response with your name.
+- Reference specific ${industry} pain points and concerns a real ${title} would have.`;
+}
 
 function createProspectSystemPrompt(scenario: any, voiceStyle: string): string {
   const objectionTypes = {

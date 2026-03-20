@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2 } from 'lucide-react';
+import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
@@ -24,6 +24,13 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+interface CustomScenario {
+  product: string;
+  buyerTitle: string;
+  industry: string;
+  objection: string;
+}
+
 interface DebriefData {
   won: boolean;
   score: number;
@@ -33,7 +40,7 @@ interface DebriefData {
 }
 
 type InputMode = 'text' | 'voice';
-type Phase = 'select-objection' | 'select-mode' | 'conversation' | 'debrief';
+type Phase = 'select-objection' | 'custom-form' | 'select-mode' | 'conversation' | 'debrief';
 
 // ── Constants ──────────────────────────────────────────────────
 const MAX_ROUNDS = 3;
@@ -47,12 +54,31 @@ const OBJECTIONS: ObjectionCard[] = [
   { id: 'team', label: 'Loop in Team', emoji: '👥', description: '"I need to loop in my team before deciding."' },
 ];
 
-const PROSPECT_NAME = 'Dana Kowalski';
-const PROSPECT_TITLE = 'VP of Operations';
+const PROSPECT_NAMES = [
+  { first: 'Dana', last: 'Kowalski' },
+  { first: 'Marcus', last: 'Chen' },
+  { first: 'Priya', last: 'Nair' },
+  { first: 'James', last: 'Okafor' },
+  { first: 'Samira', last: 'Hadid' },
+  { first: 'Tomás', last: 'Reyes' },
+  { first: 'Rachel', last: 'Brennan' },
+  { first: 'Kenji', last: 'Watanabe' },
+  { first: 'Elena', last: 'Petrov' },
+  { first: 'David', last: 'Lundgren' },
+  { first: 'Aisha', last: 'Mwangi' },
+  { first: 'Carlos', last: 'Navarro' },
+];
+
+const DEFAULT_PROSPECT_TITLE = 'VP of Operations';
+
+function pickRandomProspect() {
+  const p = PROSPECT_NAMES[Math.floor(Math.random() * PROSPECT_NAMES.length)];
+  return { name: `${p.first} ${p.last}`, title: DEFAULT_PROSPECT_TITLE };
+}
 
 // ── Helpers ────────────────────────────────────────────────────
-function buildSystemPrompt(objection: ObjectionCard): string {
-  return `You are ${PROSPECT_NAME}, ${PROSPECT_TITLE} at a mid-market logistics company. You are skeptical, busy, and protective of your budget. Your personality: direct, slightly impatient, but fair — you'll engage if the rep earns it.
+function buildSystemPrompt(objection: ObjectionCard, prospectName: string, prospectTitle: string): string {
+  return `You are ${prospectName}, ${prospectTitle} at a mid-market logistics company. You are skeptical, busy, and protective of your budget. Your personality: direct, slightly impatient, but fair — you'll engage if the rep earns it.
 
 SCENARIO: The sales rep is pitching you. Your core objection is: ${objection.description}
 
@@ -70,6 +96,10 @@ RULES:
 const GamifiedRoleplay: React.FC = () => {
   const [phase, setPhase] = useState<Phase>('select-objection');
   const [selectedObjection, setSelectedObjection] = useState<ObjectionCard | null>(null);
+  const [customScenario, setCustomScenario] = useState<CustomScenario | null>(null);
+  const [isCustomMode, setIsCustomMode] = useState(false);
+  const [customForm, setCustomForm] = useState<CustomScenario>({ product: '', buyerTitle: '', industry: '', objection: '' });
+  const [prospectInfo] = useState(() => pickRandomProspect());
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
@@ -78,6 +108,9 @@ const GamifiedRoleplay: React.FC = () => {
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+
+  const currentProspectName = isCustomMode ? prospectInfo.name : prospectInfo.name;
+  const currentProspectTitle = isCustomMode && customScenario?.buyerTitle ? customScenario.buyerTitle : prospectInfo.title;
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -162,23 +195,33 @@ const GamifiedRoleplay: React.FC = () => {
       text: m.text,
     }));
 
-    const payload = {
+    const payload: Record<string, any> = {
       userInput: userMsg,
       scenario: {
-        objection: selectedObjection?.label || 'Need',
+        objection: selectedObjection?.label || customScenario?.objection || 'Need',
         difficulty: 'medium',
-        industry: 'general',
+        industry: customScenario?.industry || 'general',
       },
       voiceStyle: 'skeptical',
       userScript: null,
       conversationHistory,
       isReversedRole: true,
+      prospectName: currentProspectName,
     };
+
+    // Add custom fields if in custom mode
+    if (isCustomMode && customScenario) {
+      payload.customProduct = customScenario.product;
+      payload.customBuyerTitle = customScenario.buyerTitle;
+      payload.customIndustry = customScenario.industry;
+      payload.customObjection = customScenario.objection;
+    }
 
     console.log('[GamifiedRoleplay] Calling roleplay-ai-response:', {
       objection: payload.scenario.objection,
       historyLength: conversationHistory.length,
       userInput: userMsg.substring(0, 80),
+      isCustom: isCustomMode,
     });
 
     // Use fetch() directly so we can set the Authorization header for guest users
@@ -221,18 +264,24 @@ const GamifiedRoleplay: React.FC = () => {
     }
 
     return data.response;
-  }, [selectedObjection]);
+  }, [selectedObjection, customScenario, isCustomMode, currentProspectName]);
 
   // ── Start conversation ─────────────────────────────────────
   const startConversation = useCallback(async () => {
-    if (!selectedObjection) return;
+    if (!selectedObjection && !isCustomMode) return;
     setPhase('conversation');
     setIsAiTyping(true);
 
     try {
+      const systemPrompt = isCustomMode
+        ? '' // custom prompt is built server-side
+        : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle);
+      const openingLine = isCustomMode && customScenario
+        ? `I'm a sales rep and I'd like to talk to you about ${customScenario.product}. Can I have a few minutes of your time?`
+        : `I'm a sales rep and I'd like to talk to you about our solution. Can I have a few minutes of your time?`;
       const response = await callAI(
-        buildSystemPrompt(selectedObjection),
-        `I'm a sales rep and I'd like to talk to you about our solution. Can I have a few minutes of your time?`,
+        systemPrompt,
+        openingLine,
         []
       );
       const prospectMsg: ChatMessage = {
@@ -249,19 +298,21 @@ const GamifiedRoleplay: React.FC = () => {
       setMessages([{
         id: crypto.randomUUID(),
         role: 'prospect',
-        text: selectedObjection.description.replace(/"/g, ''),
+        text: isCustomMode && customScenario
+          ? customScenario.objection
+          : (selectedObjection?.description.replace(/"/g, '') || 'What can I do for you?'),
         timestamp: new Date(),
       }]);
       setCurrentRound(1);
     } finally {
       setIsAiTyping(false);
     }
-  }, [selectedObjection, callAI, inputMode, speakText]);
+  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle]);
 
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async () => {
     const text = userInput.trim();
-    if (!text || isAiTyping || !selectedObjection) return;
+    if (!text || isAiTyping || (!selectedObjection && !isCustomMode)) return;
 
     // Stop any ongoing speech when user sends a message
     stopSpeech();
@@ -288,7 +339,11 @@ const GamifiedRoleplay: React.FC = () => {
     }
 
     try {
-      const response = await callAI(buildSystemPrompt(selectedObjection), text, updatedMessages);
+      const response = await callAI(
+        isCustomMode ? '' : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle),
+        text,
+        updatedMessages
+      );
       const prospectMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'prospect',
@@ -509,6 +564,9 @@ const GamifiedRoleplay: React.FC = () => {
     // Still has attempts — reset normally
     setPhase('select-objection');
     setSelectedObjection(null);
+    setCustomScenario(null);
+    setIsCustomMode(false);
+    setCustomForm({ product: '', buyerTitle: '', industry: '', objection: '' });
     setMessages([]);
     setCurrentRound(0);
     setUserInput('');
@@ -520,6 +578,9 @@ const GamifiedRoleplay: React.FC = () => {
     stopSpeech();
     setPhase('select-objection');
     setSelectedObjection(null);
+    setCustomScenario(null);
+    setIsCustomMode(false);
+    setCustomForm({ product: '', buyerTitle: '', industry: '', objection: '' });
     setMessages([]);
     setCurrentRound(0);
     setUserInput('');
@@ -528,7 +589,7 @@ const GamifiedRoleplay: React.FC = () => {
   };
 
   // ── Render: Objection Selection ────────────────────────────
-  if (phase === 'select-objection') {
+   if (phase === 'select-objection') {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center mb-8">
@@ -536,13 +597,35 @@ const GamifiedRoleplay: React.FC = () => {
           <p className="text-muted-foreground">Pick an objection to practice overcoming</p>
         </div>
 
-        {/* Session counter for logged-in free users */}
         {user?.id && !hasReachedLimit && remainingAttempts !== Infinity && (
           <div className="mb-6 flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted rounded-lg px-3 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <span>{remainingAttempts} of {currentLimit} free sessions remaining this month</span>
           </div>
         )}
+
+        {/* Build Your Own card */}
+        <div className="mb-6">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setIsCustomMode(true);
+              setSelectedObjection(null);
+              setPhase('custom-form');
+            }}
+            className="w-full flex items-center gap-4 p-5 rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 text-left shadow-sm hover:shadow-md hover:border-primary/50 transition-all"
+          >
+            <span className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 shrink-0">
+              <Star className="w-6 h-6 text-primary" />
+            </span>
+            <div>
+              <span className="font-semibold text-foreground text-base">Build Your Own Scenario</span>
+              <span className="block text-sm text-muted-foreground mt-0.5">Practice with YOUR real product, buyer, and objection</span>
+            </div>
+            <ArrowRight className="w-5 h-5 text-muted-foreground ml-auto shrink-0" />
+          </motion.button>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {OBJECTIONS.map((obj) => (
@@ -551,6 +634,8 @@ const GamifiedRoleplay: React.FC = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
+                setIsCustomMode(false);
+                setCustomScenario(null);
                 setSelectedObjection(obj);
                 setPhase('select-mode');
               }}
@@ -566,17 +651,95 @@ const GamifiedRoleplay: React.FC = () => {
     );
   }
 
+  // ── Render: Custom Scenario Form ──────────────────────────
+  if (phase === 'custom-form') {
+    const canStart = customForm.product.trim() && customForm.objection.trim();
+    return (
+      <div className="max-w-lg mx-auto p-6">
+        <h2 className="text-2xl font-bold text-foreground mb-2 text-center">Build Your Scenario</h2>
+        <p className="text-muted-foreground text-center mb-6">Fill in the details to create a realistic practice session</p>
+
+        <div className="space-y-4 mb-8">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">What do you sell?</label>
+            <input
+              type="text"
+              value={customForm.product}
+              onChange={(e) => setCustomForm(f => ({ ...f, product: e.target.value }))}
+              placeholder="e.g. CRM software, marketing services, insurance"
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Who are you selling to?</label>
+            <input
+              type="text"
+              value={customForm.buyerTitle}
+              onChange={(e) => setCustomForm(f => ({ ...f, buyerTitle: e.target.value }))}
+              placeholder="e.g. VP of Sales, small business owner, IT Director"
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">What industry?</label>
+            <input
+              type="text"
+              value={customForm.industry}
+              onChange={(e) => setCustomForm(f => ({ ...f, industry: e.target.value }))}
+              placeholder="e.g. SaaS, healthcare, construction"
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">What objection do you hear most?</label>
+            <input
+              type="text"
+              value={customForm.objection}
+              onChange={(e) => setCustomForm(f => ({ ...f, objection: e.target.value }))}
+              placeholder="e.g. We already have a solution, It's too expensive"
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => { setPhase('select-objection'); setIsCustomMode(false); }} className="flex-1">
+            Back
+          </Button>
+          <Button
+            onClick={() => {
+              setCustomScenario({ ...customForm });
+              setPhase('select-mode');
+            }}
+            disabled={!canStart}
+            className="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
+          >
+            Continue <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Render: Mode Selection ─────────────────────────────────
   if (phase === 'select-mode') {
     return (
       <div className="max-w-md mx-auto p-6 text-center">
         <h2 className="text-2xl font-bold text-foreground mb-2">How do you want to respond?</h2>
         <p className="text-muted-foreground mb-6">
-          You'll face <strong className="text-foreground">{PROSPECT_NAME}</strong>, {PROSPECT_TITLE}
+          You'll face <strong className="text-foreground">{currentProspectName}</strong>, {currentProspectTitle}
         </p>
-        <p className="text-sm text-muted-foreground mb-8 px-4 py-3 rounded-lg bg-muted">
-          Objection: {selectedObjection?.description}
-        </p>
+        {isCustomMode && customScenario ? (
+          <div className="text-sm text-muted-foreground mb-8 px-4 py-3 rounded-lg bg-muted text-left space-y-1">
+            <p><strong className="text-foreground">Product:</strong> {customScenario.product}</p>
+            {customScenario.industry && <p><strong className="text-foreground">Industry:</strong> {customScenario.industry}</p>}
+            <p><strong className="text-foreground">Objection:</strong> {customScenario.objection}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground mb-8 px-4 py-3 rounded-lg bg-muted">
+            Objection: {selectedObjection?.description}
+          </p>
+        )}
 
         <div className="flex gap-4 justify-center mb-8">
           {(['text', 'voice'] as InputMode[]).map((mode) => (
@@ -631,6 +794,19 @@ const GamifiedRoleplay: React.FC = () => {
                 : 'The prospect wasn\'t convinced.'}
           </p>
         </motion.div>
+
+        {/* Custom scenario summary */}
+        {isCustomMode && customScenario && (
+          <div className="bg-muted/50 border border-border rounded-xl p-4 mb-4 text-sm">
+            <h3 className="font-semibold text-foreground mb-2">🎯 Your Scenario</h3>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+              <span className="font-medium text-foreground">Product:</span><span>{customScenario.product}</span>
+              <span className="font-medium text-foreground">Buyer:</span><span>{customScenario.buyerTitle || '—'}</span>
+              <span className="font-medium text-foreground">Industry:</span><span>{customScenario.industry || '—'}</span>
+              <span className="font-medium text-foreground">Objection:</span><span>{customScenario.objection}</span>
+            </div>
+          </div>
+        )}
 
         {/* Score */}
         <div className="bg-card border border-border rounded-xl p-5 mb-4 shadow-sm">
@@ -717,8 +893,8 @@ const GamifiedRoleplay: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pt-4 shrink-0">
         <div>
-          <h2 className="text-lg font-bold text-foreground">{PROSPECT_NAME}</h2>
-          <p className="text-xs text-muted-foreground">{PROSPECT_TITLE} · {selectedObjection?.label} objection</p>
+          <h2 className="text-lg font-bold text-foreground">{currentProspectName}</h2>
+          <p className="text-xs text-muted-foreground">{currentProspectTitle} · {isCustomMode ? 'Custom' : selectedObjection?.label} objection</p>
         </div>
         <Button
           variant="outline"
@@ -761,7 +937,7 @@ const GamifiedRoleplay: React.FC = () => {
               >
                 {msg.role === 'prospect' && (
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold opacity-70">{PROSPECT_NAME}</span>
+                    <span className="text-xs font-semibold opacity-70">{currentProspectName}</span>
                     {inputMode === 'voice' && (
                       <button
                         onClick={() => speakText(msg.text)}
@@ -788,7 +964,7 @@ const GamifiedRoleplay: React.FC = () => {
             className="flex justify-start"
           >
             <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-md flex items-center gap-1">
-              <span className="block text-xs font-semibold text-muted-foreground mb-1">{PROSPECT_NAME}</span>
+              <span className="block text-xs font-semibold text-muted-foreground mb-1">{currentProspectName}</span>
               <div className="flex gap-1 ml-2">
                 {[0, 1, 2].map((i) => (
                   <motion.span
