@@ -828,7 +828,6 @@ const GamifiedRoleplay: React.FC = () => {
           disabled={isAiTyping}
           className="flex-1 rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
         />
-        />
         <Button
           onClick={sendMessage}
           disabled={!userInput.trim() || isAiTyping}
