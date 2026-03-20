@@ -384,7 +384,6 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userInput, isAiTyping, selectedObjection, isCustomMode, customScenario, messages, currentRound, callAI, stopSpeech, speakText, inputMode, currentProspectName, currentProspectTitle]);
 
   // ── Local fallback scoring ─────────────────────────────────
