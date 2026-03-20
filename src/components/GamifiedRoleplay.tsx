@@ -416,7 +416,7 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
-    if (!selectedObjection) return;
+    if (!selectedObjection && !isCustomMode) return;
     setIsAiTyping(true);
 
     try {
