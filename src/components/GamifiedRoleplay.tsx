@@ -729,9 +729,17 @@ const GamifiedRoleplay: React.FC = () => {
         <p className="text-muted-foreground mb-6">
           You'll face <strong className="text-foreground">{currentProspectName}</strong>, {currentProspectTitle}
         </p>
-        <p className="text-sm text-muted-foreground mb-8 px-4 py-3 rounded-lg bg-muted">
-          Objection: {selectedObjection?.description}
-        </p>
+        {isCustomMode && customScenario ? (
+          <div className="text-sm text-muted-foreground mb-8 px-4 py-3 rounded-lg bg-muted text-left space-y-1">
+            <p><strong className="text-foreground">Product:</strong> {customScenario.product}</p>
+            {customScenario.industry && <p><strong className="text-foreground">Industry:</strong> {customScenario.industry}</p>}
+            <p><strong className="text-foreground">Objection:</strong> {customScenario.objection}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground mb-8 px-4 py-3 rounded-lg bg-muted">
+            Objection: {selectedObjection?.description}
+          </p>
+        )}
 
         <div className="flex gap-4 justify-center mb-8">
           {(['text', 'voice'] as InputMode[]).map((mode) => (
