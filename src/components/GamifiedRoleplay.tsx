@@ -298,7 +298,9 @@ const GamifiedRoleplay: React.FC = () => {
       setMessages([{
         id: crypto.randomUUID(),
         role: 'prospect',
-        text: selectedObjection.description.replace(/"/g, ''),
+        text: isCustomMode && customScenario
+          ? customScenario.objection
+          : (selectedObjection?.description.replace(/"/g, '') || 'What can I do for you?'),
         timestamp: new Date(),
       }]);
       setCurrentRound(1);
