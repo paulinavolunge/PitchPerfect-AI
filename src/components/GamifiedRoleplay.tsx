@@ -523,7 +523,7 @@ const GamifiedRoleplay: React.FC = () => {
       });
       refreshCount();
     }
-  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore]);
+  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech]);
 
   // ── Voice input ────────────────────────────────────────────
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
