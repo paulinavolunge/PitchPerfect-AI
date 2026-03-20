@@ -116,6 +116,7 @@ const GamifiedRoleplay: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const runDebriefRef = useRef<(msgs: ChatMessage[]) => Promise<void>>();
   const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
 
   // ── TTS: find a female voice ──────────────────────────────
