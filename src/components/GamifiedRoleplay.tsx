@@ -713,7 +713,7 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── Render: Conversation ───────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto p-6 flex flex-col h-[80vh]">
+    <div className="max-w-2xl mx-auto flex flex-col" style={{ height: '100dvh', padding: '0 1.5rem' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
