@@ -107,6 +107,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const isManualStopRef = useRef(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
   const currentProspectName = isCustomMode ? prospectInfo.name : prospectInfo.name;
