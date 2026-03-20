@@ -450,11 +450,17 @@ const GamifiedRoleplay: React.FC = () => {
           transcript,
           practiceMode: 'text',
           scenario: {
-            objection: selectedObjection.id,
-            industry: 'general',
+            objection: isCustomMode && customScenario ? customScenario.objection : (selectedObjection?.id || 'general'),
+            industry: isCustomMode && customScenario ? customScenario.industry : 'general',
             difficulty: 'medium',
           },
           context: 'sales roleplay objection handling practice',
+          ...(isCustomMode && customScenario ? {
+            customProduct: customScenario.product,
+            customBuyerTitle: customScenario.buyerTitle,
+            customIndustry: customScenario.industry,
+            customObjection: customScenario.objection,
+          } : {}),
         }),
       });
 
