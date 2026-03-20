@@ -54,12 +54,31 @@ const OBJECTIONS: ObjectionCard[] = [
   { id: 'team', label: 'Loop in Team', emoji: '👥', description: '"I need to loop in my team before deciding."' },
 ];
 
-const PROSPECT_NAME = 'Dana Kowalski';
-const PROSPECT_TITLE = 'VP of Operations';
+const PROSPECT_NAMES = [
+  { first: 'Dana', last: 'Kowalski' },
+  { first: 'Marcus', last: 'Chen' },
+  { first: 'Priya', last: 'Nair' },
+  { first: 'James', last: 'Okafor' },
+  { first: 'Samira', last: 'Hadid' },
+  { first: 'Tomás', last: 'Reyes' },
+  { first: 'Rachel', last: 'Brennan' },
+  { first: 'Kenji', last: 'Watanabe' },
+  { first: 'Elena', last: 'Petrov' },
+  { first: 'David', last: 'Lundgren' },
+  { first: 'Aisha', last: 'Mwangi' },
+  { first: 'Carlos', last: 'Navarro' },
+];
+
+const DEFAULT_PROSPECT_TITLE = 'VP of Operations';
+
+function pickRandomProspect() {
+  const p = PROSPECT_NAMES[Math.floor(Math.random() * PROSPECT_NAMES.length)];
+  return { name: `${p.first} ${p.last}`, title: DEFAULT_PROSPECT_TITLE };
+}
 
 // ── Helpers ────────────────────────────────────────────────────
-function buildSystemPrompt(objection: ObjectionCard): string {
-  return `You are ${PROSPECT_NAME}, ${PROSPECT_TITLE} at a mid-market logistics company. You are skeptical, busy, and protective of your budget. Your personality: direct, slightly impatient, but fair — you'll engage if the rep earns it.
+function buildSystemPrompt(objection: ObjectionCard, prospectName: string, prospectTitle: string): string {
+  return `You are ${prospectName}, ${prospectTitle} at a mid-market logistics company. You are skeptical, busy, and protective of your budget. Your personality: direct, slightly impatient, but fair — you'll engage if the rep earns it.
 
 SCENARIO: The sales rep is pitching you. Your core objection is: ${objection.description}
 
