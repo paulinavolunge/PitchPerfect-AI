@@ -730,8 +730,7 @@ const GamifiedRoleplay: React.FC = () => {
         </Button>
       </div>
 
-      {/* Round dots */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 shrink-0">
         {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
           <div
             key={i}
