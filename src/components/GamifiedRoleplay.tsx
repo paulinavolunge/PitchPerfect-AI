@@ -526,13 +526,15 @@ const GamifiedRoleplay: React.FC = () => {
   }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech]);
 
   // ── Voice input ────────────────────────────────────────────
-  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const SILENCE_TIMEOUT_MS = 3500; // 3.5 seconds of silence before finalizing
+  // Bug 3 fix: Always create a fresh SpeechRecognition instance each time.
+  // Bug 4 fix: No silence timer — user taps mic to stop or clicks Send.
+  // Bug 2 fix: Properly separate final vs interim results without duplication.
 
   const toggleVoice = useCallback(() => {
+    // If currently listening, stop and keep whatever text is in the input
     if (isListening) {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      recognitionRef.current?.stop();
+      try { recognitionRef.current?.abort(); } catch (_) {}
+      recognitionRef.current = null;
       setIsListening(false);
       return;
     }
@@ -540,51 +542,52 @@ const GamifiedRoleplay: React.FC = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
+    // Bug 3: Create a brand-new instance every time
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
 
-    let finalTranscript = '';
-
-    const resetSilenceTimer = () => {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = setTimeout(() => {
-        recognition.stop();
-      }, SILENCE_TIMEOUT_MS);
-    };
+    // Bug 2 fix: Track finalized text separately so interim never duplicates
+    let committedText = ''; // accumulates only isFinal results
 
     recognition.onresult = (event: any) => {
-      let interim = '';
-      finalTranscript = '';
+      // Rebuild committed text from all final results
+      let newCommitted = '';
+      let currentInterim = '';
       for (let i = 0; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+        if (event.results[i].isFinal) {
+          newCommitted += event.results[i][0].transcript;
         } else {
-          interim += result[0].transcript;
+          currentInterim += event.results[i][0].transcript;
         }
       }
-      // Show interim + final in the input
-      setUserInput(finalTranscript + interim);
-      // Reset silence timer on every speech event
-      resetSilenceTimer();
+      committedText = newCommitted;
+      // Show committed + current interim (interim is replaced each time, never accumulated)
+      setUserInput(committedText + currentInterim);
     };
 
-    recognition.onerror = () => {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    recognition.onerror = (event: any) => {
+      console.warn('[Voice] recognition error:', event.error);
+      // 'no-speech' is not fatal — keep listening
+      if (event.error === 'no-speech') return;
+      recognitionRef.current = null;
       setIsListening(false);
     };
+
     recognition.onend = () => {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      // Finalize: set input to only committed (final) text, drop any trailing interim
+      if (committedText.trim()) {
+        setUserInput(committedText);
+      }
+      recognitionRef.current = null;
       setIsListening(false);
     };
 
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-    // Start initial silence timer in case user doesn't speak
-    resetSilenceTimer();
   }, [isListening]);
 
   // ── Reset ──────────────────────────────────────────────────
