@@ -564,6 +564,9 @@ const GamifiedRoleplay: React.FC = () => {
     // Still has attempts — reset normally
     setPhase('select-objection');
     setSelectedObjection(null);
+    setCustomScenario(null);
+    setIsCustomMode(false);
+    setCustomForm({ product: '', buyerTitle: '', industry: '', objection: '' });
     setMessages([]);
     setCurrentRound(0);
     setUserInput('');
@@ -575,6 +578,9 @@ const GamifiedRoleplay: React.FC = () => {
     stopSpeech();
     setPhase('select-objection');
     setSelectedObjection(null);
+    setCustomScenario(null);
+    setIsCustomMode(false);
+    setCustomForm({ product: '', buyerTitle: '', industry: '', objection: '' });
     setMessages([]);
     setCurrentRound(0);
     setUserInput('');
