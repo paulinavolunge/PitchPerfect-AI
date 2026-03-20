@@ -772,8 +772,8 @@ const GamifiedRoleplay: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pt-4 shrink-0">
         <div>
-          <h2 className="text-lg font-bold text-foreground">{PROSPECT_NAME}</h2>
-          <p className="text-xs text-muted-foreground">{PROSPECT_TITLE} · {selectedObjection?.label} objection</p>
+          <h2 className="text-lg font-bold text-foreground">{currentProspectName}</h2>
+          <p className="text-xs text-muted-foreground">{currentProspectTitle} · {isCustomMode ? 'Custom' : selectedObjection?.label} objection</p>
         </div>
         <Button
           variant="outline"
