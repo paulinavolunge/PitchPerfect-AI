@@ -268,7 +268,7 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── Start conversation ─────────────────────────────────────
   const startConversation = useCallback(async () => {
-    if (!selectedObjection) return;
+    if (!selectedObjection && !isCustomMode) return;
     setPhase('conversation');
     setIsAiTyping(true);
 
