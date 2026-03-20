@@ -312,7 +312,7 @@ const GamifiedRoleplay: React.FC = () => {
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async () => {
     const text = userInput.trim();
-    if (!text || isAiTyping || !selectedObjection) return;
+    if (!text || isAiTyping || (!selectedObjection && !isCustomMode)) return;
 
     // Stop any ongoing speech when user sends a message
     stopSpeech();
