@@ -56,17 +56,17 @@ const OBJECTIONS: ObjectionCard[] = [
 
 const PROSPECT_NAMES = [
   { first: 'Dana', last: 'Kowalski' },
-  { first: 'Marcus', last: 'Chen' },
   { first: 'Priya', last: 'Nair' },
-  { first: 'James', last: 'Okafor' },
   { first: 'Samira', last: 'Hadid' },
-  { first: 'Tomás', last: 'Reyes' },
   { first: 'Rachel', last: 'Brennan' },
-  { first: 'Kenji', last: 'Watanabe' },
   { first: 'Elena', last: 'Petrov' },
-  { first: 'David', last: 'Lundgren' },
   { first: 'Aisha', last: 'Mwangi' },
-  { first: 'Carlos', last: 'Navarro' },
+  { first: 'Sofia', last: 'Reyes' },
+  { first: 'Lauren', last: 'Chen' },
+  { first: 'Mei', last: 'Watanabe' },
+  { first: 'Olivia', last: 'Navarro' },
+  { first: 'Fatima', last: 'Al-Rashid' },
+  { first: 'Keiko', last: 'Tanaka' },
 ];
 
 const DEFAULT_PROSPECT_TITLE = 'VP of Operations';
@@ -107,6 +107,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const isManualStopRef = useRef(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
   const currentProspectName = isCustomMode ? prospectInfo.name : prospectInfo.name;
@@ -534,9 +535,10 @@ const GamifiedRoleplay: React.FC = () => {
   // Bug 2 fix: Properly separate final vs interim results without duplication.
 
   const toggleVoice = useCallback(() => {
-    // If currently listening, stop and keep whatever text is in the input
+    // If currently listening, do a manual stop
     if (isListening) {
-      try { recognitionRef.current?.abort(); } catch (_) {}
+      isManualStopRef.current = true;
+      try { recognitionRef.current?.stop(); } catch (_) {}
       recognitionRef.current = null;
       setIsListening(false);
       return;
@@ -545,18 +547,17 @@ const GamifiedRoleplay: React.FC = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    // Bug 3: Create a brand-new instance every time
+    isManualStopRef.current = false;
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 1;
 
-    // Bug 2 fix: Track finalized text separately so interim never duplicates
-    let committedText = ''; // accumulates only isFinal results
+    let committedText = '';
 
     recognition.onresult = (event: any) => {
-      // Rebuild committed text from all final results
       let newCommitted = '';
       let currentInterim = '';
       for (let i = 0; i < event.results.length; i++) {
@@ -567,20 +568,27 @@ const GamifiedRoleplay: React.FC = () => {
         }
       }
       committedText = newCommitted;
-      // Show committed + current interim (interim is replaced each time, never accumulated)
       setUserInput(committedText + currentInterim);
     };
 
     recognition.onerror = (event: any) => {
       console.warn('[Voice] recognition error:', event.error);
-      // 'no-speech' is not fatal — keep listening
-      if (event.error === 'no-speech') return;
+      if (event.error === 'no-speech' || event.error === 'aborted') return;
       recognitionRef.current = null;
       setIsListening(false);
     };
 
     recognition.onend = () => {
-      // Finalize: set input to only committed (final) text, drop any trailing interim
+      // If NOT a manual stop, auto-restart to keep listening
+      if (!isManualStopRef.current && recognitionRef.current === recognition) {
+        try {
+          recognition.start();
+          return;
+        } catch (e) {
+          console.warn('[Voice] failed to auto-restart:', e);
+        }
+      }
+      // Manual stop or restart failed — finalize
       if (committedText.trim()) {
         setUserInput(committedText);
       }
@@ -1053,8 +1061,9 @@ const GamifiedRoleplay: React.FC = () => {
         />
         <Button
           onClick={() => {
-            // If still listening, stop recognition first, then send
+            // Manual stop: set flag, stop recognition, then send
             if (isListening) {
+              isManualStopRef.current = true;
               try { recognitionRef.current?.stop(); } catch (_) {}
               recognitionRef.current = null;
               setIsListening(false);
