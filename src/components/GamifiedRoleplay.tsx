@@ -795,6 +795,19 @@ const GamifiedRoleplay: React.FC = () => {
           </p>
         </motion.div>
 
+        {/* Custom scenario summary */}
+        {isCustomMode && customScenario && (
+          <div className="bg-muted/50 border border-border rounded-xl p-4 mb-4 text-sm">
+            <h3 className="font-semibold text-foreground mb-2">🎯 Your Scenario</h3>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+              <span className="font-medium text-foreground">Product:</span><span>{customScenario.product}</span>
+              <span className="font-medium text-foreground">Buyer:</span><span>{customScenario.buyerTitle || '—'}</span>
+              <span className="font-medium text-foreground">Industry:</span><span>{customScenario.industry || '—'}</span>
+              <span className="font-medium text-foreground">Objection:</span><span>{customScenario.objection}</span>
+            </div>
+          </div>
+        )}
+
         {/* Score */}
         <div className="bg-card border border-border rounded-xl p-5 mb-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">
