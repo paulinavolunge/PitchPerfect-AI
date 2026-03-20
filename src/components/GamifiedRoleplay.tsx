@@ -180,13 +180,14 @@ const GamifiedRoleplay: React.FC = () => {
     return () => viewport.removeEventListener('resize', handleResize);
   }, [scrollToBottom]);
 
-  // Scroll to top when debrief appears
+  // Scroll to top and stop TTS when debrief appears
   useEffect(() => {
     if (phase === 'debrief') {
+      stopSpeech();
       window.scrollTo(0, 0);
       chatContainerRef.current?.scrollTo(0, 0);
     }
-  }, [phase]);
+  }, [phase, stopSpeech]);
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
