@@ -195,23 +195,33 @@ const GamifiedRoleplay: React.FC = () => {
       text: m.text,
     }));
 
-    const payload = {
+    const payload: Record<string, any> = {
       userInput: userMsg,
       scenario: {
-        objection: selectedObjection?.label || 'Need',
+        objection: selectedObjection?.label || customScenario?.objection || 'Need',
         difficulty: 'medium',
-        industry: 'general',
+        industry: customScenario?.industry || 'general',
       },
       voiceStyle: 'skeptical',
       userScript: null,
       conversationHistory,
       isReversedRole: true,
+      prospectName: currentProspectName,
     };
+
+    // Add custom fields if in custom mode
+    if (isCustomMode && customScenario) {
+      payload.customProduct = customScenario.product;
+      payload.customBuyerTitle = customScenario.buyerTitle;
+      payload.customIndustry = customScenario.industry;
+      payload.customObjection = customScenario.objection;
+    }
 
     console.log('[GamifiedRoleplay] Calling roleplay-ai-response:', {
       objection: payload.scenario.objection,
       historyLength: conversationHistory.length,
       userInput: userMsg.substring(0, 80),
+      isCustom: isCustomMode,
     });
 
     // Use fetch() directly so we can set the Authorization header for guest users
