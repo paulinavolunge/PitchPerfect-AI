@@ -117,7 +117,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [showPaywall, setShowPaywall] = useState(false);
 
   // ── Patience & Timer state ─────────────────────────────────
-  const RESPONSE_TIMER_MAX = 15;
+  const RESPONSE_TIMER_MAX = 25;
   const [patience, setPatience] = useState(100);
   const [timerSeconds, setTimerSeconds] = useState(RESPONSE_TIMER_MAX);
   const [responseTimes, setResponseTimes] = useState<number[]>([]);
@@ -139,6 +139,7 @@ const GamifiedRoleplay: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const accumulatedTranscriptRef = useRef<string>('');
   const runDebriefRef = useRef<(msgs: ChatMessage[]) => Promise<void>>();
   const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
 
@@ -205,6 +206,27 @@ const GamifiedRoleplay: React.FC = () => {
     return () => viewport.removeEventListener('resize', handleResize);
   }, [scrollToBottom]);
 
+  // ── Dynamic viewport height for mobile keyboard ───────────
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      setViewportHeight(vv.height);
+      // Scroll the last message into view when keyboard resizes viewport
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, []);
+
+  // ── Cancel TTS immediately when debrief appears ───────────
+  useEffect(() => {
+    if (debrief) {
+      window.speechSynthesis?.cancel();
+    }
+  }, [debrief]);
+
   // ── Patience timer: counts down when user's turn ──────────
   useEffect(() => {
     // Only run timer during conversation phase, when it's user's turn (not AI typing), and not hung up
@@ -224,8 +246,8 @@ const GamifiedRoleplay: React.FC = () => {
     timerIntervalRef.current = setInterval(() => {
       setTimerSeconds(prev => {
         if (prev <= 1) {
-          // Timer ran out — deplete patience by 25%
-          const newPatience = Math.max(0, patienceRef.current - 25);
+          // Timer ran out — deplete patience by 20%
+          const newPatience = Math.max(0, patienceRef.current - 20);
           patienceRef.current = newPatience;
           setPatience(newPatience);
           // Reset timer for next cycle
@@ -262,11 +284,11 @@ const GamifiedRoleplay: React.FC = () => {
         recognitionRef.current = null;
         setIsListening(false);
       }
-      // Show hang-up animation for 2 seconds, then trigger debrief
+      // Show hang-up animation for 2.5 seconds, then trigger debrief
       setTimeout(() => {
         setShowHangUpAnimation(false);
         runDebriefRef.current!(messages);
-      }, 2000);
+      }, 2500);
     }
   }, [patience, phase, hungUp, messages, stopSpeech]);
 
@@ -414,9 +436,9 @@ const GamifiedRoleplay: React.FC = () => {
     setResponseTimes(prev => [...prev, responseTime]);
 
     // Patience depletion based on response quality
-    let patienceDrop = 5; // default: natural decay for good-length response
+    let patienceDrop = 3; // default: natural decay for good-length response
     if (text.length < 15) {
-      patienceDrop = 10; // short/lazy response
+      patienceDrop = 8; // short/lazy response
     }
     const newPatience = Math.max(0, patienceRef.current - patienceDrop);
     patienceRef.current = newPatience;
@@ -464,8 +486,8 @@ const GamifiedRoleplay: React.FC = () => {
       lastProspectMsgTimeRef.current = Date.now();
       if (inputMode === 'voice') speakText(response);
 
-      // Round-based patience decay (5% per round)
-      const roundPatience = Math.max(0, patienceRef.current - 5);
+      // Round-based patience decay (3% per round)
+      const roundPatience = Math.max(0, patienceRef.current - 3);
       patienceRef.current = roundPatience;
       setPatience(roundPatience);
 
@@ -665,6 +687,7 @@ const GamifiedRoleplay: React.FC = () => {
       try { recognitionRef.current?.stop(); } catch (_) {}
       try { recognitionRef.current?.abort(); } catch (_) {}
       recognitionRef.current = null;
+      accumulatedTranscriptRef.current = '';
       setIsListening(false);
       return;
     }
@@ -680,6 +703,7 @@ const GamifiedRoleplay: React.FC = () => {
     }
 
     isManualStopRef.current = false;
+    accumulatedTranscriptRef.current = '';
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
@@ -688,17 +712,18 @@ const GamifiedRoleplay: React.FC = () => {
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
+      // Rebuild full transcript from all results in this session
+      let sessionFinal = '';
+      let sessionInterim = '';
       for (let i = 0; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+          sessionFinal += event.results[i][0].transcript;
         } else {
-          interimTranscript += event.results[i][0].transcript;
+          sessionInterim += event.results[i][0].transcript;
         }
       }
-      // Replace the entire input value, never append
-      setUserInput(finalTranscript + interimTranscript);
+      // Always replace — never append. Accumulated ref carries text across auto-restarts.
+      setUserInput(accumulatedTranscriptRef.current + sessionFinal + sessionInterim);
     };
 
     recognition.onerror = (event: any) => {
@@ -713,6 +738,17 @@ const GamifiedRoleplay: React.FC = () => {
     recognition.onend = () => {
       // If NOT a manual stop and this is still the active instance, auto-restart
       if (!isManualStopRef.current && recognitionRef.current === recognition) {
+        // Save all final results from the ending session before restarting
+        // so they aren't lost when a new session resets event.results
+        try {
+          const lastEvent = (recognition as any)._lastResults;
+          // Fallback: read current input as the accumulated text
+          // Since setUserInput is async, read from the DOM input directly
+          const inputEl = inputRef.current;
+          if (inputEl) {
+            accumulatedTranscriptRef.current = inputEl.value;
+          }
+        } catch (_) {}
         try {
           recognition.start();
           return;
@@ -784,6 +820,34 @@ const GamifiedRoleplay: React.FC = () => {
     setHungUp(false);
     setShowHangUpAnimation(false);
   };
+
+  // ── Render: Hang-up overlay (rendered outside phase blocks so it survives phase transitions) ──
+  const hangUpOverlay = (
+    <AnimatePresence>
+      {showHangUpAnimation && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, x: [0, -8, 8, -6, 6, -3, 3, 0] }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center"
+          style={{ background: 'rgba(0, 0, 0, 0.75)' }}
+        >
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="text-center px-8"
+          >
+            <Phone className="w-20 h-20 mx-auto text-red-400 mb-5 rotate-[135deg]" />
+            <p className="text-3xl font-bold text-white" style={{ fontSize: '28px' }}>
+              Click. {currentProspectName} hung up.
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   // ── Render: Objection Selection ────────────────────────────
    if (phase === 'select-objection') {
@@ -975,6 +1039,7 @@ const GamifiedRoleplay: React.FC = () => {
     const won = debrief.won;
     return (
       <div className="max-w-lg mx-auto p-6">
+        {hangUpOverlay}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -1134,7 +1199,7 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── Render: Conversation ───────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto flex flex-col" style={{ height: '100dvh', padding: '0 1.5rem' }}>
+    <div className="max-w-2xl mx-auto flex flex-col" style={{ height: viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pt-4 shrink-0">
         <div>
@@ -1189,29 +1254,7 @@ const GamifiedRoleplay: React.FC = () => {
         </div>
       </div>
 
-      {/* Hang-up animation overlay */}
-      <AnimatePresence>
-        {showHangUpAnimation && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, x: [0, -6, 6, -4, 4, -2, 2, 0] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-center px-6"
-            >
-              <Phone className="w-16 h-16 mx-auto text-destructive mb-4 rotate-[135deg]" />
-              <p className="text-2xl font-bold text-foreground">
-                📞 Click. {currentProspectName} hung up.
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {hangUpOverlay}
 
       {/* Chat messages */}
       <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -1296,7 +1339,11 @@ const GamifiedRoleplay: React.FC = () => {
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-            onFocus={() => setTimeout(scrollToBottom, 300)}
+            onFocus={() => {
+              setTimeout(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              }, 300);
+            }}
             placeholder={isListening ? 'Listening… tap Send when done' : 'Type your response…'}
             disabled={isAiTyping || hungUp}
             className="w-full rounded-xl border border-input bg-card px-4 py-3 pr-14 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
@@ -1305,7 +1352,7 @@ const GamifiedRoleplay: React.FC = () => {
           {!isAiTyping && !hungUp && phase === 'conversation' && messages.length > 0 && (
             <span
               className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs font-mono tabular-nums ${
-                timerSeconds <= 5 ? 'text-red-500' : timerSeconds <= 10 ? 'text-yellow-500' : 'text-muted-foreground/60'
+                timerSeconds <= 7 ? 'text-red-500' : timerSeconds <= 15 ? 'text-yellow-500' : 'text-muted-foreground/60'
               }`}
             >
               <Clock className="w-3 h-3" />
@@ -1321,6 +1368,7 @@ const GamifiedRoleplay: React.FC = () => {
               try { recognitionRef.current?.stop(); } catch (_) {}
               try { recognitionRef.current?.abort(); } catch (_) {}
               recognitionRef.current = null;
+              accumulatedTranscriptRef.current = '';
               setIsListening(false);
             }
             sendMessage();
