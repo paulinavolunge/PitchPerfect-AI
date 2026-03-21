@@ -139,6 +139,7 @@ const GamifiedRoleplay: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const accumulatedTranscriptRef = useRef<string>('');
   const runDebriefRef = useRef<(msgs: ChatMessage[]) => Promise<void>>();
   const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
 
@@ -204,6 +205,27 @@ const GamifiedRoleplay: React.FC = () => {
     viewport.addEventListener('resize', handleResize);
     return () => viewport.removeEventListener('resize', handleResize);
   }, [scrollToBottom]);
+
+  // ── Dynamic viewport height for mobile keyboard ───────────
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      setViewportHeight(vv.height);
+      // Scroll the last message into view when keyboard resizes viewport
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, []);
+
+  // ── Cancel TTS immediately when debrief appears ───────────
+  useEffect(() => {
+    if (debrief) {
+      window.speechSynthesis?.cancel();
+    }
+  }, [debrief]);
 
   // ── Patience timer: counts down when user's turn ──────────
   useEffect(() => {
@@ -665,6 +687,7 @@ const GamifiedRoleplay: React.FC = () => {
       try { recognitionRef.current?.stop(); } catch (_) {}
       try { recognitionRef.current?.abort(); } catch (_) {}
       recognitionRef.current = null;
+      accumulatedTranscriptRef.current = '';
       setIsListening(false);
       return;
     }
@@ -680,6 +703,7 @@ const GamifiedRoleplay: React.FC = () => {
     }
 
     isManualStopRef.current = false;
+    accumulatedTranscriptRef.current = '';
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
@@ -688,17 +712,18 @@ const GamifiedRoleplay: React.FC = () => {
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
+      // Rebuild full transcript from all results in this session
+      let sessionFinal = '';
+      let sessionInterim = '';
       for (let i = 0; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+          sessionFinal += event.results[i][0].transcript;
         } else {
-          interimTranscript += event.results[i][0].transcript;
+          sessionInterim += event.results[i][0].transcript;
         }
       }
-      // Replace the entire input value, never append
-      setUserInput(finalTranscript + interimTranscript);
+      // Always replace — never append. Accumulated ref carries text across auto-restarts.
+      setUserInput(accumulatedTranscriptRef.current + sessionFinal + sessionInterim);
     };
 
     recognition.onerror = (event: any) => {
@@ -713,6 +738,17 @@ const GamifiedRoleplay: React.FC = () => {
     recognition.onend = () => {
       // If NOT a manual stop and this is still the active instance, auto-restart
       if (!isManualStopRef.current && recognitionRef.current === recognition) {
+        // Save all final results from the ending session before restarting
+        // so they aren't lost when a new session resets event.results
+        try {
+          const lastEvent = (recognition as any)._lastResults;
+          // Fallback: read current input as the accumulated text
+          // Since setUserInput is async, read from the DOM input directly
+          const inputEl = inputRef.current;
+          if (inputEl) {
+            accumulatedTranscriptRef.current = inputEl.value;
+          }
+        } catch (_) {}
         try {
           recognition.start();
           return;
@@ -1163,7 +1199,7 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── Render: Conversation ───────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto flex flex-col" style={{ height: '100dvh', padding: '0 1.5rem' }}>
+    <div className="max-w-2xl mx-auto flex flex-col" style={{ height: viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pt-4 shrink-0">
         <div>
@@ -1303,7 +1339,11 @@ const GamifiedRoleplay: React.FC = () => {
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-            onFocus={() => setTimeout(scrollToBottom, 300)}
+            onFocus={() => {
+              setTimeout(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              }, 300);
+            }}
             placeholder={isListening ? 'Listening… tap Send when done' : 'Type your response…'}
             disabled={isAiTyping || hungUp}
             className="w-full rounded-xl border border-input bg-card px-4 py-3 pr-14 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
@@ -1328,6 +1368,7 @@ const GamifiedRoleplay: React.FC = () => {
               try { recognitionRef.current?.stop(); } catch (_) {}
               try { recognitionRef.current?.abort(); } catch (_) {}
               recognitionRef.current = null;
+              accumulatedTranscriptRef.current = '';
               setIsListening(false);
             }
             sendMessage();
