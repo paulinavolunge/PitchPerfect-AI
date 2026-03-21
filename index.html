@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
   <head>
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVCRJT504Y"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-HVCRJT504Y');
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#ffffff" />
@@ -28,7 +37,7 @@
       @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
     </style>
 
-    <!-- Analytics managed by src/utils/analytics.ts -->
+    <!-- Custom event tracking managed by src/utils/analytics.ts -->
   </head>
   <body>
     <div id="root">
