@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2, Star } from 'lucide-react';
@@ -109,6 +109,11 @@ const GamifiedRoleplay: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const isManualStopRef = useRef(false);
   const [showPaywall, setShowPaywall] = useState(false);
+
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  }, []);
 
   const currentProspectName = isCustomMode ? prospectInfo.name : prospectInfo.name;
   const currentProspectTitle = isCustomMode && customScenario?.buyerTitle ? customScenario.buyerTitle : prospectInfo.title;
@@ -799,21 +804,26 @@ const GamifiedRoleplay: React.FC = () => {
           </p>
         )}
 
-        <div className="flex gap-4 justify-center mb-8">
-          {(['text', 'voice'] as InputMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setInputMode(mode)}
-              className={`flex flex-col items-center gap-2 px-8 py-5 rounded-xl border-2 transition-all ${
-                inputMode === mode
-                  ? 'border-primary-500 bg-primary-50 shadow-md'
-                  : 'border-border bg-card hover:border-primary-300'
-              }`}
-            >
-              {mode === 'text' ? <MessageSquare className="w-6 h-6 text-primary-600" /> : <Mic className="w-6 h-6 text-primary-600" />}
-              <span className="font-medium text-foreground capitalize">{mode}</span>
-            </button>
-          ))}
+        <div className="flex flex-col items-center gap-2 mb-8">
+          <div className="flex gap-4 justify-center">
+            {(['text', 'voice'] as InputMode[]).filter((mode) => mode === 'text' || !isMobile).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setInputMode(mode)}
+                className={`flex flex-col items-center gap-2 px-8 py-5 rounded-xl border-2 transition-all ${
+                  inputMode === mode
+                    ? 'border-primary-500 bg-primary-50 shadow-md'
+                    : 'border-border bg-card hover:border-primary-300'
+                }`}
+              >
+                {mode === 'text' ? <MessageSquare className="w-6 h-6 text-primary-600" /> : <Mic className="w-6 h-6 text-primary-600" />}
+                <span className="font-medium text-foreground capitalize">{mode}</span>
+              </button>
+            ))}
+          </div>
+          {isMobile && (
+            <p className="text-xs text-muted-foreground mt-1">Voice mode available on desktop.</p>
+          )}
         </div>
 
         <div className="flex gap-3 justify-center">
