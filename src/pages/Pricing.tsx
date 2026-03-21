@@ -20,7 +20,7 @@ const Pricing = () => {
 
   const handlePurchase = async (planId: string, quantity?: number) => {
     if (!user) {
-      navigate('/signup');
+      navigate(`/signup?plan=${planId}`);
       return;
     }
 

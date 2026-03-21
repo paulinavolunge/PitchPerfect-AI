@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Mail, Lock, User, Loader2, AlertCircle, X } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +12,8 @@ import { Helmet } from 'react-helmet-async';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planParam = searchParams.get('plan');
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -24,12 +26,33 @@ const Signup = () => {
     confirmPassword: ''
   });
 
+  const redirectToCheckout = async (plan: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { productType: plan, quantity: plan === 'team' ? 3 : 1 },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch (err: any) {
+      console.error('Post-signup checkout error:', err);
+    }
+    // Fallback to dashboard if checkout fails
+    navigate('/dashboard');
+  };
+
   useEffect(() => {
     console.log('Signup page loaded');
-    
+
     // Redirect if already authenticated (but not during signup process)
     if (user && !isLoading) {
-      navigate('/dashboard');
+      if (planParam === 'solo' || planParam === 'team') {
+        redirectToCheckout(planParam);
+      } else {
+        navigate('/dashboard');
+      }
     }
   }, [user, navigate, isLoading]);
 
@@ -127,7 +150,11 @@ const Signup = () => {
         
         // Add a small delay to ensure auth context is properly initialized
         setTimeout(() => {
-          navigate('/dashboard');
+          if (planParam === 'solo' || planParam === 'team') {
+            redirectToCheckout(planParam);
+          } else {
+            navigate('/dashboard');
+          }
         }, 500);
       }
     } catch (error: any) {
@@ -149,10 +176,13 @@ const Signup = () => {
     try {
       console.log('Starting Google OAuth signup...');
       
+      const redirectPath = (planParam === 'solo' || planParam === 'team')
+        ? `/signup?plan=${planParam}`
+        : '/dashboard';
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}${redirectPath}`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

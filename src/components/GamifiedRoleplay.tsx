@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2, Star, Clock, Phone } from 'lucide-react';
+import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2, Star, Clock, Phone, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
@@ -115,6 +115,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const isManualStopRef = useRef(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   // ── Patience & Timer state ─────────────────────────────────
   const RESPONSE_TIMER_MAX = 25;
@@ -769,6 +770,27 @@ const GamifiedRoleplay: React.FC = () => {
   }, [isListening]);
 
   // ── Reset ──────────────────────────────────────────────────
+  const handleGoProCheckout = async (planId: string = 'solo', quantity: number = 1) => {
+    if (!user) {
+      navigate(`/signup?plan=${planId}`);
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { productType: planId, quantity },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      console.error('Checkout error:', err);
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   const handleTryAnother = () => {
     // After completing a session, check if the user has hit their limit
     if (hasReachedLimit) {
@@ -1004,7 +1026,7 @@ const GamifiedRoleplay: React.FC = () => {
 
         <div className="flex flex-col items-center gap-2 mb-8">
           <div className="flex gap-4 justify-center">
-            {(['text', 'voice'] as InputMode[]).filter((mode) => mode === 'text' || !isMobile).map((mode) => (
+            {(['text', 'voice'] as InputMode[]).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setInputMode(mode)}
@@ -1016,12 +1038,12 @@ const GamifiedRoleplay: React.FC = () => {
               >
                 {mode === 'text' ? <MessageSquare className="w-6 h-6 text-primary-600" /> : <Mic className="w-6 h-6 text-primary-600" />}
                 <span className="font-medium text-foreground capitalize">{mode}</span>
+                {mode === 'voice' && isMobile && (
+                  <span className="text-xs text-muted-foreground -mt-1">(Beta)</span>
+                )}
               </button>
             ))}
           </div>
-          {isMobile && (
-            <p className="text-xs text-muted-foreground mt-1">Voice mode available on desktop.</p>
-          )}
         </div>
 
         <div className="flex gap-3 justify-center">
@@ -1158,8 +1180,8 @@ const GamifiedRoleplay: React.FC = () => {
               <Button variant="outline" onClick={() => navigate('/signup')} className="flex-1">
                 Sign Up Free <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
-              <Button onClick={() => navigate('/pricing')} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
-                Go Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" />
+              <Button onClick={() => handleGoProCheckout('solo')} disabled={checkoutLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                {checkoutLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</> : <>Go Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" /></>}
               </Button>
             </div>
           </div>
@@ -1175,8 +1197,8 @@ const GamifiedRoleplay: React.FC = () => {
               <Progress value={Math.min((attemptCount / 3) * 100, 100)} className="h-2" />
               <span className="text-xs text-muted-foreground mt-1 block">{attemptCount}/3 sessions used</span>
             </div>
-            <Button onClick={() => navigate('/pricing')} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              Upgrade to Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" />
+            <Button onClick={() => handleGoProCheckout('solo')} disabled={checkoutLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              {checkoutLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</> : <>Upgrade to Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" /></>}
             </Button>
           </div>
         ) : null}
