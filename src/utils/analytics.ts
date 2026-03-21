@@ -19,7 +19,8 @@ function stripInternalParams(url: string): string {
 }
 
 function isProductionHost(): boolean {
-  return window.location.hostname === PRODUCTION_HOSTNAME;
+  const hostname = window.location.hostname;
+  return hostname === 'pitchperfectai.ai' || hostname === 'www.pitchperfectai.ai' || hostname === PRODUCTION_HOSTNAME;
 }
 
 export const hasValidConsent = (): boolean => {
@@ -91,7 +92,8 @@ export const initGA = () => {
 };
 
 export const trackPageView = (path: string) => {
-  if (!isProductionHost() || !hasValidConsent() || !window.gtag) return;
+  if (!isProductionHost()) return;
+  if (typeof window.gtag !== 'function') return;
   const cleanPath = stripInternalParams(path);
   const cleanLocation = stripInternalParams(window.location.href);
   window.gtag('event', 'page_view', {
@@ -103,7 +105,8 @@ export const trackPageView = (path: string) => {
 };
 
 export const trackEvent = (eventName: string, eventParams: Record<string, any> = {}) => {
-  if (!isProductionHost() || !hasValidConsent() || !window.gtag) return;
+  if (!isProductionHost()) return;
+  if (typeof window.gtag !== 'function') return;
   window.gtag('event', eventName, { ...eventParams, send_to: GA_ID });
 };
 
