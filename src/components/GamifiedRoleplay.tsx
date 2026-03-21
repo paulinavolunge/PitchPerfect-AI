@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2, Star } from 'lucide-react';
@@ -110,6 +110,11 @@ const GamifiedRoleplay: React.FC = () => {
   const isManualStopRef = useRef(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  }, []);
+
   const currentProspectName = isCustomMode ? prospectInfo.name : prospectInfo.name;
   const currentProspectTitle = isCustomMode && customScenario?.buyerTitle ? customScenario.buyerTitle : prospectInfo.title;
 
@@ -150,13 +155,14 @@ const GamifiedRoleplay: React.FC = () => {
     synthRef.current?.cancel();
   }, []);
 
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const navigate = useNavigate();
   const {
     hasReachedLimit,
     incrementAttempt,
     isGuest,
     remainingAttempts,
+    attemptCount,
     currentLimit,
     FREE_ACCOUNT_MONTHLY_LIMIT,
     refreshCount,
@@ -799,21 +805,26 @@ const GamifiedRoleplay: React.FC = () => {
           </p>
         )}
 
-        <div className="flex gap-4 justify-center mb-8">
-          {(['text', 'voice'] as InputMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setInputMode(mode)}
-              className={`flex flex-col items-center gap-2 px-8 py-5 rounded-xl border-2 transition-all ${
-                inputMode === mode
-                  ? 'border-primary-500 bg-primary-50 shadow-md'
-                  : 'border-border bg-card hover:border-primary-300'
-              }`}
-            >
-              {mode === 'text' ? <MessageSquare className="w-6 h-6 text-primary-600" /> : <Mic className="w-6 h-6 text-primary-600" />}
-              <span className="font-medium text-foreground capitalize">{mode}</span>
-            </button>
-          ))}
+        <div className="flex flex-col items-center gap-2 mb-8">
+          <div className="flex gap-4 justify-center">
+            {(['text', 'voice'] as InputMode[]).filter((mode) => mode === 'text' || !isMobile).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setInputMode(mode)}
+                className={`flex flex-col items-center gap-2 px-8 py-5 rounded-xl border-2 transition-all ${
+                  inputMode === mode
+                    ? 'border-primary-500 bg-primary-50 shadow-md'
+                    : 'border-border bg-card hover:border-primary-300'
+                }`}
+              >
+                {mode === 'text' ? <MessageSquare className="w-6 h-6 text-primary-600" /> : <Mic className="w-6 h-6 text-primary-600" />}
+                <span className="font-medium text-foreground capitalize">{mode}</span>
+              </button>
+            ))}
+          </div>
+          {isMobile && (
+            <p className="text-xs text-muted-foreground mt-1">Voice mode available on desktop.</p>
+          )}
         </div>
 
         <div className="flex gap-3 justify-center">
@@ -907,37 +918,51 @@ const GamifiedRoleplay: React.FC = () => {
           <p className="text-sm text-muted-foreground">{debrief.tip}</p>
         </div>
 
-        {/* Post-session gating: show appropriate CTA based on user state */}
-        {hasReachedLimit && isGuest ? (
-          // Guest used their 1 free session — prompt to create account
-          <div className="bg-muted border border-border rounded-xl p-5 mb-4 text-center">
+        {/* Post-session CTA based on user tier */}
+        {isGuest ? (
+          // Guest (not logged in)
+          <div className="bg-card border border-border rounded-xl p-5 mb-4 text-center shadow-sm">
             <UserPlus className="w-8 h-8 mx-auto text-primary mb-2" />
             <h3 className="font-semibold text-foreground mb-1">Want to keep practicing?</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Create a free account and get {FREE_ACCOUNT_MONTHLY_LIMIT} practice sessions per month — free forever.
+              Create a free account to get 3 practice sessions per month — or go unlimited with Pro.
             </p>
-            <Button onClick={() => navigate('/signup')} className="w-full bg-primary-500 hover:bg-primary-600 text-white">
-              <UserPlus className="w-4 h-4 mr-2" /> Create Free Account
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => navigate('/signup')} className="flex-1">
+                Sign Up Free <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+              <Button onClick={() => navigate('/pricing')} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                Go Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        ) : !isPremium ? (
+          // Free user (logged in, not subscribed)
+          <div className="bg-card border border-border rounded-xl p-5 mb-4 text-center shadow-sm">
+            <Sparkles className="w-8 h-8 mx-auto text-primary mb-2" />
+            <h3 className="font-semibold text-foreground mb-1">Ready to master every objection?</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              You've used {attemptCount} of 3 free sessions this month. Upgrade to Pro for unlimited practice, custom scenarios, and detailed analytics.
+            </p>
+            <div className="mb-4">
+              <Progress value={Math.min((attemptCount / 3) * 100, 100)} className="h-2" />
+              <span className="text-xs text-muted-foreground mt-1 block">{attemptCount}/3 sessions used</span>
+            </div>
+            <Button onClick={() => navigate('/pricing')} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              Upgrade to Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
-        ) : hasReachedLimit && !isGuest ? (
-          // Free user hit their monthly limit — show upgrade prompt
-          <div className="bg-muted border border-border rounded-xl p-5 mb-4 text-center">
-            <Lock className="w-8 h-8 mx-auto text-primary mb-2" />
-            <h3 className="font-semibold text-foreground mb-1">Monthly limit reached</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              You've used all {currentLimit} free sessions this month. Upgrade for unlimited practice.
-            </p>
-            <Button onClick={() => setShowPaywall(true)} className="w-full bg-primary-500 hover:bg-primary-600 text-white">
-              <ArrowRight className="w-4 h-4 mr-2" /> View Plans
-            </Button>
-          </div>
-        ) : (
-          // Still has attempts — normal "Try Another" button
-          <Button onClick={handleTryAnother} className="w-full bg-primary-500 hover:bg-primary-600 text-white">
+        ) : null}
+
+        {/* Action buttons */}
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={handleTryAnother} className="flex-1">
             <RotateCcw className="w-4 h-4 mr-2" /> Try Another Objection
           </Button>
-        )}
+          <Button onClick={() => { reset(); }} className="flex-1 bg-primary-500 hover:bg-primary-600 text-white">
+            Practice Again <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
 
         {/* Upgrade Paywall Modal */}
         <UpgradePaywallModal open={showPaywall} />
