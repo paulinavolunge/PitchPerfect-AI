@@ -61,7 +61,7 @@ const Dashboard = () => {
 
   const handleStartPractice = () => {
     if (!isPremium && (creditsRemaining ?? 0) === 0) {
-      navigate('/pricing');
+      handleCheckout('solo');
       return;
     }
     navigate('/roleplay');
@@ -124,8 +124,8 @@ const Dashboard = () => {
               <AlertDescription className="flex items-center justify-between">
                 <span className="text-amber-800">You have no credits remaining. Upgrade to continue practicing.</span>
                 {isPricingEnabled() && (
-                  <Button onClick={() => navigate('/pricing')} variant="outline" size="sm" className="ml-4 border-amber-400 text-amber-800 hover:bg-amber-100">
-                    View Plans
+                  <Button onClick={() => handleCheckout('solo')} disabled={checkoutLoading === 'solo'} variant="outline" size="sm" className="ml-4 border-amber-400 text-amber-800 hover:bg-amber-100">
+                    {checkoutLoading === 'solo' ? 'Processing...' : 'Upgrade to Pro — $29/mo'}
                   </Button>
                 )}
               </AlertDescription>
@@ -183,25 +183,32 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className={!isPremium ? 'border-blue-200' : ''}>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">Plan</CardTitle>
-                    <Crown className="h-4 w-4 text-muted-foreground" />
+                    <Crown className={`h-4 w-4 ${isPremium ? 'text-amber-500' : 'text-muted-foreground'}`} />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-foreground">
-                      {isPremium ? 'Premium' : 'Free'}
-                    </div>
-                    {!isPremium && isPricingEnabled() && (
-                      <button
-                        onClick={() => navigate('/pricing')}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Upgrade →
-                      </button>
-                    )}
-                    {isPremium && (
-                      <p className="text-xs text-muted-foreground">active</p>
+                    {isPremium ? (
+                      <>
+                        <div className="text-2xl font-bold text-foreground">Premium</div>
+                        <p className="text-xs text-muted-foreground">active</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-foreground">Free</div>
+                        <p className="text-xs text-muted-foreground mb-2">3 sessions/month</p>
+                        {isPricingEnabled() && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleCheckout('solo')}
+                            disabled={checkoutLoading === 'solo'}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
+                          >
+                            {checkoutLoading === 'solo' ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" />...</> : 'Upgrade — $29/mo'}
+                          </Button>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>

@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
 import { useGuestMode } from "@/context/GuestModeContext";
-import { Menu, UserPlus, LogIn, Home, UserRound, Crown, Diamond } from 'lucide-react';
+import { Menu, UserPlus, LogIn, Home, UserRound, Crown, Diamond, Zap, Loader2 } from 'lucide-react';
 import { isPricingEnabled, isPremiumFeaturesEnabled } from '@/config/features';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +19,24 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const handleUpgradeCheckout = async () => {
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { productType: 'solo', quantity: 1 },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch (err) {
+      console.error('Navbar checkout error:', err);
+    }
+    setCheckoutLoading(false);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -191,12 +210,22 @@ const Navbar: React.FC = () => {
                   </div>
                 )}
 
-                {/* Credits display */}
+                {/* Upgrade button for free users */}
                 {isPremiumFeaturesEnabled() && !isPremium && (
-                  <div className="hidden sm:flex items-center space-x-1 text-sm text-deep-navy/70">
-                    <Diamond className="h-4 w-4" aria-hidden="true" />
-                    <span>{creditsRemaining} credits</span>
-                  </div>
+                  <button
+                    onClick={handleUpgradeCheckout}
+                    disabled={checkoutLoading}
+                    className="hidden sm:flex items-center space-x-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-medium transition-colors disabled:opacity-60"
+                  >
+                    {checkoutLoading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <>
+                        <Zap className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Upgrade</span>
+                      </>
+                    )}
+                  </button>
                 )}
 
                 {/* User menu */}
@@ -244,11 +273,9 @@ const Navbar: React.FC = () => {
                       </Link>
                     </DropdownMenuItem>
                     {isPremiumFeaturesEnabled() && !isPremium && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/pricing" className="cursor-pointer w-full">
-                          <Crown className="mr-2 h-4 w-4" aria-hidden="true" />
-                          Upgrade to Premium
-                        </Link>
+                      <DropdownMenuItem onClick={handleUpgradeCheckout} disabled={checkoutLoading} className="cursor-pointer">
+                        <Crown className="mr-2 h-4 w-4" aria-hidden="true" />
+                        {checkoutLoading ? 'Processing...' : 'Upgrade to Pro — $29/mo'}
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
