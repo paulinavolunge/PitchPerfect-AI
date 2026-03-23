@@ -55,7 +55,7 @@ const MAX_ROUNDS = 6;
 const OBJECTIONS: ObjectionCard[] = [
   { id: 'budget', label: 'Budget', emoji: '💰', description: '"We don\'t have the budget right now."' },
   { id: 'think', label: 'Think About It', emoji: '🤔', description: '"Let me think about it and get back to you."' },
-  { id: 'email', label: 'Send Me an Email', emoji: '📧', description: '"Just send me an email with the details."' },
+  { id: 'email', label: 'Send Me an Email', emoji: '\u2709\uFE0F', description: '"Just send me an email with the details."' },
   { id: 'competitor', label: 'Using a Competitor', emoji: '🏢', description: '"We already use another vendor for that."' },
   { id: 'timing', label: 'Bad Timing', emoji: '⏰', description: '"It\'s not a good time for us right now."' },
   { id: 'team', label: 'Loop in Team', emoji: '👥', description: '"I need to loop in my team before deciding."' },
@@ -115,6 +115,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [isTransitioningToDebrief, setIsTransitioningToDebrief] = useState(false);
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [isTranscribedFromVoice, setIsTranscribedFromVoice] = useState(false);
   const isManualStopRef = useRef(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -225,13 +226,6 @@ const GamifiedRoleplay: React.FC = () => {
     return () => vv.removeEventListener('resize', onResize);
   }, []);
 
-  // ── Cancel TTS immediately when debrief appears ───────────
-  useEffect(() => {
-    if (debrief) {
-      window.speechSynthesis?.cancel();
-    }
-  }, [debrief]);
-
   // ── Patience timer: counts down when user is idle ──────────
   useEffect(() => {
     // Only run timer during conversation phase, when it's user's turn (not AI typing), and not hung up
@@ -298,15 +292,13 @@ const GamifiedRoleplay: React.FC = () => {
     }
   }, [patience, phase, hungUp, messages, stopSpeech]);
 
-  // Scroll to top and stop TTS when debrief appears
+  // Scroll to top when debrief appears
   useEffect(() => {
     if (phase === 'debrief') {
-      stopSpeech();
-      if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
       window.scrollTo(0, 0);
       chatContainerRef.current?.scrollTo(0, 0);
     }
-  }, [phase, stopSpeech]);
+  }, [phase]);
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
@@ -465,6 +457,7 @@ const GamifiedRoleplay: React.FC = () => {
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setUserInput('');
+    setIsTranscribedFromVoice(false);
     setIsUserTyping(false);
     setIsAiTyping(true);
 
@@ -685,6 +678,8 @@ const GamifiedRoleplay: React.FC = () => {
       });
     } finally {
       setIsAiTyping(false);
+      // Wait briefly to ensure TTS audio has fully stopped before showing debrief
+      await new Promise(resolve => setTimeout(resolve, 100));
       setPhase('debrief');
 
       // Track the completed session attempt AFTER debrief
@@ -756,6 +751,7 @@ const GamifiedRoleplay: React.FC = () => {
       }
       const currentText = accumulatedTranscriptRef.current + finalText + lastInterim;
       setUserInput(currentText);
+      if (currentText) setIsTranscribedFromVoice(true);
 
       // When we get a final result, save it to accumulated and prepare for restart
       if (finalText) {
@@ -1393,6 +1389,13 @@ const GamifiedRoleplay: React.FC = () => {
         <div ref={chatEndRef} />
       </div>
 
+      {/* Voice transcription indicator */}
+      {isTranscribedFromVoice && userInput && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1 ml-1 shrink-0">
+          <Mic className="w-3 h-3" />
+          <span>Transcribed from voice</span>
+        </div>
+      )}
       <div className="flex gap-2 items-end sticky bottom-0 bg-background pb-4 pt-2 shrink-0">
         {inputMode === 'voice' && (
           <Button
@@ -1411,7 +1414,7 @@ const GamifiedRoleplay: React.FC = () => {
             ref={inputRef}
             type="text"
             value={userInput}
-            onChange={(e) => { setUserInput(e.target.value); if (e.target.value.length > 0) setIsUserTyping(true); }}
+            onChange={(e) => { setUserInput(e.target.value); setIsTranscribedFromVoice(false); if (e.target.value.length > 0) setIsUserTyping(true); }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             onFocus={() => {
               setTimeout(() => {
