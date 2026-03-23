@@ -55,7 +55,7 @@ const OBJECTIONS: ObjectionCard[] = [
   { id: 'budget', label: 'Budget', emoji: '💰', description: '"We don\'t have the budget right now."' },
   { id: 'think', label: 'Think About It', emoji: '🤔', description: '"Let me think about it and get back to you."' },
   { id: 'email', label: 'Send Me an Email', emoji: '📧', description: '"Just send me an email with the details."' },
-  { id: 'competitor', label: 'Using a Competitor', emoji: '🏢', description: '"We already use [Competitor] for that."' },
+  { id: 'competitor', label: 'Using a Competitor', emoji: '🏢', description: '"We already use another vendor for that."' },
   { id: 'timing', label: 'Bad Timing', emoji: '⏰', description: '"It\'s not a good time for us right now."' },
   { id: 'team', label: 'Loop in Team', emoji: '👥', description: '"I need to loop in my team before deciding."' },
 ];
@@ -1364,7 +1364,7 @@ const GamifiedRoleplay: React.FC = () => {
             type="text"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             onFocus={() => {
               setTimeout(() => {
                 chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });

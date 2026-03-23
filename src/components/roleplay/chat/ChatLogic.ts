@@ -46,7 +46,7 @@ export const generateFirstObjection = async (scenario: Scenario, getAIPersona: (
       "This looks good, but I'll need to run it by our procurement team and they're very particular about vendors."
     ],
     Competition: [
-      "I'm already talking to [Competitor] and they're offering me a better deal. What makes you different?",
+      "I'm already talking to another vendor and they're offering me a better deal. What makes you different?",
       "Your competitor just quoted me 25% less for the same features. Can you match their price?"
     ],
     Need: [
@@ -195,7 +195,7 @@ function generateContextualFallbackResponse(userInput: string, scenario: Scenari
       `${persona}: This looks good, but I'll need to run it by our procurement team and they're very particular about vendors.`
     ],
     Competition: [
-      `${persona}: I'm already talking to [Competitor] and they're offering me a better deal. What makes you different?`,
+      `${persona}: I'm already talking to another vendor and they're offering me a better deal. What makes you different?`,
       `${persona}: Your competitor just quoted me 25% less for the same features. Can you match their price?`
     ],
     Need: [

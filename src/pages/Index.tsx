@@ -188,7 +188,7 @@ const Index = () => {
                   <div className="pp-comp-card pp-comp-ppai">
                     <div className="pp-comp-label pp-comp-label-ppai">⚡ PitchPerfect AI Response</div>
                     <div className="pp-comp-msg pp-comp-msg-ppai">
-                      "We already use [Competitor] and we're happy with them. I've got a board meeting in 20 minutes. Give me one concrete reason I should keep listening instead of hanging up."
+                      "We already use another vendor and we're happy with them. I've got a board meeting in 20 minutes. Give me one concrete reason I should keep listening instead of hanging up."
                     </div>
                     <div className="pp-comp-verdict pp-verdict-good">✓ Realistic pushback. Scored 7.4/10. Specific feedback.</div>
                   </div>
