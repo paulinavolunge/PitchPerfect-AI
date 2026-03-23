@@ -8,6 +8,7 @@ import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
+import { toast } from '@/hooks/use-toast';
 
 // ── Types ──────────────────────────────────────────────────────
 interface ObjectionCard {
@@ -714,7 +715,15 @@ const GamifiedRoleplay: React.FC = () => {
     }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      toast({
+        title: "Voice not supported",
+        description: "Voice isn't supported in this browser. Try Chrome or Safari.",
+        variant: "destructive",
+      });
+      setInputMode('text');
+      return;
+    }
 
     // Create a brand new instance every time — stop and abort any lingering previous one
     if (recognitionRef.current) {
@@ -1051,7 +1060,16 @@ const GamifiedRoleplay: React.FC = () => {
             {(['text', 'voice'] as InputMode[]).map((mode) => (
               <button
                 key={mode}
-                onClick={() => setInputMode(mode)}
+                onClick={() => {
+                  setInputMode(mode);
+                  if (mode === 'voice' && !(window as any).SpeechRecognition && !(window as any).webkitSpeechRecognition) {
+                    toast({
+                      title: "Voice not supported",
+                      description: "Voice mode isn't supported in this browser. Try Chrome or Safari for the best experience, or use text mode.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
                 className={`flex flex-col items-center gap-2 px-8 py-5 rounded-xl border-2 transition-all ${
                   inputMode === mode
                     ? 'border-primary-500 bg-primary-50 shadow-md'
