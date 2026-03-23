@@ -1212,7 +1212,7 @@ const GamifiedRoleplay: React.FC = () => {
           <Button variant="outline" onClick={handleTryAnother} className="flex-1">
             <RotateCcw className="w-4 h-4 mr-2" /> Try Another Objection
           </Button>
-          <Button onClick={() => { reset(); }} className="flex-1 bg-primary-500 hover:bg-primary-600 text-white">
+          <Button onClick={() => { handleTryAnother(); }} className="flex-1 bg-primary-500 hover:bg-primary-600 text-white">
             Practice Again <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
