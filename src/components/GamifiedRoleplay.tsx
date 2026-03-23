@@ -707,8 +707,8 @@ const GamifiedRoleplay: React.FC = () => {
         const text = await processVoiceInput(blob);
         if (!text || text.trim().length === 0) {
           toast({
-            title: "No speech detected",
-            description: "Couldn't capture audio. Please speak louder and try again.",
+            title: "Couldn't capture your voice",
+            description: "Please try again.",
             variant: "destructive",
           });
           setIsProcessingVoice(false);
@@ -716,11 +716,13 @@ const GamifiedRoleplay: React.FC = () => {
         }
         setUserInput(text);
         setIsTranscribedFromVoice(true);
+        // Auto-send transcribed voice input
+        setTimeout(() => sendMessage(), 50);
       } catch (err) {
         console.error('[Voice] Whisper processing failed:', err);
         toast({
-          title: "Voice processing failed",
-          description: "Voice processing failed. Please try again or switch to text mode.",
+          title: "Couldn't capture your voice",
+          description: "Please try again.",
           variant: "destructive",
         });
       } finally {
@@ -758,7 +760,7 @@ const GamifiedRoleplay: React.FC = () => {
         variant: "destructive",
       });
     }
-  }, [isListening]);
+  }, [isListening, sendMessage]);
 
   // ── Reset ──────────────────────────────────────────────────
   const handleGoProCheckout = async (planId: string = 'solo', quantity: number = 1) => {
@@ -1265,7 +1267,7 @@ const GamifiedRoleplay: React.FC = () => {
             }`}
           />
         ))}
-        <span className="text-xs text-muted-foreground ml-2">Round {Math.min(currentRound, MAX_ROUNDS)}/{MAX_ROUNDS}</span>
+        <span className="text-xs text-muted-foreground ml-2">Round {Math.min(currentRound, MAX_ROUNDS)}</span>
       </div>
 
       {/* Patience meter */}
@@ -1423,11 +1425,11 @@ const GamifiedRoleplay: React.FC = () => {
                   // Allow state to settle then send
                   setTimeout(() => sendMessage(), 50);
                 } else {
-                  toast({ title: "No speech detected", description: "Couldn't capture audio. Please speak louder and try again.", variant: "destructive" });
+                  toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
                 }
               } catch (err) {
                 console.error('[Voice] Processing failed on send:', err);
-                toast({ title: "Voice processing failed", description: "Voice processing failed. Please try again or switch to text mode.", variant: "destructive" });
+                toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
               } finally {
                 setIsProcessingVoice(false);
               }
