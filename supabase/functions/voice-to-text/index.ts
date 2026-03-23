@@ -8,19 +8,22 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
-const verifyAuth = async (request: Request) => {
+const tryAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) throw new Error('Missing authorization token');
+  if (!token) return null;
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!
-  );
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!
+    );
 
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error('Invalid token');
-
-  return user;
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
+    return user;
+  } catch {
+    return null;
+  }
 };
 
 serve(async (req) => {
@@ -30,9 +33,10 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
-    const user = await verifyAuth(req);
-    console.log('Authenticated user:', user.id);
+    // Try authentication (optional — guests are allowed)
+    const user = await tryAuth(req);
+    const callerId = user?.id ?? 'guest';
+    console.log('Voice transcription request from:', callerId);
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
@@ -45,7 +49,7 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    console.log('Processing voice transcription for user:', user.id);
+    console.log('Processing voice transcription for:', callerId);
 
     // Convert base64 to blob for OpenAI API
     const audioBuffer = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
@@ -71,7 +75,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Transcription successful for user:', user.id);
+    console.log('Transcription successful for:', callerId);
 
     return new Response(JSON.stringify({ 
       text: data.text,
@@ -83,21 +87,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in voice-to-text function:', error);
     
-    // Handle authentication errors
     const errMsg = (error as Error).message ?? '';
-    if (errMsg.includes('authorization') || errMsg.includes('token')) {
-      return new Response(JSON.stringify({ 
-        error: 'Authentication required',
-        code: 'AUTH_ERROR'
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       error: errMsg,
-      fallback: true 
+      fallback: true
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -116,14 +116,12 @@ export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
   try {
     console.log('🎙️ Processing voice input, blob size:', audioBlob.size, 'type:', audioBlob.type);
     
-    // Get current user for rate limiting
+    // Get current user for rate limiting (guests are allowed)
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Authentication required for voice processing');
-    }
+    const rateLimitId = user?.id ?? `guest-${sessionStorage.getItem('guest_session_id') ?? (() => { const id = crypto.randomUUID(); sessionStorage.setItem('guest_session_id', id); return id; })()}`;
 
-    // Check rate limiting
-    if (VoiceInputSecurity.isRateLimited(user.id)) {
+    // Check rate limiting (applies to both authenticated users and guests)
+    if (VoiceInputSecurity.isRateLimited(rateLimitId)) {
       throw new Error('Voice processing rate limit exceeded. Please try again later.');
     }
 
