@@ -125,6 +125,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [responseTimes, setResponseTimes] = useState<number[]>([]);
   const [hungUp, setHungUp] = useState(false);
   const [showHangUpAnimation, setShowHangUpAnimation] = useState(false);
+  const [isUserTyping, setIsUserTyping] = useState(false);
   const lastProspectMsgTimeRef = useRef<number>(Date.now());
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const patienceRef = useRef(100); // keep ref in sync for interval callbacks
@@ -229,10 +230,11 @@ const GamifiedRoleplay: React.FC = () => {
     }
   }, [debrief]);
 
-  // ── Patience timer: counts down when user's turn ──────────
+  // ── Patience timer: counts down when user is idle ──────────
   useEffect(() => {
     // Only run timer during conversation phase, when it's user's turn (not AI typing), and not hung up
-    if (phase !== 'conversation' || isAiTyping || hungUp) {
+    // PAUSE when user is actively typing or speaking in voice mode
+    if (phase !== 'conversation' || isAiTyping || hungUp || isUserTyping || isListening) {
       // Clear any existing timer
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
@@ -265,7 +267,7 @@ const GamifiedRoleplay: React.FC = () => {
         timerIntervalRef.current = null;
       }
     };
-  }, [phase, isAiTyping, hungUp, currentRound, messages.length]);
+  }, [phase, isAiTyping, hungUp, isUserTyping, isListening, currentRound, messages.length]);
 
   // Keep patienceRef in sync
   useEffect(() => {
@@ -459,6 +461,7 @@ const GamifiedRoleplay: React.FC = () => {
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setUserInput('');
+    setIsUserTyping(false);
     setIsAiTyping(true);
 
     const nextRound = currentRound + 1;
@@ -815,6 +818,7 @@ const GamifiedRoleplay: React.FC = () => {
     setMessages([]);
     setCurrentRound(0);
     setUserInput('');
+    setIsUserTyping(false);
     setDebrief(null);
     setIsAiTyping(false);
     setIsTransitioningToDebrief(false);
@@ -836,6 +840,7 @@ const GamifiedRoleplay: React.FC = () => {
     setMessages([]);
     setCurrentRound(0);
     setUserInput('');
+    setIsUserTyping(false);
     setDebrief(null);
     setIsAiTyping(false);
     setIsTransitioningToDebrief(false);
@@ -1363,7 +1368,7 @@ const GamifiedRoleplay: React.FC = () => {
             ref={inputRef}
             type="text"
             value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
+            onChange={(e) => { setUserInput(e.target.value); if (e.target.value.length > 0) setIsUserTyping(true); }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             onFocus={() => {
               setTimeout(() => {
