@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 import { toast } from '@/hooks/use-toast';
+import { VoiceRecordingManager, processVoiceInput } from '@/utils/voiceInput';
 
 // ── Types ──────────────────────────────────────────────────────
 interface ObjectionCard {
@@ -115,8 +116,9 @@ const GamifiedRoleplay: React.FC = () => {
   const [isTransitioningToDebrief, setIsTransitioningToDebrief] = useState(false);
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false);
   const [isTranscribedFromVoice, setIsTranscribedFromVoice] = useState(false);
-  const isManualStopRef = useRef(false);
+  const voiceManagerRef = useRef<VoiceRecordingManager | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
@@ -144,8 +146,6 @@ const GamifiedRoleplay: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<any>(null);
-  const accumulatedTranscriptRef = useRef<string>('');
   const runDebriefRef = useRef<(msgs: ChatMessage[]) => Promise<void>>();
   const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
 
@@ -230,7 +230,7 @@ const GamifiedRoleplay: React.FC = () => {
   useEffect(() => {
     // Only run timer during conversation phase, when it's user's turn (not AI typing), and not hung up
     // PAUSE when user is actively typing or speaking in voice mode
-    if (phase !== 'conversation' || isAiTyping || hungUp || isUserTyping || isListening) {
+    if (phase !== 'conversation' || isAiTyping || hungUp || isUserTyping || isListening || isProcessingVoice) {
       // Clear any existing timer
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
@@ -263,7 +263,7 @@ const GamifiedRoleplay: React.FC = () => {
         timerIntervalRef.current = null;
       }
     };
-  }, [phase, isAiTyping, hungUp, isUserTyping, isListening, currentRound, messages.length]);
+  }, [phase, isAiTyping, hungUp, isUserTyping, isListening, isProcessingVoice, currentRound, messages.length]);
 
   // Keep patienceRef in sync
   useEffect(() => {
@@ -276,13 +276,12 @@ const GamifiedRoleplay: React.FC = () => {
       setHungUp(true);
       setShowHangUpAnimation(true);
       stopSpeech();
-      // Stop any active speech recognition
-      if (recognitionRef.current) {
-        isManualStopRef.current = true;
-        try { recognitionRef.current.stop(); } catch (_) {}
-        try { recognitionRef.current.abort(); } catch (_) {}
-        recognitionRef.current = null;
+      // Stop any active voice recording
+      if (voiceManagerRef.current?.isCurrentlyRecording()) {
+        try { voiceManagerRef.current.stopRecording(); } catch (_) {}
+        voiceManagerRef.current = null;
         setIsListening(false);
+        setIsProcessingVoice(false);
       }
       // Show hang-up animation for 2.5 seconds, then trigger debrief
       setTimeout(() => {
@@ -697,97 +696,68 @@ const GamifiedRoleplay: React.FC = () => {
   // Keep ref always pointing to latest runDebrief
   runDebriefRef.current = runDebrief;
 
-  const toggleVoice = useCallback(() => {
-    // If currently listening, do a manual stop
-    if (isListening) {
-      isManualStopRef.current = true;
-      try { recognitionRef.current?.stop(); } catch (_) {}
-      try { recognitionRef.current?.abort(); } catch (_) {}
-      recognitionRef.current = null;
-      accumulatedTranscriptRef.current = '';
+  const toggleVoice = useCallback(async () => {
+    // If currently listening, stop recording and process with Whisper
+    if (isListening && voiceManagerRef.current?.isCurrentlyRecording()) {
       setIsListening(false);
+      setIsProcessingVoice(true);
+      try {
+        const blob = await voiceManagerRef.current.stopRecording();
+        voiceManagerRef.current = null;
+        const text = await processVoiceInput(blob);
+        if (!text || text.trim().length === 0) {
+          toast({
+            title: "No speech detected",
+            description: "Couldn't capture audio. Please speak louder and try again.",
+            variant: "destructive",
+          });
+          setIsProcessingVoice(false);
+          return;
+        }
+        setUserInput(text);
+        setIsTranscribedFromVoice(true);
+      } catch (err) {
+        console.error('[Voice] Whisper processing failed:', err);
+        toast({
+          title: "Voice processing failed",
+          description: "Voice processing failed. Please try again or switch to text mode.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsProcessingVoice(false);
+      }
       return;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
+    // Check browser support (MediaRecorder-based, not SpeechRecognition)
+    if (!navigator.mediaDevices?.getUserMedia) {
       toast({
         title: "Voice not supported",
-        description: "Voice isn't supported in this browser. Try Chrome or Safari.",
+        description: "Voice isn't supported in this browser. Please update your browser or use text mode.",
         variant: "destructive",
       });
       setInputMode('text');
       return;
     }
 
-    // Create a brand new instance every time — stop and abort any lingering previous one
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (_) {}
-      try { recognitionRef.current.abort(); } catch (_) {}
-      recognitionRef.current = null;
+    // Start recording
+    try {
+      const manager = new VoiceRecordingManager();
+      voiceManagerRef.current = manager;
+      await manager.startRecording();
+      setIsListening(true);
+    } catch (err: any) {
+      console.error('[Voice] Failed to start recording:', err);
+      voiceManagerRef.current = null;
+      const isDenied = err?.name === 'NotAllowedError' || err?.message?.includes('permission');
+      toast({
+        title: isDenied ? "Microphone blocked" : "Recording failed",
+        description: isDenied
+          ? "Microphone access is needed for voice mode. Please allow microphone access in your browser settings."
+          : "Voice processing failed. Please try again or switch to text mode.",
+        variant: "destructive",
+      });
     }
-
-    isManualStopRef.current = false;
-    accumulatedTranscriptRef.current = '';
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event: any) => {
-      // Rebuild transcript from ALL results in this event — never append to existing input
-      let finalText = '';
-      let lastInterim = '';
-      for (let i = 0; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalText += transcript;
-        } else {
-          // Only keep the very last interim result
-          lastInterim = transcript;
-        }
-      }
-      const currentText = accumulatedTranscriptRef.current + finalText + lastInterim;
-      setUserInput(currentText);
-      if (currentText) setIsTranscribedFromVoice(true);
-
-      // When we get a final result, save it to accumulated and prepare for restart
-      if (finalText) {
-        accumulatedTranscriptRef.current = accumulatedTranscriptRef.current + finalText;
-      }
-    };
-
-    recognition.onerror = (event: any) => {
-      console.warn('[Voice] recognition error:', event.error);
-      if (event.error === 'no-speech' || event.error === 'aborted') return;
-      if (recognitionRef.current === recognition) {
-        recognitionRef.current = null;
-        setIsListening(false);
-      }
-    };
-
-    recognition.onend = () => {
-      // If NOT a manual stop and this is still the active instance, auto-restart
-      if (!isManualStopRef.current && recognitionRef.current === recognition) {
-        try {
-          recognition.start();
-          return;
-        } catch (e) {
-          console.warn('[Voice] failed to auto-restart:', e);
-        }
-      }
-      // Only clean up if this is still the active instance
-      if (recognitionRef.current === recognition) {
-        recognitionRef.current = null;
-        setIsListening(false);
-      }
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
   }, [isListening]);
 
   // ── Reset ──────────────────────────────────────────────────
@@ -1058,10 +1028,10 @@ const GamifiedRoleplay: React.FC = () => {
                 key={mode}
                 onClick={() => {
                   setInputMode(mode);
-                  if (mode === 'voice' && !(window as any).SpeechRecognition && !(window as any).webkitSpeechRecognition) {
+                  if (mode === 'voice' && !(navigator.mediaDevices?.getUserMedia)) {
                     toast({
                       title: "Voice not supported",
-                      description: "Voice mode isn't supported in this browser. Try Chrome or Safari for the best experience, or use text mode.",
+                      description: "Voice mode isn't supported in this browser. Please update your browser or use text mode.",
                       variant: "destructive",
                     });
                   }
@@ -1402,11 +1372,11 @@ const GamifiedRoleplay: React.FC = () => {
             variant="outline"
             size="icon"
             onClick={toggleVoice}
-            className={isListening ? 'border-destructive text-destructive animate-pulse' : ''}
-            disabled={isAiTyping || hungUp}
-            title={isListening ? 'Stop listening' : 'Start voice input'}
+            className={isListening ? 'border-destructive text-destructive animate-pulse' : isProcessingVoice ? 'border-yellow-500 text-yellow-500' : ''}
+            disabled={isAiTyping || hungUp || isProcessingVoice}
+            title={isProcessingVoice ? 'Processing voice...' : isListening ? 'Stop recording' : 'Start voice input'}
           >
-            <Mic className="w-5 h-5" />
+            {isProcessingVoice ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
           </Button>
         )}
         <div className="flex-1 relative">
@@ -1421,7 +1391,7 @@ const GamifiedRoleplay: React.FC = () => {
                 chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
               }, 300);
             }}
-            placeholder={isListening ? 'Listening… tap Send when done' : 'Type your response…'}
+            placeholder={isProcessingVoice ? 'Processing voice…' : isListening ? 'Recording… tap mic or Send when done' : 'Type your response…'}
             disabled={isAiTyping || hungUp}
             className="w-full rounded-xl border border-input bg-card px-4 py-3 pr-14 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
           />
@@ -1438,22 +1408,37 @@ const GamifiedRoleplay: React.FC = () => {
           )}
         </div>
         <Button
-          onClick={() => {
-            // Manual stop: set flag, stop+abort recognition, then send
-            if (isListening) {
-              isManualStopRef.current = true;
-              try { recognitionRef.current?.stop(); } catch (_) {}
-              try { recognitionRef.current?.abort(); } catch (_) {}
-              recognitionRef.current = null;
-              accumulatedTranscriptRef.current = '';
+          onClick={async () => {
+            // If recording, stop and process first, then send
+            if (isListening && voiceManagerRef.current?.isCurrentlyRecording()) {
               setIsListening(false);
+              setIsProcessingVoice(true);
+              try {
+                const blob = await voiceManagerRef.current.stopRecording();
+                voiceManagerRef.current = null;
+                const text = await processVoiceInput(blob);
+                if (text && text.trim().length > 0) {
+                  setUserInput(text);
+                  setIsTranscribedFromVoice(true);
+                  // Allow state to settle then send
+                  setTimeout(() => sendMessage(), 50);
+                } else {
+                  toast({ title: "No speech detected", description: "Couldn't capture audio. Please speak louder and try again.", variant: "destructive" });
+                }
+              } catch (err) {
+                console.error('[Voice] Processing failed on send:', err);
+                toast({ title: "Voice processing failed", description: "Voice processing failed. Please try again or switch to text mode.", variant: "destructive" });
+              } finally {
+                setIsProcessingVoice(false);
+              }
+              return;
             }
             sendMessage();
           }}
-          disabled={!userInput.trim() || isAiTyping || hungUp}
+          disabled={(!userInput.trim() && !isListening) || isAiTyping || hungUp || isProcessingVoice}
           className="bg-primary-500 hover:bg-primary-600 text-white rounded-xl px-5"
         >
-          Send
+          {isProcessingVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : isListening ? 'Stop & Send' : 'Send'}
         </Button>
       </div>
     </div>
