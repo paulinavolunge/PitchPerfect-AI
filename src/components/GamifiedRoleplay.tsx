@@ -129,6 +129,7 @@ const GamifiedRoleplay: React.FC = () => {
   const lastProspectMsgTimeRef = useRef<number>(Date.now());
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const patienceRef = useRef(100); // keep ref in sync for interval callbacks
+  const sessionStartTimeRef = useRef<number>(0);
 
   const isMobile = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -410,6 +411,7 @@ const GamifiedRoleplay: React.FC = () => {
       };
       setMessages([prospectMsg]);
       setCurrentRound(1);
+      sessionStartTimeRef.current = Date.now();
       if (inputMode === 'voice') speakText(response);
     } catch (err) {
       console.error('[GamifiedRoleplay] Failed to get opening response:', err);
@@ -422,6 +424,7 @@ const GamifiedRoleplay: React.FC = () => {
         timestamp: new Date(),
       }]);
       setCurrentRound(1);
+      sessionStartTimeRef.current = Date.now();
     } finally {
       setIsAiTyping(false);
     }
@@ -441,7 +444,7 @@ const GamifiedRoleplay: React.FC = () => {
 
     // Patience depletion based on response quality
     let patienceDrop = 3; // default: natural decay for good-length response
-    if (text.length < 15) {
+    if (text.split(/\s+/).filter(Boolean).length < 3) {
       patienceDrop = 8; // short/lazy response
     }
     const newPatience = Math.max(0, patienceRef.current - patienceDrop);
@@ -604,7 +607,7 @@ const GamifiedRoleplay: React.FC = () => {
         },
         body: JSON.stringify({
           transcript,
-          practiceMode: 'text',
+          practiceMode: inputMode,
           scenario: {
             objection: isCustomMode && customScenario ? customScenario.objection : (selectedObjection?.id || 'general'),
             industry: isCustomMode && customScenario ? customScenario.industry : 'general',
@@ -688,7 +691,7 @@ const GamifiedRoleplay: React.FC = () => {
         scenario_type: isCustomMode && customScenario ? `custom: ${customScenario.objection}` : (selectedObjection?.label ?? 'practice'),
         difficulty: 'medium',
         industry: isCustomMode && customScenario ? customScenario.industry : 'general',
-        duration_seconds: 0,
+        duration_seconds: sessionStartTimeRef.current ? Math.round((Date.now() - sessionStartTimeRef.current) / 1000) : 0,
         score: null,
       });
       refreshCount();
