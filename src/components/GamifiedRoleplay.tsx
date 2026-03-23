@@ -111,6 +111,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [currentRound, setCurrentRound] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [isAiTyping, setIsAiTyping] = useState(false);
+  const [isTransitioningToDebrief, setIsTransitioningToDebrief] = useState(false);
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
   const isManualStopRef = useRef(false);
@@ -465,6 +466,7 @@ const GamifiedRoleplay: React.FC = () => {
     // If we've exceeded max rounds, go straight to debrief (no more AI calls)
     if (nextRound > MAX_ROUNDS) {
       setIsAiTyping(false);
+      setIsTransitioningToDebrief(true);
       await runDebriefRef.current!(updatedMessages);
       return;
     }
@@ -495,6 +497,7 @@ const GamifiedRoleplay: React.FC = () => {
       // Auto-trigger debrief after the LAST round's AI response
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
+        setIsTransitioningToDebrief(true);
         await runDebriefRef.current!(allMessages);
         return;
       }
@@ -513,6 +516,7 @@ const GamifiedRoleplay: React.FC = () => {
       // Even on error, auto-trigger debrief if this was the last round
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
+        setIsTransitioningToDebrief(true);
         await runDebriefRef.current!(allMessages);
         return;
       }
@@ -707,24 +711,31 @@ const GamifiedRoleplay: React.FC = () => {
     accumulatedTranscriptRef.current = '';
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: any) => {
-      // Rebuild full transcript from all results in this session
-      let sessionFinal = '';
-      let sessionInterim = '';
+      // Rebuild transcript from ALL results in this event — never append to existing input
+      let finalText = '';
+      let lastInterim = '';
       for (let i = 0; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          sessionFinal += event.results[i][0].transcript;
+          finalText += transcript;
         } else {
-          sessionInterim += event.results[i][0].transcript;
+          // Only keep the very last interim result
+          lastInterim = transcript;
         }
       }
-      // Always replace — never append. Accumulated ref carries text across auto-restarts.
-      setUserInput(accumulatedTranscriptRef.current + sessionFinal + sessionInterim);
+      const currentText = accumulatedTranscriptRef.current + finalText + lastInterim;
+      setUserInput(currentText);
+
+      // When we get a final result, save it to accumulated and prepare for restart
+      if (finalText) {
+        accumulatedTranscriptRef.current = accumulatedTranscriptRef.current + finalText;
+      }
     };
 
     recognition.onerror = (event: any) => {
@@ -739,17 +750,6 @@ const GamifiedRoleplay: React.FC = () => {
     recognition.onend = () => {
       // If NOT a manual stop and this is still the active instance, auto-restart
       if (!isManualStopRef.current && recognitionRef.current === recognition) {
-        // Save all final results from the ending session before restarting
-        // so they aren't lost when a new session resets event.results
-        try {
-          const lastEvent = (recognition as any)._lastResults;
-          // Fallback: read current input as the accumulated text
-          // Since setUserInput is async, read from the DOM input directly
-          const inputEl = inputRef.current;
-          if (inputEl) {
-            accumulatedTranscriptRef.current = inputEl.value;
-          }
-        } catch (_) {}
         try {
           recognition.start();
           return;
@@ -795,16 +795,18 @@ const GamifiedRoleplay: React.FC = () => {
     // After completing a session, check if the user has hit their limit
     if (hasReachedLimit) {
       if (isGuest) {
-        // Guest used their 1 free session — don't reset, show signup prompt (rendered in debrief)
+        // Guest used their 1 free session — navigate to signup
+        navigate('/signup');
         return;
-      } else {
+      } else if (!isPremium) {
         // Free user used their 3 monthly sessions — show paywall
         setShowPaywall(true);
         return;
       }
     }
 
-    // Still has attempts — reset normally
+    // Still has attempts (or premium) — reset and go back to objection selection
+    stopSpeech();
     setPhase('select-objection');
     setSelectedObjection(null);
     setCustomScenario(null);
@@ -815,6 +817,7 @@ const GamifiedRoleplay: React.FC = () => {
     setUserInput('');
     setDebrief(null);
     setIsAiTyping(false);
+    setIsTransitioningToDebrief(false);
     setPatience(100);
     patienceRef.current = 100;
     setTimerSeconds(RESPONSE_TIMER_MAX);
@@ -835,6 +838,7 @@ const GamifiedRoleplay: React.FC = () => {
     setUserInput('');
     setDebrief(null);
     setIsAiTyping(false);
+    setIsTransitioningToDebrief(false);
     setPatience(100);
     patienceRef.current = 100;
     setTimerSeconds(RESPONSE_TIMER_MAX);
@@ -1038,7 +1042,7 @@ const GamifiedRoleplay: React.FC = () => {
               >
                 {mode === 'text' ? <MessageSquare className="w-6 h-6 text-primary-600" /> : <Mic className="w-6 h-6 text-primary-600" />}
                 <span className="font-medium text-foreground capitalize">{mode}</span>
-                {mode === 'voice' && isMobile && (
+                {mode === 'voice' && (
                   <span className="text-xs text-muted-foreground -mt-1">(Beta)</span>
                 )}
               </button>
@@ -1316,8 +1320,8 @@ const GamifiedRoleplay: React.FC = () => {
           ))}
         </AnimatePresence>
 
-        {/* Typing indicator */}
-        {isAiTyping && (
+        {/* Typing indicator — hide during debrief transition so it doesn't flash after final round */}
+        {isAiTyping && !isTransitioningToDebrief && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
