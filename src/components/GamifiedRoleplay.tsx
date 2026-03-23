@@ -1364,7 +1364,7 @@ const GamifiedRoleplay: React.FC = () => {
             type="text"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             onFocus={() => {
               setTimeout(() => {
                 chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
