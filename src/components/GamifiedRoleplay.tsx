@@ -643,8 +643,13 @@ const GamifiedRoleplay: React.FC = () => {
 
         console.log('API score:', apiScore, 'Local score:', localScore, 'Final:', finalScore);
 
+        // Determine outcome factoring in patience state
+        const didHangUp = sessionStats.hungUp;
+        const lowPatience = sessionStats.finalPatience < 30;
+        const won = !didHangUp && !lowPatience && finalScore >= 7;
+
         setDebrief({
-          won: finalScore >= 7,
+          won,
           score: finalScore,
           strengths: parsed.strengths ?? ['Engaged with the prospect'],
           gaps: sessionStats.hungUp
@@ -659,8 +664,13 @@ const GamifiedRoleplay: React.FC = () => {
     } catch (err) {
       console.error('[GamifiedRoleplay] Debrief error, using local scoring:', err);
       const localScore = computeLocalScore(finalMessages);
+      // Determine outcome factoring in patience state
+      const didHangUp = sessionStats.hungUp;
+      const lowPatience = sessionStats.finalPatience < 30;
+      const won = !didHangUp && !lowPatience && localScore >= 7;
+
       setDebrief({
-        won: localScore >= 7,
+        won,
         score: localScore,
         strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
         gaps: sessionStats.hungUp
@@ -1082,14 +1092,26 @@ const GamifiedRoleplay: React.FC = () => {
             <XCircle className="w-16 h-16 mx-auto text-destructive mb-3" />
           )}
           <h2 className="text-2xl font-bold text-foreground">
-            {debrief.score >= 7 ? 'Deal Won!' : debrief.score >= 4 ? 'Almost There — Keep Practicing' : 'Deal Lost'}
+            {debrief.sessionStats?.hungUp
+              ? 'Prospect Hung Up'
+              : debrief.won
+                ? 'Deal Won!'
+                : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
+                  ? 'Deal Lost'
+                  : debrief.score >= 4
+                    ? 'Almost There — Keep Practicing'
+                    : 'Deal Lost'}
           </h2>
           <p className="text-muted-foreground mt-1">
-            {debrief.score >= 7
-              ? 'You earned the prospect\'s trust.'
-              : debrief.score >= 4
-                ? 'Getting closer! A few tweaks and you\'ll close it next time.'
-                : 'The prospect wasn\'t convinced.'}
+            {debrief.sessionStats?.hungUp
+              ? 'The prospect ran out of patience and ended the call.'
+              : debrief.won
+                ? 'You earned the prospect\'s trust.'
+                : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
+                  ? 'The prospect was losing patience — the deal slipped away.'
+                  : debrief.score >= 4
+                    ? 'Getting closer! A few tweaks and you\'ll close it next time.'
+                    : 'The prospect wasn\'t convinced.'}
           </p>
         </motion.div>
 
