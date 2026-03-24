@@ -143,6 +143,20 @@ const GamifiedRoleplay: React.FC = () => {
   const currentProspectName = isCustomMode ? prospectInfo.name : prospectInfo.name;
   const currentProspectTitle = isCustomMode && customScenario?.buyerTitle ? customScenario.buyerTitle : prospectInfo.title;
 
+  const DEBRIEF_LOADING_MESSAGES = ['Analyzing your performance...', 'Reviewing your objection handling...', 'Generating your score...'];
+  const [debriefLoadingMsgIndex, setDebriefLoadingMsgIndex] = useState(0);
+
+  useEffect(() => {
+    if (!isTransitioningToDebrief) {
+      setDebriefLoadingMsgIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setDebriefLoadingMsgIndex(prev => (prev + 1) % DEBRIEF_LOADING_MESSAGES.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [isTransitioningToDebrief]);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -558,6 +572,7 @@ const GamifiedRoleplay: React.FC = () => {
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
     stopSpeech();
     if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+    setIsTransitioningToDebrief(true);
     setIsAiTyping(true);
 
     // Build session stats
@@ -679,6 +694,7 @@ const GamifiedRoleplay: React.FC = () => {
       setIsAiTyping(false);
       // Wait briefly to ensure TTS audio has fully stopped before showing debrief
       await new Promise(resolve => setTimeout(resolve, 100));
+      setIsTransitioningToDebrief(false);
       setPhase('debrief');
 
       // Track the completed session attempt AFTER debrief
@@ -1239,7 +1255,32 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── Render: Conversation ───────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto flex flex-col" style={{ height: viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
+    <div className="max-w-2xl mx-auto flex flex-col relative" style={{ height: viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
+      {/* Debrief loading overlay */}
+      <AnimatePresence>
+        {isTransitioningToDebrief && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm rounded-xl"
+          >
+            <Loader2 className="w-10 h-10 text-primary-500 animate-spin mb-4" />
+            <motion.p
+              key={debriefLoadingMsgIndex}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+              className="text-sm font-medium text-muted-foreground"
+            >
+              {DEBRIEF_LOADING_MESSAGES[debriefLoadingMsgIndex]}
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pt-4 shrink-0">
         <div>
