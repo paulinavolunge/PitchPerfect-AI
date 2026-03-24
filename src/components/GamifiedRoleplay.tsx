@@ -123,7 +123,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   // ── Patience & Timer state ─────────────────────────────────
-  const RESPONSE_TIMER_MAX = 25;
+  const RESPONSE_TIMER_MAX = 15;
   const [patience, setPatience] = useState(100);
   const [timerSeconds, setTimerSeconds] = useState(RESPONSE_TIMER_MAX);
   const [responseTimes, setResponseTimes] = useState<number[]>([]);
@@ -260,12 +260,21 @@ const GamifiedRoleplay: React.FC = () => {
 
     timerIntervalRef.current = setInterval(() => {
       setTimerSeconds(prev => {
-        if (prev <= 1) {
-          // Timer ran out — deplete patience by 20%
-          const newPatience = Math.max(0, patienceRef.current - 20);
+        // Every 5 seconds of idle, apply escalating patience decay
+        if (prev % 5 === 1 && prev < RESPONSE_TIMER_MAX) {
+          const p = patienceRef.current;
+          const drop = p > 60 ? 8 : p > 30 ? 12 : 15;
+          const newPatience = Math.max(0, p - drop);
           patienceRef.current = newPatience;
           setPatience(newPatience);
-          // Reset timer for next cycle
+        }
+        if (prev <= 1) {
+          // Timer ran out — big patience hit, then reset
+          const p = patienceRef.current;
+          const drop = p > 60 ? 8 : p > 30 ? 12 : 15;
+          const newPatience = Math.max(0, p - drop);
+          patienceRef.current = newPatience;
+          setPatience(newPatience);
           return RESPONSE_TIMER_MAX;
         }
         return prev - 1;
