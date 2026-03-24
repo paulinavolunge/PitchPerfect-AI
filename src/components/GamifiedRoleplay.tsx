@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2, Star, Clock, Phone, Loader2 } from 'lucide-react';
+import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2, Star, Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useFreeTrialLimit } from '@/hooks/useFreeTrialLimit';
@@ -51,7 +51,7 @@ type InputMode = 'text' | 'voice';
 type Phase = 'select-objection' | 'custom-form' | 'select-mode' | 'conversation' | 'debrief';
 
 // ── Constants ──────────────────────────────────────────────────
-const MAX_ROUNDS = 6;
+const MAX_ROUNDS = 3;
 
 const OBJECTIONS: ObjectionCard[] = [
   { id: 'budget', label: 'Budget', emoji: '💰', description: '"We don\'t have the budget right now."' },
@@ -129,6 +129,7 @@ const GamifiedRoleplay: React.FC = () => {
   const [responseTimes, setResponseTimes] = useState<number[]>([]);
   const [hungUp, setHungUp] = useState(false);
   const [showHangUpAnimation, setShowHangUpAnimation] = useState(false);
+  const [hangUpReason, setHangUpReason] = useState('');
   const [isUserTyping, setIsUserTyping] = useState(false);
   const lastProspectMsgTimeRef = useRef<number>(Date.now());
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -288,6 +289,7 @@ const GamifiedRoleplay: React.FC = () => {
   useEffect(() => {
     if (patience <= 0 && phase === 'conversation' && !hungUp) {
       setHungUp(true);
+      setHangUpReason(timerSeconds <= 5 ? 'You took too long to respond.' : 'The prospect lost patience.');
       setShowHangUpAnimation(true);
       stopSpeech();
       // Stop any active voice recording
@@ -297,7 +299,7 @@ const GamifiedRoleplay: React.FC = () => {
         setIsListening(false);
         setIsProcessingVoice(false);
       }
-      // Show hang-up animation for 2.5 seconds, then trigger debrief
+      // Show dramatic hang-up screen, then trigger debrief
       setTimeout(() => {
         setShowHangUpAnimation(false);
         runDebriefRef.current!(messages);
@@ -572,6 +574,17 @@ const GamifiedRoleplay: React.FC = () => {
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
     stopSpeech();
     if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+
+    // Show dramatic hang-up screen if patience was low and it wasn't already shown
+    const shouldShowHangUp = (hungUp || patienceRef.current <= 30) && !showHangUpAnimation;
+    if (shouldShowHangUp && !hungUp) {
+      // End Session clicked with low patience — set reason and show screen
+      setHangUpReason('The prospect was losing patience.');
+      setShowHangUpAnimation(true);
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      setShowHangUpAnimation(false);
+    }
+
     setIsTransitioningToDebrief(true);
     setIsAiTyping(true);
 
@@ -707,7 +720,7 @@ const GamifiedRoleplay: React.FC = () => {
       });
       refreshCount();
     }
-  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp]);
+  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation]);
 
   // Keep ref always pointing to latest runDebrief
   runDebriefRef.current = runDebrief;
@@ -832,6 +845,7 @@ const GamifiedRoleplay: React.FC = () => {
     setResponseTimes([]);
     setHungUp(false);
     setShowHangUpAnimation(false);
+    setHangUpReason('');
   };
 
   const reset = () => {
@@ -854,6 +868,7 @@ const GamifiedRoleplay: React.FC = () => {
     setResponseTimes([]);
     setHungUp(false);
     setShowHangUpAnimation(false);
+    setHangUpReason('');
   };
 
   // ── Render: Hang-up overlay (rendered outside phase blocks so it survives phase transitions) ──
@@ -862,23 +877,30 @@ const GamifiedRoleplay: React.FC = () => {
       {showHangUpAnimation && (
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, x: [0, -8, 8, -6, 6, -3, 3, 0] }}
+          animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.3 }}
           className="fixed inset-0 z-[100] flex items-center justify-center"
-          style={{ background: 'rgba(0, 0, 0, 0.75)' }}
+          style={{ background: '#0a0a0a' }}
         >
-          <motion.div
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.4 }}
-            className="text-center px-8"
-          >
-            <Phone className="w-20 h-20 mx-auto text-red-400 mb-5 rotate-[135deg]" />
-            <p className="text-3xl font-bold text-white" style={{ fontSize: '28px' }}>
-              Click. {currentProspectName} hung up.
-            </p>
-          </motion.div>
+          <div className="text-center px-8">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="text-4xl font-bold text-white tracking-tight"
+            >
+              Click. They hung up.
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.0, duration: 0.5 }}
+              className="text-base text-gray-400 mt-4"
+            >
+              {hangUpReason}
+            </motion.p>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
