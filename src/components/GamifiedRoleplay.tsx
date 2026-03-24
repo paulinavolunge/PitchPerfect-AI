@@ -423,8 +423,8 @@ const GamifiedRoleplay: React.FC = () => {
   }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle]);
 
   // ── Send message ───────────────────────────────────────────
-  const sendMessage = useCallback(async () => {
-    const text = userInput.trim();
+  const sendMessage = useCallback(async (overrideText?: string) => {
+    const text = (overrideText ?? userInput).trim();
     if (!text || isAiTyping || hungUp || (!selectedObjection && !isCustomMode)) return;
 
     // Stop any ongoing speech when user sends a message
@@ -714,10 +714,8 @@ const GamifiedRoleplay: React.FC = () => {
           setIsProcessingVoice(false);
           return;
         }
-        setUserInput(text);
-        setIsTranscribedFromVoice(true);
-        // Auto-send transcribed voice input
-        setTimeout(() => sendMessage(), 50);
+        // Auto-send transcribed voice input directly
+        sendMessage(text);
       } catch (err) {
         console.error('[Voice] Whisper processing failed:', err);
         toast({
@@ -1420,10 +1418,8 @@ const GamifiedRoleplay: React.FC = () => {
                 voiceManagerRef.current = null;
                 const text = await processVoiceInput(blob);
                 if (text && text.trim().length > 0) {
-                  setUserInput(text);
-                  setIsTranscribedFromVoice(true);
-                  // Allow state to settle then send
-                  setTimeout(() => sendMessage(), 50);
+                  // Auto-send transcribed voice input directly
+                  sendMessage(text);
                 } else {
                   toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
                 }
