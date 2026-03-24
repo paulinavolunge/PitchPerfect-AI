@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy, startTransition } from 'react';
+import DOMPurify from 'dompurify';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import LazyLoadManager from '@/components/optimized/LazyLoadManager';
@@ -413,7 +414,7 @@ const Demo = () => {
                           </div>
                         )}
                       </div>
-                      <div className={`${textColor} text-sm sm:text-base leading-relaxed`} dangerouslySetInnerHTML={{ __html: feedback }} />
+                      <div className={`${textColor} text-sm sm:text-base leading-relaxed`} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(feedback) }} />
                     </div>
                   );
                 })()}
