@@ -238,7 +238,7 @@ const Demo = () => {
         };
       }
 
-      setFeedback(feedbackData.feedback);
+      setFeedback((feedbackData.feedback || '').replace(/<[^>]*>/g, ''));
       setFeedbackScore(feedbackData.score);
 
       // Track attempt
@@ -413,7 +413,7 @@ const Demo = () => {
                           </div>
                         )}
                       </div>
-                      <div className={`${textColor} text-sm sm:text-base leading-relaxed`} dangerouslySetInnerHTML={{ __html: feedback }} />
+                      <p className={`${textColor} text-sm sm:text-base leading-relaxed`}>{feedback}</p>
                     </div>
                   );
                 })()}
