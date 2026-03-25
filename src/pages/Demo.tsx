@@ -238,7 +238,7 @@ const Demo = () => {
         };
       }
 
-      setFeedback(feedbackData.feedback);
+      setFeedback((feedbackData.feedback || '').replace(/<[^>]*>/g, ''));
       setFeedbackScore(feedbackData.score);
 
       // Track attempt
