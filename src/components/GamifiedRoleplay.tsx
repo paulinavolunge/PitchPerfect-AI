@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Mic, ArrowRight, RotateCcw, Trophy, XCircle, ChevronRight, UserPlus, Lock, Sparkles, Volume2, Star, Clock, Loader2 } from 'lucide-react';
@@ -10,6 +10,9 @@ import { useNavigate } from 'react-router-dom';
 import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 import { toast } from '@/hooks/use-toast';
 import { VoiceRecordingManager, processVoiceInput } from '@/utils/voiceInput';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
+
+const WinCelebration = React.lazy(() => import('@/components/WinCelebration'));
 
 // ── Types ──────────────────────────────────────────────────────
 interface ObjectionCard {
@@ -121,6 +124,9 @@ const GamifiedRoleplay: React.FC = () => {
   const voiceManagerRef = useRef<VoiceRecordingManager | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showWinCelebration, setShowWinCelebration] = useState(false);
+
+  const { playCallStart, playCallEnd } = useSoundEffects();
 
   // ── Patience & Timer state ─────────────────────────────────
   const RESPONSE_TIMER_MAX = 15;
@@ -299,7 +305,6 @@ const GamifiedRoleplay: React.FC = () => {
     if (patience <= 0 && phase === 'conversation' && !hungUp) {
       setHungUp(true);
       setHangUpReason(timerSeconds <= 5 ? 'You took too long to respond.' : 'The prospect lost patience.');
-      setShowHangUpAnimation(true);
       stopSpeech();
       // Stop any active voice recording
       if (voiceManagerRef.current?.isCurrentlyRecording()) {
@@ -308,21 +313,29 @@ const GamifiedRoleplay: React.FC = () => {
         setIsListening(false);
         setIsProcessingVoice(false);
       }
-      // Show dramatic hang-up screen, then trigger debrief
-      setTimeout(() => {
-        setShowHangUpAnimation(false);
-        runDebriefRef.current!(messages);
-      }, 2500);
+      // Play call end sound (click + busy signal) BEFORE showing hang-up screen
+      playCallEnd().then(() => {
+        setShowHangUpAnimation(true);
+        // Show dramatic hang-up screen, then trigger debrief
+        setTimeout(() => {
+          setShowHangUpAnimation(false);
+          runDebriefRef.current!(messages);
+        }, 2500);
+      });
     }
-  }, [patience, phase, hungUp, messages, stopSpeech]);
+  }, [patience, phase, hungUp, messages, stopSpeech, playCallEnd]);
 
-  // Scroll to top when debrief appears
+  // Scroll to top when debrief appears; show win celebration if won
   useEffect(() => {
     if (phase === 'debrief') {
-      window.scrollTo(0, 0);
-      chatContainerRef.current?.scrollTo(0, 0);
+      if (debrief?.won) {
+        setShowWinCelebration(true);
+      } else {
+        window.scrollTo(0, 0);
+        chatContainerRef.current?.scrollTo(0, 0);
+      }
     }
-  }, [phase]);
+  }, [phase, debrief]);
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
@@ -408,6 +421,9 @@ const GamifiedRoleplay: React.FC = () => {
     setPhase('conversation');
     setIsAiTyping(true);
 
+    // Play phone ringing sound before first prospect message
+    await playCallStart();
+
     try {
       const systemPrompt = isCustomMode
         ? '' // custom prompt is built server-side
@@ -445,7 +461,7 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle]);
+  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle, playCallStart]);
 
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async (overrideText?: string) => {
@@ -855,6 +871,7 @@ const GamifiedRoleplay: React.FC = () => {
     setHungUp(false);
     setShowHangUpAnimation(false);
     setHangUpReason('');
+    setShowWinCelebration(false);
   };
 
   const reset = () => {
@@ -878,6 +895,7 @@ const GamifiedRoleplay: React.FC = () => {
     setHungUp(false);
     setShowHangUpAnimation(false);
     setHangUpReason('');
+    setShowWinCelebration(false);
   };
 
   // ── Render: Hang-up overlay (rendered outside phase blocks so it survives phase transitions) ──
@@ -1106,6 +1124,36 @@ const GamifiedRoleplay: React.FC = () => {
           </Button>
         </div>
       </div>
+    );
+  }
+
+  // ── Render: Win Celebration ──────────────────────────────────
+  if (phase === 'debrief' && debrief && showWinCelebration) {
+    // Pick the user's longest message as "best line"
+    const userMessages = messages.filter(m => m.role === 'user');
+    const bestLine = userMessages.length > 0
+      ? userMessages.reduce((a, b) => a.text.length > b.text.length ? a : b).text
+      : undefined;
+
+    return (
+      <Suspense fallback={<div className="fixed inset-0 z-50 bg-black" />}>
+        <WinCelebration
+          score={debrief.score}
+          feedback={debrief.tip}
+          bestLine={bestLine}
+          onRunItBack={() => {
+            setShowWinCelebration(false);
+            handleTryAnother();
+          }}
+          onNewObjection={() => {
+            setShowWinCelebration(false);
+            handleTryAnother();
+          }}
+          onViewDebrief={() => {
+            setShowWinCelebration(false);
+          }}
+        />
+      </Suspense>
     );
   }
 
