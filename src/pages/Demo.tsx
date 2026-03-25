@@ -413,7 +413,7 @@ const Demo = () => {
                           </div>
                         )}
                       </div>
-                      <div className={`${textColor} text-sm sm:text-base leading-relaxed`} <div className={`${textColor} text-sm sm:text-base leading-relaxed`}>{feedback.replace(/<[^>]*>/g, '')}</div> />
+                      <p className={`${textColor} text-sm sm:text-base leading-relaxed`}>{feedback}</p>
                     </div>
                   );
                 })()}
