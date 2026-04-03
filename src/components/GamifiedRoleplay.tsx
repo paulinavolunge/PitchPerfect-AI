@@ -1391,7 +1391,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   // ── Render: Conversation ───────────────────────────────────
   return (
-    <div className={`max-w-2xl mx-auto flex flex-col relative ${compact ? '' : ''}`} style={{ height: compact ? '70vh' : viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
+    <div className="max-w-2xl mx-auto flex flex-col relative" style={{ height: compact ? (viewportHeight ? `${Math.min(viewportHeight - 20, window.innerHeight * 0.7)}px` : '70vh') : viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
       {/* Debrief loading overlay */}
       <AnimatePresence>
         {isTransitioningToDebrief && (

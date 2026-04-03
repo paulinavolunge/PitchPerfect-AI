@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2, Trophy, XCircle, X } from 'lucide-react';
@@ -69,13 +69,23 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
+  // Track visual viewport for mobile keyboard
+  const [vvHeight, setVvHeight] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => setVvHeight(vv.height);
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, []);
+
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const presetScenario = {
     objectionLabel: 'Cold Call',
-    openingLine: "The phone rings and the prospect picks up. Give your short greeting as the prospect, one sentence max. Use your actual name.",
+    openingLine: `The phone rings and ${prospect.name} picks up. Greet the caller as ${prospect.name.split(' ')[0]} — one sentence max.`,
     systemPrompt: buildColdCallSystemPrompt(prospect.name, prospect.title),
     prospectName: prospect.name,
     prospectTitle: prospect.title,
@@ -165,7 +175,10 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="max-w-2xl w-[95vw] p-0 gap-0 overflow-hidden bg-background border-border"
-        style={{ maxHeight: '90vh' }}
+        style={{
+          maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh',
+          transition: 'max-height 0.15s ease-out',
+        }}
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogTitle className="sr-only">Cold Call Practice</DialogTitle>
@@ -180,7 +193,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
         </button>
 
         {phase === 'roleplay' && (
-          <div className="overflow-y-auto" style={{ maxHeight: '90vh' }}>
+          <div className="overflow-y-auto" style={{ maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh' }}>
             <GamifiedRoleplay
               autoStart
               presetScenario={presetScenario}
