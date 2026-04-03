@@ -36,7 +36,7 @@ interface CustomScenario {
   objection: string;
 }
 
-interface DebriefData {
+export interface DebriefData {
   won: boolean;
   score: number;
   strengths: string[];
@@ -52,6 +52,25 @@ interface DebriefData {
 
 type InputMode = 'text' | 'voice';
 type Phase = 'select-objection' | 'custom-form' | 'select-mode' | 'conversation' | 'debrief';
+
+export interface GamifiedRoleplayProps {
+  /** Skip objection selection and jump straight to conversation */
+  autoStart?: boolean;
+  /** Pre-configured scenario for cold call hook */
+  presetScenario?: {
+    objectionLabel: string;
+    openingLine: string;
+    systemPrompt: string;
+    prospectName: string;
+    prospectTitle: string;
+  };
+  /** Called when the session ends with debrief data */
+  onComplete?: (debrief: DebriefData) => void;
+  /** Tighter layout for modal display */
+  compact?: boolean;
+  /** When true, skip incrementAttempt — cold call hook is a free taste */
+  isColdCallHook?: boolean;
+}
 
 // ── Constants ──────────────────────────────────────────────────
 const MAX_ROUNDS = 3;
@@ -104,13 +123,23 @@ RULES:
 }
 
 // ── Component ──────────────────────────────────────────────────
-const GamifiedRoleplay: React.FC = () => {
-  const [phase, setPhase] = useState<Phase>('select-objection');
+const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
+  autoStart = false,
+  presetScenario,
+  onComplete,
+  compact = false,
+  isColdCallHook = false,
+}) => {
+  const [phase, setPhase] = useState<Phase>(autoStart ? 'conversation' : 'select-objection');
   const [selectedObjection, setSelectedObjection] = useState<ObjectionCard | null>(null);
   const [customScenario, setCustomScenario] = useState<CustomScenario | null>(null);
   const [isCustomMode, setIsCustomMode] = useState(false);
   const [customForm, setCustomForm] = useState<CustomScenario>({ product: '', buyerTitle: '', industry: '', objection: '' });
-  const [prospectInfo] = useState(() => pickRandomProspect());
+  const [prospectInfo] = useState(() =>
+    presetScenario
+      ? { name: presetScenario.prospectName, title: presetScenario.prospectTitle }
+      : pickRandomProspect()
+  );
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
@@ -212,6 +241,15 @@ const GamifiedRoleplay: React.FC = () => {
     FREE_ACCOUNT_MONTHLY_LIMIT,
     refreshCount,
   } = useFreeTrialLimit();
+
+  // ── Auto-start for cold call hook ─────────────────────────
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autoStart && presetScenario && !autoStartedRef.current) {
+      autoStartedRef.current = true;
+      startConversation();
+    }
+  }, [autoStart, presetScenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-scroll chat to bottom
   const scrollToBottom = useCallback(() => {
@@ -325,17 +363,18 @@ const GamifiedRoleplay: React.FC = () => {
     }
   }, [patience, phase, hungUp, messages, stopSpeech, playCallEnd]);
 
-  // Scroll to top when debrief appears; show win celebration if won
+  // Scroll to top when debrief appears; show win celebration if won; notify parent
   useEffect(() => {
     if (phase === 'debrief') {
-      if (debrief?.won) {
+      if (debrief) onComplete?.(debrief);
+      if (debrief?.won && !compact) {
         setShowWinCelebration(true);
       } else {
-        window.scrollTo(0, 0);
+        if (!compact) window.scrollTo(0, 0);
         chatContainerRef.current?.scrollTo(0, 0);
       }
     }
-  }, [phase, debrief]);
+  }, [phase, debrief]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[]): Promise<string> => {
@@ -347,7 +386,7 @@ const GamifiedRoleplay: React.FC = () => {
     const payload: Record<string, any> = {
       userInput: userMsg,
       scenario: {
-        objection: selectedObjection?.label || customScenario?.objection || 'Need',
+        objection: presetScenario?.objectionLabel || selectedObjection?.label || customScenario?.objection || 'Need',
         difficulty: 'medium',
         industry: customScenario?.industry || 'general',
       },
@@ -417,7 +456,7 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── Start conversation ─────────────────────────────────────
   const startConversation = useCallback(async () => {
-    if (!selectedObjection && !isCustomMode) return;
+    if (!selectedObjection && !isCustomMode && !presetScenario) return;
     setPhase('conversation');
     setIsAiTyping(true);
 
@@ -425,12 +464,16 @@ const GamifiedRoleplay: React.FC = () => {
     await playCallStart();
 
     try {
-      const systemPrompt = isCustomMode
-        ? '' // custom prompt is built server-side
-        : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle);
-      const openingLine = isCustomMode && customScenario
-        ? `I'm a sales rep and I'd like to talk to you about ${customScenario.product}. Can I have a few minutes of your time?`
-        : `I'm a sales rep and I'd like to talk to you about our solution. Can I have a few minutes of your time?`;
+      const systemPrompt = presetScenario
+        ? presetScenario.systemPrompt
+        : isCustomMode
+          ? '' // custom prompt is built server-side
+          : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle);
+      const openingLine = presetScenario
+        ? presetScenario.openingLine
+        : isCustomMode && customScenario
+          ? `I'm a sales rep and I'd like to talk to you about ${customScenario.product}. Can I have a few minutes of your time?`
+          : `I'm a sales rep and I'd like to talk to you about our solution. Can I have a few minutes of your time?`;
       const response = await callAI(
         systemPrompt,
         openingLine,
@@ -451,9 +494,11 @@ const GamifiedRoleplay: React.FC = () => {
       setMessages([{
         id: crypto.randomUUID(),
         role: 'prospect',
-        text: isCustomMode && customScenario
-          ? customScenario.objection
-          : (selectedObjection?.description.replace(/"/g, '') || 'What can I do for you?'),
+        text: presetScenario
+          ? "Hi, who is this and what do you want?"
+          : isCustomMode && customScenario
+            ? customScenario.objection
+            : (selectedObjection?.description.replace(/"/g, '') || 'What can I do for you?'),
         timestamp: new Date(),
       }]);
       setCurrentRound(1);
@@ -461,12 +506,12 @@ const GamifiedRoleplay: React.FC = () => {
     } finally {
       setIsAiTyping(false);
     }
-  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle, playCallStart]);
+  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle, playCallStart, presetScenario]);
 
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? userInput).trim();
-    if (!text || isAiTyping || hungUp || (!selectedObjection && !isCustomMode)) return;
+    if (!text || isAiTyping || hungUp || (!selectedObjection && !isCustomMode && !presetScenario)) return;
 
     // Stop any ongoing speech when user sends a message
     stopSpeech();
@@ -513,7 +558,9 @@ const GamifiedRoleplay: React.FC = () => {
 
     try {
       const response = await callAI(
-        isCustomMode ? '' : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle),
+        presetScenario
+          ? presetScenario.systemPrompt
+          : isCustomMode ? '' : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle),
         text,
         updatedMessages
       );
@@ -735,15 +782,17 @@ const GamifiedRoleplay: React.FC = () => {
       setIsTransitioningToDebrief(false);
       setPhase('debrief');
 
-      // Track the completed session attempt AFTER debrief
-      await incrementAttempt({
-        scenario_type: isCustomMode && customScenario ? `custom: ${customScenario.objection}` : (selectedObjection?.label ?? 'practice'),
-        difficulty: 'medium',
-        industry: isCustomMode && customScenario ? customScenario.industry : 'general',
-        duration_seconds: sessionStartTimeRef.current ? Math.round((Date.now() - sessionStartTimeRef.current) / 1000) : 0,
-        score: null,
-      });
-      refreshCount();
+      // Track the completed session attempt AFTER debrief (skip for cold call hook — it's a free taste)
+      if (!isColdCallHook) {
+        await incrementAttempt({
+          scenario_type: isCustomMode && customScenario ? `custom: ${customScenario.objection}` : (selectedObjection?.label ?? 'practice'),
+          difficulty: 'medium',
+          industry: isCustomMode && customScenario ? customScenario.industry : 'general',
+          duration_seconds: sessionStartTimeRef.current ? Math.round((Date.now() - sessionStartTimeRef.current) / 1000) : 0,
+          score: null,
+        });
+        refreshCount();
+      }
     }
   }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation]);
 
@@ -1334,7 +1383,7 @@ const GamifiedRoleplay: React.FC = () => {
 
   // ── Render: Conversation ───────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto flex flex-col relative" style={{ height: viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
+    <div className={`max-w-2xl mx-auto flex flex-col relative ${compact ? '' : ''}`} style={{ height: compact ? '70vh' : viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
       {/* Debrief loading overlay */}
       <AnimatePresence>
         {isTransitioningToDebrief && (
@@ -1364,7 +1413,7 @@ const GamifiedRoleplay: React.FC = () => {
       <div className="flex items-center justify-between mb-4 pt-4 shrink-0">
         <div>
           <h2 className="text-lg font-bold text-foreground">{currentProspectName}</h2>
-          <p className="text-xs text-muted-foreground">{currentProspectTitle} · {isCustomMode ? 'Custom' : selectedObjection?.label} objection</p>
+          <p className="text-xs text-muted-foreground">{currentProspectTitle} · {presetScenario ? presetScenario.objectionLabel : isCustomMode ? 'Custom' : selectedObjection?.label} objection</p>
         </div>
         <Button
           variant="outline"

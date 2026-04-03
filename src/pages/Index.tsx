@@ -1,7 +1,7 @@
-import React, { Suspense, lazy, useEffect, useRef } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Mic } from 'lucide-react';
+import { Mic, Phone } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import LazyLoadManager from '@/components/optimized/LazyLoadManager';
 import { SkipLink } from '@/components/accessibility/SkipLink';
@@ -10,6 +10,7 @@ import { trackEvent } from '@/utils/analytics';
 
 const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
+const ColdCallHook = lazy(() => import('@/components/ColdCallHook'));
 
 /* ── Scroll-reveal hook ── */
 function useReveal() {
@@ -39,6 +40,12 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string }> = ({ c
 
 const Index = () => {
   const navigate = useNavigate();
+  const [coldCallOpen, setColdCallOpen] = useState(false);
+
+  const handleColdCallClick = () => {
+    trackEvent('cta_click', { button: 'try_cold_call', location: 'homepage_hero' });
+    setColdCallOpen(true);
+  };
 
   const handleGetStartedClick = () => {
     trackEvent('cta_click', { button: 'practice_free', location: 'homepage_hero' });
@@ -100,17 +107,18 @@ const Index = () => {
                   Pick a sales scenario. Practice against an AI buyer who fights back like the real thing. Get scored. Walk into your next call actually ready — in under 10&nbsp;minutes.
                 </p>
                 <div className="pp-hero-cta-row">
-                  <button className="pp-btn-primary pp-btn-lg" onClick={handleGetStartedClick}>
-                    Practice Your First Pitch Free →
+                  <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
+                    <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
+                    Try a Cold Call — Free
                   </button>
-                  <button className="pp-btn-ghost" onClick={handleWatchDemoClick} data-onboarding="demo-button" data-testid="watch-demo-button">
-                    See How It Works
+                  <button className="pp-btn-ghost" onClick={handleGetStartedClick} data-onboarding="demo-button" data-testid="watch-demo-button">
+                    Browse All Scenarios →
                   </button>
                 </div>
                 <div className="pp-hero-micro">
-                  <span>✓ Free first session</span>
+                  <span>✓ No signup required</span>
                   <span>✓ No credit card</span>
-                  <span>✓ Under 10 minutes</span>
+                  <span>✓ Under 2 minutes</span>
                 </div>
                 <div className="pp-hero-trust">
                   <div className="pp-trust-pill">🏆 Featured in Lohfeld's AI Tools Guide</div>
@@ -413,14 +421,15 @@ const Index = () => {
           <section className="pp-final-cta">
             <div className="pp-container text-center">
               <h2>Your next deal is this week.<br />Are you walking in cold?</h2>
-              <p>One 10-minute session. That's all it takes to feel the difference.<br />No credit card, no commitment, no one watching.</p>
-              <button className="pp-btn-primary pp-btn-lg" onClick={handleGetStartedClick}>
-                Practice Your First Pitch Free →
+              <p>One practice cold call. That's all it takes to feel the difference.<br />No signup, no credit card, no one watching.</p>
+              <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
+                <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
+                Try a Cold Call — Free
               </button>
               <div className="pp-hero-micro" style={{ justifyContent: 'center', color: '#64748B', marginTop: 16 }}>
-                <span>✓ Free first session</span>
+                <span>✓ No signup required</span>
                 <span>✓ No credit card</span>
-                <span>✓ Under 10 minutes</span>
+                <span>✓ Under 2 minutes</span>
               </div>
             </div>
           </section>
@@ -432,13 +441,21 @@ const Index = () => {
 
           {/* Mobile sticky CTA */}
           <div className="pp-mobile-cta">
-            <button className="pp-btn-primary pp-btn-full" onClick={handleGetStartedClick}>
-              Practice Your First Pitch Free →
+            <button className="pp-btn-primary pp-btn-full" onClick={handleColdCallClick}>
+              <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
+              Try a Cold Call — Free
             </button>
           </div>
         </main>
         <div className="h-[72px] md:hidden" />
       </div>
+
+      {/* Cold Call Hook Modal */}
+      <Suspense fallback={null}>
+        {coldCallOpen && (
+          <ColdCallHook open={coldCallOpen} onOpenChange={setColdCallOpen} />
+        )}
+      </Suspense>
     </>
   );
 };
