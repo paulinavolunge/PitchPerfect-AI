@@ -587,8 +587,10 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setPatience(roundPatience);
 
       // Auto-trigger debrief after the LAST round's AI response
+      // Delay so the user can read the prospect's final message before transition
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
+        await new Promise(resolve => setTimeout(resolve, 3500));
         setIsTransitioningToDebrief(true);
         await runDebriefRef.current!(allMessages);
         return;
@@ -608,6 +610,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       // Even on error, auto-trigger debrief if this was the last round
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
+        await new Promise(resolve => setTimeout(resolve, 3500));
         setIsTransitioningToDebrief(true);
         await runDebriefRef.current!(allMessages);
         return;

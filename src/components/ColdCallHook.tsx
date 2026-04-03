@@ -75,7 +75,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
 
   const presetScenario = {
     objectionLabel: 'Cold Call',
-    openingLine: "[The phone rings and the prospect picks up. Give your short greeting as the prospect — one sentence max.]",
+    openingLine: "The phone rings and the prospect picks up. Give your short greeting as the prospect, one sentence max. Use your actual name.",
     systemPrompt: buildColdCallSystemPrompt(prospect.name, prospect.title),
     prospectName: prospect.name,
     prospectTitle: prospect.title,
