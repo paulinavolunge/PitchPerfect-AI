@@ -200,6 +200,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
               onComplete={handleComplete}
               compact
               isColdCallHook
+              alwaysSpeak
             />
           </div>
         )}

@@ -11,6 +11,7 @@ import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 import { toast } from '@/hooks/use-toast';
 import { VoiceRecordingManager, processVoiceInput } from '@/utils/voiceInput';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { useProspectVoice } from '@/hooks/useProspectVoice';
 
 const WinCelebration = React.lazy(() => import('@/components/WinCelebration'));
 
@@ -70,6 +71,8 @@ export interface GamifiedRoleplayProps {
   compact?: boolean;
   /** When true, skip incrementAttempt — cold call hook is a free taste */
   isColdCallHook?: boolean;
+  /** When true, prospect speaks all responses regardless of input mode */
+  alwaysSpeak?: boolean;
 }
 
 // ── Constants ──────────────────────────────────────────────────
@@ -129,6 +132,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   onComplete,
   compact = false,
   isColdCallHook = false,
+  alwaysSpeak = false,
 }) => {
   const [phase, setPhase] = useState<Phase>(autoStart ? 'conversation' : 'select-objection');
   const [selectedObjection, setSelectedObjection] = useState<ObjectionCard | null>(null);
@@ -156,6 +160,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const [showWinCelebration, setShowWinCelebration] = useState(false);
 
   const { playCallStart, playCallEnd } = useSoundEffects();
+  const { speak: speakEL, stop: stopEL } = useProspectVoice();
 
   // ── Patience & Timer state ─────────────────────────────────
   const RESPONSE_TIMER_MAX = 15;
@@ -197,37 +202,21 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const runDebriefRef = useRef<(msgs: ChatMessage[]) => Promise<void>>();
-  const synthRef = useRef<SpeechSynthesis | null>(typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
-
-  // ── TTS: find a female voice ──────────────────────────────
-  const getPreferredVoice = useCallback((): SpeechSynthesisVoice | null => {
-    const synth = synthRef.current;
-    if (!synth) return null;
-    const voices = synth.getVoices();
-    const preferred = ['samantha', 'google us english female', 'microsoft zira', 'female'];
-    for (const pref of preferred) {
-      const match = voices.find(v => v.name.toLowerCase().includes(pref));
-      if (match) return match;
-    }
-    // fallback: any English voice
-    return voices.find(v => v.lang.startsWith('en')) || null;
-  }, []);
+  // ── Prospect voice (ElevenLabs with browser TTS fallback) ──
+  const shouldSpeak = alwaysSpeak || inputMode === 'voice';
 
   const speakText = useCallback((text: string) => {
-    const synth = synthRef.current;
-    if (!synth) return;
-    synth.cancel(); // stop any current speech
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    const voice = getPreferredVoice();
-    if (voice) utterance.voice = voice;
-    synth.speak(utterance);
-  }, [getPreferredVoice]);
+    if (!shouldSpeak) return;
+    speakEL(text); // non-blocking: fires request, plays when ready
+  }, [shouldSpeak, speakEL]);
 
   const stopSpeech = useCallback(() => {
-    synthRef.current?.cancel();
-  }, []);
+    stopEL();
+    // Also kill browser speech in case fallback was active
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }, [stopEL]);
 
   const { user, isPremium } = useAuth();
   const navigate = useNavigate();
@@ -488,7 +477,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setMessages([prospectMsg]);
       setCurrentRound(1);
       sessionStartTimeRef.current = Date.now();
-      if (inputMode === 'voice') speakText(response);
+      speakText(response);
     } catch (err) {
       console.error('[GamifiedRoleplay] Failed to get opening response:', err);
       setMessages([{
@@ -579,7 +568,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setMessages(allMessages);
       setCurrentRound(nextRound);
       lastProspectMsgTimeRef.current = Date.now();
-      if (inputMode === 'voice') speakText(response);
+      speakText(response);
 
       // Round-based patience decay (3% per round)
       const roundPatience = Math.max(0, patienceRef.current - 3);
@@ -653,7 +642,6 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   // ── End & Debrief ──────────────────────────────────────────
   const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
     stopSpeech();
-    if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
 
     // Show dramatic hang-up screen if patience was low and it wasn't already shown
     const shouldShowHangUp = (hungUp || patienceRef.current <= 30) && !showHangUpAnimation;
@@ -1493,9 +1481,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                 {msg.role === 'prospect' && (
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold opacity-70">{currentProspectName}</span>
-                    {inputMode === 'voice' && (
+                    {shouldSpeak && (
                       <button
-                        onClick={() => speakText(msg.text)}
+                        onClick={() => speakEL(msg.text)}
                         className="ml-2 p-0.5 rounded hover:bg-foreground/10 transition-colors"
                         aria-label="Replay message"
                         title="Replay message"
