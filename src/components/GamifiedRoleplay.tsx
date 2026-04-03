@@ -495,7 +495,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         id: crypto.randomUUID(),
         role: 'prospect',
         text: presetScenario
-          ? "Hi, who is this and what do you want?"
+          ? `${presetScenario.prospectName.split(' ')[0]} speaking.`
           : isCustomMode && customScenario
             ? customScenario.objection
             : (selectedObjection?.description.replace(/"/g, '') || 'What can I do for you?'),
@@ -521,9 +521,14 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     setResponseTimes(prev => [...prev, responseTime]);
 
     // Patience depletion based on response quality
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
     let patienceDrop = 3; // default: natural decay for good-length response
-    if (text.split(/\s+/).filter(Boolean).length < 3) {
-      patienceDrop = 8; // short/lazy response
+    if (wordCount <= 1) {
+      patienceDrop = 25; // one-word/gibberish response — prospect gets annoyed fast
+    } else if (wordCount < 3) {
+      patienceDrop = 15; // very short/lazy response
+    } else if (wordCount < 5) {
+      patienceDrop = 8; // short response
     }
     const newPatience = Math.max(0, patienceRef.current - patienceDrop);
     patienceRef.current = newPatience;
