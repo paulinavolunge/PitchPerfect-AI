@@ -135,11 +135,11 @@ export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
     }
 
     // Always use Whisper for reliable transcription
-    console.log('🤖 Using Whisper API for transcription');
+    console.log('[Mic] Sending to Whisper. Blob size:', audioBlob.size, 'type:', audioBlob.type);
     const rawTranscript = await whisperTranscribe(audioBlob);
     const transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
 
-    console.log('✅ Voice processing complete, transcript:', transcript);
+    console.log('[Mic] Whisper transcribed:', JSON.stringify(transcript));
 
     // Secure cleanup
     VoiceInputSecurity.secureCleanup(audioBlob);
@@ -228,45 +228,49 @@ export class VoiceRecordingManager {
   private stream: MediaStream | null = null;
   private audioChunks: Blob[] = [];
   private isRecording = false;
+  private startTime = 0;
 
   async startRecording(): Promise<void> {
     if (this.isRecording) {
-      console.warn('🎤 Already recording');
+      console.warn('[Mic] Already recording');
       return;
     }
 
     try {
       const { recorder, stream } = await startAudioRecording();
-      
+
       this.recorder = recorder;
       this.stream = stream;
       this.audioChunks = [];
       this.isRecording = true;
+      this.startTime = Date.now();
 
       this.recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           this.audioChunks.push(event.data);
-          console.log('🎵 Audio chunk received, size:', event.data.size);
         }
       };
 
       this.recorder.onstop = () => {
-        console.log('🛑 Recording stopped');
         this.isRecording = false;
       };
 
       this.recorder.onerror = (event) => {
-        console.error('❌ MediaRecorder error:', event);
+        console.error('[Mic] MediaRecorder error:', event);
         this.isRecording = false;
       };
 
-      // Collect data in 250ms chunks for more reliable capture
-      this.recorder.start(250);
-      console.log('🎤 Recording started successfully');
+      // NO timeslice — record as a single continuous blob.
+      // Using start(timeslice) produces multiple webm container segments
+      // that can't be naively concatenated into a valid file.
+      // Without timeslice, ondataavailable fires exactly once on stop()
+      // with the complete recording as a single valid webm file.
+      this.recorder.start();
+      console.log('[Mic] Recording started');
 
     } catch (error) {
       this.isRecording = false;
-      console.error('❌ Failed to start recording:', error);
+      console.error('[Mic] Failed to start recording:', error);
       throw error;
     }
   }
@@ -279,20 +283,20 @@ export class VoiceRecordingManager {
       }
 
       const mimeType = this.recorder.mimeType || 'audio/webm';
+      const duration = Date.now() - this.startTime;
 
       this.recorder.onstop = () => {
         try {
-          console.log('🛑 Recording stopped, chunks:', this.audioChunks.length,
-            'total size:', this.audioChunks.reduce((s, c) => s + c.size, 0));
+          const totalSize = this.audioChunks.reduce((s, c) => s + c.size, 0);
+          console.log(`[Mic] Recording stopped. Duration: ${duration}ms. Chunks: ${this.audioChunks.length}. Total size: ${totalSize} bytes`);
 
-          if (this.audioChunks.length === 0) {
+          if (this.audioChunks.length === 0 || totalSize === 0) {
             reject(new Error('No audio data recorded'));
             return;
           }
 
           const audioBlob = new Blob(this.audioChunks, { type: mimeType });
-
-          console.log('🎵 Audio blob created, size:', audioBlob.size, 'type:', audioBlob.type);
+          console.log(`[Mic] Blob created: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
 
           // Clean up
           this.cleanup();
@@ -304,17 +308,12 @@ export class VoiceRecordingManager {
         }
       };
 
-      // Flush any buffered audio data before stopping.
-      // Some browsers don't fire a final dataavailable on stop()
-      // if timeslice was used, so requestData() forces it out first.
-      try {
-        this.recorder.requestData();
-      } catch (_) {
-        // requestData() may throw if state is not 'recording' on some browsers
-      }
-
       this.recorder.stop();
     });
+  }
+
+  getRecordingDuration(): number {
+    return this.isRecording ? Date.now() - this.startTime : 0;
   }
 
   private cleanup(): void {

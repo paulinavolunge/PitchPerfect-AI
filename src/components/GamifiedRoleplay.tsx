@@ -799,12 +799,17 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const toggleVoice = useCallback(async () => {
     // If currently listening, stop recording and process with Whisper
     if (isListening && voiceManagerRef.current?.isCurrentlyRecording()) {
+      const duration = voiceManagerRef.current.getRecordingDuration();
       setIsListening(false);
       setIsProcessingVoice(true);
       try {
         const blob = await voiceManagerRef.current.stopRecording();
         voiceManagerRef.current = null;
+        console.log(`[Voice] Stopped. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
+        toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
         const text = await processVoiceInput(blob);
+        console.log('[Voice] Whisper result:', JSON.stringify(text));
+        toast({ title: 'Whisper transcribed', description: text || '(empty)' });
         if (!text || text.trim().length === 0) {
           toast({
             title: "Couldn't capture your voice",
@@ -852,6 +857,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       voiceManagerRef.current = manager;
       await manager.startRecording();
       setIsListening(true);
+      console.log('[Voice] Recording started');
+      toast({ title: 'Recording started…', description: 'Tap mic or Send when done' });
     } catch (err: any) {
       console.error('[Voice] Failed to start recording:', err);
       voiceManagerRef.current = null;
@@ -1587,12 +1594,17 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           onClick={async () => {
             // If recording, stop and process first, then send
             if (isListening && voiceManagerRef.current?.isCurrentlyRecording()) {
+              const duration = voiceManagerRef.current.getRecordingDuration();
               setIsListening(false);
               setIsProcessingVoice(true);
               try {
                 const blob = await voiceManagerRef.current.stopRecording();
                 voiceManagerRef.current = null;
+                console.log(`[Voice] Send pressed. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
+                toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
                 const text = await processVoiceInput(blob);
+                console.log('[Voice] Whisper result:', JSON.stringify(text));
+                toast({ title: 'Whisper transcribed', description: text || '(empty)' });
                 if (text && text.trim().length > 0) {
                   // Auto-send transcribed voice input directly
                   sendMessage(text);

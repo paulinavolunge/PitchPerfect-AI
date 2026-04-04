@@ -15,6 +15,7 @@ const DEFAULT_VOICE_ID = VOICE_FEMALE;
 export function useProspectVoice() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const currentUrlRef = useRef<string | null>(null);
+  const queueRef = useRef<Promise<void>>(Promise.resolve());
   const synthRef = useRef<SpeechSynthesis | null>(
     typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null
   );
@@ -72,7 +73,7 @@ export function useProspectVoice() {
     synth.speak(utterance);
   }, []);
 
-  const speak = useCallback(async (text: string, voiceId?: string) => {
+  const _speakImmediate = useCallback(async (text: string, voiceId?: string) => {
     // Fully release previous audio before starting a new request
     stop();
     // Brief pause to let the browser release audio resources
@@ -157,6 +158,32 @@ export function useProspectVoice() {
       fallbackToWebSpeech(text, voiceId);
     }
   }, [stop, releaseAudio, fallbackToWebSpeech]);
+
+  /** Queued speak — serializes requests so they never overlap */
+  const speak = useCallback((text: string, voiceId?: string) => {
+    // Chain onto the queue: wait for previous speak to finish, then play this one
+    queueRef.current = queueRef.current
+      .then(() => _speakImmediate(text, voiceId))
+      .then(() => {
+        // Wait for playback to finish before allowing next queued item
+        return new Promise<void>((resolve) => {
+          const audio = currentAudioRef.current;
+          if (!audio) { resolve(); return; }
+          // If already ended, resolve immediately
+          if (audio.ended || audio.paused) { resolve(); return; }
+          const orig = audio.onended;
+          audio.onended = (e) => {
+            if (typeof orig === 'function') orig.call(audio, e);
+            resolve();
+          };
+          // Safety timeout — don't block the queue forever
+          setTimeout(resolve, 15000);
+        });
+      })
+      .catch((err) => {
+        console.warn('[ProspectVoice] Queue error:', err);
+      });
+  }, [_speakImmediate]);
 
   return { speak, stop };
 }
