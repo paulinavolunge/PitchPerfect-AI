@@ -29,7 +29,7 @@ export function useProspectVoice() {
     synthRef.current?.cancel();
   }, []);
 
-  const fallbackToWebSpeech = useCallback((text: string) => {
+  const fallbackToWebSpeech = useCallback((text: string, voiceId?: string) => {
     const synth = synthRef.current;
     if (!synth) return;
     synth.cancel();
@@ -37,9 +37,14 @@ export function useProspectVoice() {
     utterance.rate = 0.95;
     utterance.pitch = 0.95;
 
-    // Prefer natural-sounding voices
     const voices = synth.getVoices();
-    const preferred = ['samantha', 'google us english female', 'microsoft zira', 'female'];
+    const isMaleVoice = voiceId === VOICE_MALE;
+
+    // Match gender to the prospect's ElevenLabs voice
+    const preferred = isMaleVoice
+      ? ['daniel', 'david', 'james', 'google uk english male', 'male']
+      : ['samantha', 'google us english female', 'microsoft zira', 'female'];
+
     for (const pref of preferred) {
       const match = voices.find(v => v.name.toLowerCase().includes(pref));
       if (match) { utterance.voice = match; break; }
@@ -117,13 +122,13 @@ export function useProspectVoice() {
         URL.revokeObjectURL(audioUrl);
         if (currentAudioRef.current === audio) currentAudioRef.current = null;
         console.warn('[ProspectVoice] Audio playback failed, falling back to browser TTS');
-        fallbackToWebSpeech(text);
+        fallbackToWebSpeech(text, voiceId);
       };
 
       await audio.play();
     } catch (err) {
       console.warn('[ProspectVoice] ElevenLabs failed, falling back to browser TTS:', err);
-      fallbackToWebSpeech(text);
+      fallbackToWebSpeech(text, voiceId);
     }
   }, [stop, fallbackToWebSpeech]);
 

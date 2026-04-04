@@ -260,8 +260,8 @@ export class VoiceRecordingManager {
         this.isRecording = false;
       };
 
-      // Start recording with data collection every second
-      this.recorder.start(1000);
+      // Collect data in 250ms chunks for more reliable capture
+      this.recorder.start(250);
       console.log('🎤 Recording started successfully');
 
     } catch (error) {
@@ -278,28 +278,40 @@ export class VoiceRecordingManager {
         return;
       }
 
+      const mimeType = this.recorder.mimeType || 'audio/webm';
+
       this.recorder.onstop = () => {
         try {
+          console.log('🛑 Recording stopped, chunks:', this.audioChunks.length,
+            'total size:', this.audioChunks.reduce((s, c) => s + c.size, 0));
+
           if (this.audioChunks.length === 0) {
             reject(new Error('No audio data recorded'));
             return;
           }
 
-          const audioBlob = new Blob(this.audioChunks, { 
-            type: this.recorder?.mimeType || 'audio/webm' 
-          });
-          
+          const audioBlob = new Blob(this.audioChunks, { type: mimeType });
+
           console.log('🎵 Audio blob created, size:', audioBlob.size, 'type:', audioBlob.type);
-          
+
           // Clean up
           this.cleanup();
-          
+
           resolve(audioBlob);
         } catch (error) {
           this.cleanup();
           reject(error);
         }
       };
+
+      // Flush any buffered audio data before stopping.
+      // Some browsers don't fire a final dataavailable on stop()
+      // if timeslice was used, so requestData() forces it out first.
+      try {
+        this.recorder.requestData();
+      } catch (_) {
+        // requestData() may throw if state is not 'recording' on some browsers
+      }
 
       this.recorder.stop();
     });
