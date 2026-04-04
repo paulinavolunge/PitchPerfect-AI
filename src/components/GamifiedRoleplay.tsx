@@ -501,6 +501,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? userInput).trim();
+    if (overrideText) {
+      console.log('[sendMessage] Using overrideText:', JSON.stringify(text), '(userInput was:', JSON.stringify(userInput), ')');
+    }
     if (!text || isAiTyping || hungUp || (!selectedObjection && !isCustomMode && !presetScenario)) return;
 
     // Stop any ongoing speech when user sends a message
@@ -857,6 +860,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       voiceManagerRef.current = manager;
       await manager.startRecording();
       setIsListening(true);
+      // Clear any text in the input so it doesn't get sent alongside the voice message
+      setUserInput('');
+      setIsUserTyping(false);
       console.log('[Voice] Recording started');
       toast({ title: 'Recording started…', description: 'Tap mic or Send when done' });
     } catch (err: any) {
@@ -1568,7 +1574,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             type="text"
             value={userInput}
             onChange={(e) => { setUserInput(e.target.value); setIsTranscribedFromVoice(false); if (e.target.value.length > 0) setIsUserTyping(true); }}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !isListening && !isProcessingVoice) { e.preventDefault(); sendMessage(); } }}
             onFocus={() => {
               setTimeout(() => {
                 chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
