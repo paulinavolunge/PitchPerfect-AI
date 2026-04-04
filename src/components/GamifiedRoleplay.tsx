@@ -840,6 +840,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       return;
     }
 
+    // Stop any prospect audio before recording so echo cancellation
+    // doesn't capture residual playback as the user's speech
+    stopSpeech();
+    // Brief pause to let audio resources fully release
+    await new Promise(resolve => setTimeout(resolve, 200));
+
     // Start recording
     try {
       const manager = new VoiceRecordingManager();
@@ -858,7 +864,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         variant: "destructive",
       });
     }
-  }, [isListening, sendMessage]);
+  }, [isListening, sendMessage, stopSpeech]);
 
   // ── Reset ──────────────────────────────────────────────────
   const handleGoProCheckout = async (planId: string = 'solo', quantity: number = 1) => {

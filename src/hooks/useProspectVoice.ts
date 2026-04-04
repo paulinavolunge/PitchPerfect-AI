@@ -14,20 +14,35 @@ const DEFAULT_VOICE_ID = VOICE_FEMALE;
  */
 export function useProspectVoice() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentUrlRef = useRef<string | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(
     typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null
   );
 
-  const stop = useCallback(() => {
-    // Stop ElevenLabs audio
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current.currentTime = 0;
+  /** Fully release the current Audio element and its object URL */
+  const releaseAudio = useCallback(() => {
+    const audio = currentAudioRef.current;
+    const url = currentUrlRef.current;
+    if (audio) {
+      audio.pause();
+      audio.onended = null;
+      audio.onerror = null;
+      // Remove src so the browser releases the media resource
+      audio.removeAttribute('src');
+      audio.load(); // forces release of the media resource
       currentAudioRef.current = null;
     }
+    if (url) {
+      URL.revokeObjectURL(url);
+      currentUrlRef.current = null;
+    }
+  }, []);
+
+  const stop = useCallback(() => {
+    releaseAudio();
     // Stop browser TTS
     synthRef.current?.cancel();
-  }, []);
+  }, [releaseAudio]);
 
   const fallbackToWebSpeech = useCallback((text: string, voiceId?: string) => {
     const synth = synthRef.current;
@@ -58,10 +73,15 @@ export function useProspectVoice() {
   }, []);
 
   const speak = useCallback(async (text: string, voiceId?: string) => {
-    // Stop any current playback first
+    // Fully release previous audio before starting a new request
     stop();
+    // Brief pause to let the browser release audio resources
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     if (!text.trim()) return;
+
+    const vid = voiceId || DEFAULT_VOICE_ID;
+    console.log('[ProspectVoice] Speaking:', text.slice(0, 60) + '…', 'voiceId:', vid);
 
     try {
       // Call ElevenLabs edge function
@@ -78,6 +98,7 @@ export function useProspectVoice() {
         // Guest — use anon key
       }
 
+      console.log('[ProspectVoice] Calling ElevenLabs edge function…');
       const response = await fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts`, {
         method: 'POST',
         headers: {
@@ -87,11 +108,13 @@ export function useProspectVoice() {
         },
         body: JSON.stringify({
           text: text.slice(0, 500),
-          voiceId: voiceId || DEFAULT_VOICE_ID,
+          voiceId: vid,
         }),
       });
 
       if (!response.ok) {
+        const errBody = await response.text().catch(() => '');
+        console.error('[ProspectVoice] Edge function error:', response.status, errBody);
         throw new Error(`TTS edge function error: ${response.status}`);
       }
 
@@ -100,6 +123,8 @@ export function useProspectVoice() {
       if (!data?.audioContent) {
         throw new Error('No audioContent in response');
       }
+
+      console.log('[ProspectVoice] Audio received, base64 length:', data.audioContent.length);
 
       // Decode base64 → audio blob → play
       const binaryStr = atob(data.audioContent);
@@ -112,25 +137,26 @@ export function useProspectVoice() {
 
       const audio = new Audio(audioUrl);
       currentAudioRef.current = audio;
+      currentUrlRef.current = audioUrl;
 
-      // Clean up object URL when done
+      // Clean up when playback finishes naturally
       audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        if (currentAudioRef.current === audio) currentAudioRef.current = null;
+        console.log('[ProspectVoice] Playback ended naturally');
+        releaseAudio();
       };
-      audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        if (currentAudioRef.current === audio) currentAudioRef.current = null;
-        console.warn('[ProspectVoice] Audio playback failed, falling back to browser TTS');
+      audio.onerror = (e) => {
+        console.warn('[ProspectVoice] Audio playback error:', e);
+        releaseAudio();
         fallbackToWebSpeech(text, voiceId);
       };
 
       await audio.play();
+      console.log('[ProspectVoice] Playback started');
     } catch (err) {
       console.warn('[ProspectVoice] ElevenLabs failed, falling back to browser TTS:', err);
       fallbackToWebSpeech(text, voiceId);
     }
-  }, [stop, fallbackToWebSpeech]);
+  }, [stop, releaseAudio, fallbackToWebSpeech]);
 
   return { speak, stop };
 }
