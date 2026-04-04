@@ -1,7 +1,10 @@
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-const ELEVENLABS_VOICE_ID = 'CwhRBWXzGAHq8TQ4Fs17'; // Roger — natural, professional
+// ElevenLabs voice IDs
+export const VOICE_FEMALE = '21m00Tcm4TlvDq8ikWAM'; // Rachel — warm, professional female
+export const VOICE_MALE = 'CwhRBWXzGAHq8TQ4Fs17';   // Roger — natural, professional male
+const DEFAULT_VOICE_ID = VOICE_FEMALE;
 
 /**
  * Hook that speaks prospect responses via ElevenLabs TTS,
@@ -49,7 +52,7 @@ export function useProspectVoice() {
     synth.speak(utterance);
   }, []);
 
-  const speak = useCallback(async (text: string) => {
+  const speak = useCallback(async (text: string, voiceId?: string) => {
     // Stop any current playback first
     stop();
 
@@ -79,7 +82,7 @@ export function useProspectVoice() {
         },
         body: JSON.stringify({
           text: text.slice(0, 500),
-          voiceId: ELEVENLABS_VOICE_ID,
+          voiceId: voiceId || DEFAULT_VOICE_ID,
         }),
       });
 

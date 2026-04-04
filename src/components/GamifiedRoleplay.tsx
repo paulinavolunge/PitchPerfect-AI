@@ -64,6 +64,7 @@ export interface GamifiedRoleplayProps {
     systemPrompt: string;
     prospectName: string;
     prospectTitle: string;
+    voiceId?: string;
   };
   /** Called when the session ends with debrief data */
   onComplete?: (debrief: DebriefData) => void;
@@ -207,8 +208,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   const speakText = useCallback((text: string) => {
     if (!shouldSpeak) return;
-    speakEL(text); // non-blocking: fires request, plays when ready
-  }, [shouldSpeak, speakEL]);
+    speakEL(text, presetScenario?.voiceId); // non-blocking: fires request, plays when ready
+  }, [shouldSpeak, speakEL, presetScenario?.voiceId]);
 
   const stopSpeech = useCallback(() => {
     stopEL();
@@ -1483,7 +1484,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                     <span className="text-xs font-semibold opacity-70">{currentProspectName}</span>
                     {shouldSpeak && (
                       <button
-                        onClick={() => speakEL(msg.text)}
+                        onClick={() => speakEL(msg.text, presetScenario?.voiceId)}
                         className="ml-2 p-0.5 rounded hover:bg-foreground/10 transition-colors"
                         aria-label="Replay message"
                         title="Replay message"
@@ -1532,14 +1533,18 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         </div>
       )}
       <div className="flex gap-2 items-end sticky bottom-0 bg-background pb-4 pt-2 shrink-0">
-        {inputMode === 'voice' && (
+        {(inputMode === 'voice' || alwaysSpeak) && (
           <Button
             variant="outline"
             size="icon"
-            onClick={toggleVoice}
+            onClick={() => {
+              // In cold call mode, auto-switch to voice mode on first tap
+              if (inputMode !== 'voice') setInputMode('voice');
+              toggleVoice();
+            }}
             className={isListening ? 'border-destructive text-destructive animate-pulse' : isProcessingVoice ? 'border-yellow-500 text-yellow-500' : ''}
             disabled={isAiTyping || hungUp || isProcessingVoice}
-            title={isProcessingVoice ? 'Processing voice...' : isListening ? 'Stop recording' : 'Start voice input'}
+            title={isProcessingVoice ? 'Processing voice...' : isListening ? 'Stop recording' : 'Tap to speak'}
           >
             {isProcessingVoice ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
           </Button>

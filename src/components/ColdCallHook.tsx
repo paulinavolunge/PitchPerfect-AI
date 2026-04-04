@@ -9,18 +9,25 @@ import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@/utils/analytics';
 import GamifiedRoleplay, { type DebriefData } from '@/components/GamifiedRoleplay';
 
+import { VOICE_FEMALE, VOICE_MALE } from '@/hooks/useProspectVoice';
+
 // ── Cold call scenario config ──────────────────────────────────
 const COLD_CALL_PROSPECT_NAMES = [
-  { first: 'Dana', last: 'Kowalski', title: 'VP of Operations' },
-  { first: 'Priya', last: 'Nair', title: 'Head of Procurement' },
-  { first: 'Rachel', last: 'Brennan', title: 'Director of Sales' },
-  { first: 'Samira', last: 'Hadid', title: 'VP of Marketing' },
-  { first: 'Lauren', last: 'Chen', title: 'COO' },
+  { first: 'Dana', last: 'Kowalski', title: 'VP of Operations', gender: 'female' as const },
+  { first: 'Priya', last: 'Nair', title: 'Head of Procurement', gender: 'female' as const },
+  { first: 'Rachel', last: 'Brennan', title: 'Director of Sales', gender: 'female' as const },
+  { first: 'Samira', last: 'Hadid', title: 'VP of Marketing', gender: 'female' as const },
+  { first: 'Lauren', last: 'Chen', title: 'COO', gender: 'female' as const },
+  { first: 'Marcus', last: 'Rivera', title: 'VP of Operations', gender: 'male' as const },
 ];
 
 function pickColdCallProspect() {
   const p = COLD_CALL_PROSPECT_NAMES[Math.floor(Math.random() * COLD_CALL_PROSPECT_NAMES.length)];
-  return { name: `${p.first} ${p.last}`, title: p.title };
+  return {
+    name: `${p.first} ${p.last}`,
+    title: p.title,
+    voiceId: p.gender === 'male' ? VOICE_MALE : VOICE_FEMALE,
+  };
 }
 
 function buildColdCallSystemPrompt(prospectName: string, prospectTitle: string): string {
@@ -89,6 +96,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     systemPrompt: buildColdCallSystemPrompt(prospect.name, prospect.title),
     prospectName: prospect.name,
     prospectTitle: prospect.title,
+    voiceId: prospect.voiceId,
   };
 
   const handleComplete = useCallback((d: DebriefData) => {
