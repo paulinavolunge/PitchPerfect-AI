@@ -94,13 +94,20 @@ serve(async (req) => {
       );
     }
 
-    // Convert audio stream to base64
+    // Convert audio stream to base64 in chunks to avoid call stack overflow.
+    // The spread operator (...new Uint8Array(largeBuffer)) crashes on audio
+    // responses >~30KB because it passes every byte as a function argument.
     const audioBuffer = await response.arrayBuffer();
-    const base64Audio = btoa(
-      String.fromCharCode(...new Uint8Array(audioBuffer))
-    );
+    const uint8 = new Uint8Array(audioBuffer);
+    const chunkSize = 32768; // 32KB chunks
+    const parts: string[] = [];
+    for (let i = 0; i < uint8.length; i += chunkSize) {
+      const chunk = uint8.subarray(i, i + chunkSize);
+      parts.push(String.fromCharCode.apply(null, Array.from(chunk)));
+    }
+    const base64Audio = btoa(parts.join(''));
 
-    console.log(`TTS generated: ${cleanText.length} chars → ${audioBuffer.byteLength} bytes audio`);
+    console.log(`TTS generated: ${cleanText.length} chars → ${audioBuffer.byteLength} bytes audio → ${base64Audio.length} base64 chars`);
 
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
