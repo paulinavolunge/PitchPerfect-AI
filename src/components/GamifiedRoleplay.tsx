@@ -516,9 +516,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const sendMessage = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? userInput).trim();
     if (overrideText) {
-      console.log('[sendMessage] Using overrideText:', JSON.stringify(text), '(userInput was:', JSON.stringify(userInput), ')');
+      console.log('[VOICE] sendMessage received overrideText:', JSON.stringify(text), '(userInput was:', JSON.stringify(userInput), ')');
     }
-    if (!text || isAiTyping || hungUp || (!selectedObjection && !isCustomMode && !presetScenario)) return;
+    if (!text || isAiTyping || hungUp || (!selectedObjection && !isCustomMode && !presetScenario)) {
+      if (!text) console.log('[VOICE] sendMessage blocked: empty text');
+      if (isAiTyping) console.log('[VOICE] sendMessage blocked: AI is typing');
+      return;
+    }
 
     // Stop any ongoing speech when user sends a message
     stopSpeech();
@@ -813,10 +817,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   runDebriefRef.current = runDebrief;
 
   const toggleVoice = useCallback(async () => {
+    console.log('[VOICE] Mic button clicked, isListening:', isListening);
     // If currently listening, stop recording and process with Whisper
     if (isListening) {
       if (voiceManagerRef.current?.isCurrentlyRecording()) {
         const duration = voiceManagerRef.current.getRecordingDuration();
+        console.log('[VOICE] Stopping recording, duration:', duration, 'ms');
         setIsListening(false);
         setIsProcessingVoice(true);
         // Unmute TTS now that mic is off
@@ -824,12 +830,16 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         try {
           const blob = await voiceManagerRef.current.stopRecording();
           voiceManagerRef.current = null;
-          console.log(`[Voice] Stopped. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
+          console.log('[VOICE] Recording stopped, blob size:', blob.size, 'type:', blob.type);
+          console.log('[VOICE] MIME check:', blob.type, 'passes:', !blob.type || blob.type.startsWith('audio/'));
           toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
+          console.log('[VOICE] Sending to Whisper, blob size:', blob.size);
           const result = await processVoiceInput(blob);
-          console.log('[Voice] Whisper result:', JSON.stringify(result.transcript), 'raw:', JSON.stringify(result.rawTranscript));
+          console.log('[VOICE] Whisper raw response:', JSON.stringify(result.rawTranscript));
+          console.log('[VOICE] Sanitized transcript:', JSON.stringify(result.transcript));
           toast({ title: `Whisper: "${result.rawTranscript}"`, description: `${duration}ms · ${result.blobSize} bytes · ${result.blobType}` });
           if (!result.transcript || result.transcript.trim().length === 0) {
+            console.log('[VOICE] Empty transcript, aborting send');
             toast({
               title: "Couldn't capture your voice",
               description: "Please try again.",
@@ -839,10 +849,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             return;
           }
           // Auto-send transcribed voice input directly
+          console.log('[VOICE] Calling sendMessage with:', JSON.stringify(result.transcript));
           sendMessage(result.transcript);
+          console.log('[VOICE] sendMessage completed');
         } catch (err: any) {
-          console.error('[Voice] Whisper processing failed:', err);
           const isHallucination = err?.message === 'WHISPER_HALLUCINATION';
+          console.log('[VOICE] Hallucination check: rejected:', isHallucination, 'error:', err?.message);
           toast({
             title: isHallucination
               ? "Couldn't hear you clearly"
@@ -857,6 +869,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         }
       } else {
         // Recording state is inconsistent (e.g. MediaRecorder errored) — reset
+        console.log('[VOICE] Recording state inconsistent — isListening but not isCurrentlyRecording. Resetting.');
         setIsListening(false);
         unmuteSpeech();
         voiceManagerRef.current = null;
@@ -867,6 +880,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
     // Check browser support (MediaRecorder-based, not SpeechRecognition)
     if (!navigator.mediaDevices?.getUserMedia) {
+      console.log('[VOICE] getUserMedia not supported');
       toast({
         title: "Voice not supported",
         description: "Voice isn't supported in this browser. Please update your browser or use text mode.",
@@ -877,11 +891,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     }
 
     // Mute TTS and stop current playback so it can't feed back into the mic
+    console.log('[VOICE] Muting TTS before recording');
     muteSpeech();
     // Brief pause to let audio resources fully release
     await new Promise(resolve => setTimeout(resolve, 200));
 
     // Start recording
+    console.log('[VOICE] Starting recording...');
     try {
       const manager = new VoiceRecordingManager();
       voiceManagerRef.current = manager;
@@ -890,10 +906,10 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       // Clear any text in the input so it doesn't get sent alongside the voice message
       setUserInput('');
       setIsUserTyping(false);
-      console.log('[Voice] Recording started');
+      console.log('[VOICE] Recording started successfully');
       toast({ title: 'Recording started…', description: 'Tap mic or Send when done' });
     } catch (err: any) {
-      console.error('[Voice] Failed to start recording:', err);
+      console.error('[VOICE] Failed to start recording:', err);
       voiceManagerRef.current = null;
       // Unmute since recording failed
       unmuteSpeech();
@@ -1622,29 +1638,37 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           onClick={async () => {
             // If in voice/recording mode, stop and process first, then send
             if (isListening) {
+              console.log('[VOICE] Send button pressed while recording');
               // Unmute TTS now that mic is stopping
               unmuteSpeech();
               if (voiceManagerRef.current?.isCurrentlyRecording()) {
                 const duration = voiceManagerRef.current.getRecordingDuration();
+                console.log('[VOICE] Stopping recording via Send, duration:', duration, 'ms');
                 setIsListening(false);
                 setIsProcessingVoice(true);
                 try {
                   const blob = await voiceManagerRef.current.stopRecording();
                   voiceManagerRef.current = null;
-                  console.log(`[Voice] Send pressed. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
+                  console.log('[VOICE] Recording stopped, blob size:', blob.size, 'type:', blob.type);
+                  console.log('[VOICE] MIME check:', blob.type, 'passes:', !blob.type || blob.type.startsWith('audio/'));
                   toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
+                  console.log('[VOICE] Sending to Whisper, blob size:', blob.size);
                   const result = await processVoiceInput(blob);
-                  console.log('[Voice] Whisper result:', JSON.stringify(result.transcript), 'raw:', JSON.stringify(result.rawTranscript));
+                  console.log('[VOICE] Whisper raw response:', JSON.stringify(result.rawTranscript));
+                  console.log('[VOICE] Sanitized transcript:', JSON.stringify(result.transcript));
                   toast({ title: `Whisper: "${result.rawTranscript}"`, description: `${duration}ms · ${result.blobSize} bytes · ${result.blobType}` });
                   if (result.transcript && result.transcript.trim().length > 0) {
                     // Auto-send transcribed voice input directly
+                    console.log('[VOICE] Calling sendMessage with:', JSON.stringify(result.transcript));
                     sendMessage(result.transcript);
+                    console.log('[VOICE] sendMessage completed');
                   } else {
+                    console.log('[VOICE] Empty transcript, aborting send');
                     toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
                   }
                 } catch (err: any) {
-                  console.error('[Voice] Processing failed on send:', err);
                   const isHallucination = err?.message === 'WHISPER_HALLUCINATION';
+                  console.log('[VOICE] Hallucination check: rejected:', isHallucination, 'error:', err?.message);
                   toast({
                     title: isHallucination
                       ? "Couldn't hear you clearly"
