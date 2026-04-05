@@ -261,12 +261,8 @@ const ConversationInterface = ({
 
         if (realtimeTranscript.trim()) {
           console.log('✅ Using real-time transcript:', realtimeTranscript);
-          setInputText(realtimeTranscript);
           setVoiceStatus('complete');
-          toast({
-            title: 'Voice Captured',
-            description: `"${realtimeTranscript.substring(0, 50)}${realtimeTranscript.length > 50 ? '...' : ''}"`,
-          });
+          handleSendMessage(realtimeTranscript);
           return;
         }
 
@@ -274,12 +270,8 @@ const ConversationInterface = ({
         const result = await processVoiceInput(audioBlob);
 
         if (result.transcript && result.transcript.trim()) {
-          setInputText(result.transcript);
           setVoiceStatus('complete');
-          toast({
-            title: 'Voice Processed',
-            description: `"${result.transcript.substring(0, 50)}${result.transcript.length > 50 ? '...' : ''}"`,
-          });
+          handleSendMessage(result.transcript);
           return;
         }
 
@@ -288,12 +280,8 @@ const ConversationInterface = ({
 
       // SpeechRecognition-only mode
       if (realtimeTranscript.trim()) {
-        setInputText(realtimeTranscript);
         setVoiceStatus('complete');
-        toast({
-          title: 'Voice Captured',
-          description: `"${realtimeTranscript.substring(0, 50)}${realtimeTranscript.length > 50 ? '...' : ''}"`,
-        });
+        handleSendMessage(realtimeTranscript);
         return;
       }
 

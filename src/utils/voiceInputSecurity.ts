@@ -44,15 +44,19 @@ export class VoiceInputSecurity {
       console.warn('Audio file too large:', audioBlob.size);
       return false;
     }
-    
-    // Check MIME type (use startsWith to handle codec suffixes like 'audio/webm;codecs=opus')
-    const allowedTypes = ['audio/wav', 'audio/mp3', 'audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg'];
-    const isValidType = allowedTypes.some(type => audioBlob.type.startsWith(type));
-    if (!isValidType) {
-      console.warn('Invalid audio type:', audioBlob.type);
-      return false;
+
+    // Check MIME type — use startsWith to handle codec suffixes like 'audio/webm;codecs=opus'
+    // Allow empty type (some browsers don't set it when MediaRecorder chooses format)
+    const blobType = audioBlob.type;
+    if (blobType) {
+      const allowedTypes = ['audio/wav', 'audio/mp3', 'audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg'];
+      const isValidType = allowedTypes.some(type => blobType.startsWith(type));
+      if (!isValidType) {
+        console.warn('Invalid audio type:', blobType);
+        return false;
+      }
     }
-    
+
     return true;
   }
 

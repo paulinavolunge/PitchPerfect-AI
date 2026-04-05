@@ -26,16 +26,17 @@ export const sanitizeAudioMetadata = (metadata: string): string => {
 };
 
 // Strict sanitization for security-sensitive contexts
+// Targets XSS vectors while preserving normal speech punctuation
 export const sanitizeStrictly = (input: string): string => {
   if (!input || typeof input !== 'string') {
     return '';
   }
-  
-  // More aggressive sanitization for security contexts
+
   return input
-    .replace(/[<>:"/\\|?*&%$#@!`~]/g, '_') // Remove more special characters
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .replace(/[^\w\s.-]/g, '_') // Keep only word characters, spaces, dots, and hyphens
+    .replace(/<[^>]*>/g, '')               // Strip HTML tags
+    .replace(/javascript\s*:/gi, '')       // Strip javascript: protocol
+    .replace(/on\w+\s*=/gi, '')            // Strip event handlers (onclick=, onerror=, etc.)
+    .replace(/\s+/g, ' ')                  // Normalize whitespace
     .trim()
-    .slice(0, 500); // Longer limit for general content but still bounded
+    .slice(0, 500);
 };
