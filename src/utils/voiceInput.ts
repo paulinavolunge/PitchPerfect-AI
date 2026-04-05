@@ -126,7 +126,7 @@ const nativeSpeechRecognition = (): Promise<string> => {
 };
 
 // Known Whisper hallucination phrases — returned when audio is mostly silence/noise
-const WHISPER_HALLUCINATIONS = new Set([
+const WHISPER_HALLUCINATION_PHRASES = new Set([
   'you',
   'thank you',
   'thanks',
@@ -140,6 +140,29 @@ const WHISPER_HALLUCINATIONS = new Set([
   'please subscribe',
   'like and subscribe',
 ]);
+
+// Individual words that are hallucination filler — if EVERY word in the transcript
+// is one of these, the whole transcript is likely hallucinated
+const WHISPER_HALLUCINATION_WORDS = new Set([
+  'you', 'thank', 'thanks', 'bye', 'goodbye', 'subscribe', 'please',
+  'like', 'and', 'for', 'watching', 'listening', 'the', 'a',
+  'yeah', 'ok', 'okay', 'hello', 'hi', 'hey', 'hmm', 'um', 'uh',
+]);
+
+function isWhisperHallucination(text: string): boolean {
+  const normalized = text.trim().toLowerCase().replace(/[._,!?]+$/g, '');
+  if (!normalized) return true;
+
+  // Exact match against known full phrases
+  if (WHISPER_HALLUCINATION_PHRASES.has(normalized)) return true;
+
+  // Split into words and check if every word is a hallucination word
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  if (words.every(w => WHISPER_HALLUCINATION_WORDS.has(w))) return true;
+
+  return false;
+}
 
 export interface VoiceInputResult {
   transcript: string;
@@ -186,8 +209,8 @@ export const processVoiceInput = async (audioBlob: Blob): Promise<VoiceInputResu
     }
 
     // Reject known Whisper hallucinations (silence/noise artifacts)
-    const normalized = transcript.trim().toLowerCase().replace(/[._]+$/, '');
-    if (WHISPER_HALLUCINATIONS.has(normalized)) {
+    if (isWhisperHallucination(transcript)) {
+      console.warn('[Mic] Rejected Whisper hallucination:', JSON.stringify(transcript));
       throw new Error('WHISPER_HALLUCINATION');
     }
 

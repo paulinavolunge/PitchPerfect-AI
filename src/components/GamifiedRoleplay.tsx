@@ -161,7 +161,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const [showWinCelebration, setShowWinCelebration] = useState(false);
 
   const { playCallStart, playCallEnd } = useSoundEffects();
-  const { speak: speakEL, stop: stopEL } = useProspectVoice();
+  const { speak: speakEL, stop: stopEL, mute: muteEL, unmute: unmuteEL } = useProspectVoice();
 
   // ── Patience & Timer state ─────────────────────────────────
   const RESPONSE_TIMER_MAX = 15;
@@ -218,6 +218,19 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       window.speechSynthesis.cancel();
     }
   }, [stopEL]);
+
+  /** Mute TTS and stop current playback — used when mic recording starts */
+  const muteSpeech = useCallback(() => {
+    muteEL();
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }, [muteEL]);
+
+  /** Unmute TTS — used when mic recording stops */
+  const unmuteSpeech = useCallback(() => {
+    unmuteEL();
+  }, [unmuteEL]);
 
   const { user, isPremium } = useAuth();
   const navigate = useNavigate();
@@ -334,6 +347,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setHungUp(true);
       setHangUpReason(timerSeconds <= 5 ? 'You took too long to respond.' : 'The prospect lost patience.');
       stopSpeech();
+      unmuteSpeech();
       // Stop any active voice recording
       if (voiceManagerRef.current?.isCurrentlyRecording()) {
         try { voiceManagerRef.current.stopRecording(); } catch (_) {}
@@ -351,7 +365,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         }, 2500);
       });
     }
-  }, [patience, phase, hungUp, messages, stopSpeech, playCallEnd]);
+  }, [patience, phase, hungUp, messages, stopSpeech, unmuteSpeech, playCallEnd]);
 
   // Scroll to top when debrief appears; show win celebration if won; notify parent
   useEffect(() => {
@@ -805,6 +819,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         const duration = voiceManagerRef.current.getRecordingDuration();
         setIsListening(false);
         setIsProcessingVoice(true);
+        // Unmute TTS now that mic is off
+        unmuteSpeech();
         try {
           const blob = await voiceManagerRef.current.stopRecording();
           voiceManagerRef.current = null;
@@ -842,6 +858,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       } else {
         // Recording state is inconsistent (e.g. MediaRecorder errored) — reset
         setIsListening(false);
+        unmuteSpeech();
         voiceManagerRef.current = null;
         toast({ title: "Recording interrupted", description: "Please try again.", variant: "destructive" });
       }
@@ -859,9 +876,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       return;
     }
 
-    // Stop any prospect audio before recording so echo cancellation
-    // doesn't capture residual playback as the user's speech
-    stopSpeech();
+    // Mute TTS and stop current playback so it can't feed back into the mic
+    muteSpeech();
     // Brief pause to let audio resources fully release
     await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -879,6 +895,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     } catch (err: any) {
       console.error('[Voice] Failed to start recording:', err);
       voiceManagerRef.current = null;
+      // Unmute since recording failed
+      unmuteSpeech();
       const isDenied = err?.name === 'NotAllowedError' || err?.message?.includes('permission');
       toast({
         title: isDenied ? "Microphone blocked" : "Recording failed",
@@ -888,7 +906,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         variant: "destructive",
       });
     }
-  }, [isListening, sendMessage, stopSpeech]);
+  }, [isListening, sendMessage, muteSpeech, unmuteSpeech]);
 
   // ── Reset ──────────────────────────────────────────────────
   const handleGoProCheckout = async (planId: string = 'solo', quantity: number = 1) => {
@@ -1604,6 +1622,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           onClick={async () => {
             // If in voice/recording mode, stop and process first, then send
             if (isListening) {
+              // Unmute TTS now that mic is stopping
+              unmuteSpeech();
               if (voiceManagerRef.current?.isCurrentlyRecording()) {
                 const duration = voiceManagerRef.current.getRecordingDuration();
                 setIsListening(false);

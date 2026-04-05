@@ -16,6 +16,7 @@ export function useProspectVoice() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const currentUrlRef = useRef<string | null>(null);
   const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const isMutedRef = useRef(false);
   const synthRef = useRef<SpeechSynthesis | null>(
     typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null
   );
@@ -74,6 +75,12 @@ export function useProspectVoice() {
   }, []);
 
   const _speakImmediate = useCallback(async (text: string, voiceId?: string) => {
+    // Skip playback entirely while muted (mic is recording)
+    if (isMutedRef.current) {
+      console.log('[ProspectVoice] Muted (mic active) — skipping TTS');
+      return;
+    }
+
     // Fully release previous audio before starting a new request
     stop();
     // Brief pause to let the browser release audio resources
@@ -185,5 +192,18 @@ export function useProspectVoice() {
       });
   }, [_speakImmediate]);
 
-  return { speak, stop };
+  /** Mute TTS — stops current audio and blocks queued speaks from starting */
+  const mute = useCallback(() => {
+    isMutedRef.current = true;
+    stop();
+    console.log('[ProspectVoice] Muted');
+  }, [stop]);
+
+  /** Unmute TTS — allows queued speaks to resume */
+  const unmute = useCallback(() => {
+    isMutedRef.current = false;
+    console.log('[ProspectVoice] Unmuted');
+  }, []);
+
+  return { speak, stop, mute, unmute };
 }
