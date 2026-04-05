@@ -21,6 +21,19 @@ const startAudioRecording = (): Promise<{ recorder: MediaRecorder; stream: Media
 
       console.log('🎤 Microphone access granted');
 
+      // Log actual audio constraints the browser applied (may differ from requested)
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        const settings = audioTrack.getSettings();
+        console.log('🎤 Audio track settings:', JSON.stringify({
+          echoCancellation: settings.echoCancellation,
+          noiseSuppression: settings.noiseSuppression,
+          autoGainControl: settings.autoGainControl,
+          sampleRate: settings.sampleRate,
+          channelCount: settings.channelCount,
+        }));
+      }
+
       // Test different MIME types for MediaRecorder
       let mimeType = 'audio/webm;codecs=opus';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -112,10 +125,33 @@ const nativeSpeechRecognition = (): Promise<string> => {
   });
 };
 
-export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
+// Known Whisper hallucination phrases — returned when audio is mostly silence/noise
+const WHISPER_HALLUCINATIONS = new Set([
+  'you',
+  'thank you',
+  'thanks',
+  'thanks for watching',
+  'thanks for listening',
+  'thank you for watching',
+  'thank you for listening',
+  'bye',
+  'goodbye',
+  'subscribe',
+  'please subscribe',
+  'like and subscribe',
+]);
+
+export interface VoiceInputResult {
+  transcript: string;
+  rawTranscript: string;
+  blobSize: number;
+  blobType: string;
+}
+
+export const processVoiceInput = async (audioBlob: Blob): Promise<VoiceInputResult> => {
   try {
     console.log('🎙️ Processing voice input, blob size:', audioBlob.size, 'type:', audioBlob.type);
-    
+
     // Get current user for rate limiting (guests are allowed)
     const { data: { user } } = await supabase.auth.getUser();
     const rateLimitId = user?.id ?? `guest-${sessionStorage.getItem('guest_session_id') ?? (() => { const id = crypto.randomUUID(); sessionStorage.setItem('guest_session_id', id); return id; })()}`;
@@ -137,9 +173,10 @@ export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
     // Always use Whisper for reliable transcription
     console.log('[Mic] Sending to Whisper. Blob size:', audioBlob.size, 'type:', audioBlob.type);
     const rawTranscript = await whisperTranscribe(audioBlob);
-    const transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
+    console.log('[Mic] Raw Whisper response:', JSON.stringify(rawTranscript));
 
-    console.log('[Mic] Whisper transcribed:', JSON.stringify(transcript));
+    const transcript = VoiceInputSecurity.sanitizeTranscription(rawTranscript);
+    console.log('[Mic] Sanitized transcript:', JSON.stringify(transcript));
 
     // Secure cleanup
     VoiceInputSecurity.secureCleanup(audioBlob);
@@ -148,7 +185,18 @@ export const processVoiceInput = async (audioBlob: Blob): Promise<string> => {
       throw new Error('No speech detected in audio');
     }
 
-    return transcript;
+    // Reject known Whisper hallucinations (silence/noise artifacts)
+    const normalized = transcript.trim().toLowerCase().replace(/[._]+$/, '');
+    if (WHISPER_HALLUCINATIONS.has(normalized)) {
+      throw new Error('WHISPER_HALLUCINATION');
+    }
+
+    return {
+      transcript,
+      rawTranscript,
+      blobSize: audioBlob.size,
+      blobType: audioBlob.type,
+    };
   } catch (error) {
     // Secure cleanup on error
     VoiceInputSecurity.secureCleanup(audioBlob);

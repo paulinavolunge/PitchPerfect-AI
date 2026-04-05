@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 import { toast } from '@/hooks/use-toast';
-import { VoiceRecordingManager, processVoiceInput } from '@/utils/voiceInput';
+import { VoiceRecordingManager, processVoiceInput, type VoiceInputResult } from '@/utils/voiceInput';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useProspectVoice } from '@/hooks/useProspectVoice';
 
@@ -810,10 +810,10 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           voiceManagerRef.current = null;
           console.log(`[Voice] Stopped. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
           toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
-          const text = await processVoiceInput(blob);
-          console.log('[Voice] Whisper result:', JSON.stringify(text));
-          toast({ title: 'Whisper transcribed', description: text || '(empty)' });
-          if (!text || text.trim().length === 0) {
+          const result = await processVoiceInput(blob);
+          console.log('[Voice] Whisper result:', JSON.stringify(result.transcript), 'raw:', JSON.stringify(result.rawTranscript));
+          toast({ title: `Whisper: "${result.rawTranscript}"`, description: `${duration}ms · ${result.blobSize} bytes · ${result.blobType}` });
+          if (!result.transcript || result.transcript.trim().length === 0) {
             toast({
               title: "Couldn't capture your voice",
               description: "Please try again.",
@@ -823,12 +823,17 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             return;
           }
           // Auto-send transcribed voice input directly
-          sendMessage(text);
-        } catch (err) {
+          sendMessage(result.transcript);
+        } catch (err: any) {
           console.error('[Voice] Whisper processing failed:', err);
+          const isHallucination = err?.message === 'WHISPER_HALLUCINATION';
           toast({
-            title: "Couldn't capture your voice",
-            description: "Please try again.",
+            title: isHallucination
+              ? "Couldn't hear you clearly"
+              : "Couldn't capture your voice",
+            description: isHallucination
+              ? "Try again closer to the mic."
+              : "Please try again.",
             variant: "destructive",
           });
         } finally {
@@ -1608,18 +1613,27 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                   voiceManagerRef.current = null;
                   console.log(`[Voice] Send pressed. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
                   toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
-                  const text = await processVoiceInput(blob);
-                  console.log('[Voice] Whisper result:', JSON.stringify(text));
-                  toast({ title: 'Whisper transcribed', description: text || '(empty)' });
-                  if (text && text.trim().length > 0) {
+                  const result = await processVoiceInput(blob);
+                  console.log('[Voice] Whisper result:', JSON.stringify(result.transcript), 'raw:', JSON.stringify(result.rawTranscript));
+                  toast({ title: `Whisper: "${result.rawTranscript}"`, description: `${duration}ms · ${result.blobSize} bytes · ${result.blobType}` });
+                  if (result.transcript && result.transcript.trim().length > 0) {
                     // Auto-send transcribed voice input directly
-                    sendMessage(text);
+                    sendMessage(result.transcript);
                   } else {
                     toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
                   }
-                } catch (err) {
+                } catch (err: any) {
                   console.error('[Voice] Processing failed on send:', err);
-                  toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
+                  const isHallucination = err?.message === 'WHISPER_HALLUCINATION';
+                  toast({
+                    title: isHallucination
+                      ? "Couldn't hear you clearly"
+                      : "Couldn't capture your voice",
+                    description: isHallucination
+                      ? "Try again closer to the mic."
+                      : "Please try again.",
+                    variant: "destructive",
+                  });
                 } finally {
                   setIsProcessingVoice(false);
                 }

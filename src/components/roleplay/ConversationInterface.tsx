@@ -271,14 +271,14 @@ const ConversationInterface = ({
         }
 
         console.log('🤖 Processing audio with Whisper...');
-        const transcript = await processVoiceInput(audioBlob);
+        const result = await processVoiceInput(audioBlob);
 
-        if (transcript && transcript.trim()) {
-          setInputText(transcript);
+        if (result.transcript && result.transcript.trim()) {
+          setInputText(result.transcript);
           setVoiceStatus('complete');
           toast({
             title: 'Voice Processed',
-            description: `"${transcript.substring(0, 50)}${transcript.length > 50 ? '...' : ''}"`,
+            description: `"${result.transcript.substring(0, 50)}${result.transcript.length > 50 ? '...' : ''}"`,
           });
           return;
         }
