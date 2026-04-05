@@ -154,7 +154,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const [debrief, setDebrief] = useState<DebriefData | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
-  const [isTranscribedFromVoice, setIsTranscribedFromVoice] = useState(false);
+  // Note: isTranscribedFromVoice removed — voice transcriptions are sent directly via sendMessage(text)
   const voiceManagerRef = useRef<VoiceRecordingManager | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -540,7 +540,6 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setUserInput('');
-    setIsTranscribedFromVoice(false);
     setIsUserTyping(false);
     setIsAiTyping(true);
 
@@ -801,38 +800,45 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   const toggleVoice = useCallback(async () => {
     // If currently listening, stop recording and process with Whisper
-    if (isListening && voiceManagerRef.current?.isCurrentlyRecording()) {
-      const duration = voiceManagerRef.current.getRecordingDuration();
-      setIsListening(false);
-      setIsProcessingVoice(true);
-      try {
-        const blob = await voiceManagerRef.current.stopRecording();
-        voiceManagerRef.current = null;
-        console.log(`[Voice] Stopped. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
-        toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
-        const text = await processVoiceInput(blob);
-        console.log('[Voice] Whisper result:', JSON.stringify(text));
-        toast({ title: 'Whisper transcribed', description: text || '(empty)' });
-        if (!text || text.trim().length === 0) {
+    if (isListening) {
+      if (voiceManagerRef.current?.isCurrentlyRecording()) {
+        const duration = voiceManagerRef.current.getRecordingDuration();
+        setIsListening(false);
+        setIsProcessingVoice(true);
+        try {
+          const blob = await voiceManagerRef.current.stopRecording();
+          voiceManagerRef.current = null;
+          console.log(`[Voice] Stopped. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
+          toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
+          const text = await processVoiceInput(blob);
+          console.log('[Voice] Whisper result:', JSON.stringify(text));
+          toast({ title: 'Whisper transcribed', description: text || '(empty)' });
+          if (!text || text.trim().length === 0) {
+            toast({
+              title: "Couldn't capture your voice",
+              description: "Please try again.",
+              variant: "destructive",
+            });
+            setIsProcessingVoice(false);
+            return;
+          }
+          // Auto-send transcribed voice input directly
+          sendMessage(text);
+        } catch (err) {
+          console.error('[Voice] Whisper processing failed:', err);
           toast({
             title: "Couldn't capture your voice",
             description: "Please try again.",
             variant: "destructive",
           });
+        } finally {
           setIsProcessingVoice(false);
-          return;
         }
-        // Auto-send transcribed voice input directly
-        sendMessage(text);
-      } catch (err) {
-        console.error('[Voice] Whisper processing failed:', err);
-        toast({
-          title: "Couldn't capture your voice",
-          description: "Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsProcessingVoice(false);
+      } else {
+        // Recording state is inconsistent (e.g. MediaRecorder errored) — reset
+        setIsListening(false);
+        voiceManagerRef.current = null;
+        toast({ title: "Recording interrupted", description: "Please try again.", variant: "destructive" });
       }
       return;
     }
@@ -1544,13 +1550,6 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         <div ref={chatEndRef} />
       </div>
 
-      {/* Voice transcription indicator */}
-      {isTranscribedFromVoice && userInput && (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1 ml-1 shrink-0">
-          <Mic className="w-3 h-3" />
-          <span>Transcribed from voice</span>
-        </div>
-      )}
       <div className="flex gap-2 items-end sticky bottom-0 bg-background pb-4 pt-2 shrink-0">
         {(inputMode === 'voice' || alwaysSpeak) && (
           <Button
@@ -1573,7 +1572,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             ref={inputRef}
             type="text"
             value={userInput}
-            onChange={(e) => { setUserInput(e.target.value); setIsTranscribedFromVoice(false); if (e.target.value.length > 0) setIsUserTyping(true); }}
+            onChange={(e) => { setUserInput(e.target.value); if (e.target.value.length > 0) setIsUserTyping(true); }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !isListening && !isProcessingVoice) { e.preventDefault(); sendMessage(); } }}
             onFocus={() => {
               setTimeout(() => {
@@ -1581,7 +1580,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
               }, 300);
             }}
             placeholder={isProcessingVoice ? 'Processing voice…' : isListening ? 'Recording… tap mic or Send when done' : 'Type your response…'}
-            disabled={isAiTyping || hungUp}
+            disabled={isAiTyping || hungUp || isListening || isProcessingVoice}
             className="w-full rounded-xl border border-input bg-card px-4 py-3 pr-14 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
           />
           {/* Response timer */}
@@ -1598,30 +1597,37 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         </div>
         <Button
           onClick={async () => {
-            // If recording, stop and process first, then send
-            if (isListening && voiceManagerRef.current?.isCurrentlyRecording()) {
-              const duration = voiceManagerRef.current.getRecordingDuration();
-              setIsListening(false);
-              setIsProcessingVoice(true);
-              try {
-                const blob = await voiceManagerRef.current.stopRecording();
-                voiceManagerRef.current = null;
-                console.log(`[Voice] Send pressed. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
-                toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
-                const text = await processVoiceInput(blob);
-                console.log('[Voice] Whisper result:', JSON.stringify(text));
-                toast({ title: 'Whisper transcribed', description: text || '(empty)' });
-                if (text && text.trim().length > 0) {
-                  // Auto-send transcribed voice input directly
-                  sendMessage(text);
-                } else {
+            // If in voice/recording mode, stop and process first, then send
+            if (isListening) {
+              if (voiceManagerRef.current?.isCurrentlyRecording()) {
+                const duration = voiceManagerRef.current.getRecordingDuration();
+                setIsListening(false);
+                setIsProcessingVoice(true);
+                try {
+                  const blob = await voiceManagerRef.current.stopRecording();
+                  voiceManagerRef.current = null;
+                  console.log(`[Voice] Send pressed. Duration: ${duration}ms. Blob: ${blob.size} bytes`);
+                  toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
+                  const text = await processVoiceInput(blob);
+                  console.log('[Voice] Whisper result:', JSON.stringify(text));
+                  toast({ title: 'Whisper transcribed', description: text || '(empty)' });
+                  if (text && text.trim().length > 0) {
+                    // Auto-send transcribed voice input directly
+                    sendMessage(text);
+                  } else {
+                    toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
+                  }
+                } catch (err) {
+                  console.error('[Voice] Processing failed on send:', err);
                   toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
+                } finally {
+                  setIsProcessingVoice(false);
                 }
-              } catch (err) {
-                console.error('[Voice] Processing failed on send:', err);
-                toast({ title: "Couldn't capture your voice", description: "Please try again.", variant: "destructive" });
-              } finally {
-                setIsProcessingVoice(false);
+              } else {
+                // Recording state is inconsistent (e.g. MediaRecorder errored) — reset
+                setIsListening(false);
+                voiceManagerRef.current = null;
+                toast({ title: "Recording interrupted", description: "Please try again.", variant: "destructive" });
               }
               return;
             }
