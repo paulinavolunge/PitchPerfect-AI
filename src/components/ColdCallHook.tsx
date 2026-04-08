@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Trophy, XCircle, X, Lightbulb } from 'lucide-react';
+import { ArrowRight, Loader2, Trophy, XCircle, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -100,7 +100,10 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   };
 
   const handleComplete = useCallback((d: DebriefData) => {
-    try { localStorage.setItem('pp_cold_call_used', 'true'); } catch {}
+    try {
+      localStorage.setItem('pp_cold_call_used', 'true');
+      localStorage.setItem('pp_cold_call_last_score', String(Math.round(d.score * 10)));
+    } catch {}
     setDebrief(d);
     setPhase('scorecard');
     trackEvent('cold_call_hook_completed', {
@@ -186,12 +189,30 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   const proResponse = useMemo(() => {
     if (!debrief) return '';
     const responses = [
-      "I hear you — most of my best clients felt the same way on the first call. Quick question: if I could show you how [Company X] cut their [pain point] by 30% in 90 days, would that be worth 2 minutes?",
-      "Totally fair. I wouldn't take a random call either. Here's why I reached out to YOU specifically — your team posted about [specific challenge] last quarter, and that's exactly what we solve.",
-      "I respect that. Before you go — what if I sent you a 60-second case study from a company your size? If it's not relevant, I'll never call again.",
+      "I hear you — most of my best clients said the same thing on the first call. Quick question: if I could show you how [similar company] cut their costs by 30% in 90 days, would that be worth 2 minutes?",
+      "Totally fair. I wouldn't take a random call either. Here's why I reached out to YOU specifically — I saw your team is scaling fast, and that's exactly the pain point we solve.",
+      "I respect that. Before you go — what if I sent you a 60-second case study? If it's not relevant, I'll never call again. Fair enough?",
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   }, [debrief]);
+
+  // Pick a "next challenge" teaser once per debrief.
+  const nextChallenge = useMemo(() => {
+    if (!debrief) return '';
+    const challenges = [
+      "A VP just told you: \"We don't have budget until Q3.\" You have 15 seconds. What do you say?",
+      "Your prospect says: \"Just send me an email.\" This is where 80% of reps lose the deal. Can you save it?",
+      "The gatekeeper says: \"She's in a meeting.\" Most reps hang up. Top reps get transferred. Which are you?",
+    ];
+    return challenges[Math.floor(Math.random() * challenges.length)];
+  }, [debrief]);
+
+  // Read the guest's last score from localStorage for the locked-state heading.
+  const lastScoreLabel = useMemo(() => {
+    if (typeof window === 'undefined') return '80%';
+    const v = localStorage.getItem('pp_cold_call_last_score');
+    return v ? `${v}%` : '80%';
+  }, [guestLocked]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -218,7 +239,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
           <div className="overflow-y-auto p-6 sm:p-8" style={{ maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh' }}>
             <div className="text-center mb-6">
               <Trophy className="w-12 h-12 mx-auto text-primary mb-3" />
-              <h2 className="text-2xl font-bold text-foreground mb-2">You already know what 80% feels like. Want to find out what 95% sounds like?</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">You already know what {lastScoreLabel} feels like. Want to find out what 95% sounds like?</h2>
               <p className="text-sm text-muted-foreground">
                 Your first attempt is saved. Sign up to beat it.
               </p>
@@ -359,22 +380,32 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
               </div>
             </div>
 
-            {/* Pro response example */}
-            <div className="bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 rounded-xl p-4 mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
-                <h4 className="text-sm font-semibold text-amber-900">What a top closer would say here:</h4>
-              </div>
-              <p className="text-sm text-amber-900 italic mb-3">"{proResponse}"</p>
-              <p className="text-sm font-bold text-amber-900">
-                Want to practice until this comes naturally? That's what round 2 is for.
+            {/* Tip */}
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Tip:</strong> {debrief.tip}
               </p>
             </div>
 
-            {/* Tip */}
+            {/* Pro response example */}
+            <div className="bg-amber-50 border border-amber-200 border-l-4 border-amber-400 rounded-xl p-4 mb-4">
+              <h4 className="text-sm font-semibold text-amber-900 mb-2">
+                💡 What a top closer would say here:
+              </h4>
+              <p className="text-sm text-amber-900 italic mb-2">"{proResponse}"</p>
+              <p className="text-xs text-amber-800/80">
+                Notice the pattern: acknowledge, reframe, offer something specific.
+              </p>
+            </div>
+
+            {/* Your next challenge */}
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
-              <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">Tip:</strong> {debrief.tip}
+              <h4 className="text-sm font-semibold text-foreground mb-2">
+                🎯 Your next challenge:
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">{nextChallenge}</p>
+              <p className="text-sm font-bold text-foreground">
+                Sign up to take this on. It takes 90 seconds.
               </p>
             </div>
 
