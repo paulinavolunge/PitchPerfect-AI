@@ -7,6 +7,7 @@ import LazyLoadManager from '@/components/optimized/LazyLoadManager';
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
 import { trackEvent } from '@/utils/analytics';
+import { useAuth } from '@/context/AuthContext';
 
 const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
@@ -40,9 +41,18 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string }> = ({ c
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [coldCallOpen, setColdCallOpen] = useState(false);
+  const coldCallUsed = typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
+  const coldCallLocked = coldCallUsed && !user;
+  const coldCallLabel = coldCallLocked ? 'Sign Up to Keep Practicing' : '{coldCallLabel}';
 
   const handleColdCallClick = () => {
+    if (coldCallLocked) {
+      trackEvent('cta_click', { button: 'cold_call_locked_signup', location: 'homepage_hero' });
+      navigate('/auth');
+      return;
+    }
     trackEvent('cta_click', { button: 'try_cold_call', location: 'homepage_hero' });
     setColdCallOpen(true);
   };
@@ -109,7 +119,7 @@ const Index = () => {
                 <div className="pp-hero-cta-row">
                   <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
                     <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-                    Try a Cold Call — Free
+                    {coldCallLabel}
                   </button>
                   <button className="pp-btn-ghost" onClick={handleGetStartedClick} data-onboarding="demo-button" data-testid="watch-demo-button">
                     Browse All Scenarios →
@@ -424,7 +434,7 @@ const Index = () => {
               <p>One practice cold call. That's all it takes to feel the difference.<br />No signup, no credit card, no one watching.</p>
               <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
                 <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-                Try a Cold Call — Free
+                {coldCallLabel}
               </button>
               <div className="pp-hero-micro" style={{ justifyContent: 'center', color: '#64748B', marginTop: 16 }}>
                 <span>✓ No signup required</span>
@@ -443,7 +453,7 @@ const Index = () => {
           <div className="pp-mobile-cta">
             <button className="pp-btn-primary pp-btn-full" onClick={handleColdCallClick}>
               <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-              Try a Cold Call — Free
+              {coldCallLabel}
             </button>
           </div>
         </main>

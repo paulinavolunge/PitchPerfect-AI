@@ -100,6 +100,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   };
 
   const handleComplete = useCallback((d: DebriefData) => {
+    try { localStorage.setItem('pp_cold_call_used', 'true'); } catch {}
     setDebrief(d);
     setPhase('scorecard');
     trackEvent('cold_call_hook_completed', {
@@ -177,6 +178,8 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     }
   };
 
+  const guestLocked = !user && typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
+
   const scorePercent = debrief ? Math.round(debrief.score * 10) : 0;
 
   return (
@@ -200,7 +203,23 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
           <X className="h-4 w-4" />
         </button>
 
-        {phase === 'roleplay' && (
+        {phase === 'roleplay' && guestLocked && (
+          <div className="p-6 sm:p-8 text-center">
+            <Trophy className="w-12 h-12 mx-auto text-primary mb-3" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">You've used your free cold call</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Sign up free to keep practicing and track your progress.
+            </p>
+            <Button
+              onClick={() => { handleClose(); navigate('/auth'); }}
+              className="w-full bg-primary-500 hover:bg-primary-600 text-white"
+            >
+              Sign up to practice again <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
+
+        {phase === 'roleplay' && !guestLocked && (
           <div className="overflow-y-auto" style={{ maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh' }}>
             <GamifiedRoleplay
               autoStart
