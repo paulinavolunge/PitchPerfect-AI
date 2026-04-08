@@ -204,18 +204,83 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
         </button>
 
         {phase === 'roleplay' && guestLocked && (
-          <div className="p-6 sm:p-8 text-center">
-            <Trophy className="w-12 h-12 mx-auto text-primary mb-3" />
-            <h2 className="text-2xl font-bold text-foreground mb-2">You've used your free cold call</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              Sign up free to keep practicing and track your progress.
-            </p>
-            <Button
-              onClick={() => { handleClose(); navigate('/auth'); }}
-              className="w-full bg-primary-500 hover:bg-primary-600 text-white"
-            >
-              Sign up to practice again <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+          <div className="overflow-y-auto p-6 sm:p-8" style={{ maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh' }}>
+            <div className="text-center mb-6">
+              <Trophy className="w-12 h-12 mx-auto text-primary mb-3" />
+              <h2 className="text-2xl font-bold text-foreground mb-2">Sign up to practice again</h2>
+              <p className="text-sm text-muted-foreground">
+                You've used your free cold call. Sign up free to keep practicing and track your progress.
+              </p>
+            </div>
+
+            <div className="bg-card border border-border rounded-xl p-5">
+              {/* Google signup */}
+              <Button
+                onClick={handleGoogleSignup}
+                disabled={isGoogleLoading}
+                className="w-full mb-3 bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-medium"
+                variant="outline"
+              >
+                {isGoogleLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <img src="https://www.google.com/favicon.ico" alt="" className="w-4 h-4 mr-2" />
+                )}
+                Continue with Google
+              </Button>
+
+              <div className="relative mb-3">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-card px-2 text-muted-foreground">or</span>
+                </div>
+              </div>
+
+              {/* Email signup */}
+              <form onSubmit={handleEmailSignup} className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={signupName}
+                  onChange={(e) => setSignupName(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={signupEmail}
+                  onChange={(e) => setSignupEmail(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <input
+                  type="password"
+                  placeholder="Password (min 6 characters)"
+                  value={signupPassword}
+                  onChange={(e) => setSignupPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <Button
+                  type="submit"
+                  disabled={isSigningUp || !signupEmail || !signupPassword}
+                  className="w-full bg-primary-500 hover:bg-primary-600 text-white"
+                >
+                  {isSigningUp ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</>
+                  ) : (
+                    <>Sign Up Free <ArrowRight className="w-4 h-4 ml-1" /></>
+                  )}
+                </Button>
+              </form>
+
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                Free account includes 3 practice sessions/month. No credit card required.
+              </p>
+            </div>
           </div>
         )}
 
