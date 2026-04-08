@@ -111,10 +111,10 @@ const Index = () => {
                   Your AI Sales Sparring Partner
                 </div>
                 <h1 id="hero-heading" className="pp-hero-h1">
-                  You know your product. You just freeze when they <em>push back.</em>
+                  Never freeze on a sales call again.
                 </h1>
                 <p className="pp-hero-sub">
-                  Pick a sales scenario. Practice against an AI buyer who fights back like the real thing. Get scored. Walk into your next call actually ready — in under 10&nbsp;minutes.
+                  Practice against AI prospects who fight back like real buyers. Get scored. Walk into your next call ready — in under 2&nbsp;minutes.
                 </p>
                 <div className="pp-hero-cta-row">
                   <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
