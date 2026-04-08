@@ -50,7 +50,7 @@ const Index = () => {
   const handleColdCallClick = () => {
     if (coldCallLocked) {
       trackEvent('cta_click', { button: 'cold_call_locked_signup', location: 'homepage_hero' });
-      navigate('/auth');
+      navigate('/login');
       return;
     }
     trackEvent('cta_click', { button: 'try_cold_call', location: 'homepage_hero' });
