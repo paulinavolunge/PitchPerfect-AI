@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Trophy, XCircle, X } from 'lucide-react';
+import { ArrowRight, Loader2, Trophy, XCircle, X, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -182,6 +182,17 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
 
   const scorePercent = debrief ? Math.round(debrief.score * 10) : 0;
 
+  // Pick a "pro response" example once per debrief so it stays stable across re-renders.
+  const proResponse = useMemo(() => {
+    if (!debrief) return '';
+    const responses = [
+      "I hear you — most of my best clients felt the same way on the first call. Quick question: if I could show you how [Company X] cut their [pain point] by 30% in 90 days, would that be worth 2 minutes?",
+      "Totally fair. I wouldn't take a random call either. Here's why I reached out to YOU specifically — your team posted about [specific challenge] last quarter, and that's exactly what we solve.",
+      "I respect that. Before you go — what if I sent you a 60-second case study from a company your size? If it's not relevant, I'll never call again.",
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }, [debrief]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -207,9 +218,9 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
           <div className="overflow-y-auto p-6 sm:p-8" style={{ maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh' }}>
             <div className="text-center mb-6">
               <Trophy className="w-12 h-12 mx-auto text-primary mb-3" />
-              <h2 className="text-2xl font-bold text-foreground mb-2">You've had your free round. Want to actually get good?</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">You already know what 80% feels like. Want to find out what 95% sounds like?</h2>
               <p className="text-sm text-muted-foreground">
-                Sales reps who practice 3x per week close 28% more deals. Sign up to keep going.
+                Your first attempt is saved. Sign up to beat it.
               </p>
             </div>
 
@@ -348,6 +359,18 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
               </div>
             </div>
 
+            {/* Pro response example */}
+            <div className="bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 rounded-xl p-4 mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
+                <h4 className="text-sm font-semibold text-amber-900">What a top closer would say here:</h4>
+              </div>
+              <p className="text-sm text-amber-900 italic mb-3">"{proResponse}"</p>
+              <p className="text-sm font-bold text-amber-900">
+                Want to practice until this comes naturally? That's what round 2 is for.
+              </p>
+            </div>
+
             {/* Tip */}
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
               <p className="text-sm text-muted-foreground">
@@ -373,10 +396,10 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
               // Anonymous — inline signup
               <div className="bg-card border border-border rounded-xl p-5">
                 <h3 className="font-semibold text-foreground text-center mb-1">
-                  You scored {scorePercent}%. Here's what's costing you deals.
+                  You scored {scorePercent}%. A top rep scores 90%+. Close the gap.
                 </h3>
                 <p className="text-sm text-muted-foreground text-center mb-4">
-                  Sign up free to master the objections that trip you up — starting with the one that just did.
+                  3 free rounds. That's all it takes to hear the difference in your next call.
                 </p>
 
                 {/* Google signup */}
