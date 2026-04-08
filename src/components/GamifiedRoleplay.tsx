@@ -600,7 +600,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       // Delay so the user can read the prospect's final message before transition
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        await new Promise(resolve => setTimeout(resolve, 5500));
+        // Scroll to bottom so the prospect's final message is visible
+        chatContainerRef.current?.scrollTo({
+          top: chatContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+        // Give the user time to read the final message before the overlay appears
+        await new Promise(resolve => setTimeout(resolve, 7000));
         setIsTransitioningToDebrief(true);
         await runDebriefRef.current!(allMessages);
         return;
@@ -620,7 +626,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       // Even on error, auto-trigger debrief if this was the last round
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        await new Promise(resolve => setTimeout(resolve, 5500));
+        // Scroll to bottom so the prospect's final message is visible
+        chatContainerRef.current?.scrollTo({
+          top: chatContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+        // Give the user time to read the final message before the overlay appears
+        await new Promise(resolve => setTimeout(resolve, 7000));
         setIsTransitioningToDebrief(true);
         await runDebriefRef.current!(allMessages);
         return;
