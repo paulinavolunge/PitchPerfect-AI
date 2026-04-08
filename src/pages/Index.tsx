@@ -108,13 +108,13 @@ const Index = () => {
               <div>
                 <div className="pp-hero-badge">
                   <span className="pp-badge-dot" />
-                  Your AI Sales Sparring Partner
+                  TRUSTED BY SALES REPS WHO HATE LOSING DEALS
                 </div>
                 <h1 id="hero-heading" className="pp-hero-h1">
                   Never freeze on a sales call again.
                 </h1>
                 <p className="pp-hero-sub">
-                  Practice against AI prospects who fight back like real buyers. Get scored. Walk into your next call ready — in under 2&nbsp;minutes.
+                  Practice against AI buyers who push back like the real thing. Get scored. Walk into your next call actually ready — in under 2&nbsp;minutes.
                 </p>
                 <div className="pp-hero-cta-row">
                   <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
@@ -122,7 +122,7 @@ const Index = () => {
                     {coldCallLabel}
                   </button>
                   <button className="pp-btn-ghost" onClick={handleGetStartedClick} data-onboarding="demo-button" data-testid="watch-demo-button">
-                    Browse All Scenarios →
+                    Battle-Test Your Pitch →
                   </button>
                 </div>
                 <div className="pp-hero-micro">
@@ -222,7 +222,7 @@ const Index = () => {
                 <div className="text-center">
                   <div className="pp-section-label">How it works</div>
                   <h2 className="pp-section-title">Three steps. Ten minutes. Ready for anything.</h2>
-                  <p className="pp-section-sub mx-auto">No setup. No tutorials. Pick a scenario, practice, get your score.</p>
+                  <p className="pp-section-sub mx-auto">No setup. No tutorials. Pick a scenario, battle-test, get your score.</p>
                 </div>
                 <div className="pp-steps-grid">
                   {[
@@ -252,14 +252,14 @@ const Index = () => {
               <div className="pp-container">
                 <div className="text-center">
                   <div className="pp-section-label">Real sales scenarios</div>
-                  <h2 className="pp-section-title">Practice the Exact Call You're About to Make.</h2>
+                  <h2 className="pp-section-title">Battle-Test the Exact Call You're About to Make.</h2>
                   <p className="pp-section-sub mx-auto">Not generic communication tips. Real sales scenarios designed around the conversations that make or break your month.</p>
                 </div>
                 <div className="pp-scenario-grid">
                   {[
-                    { icon: '🎯', title: 'Cold Call — First 30 Seconds', text: 'Get past "I\'m not interested" and earn the meeting. Practice your opener and handle instant rejection.' },
-                    { icon: '💰', title: 'Pricing Objection', text: 'Handle "That\'s too expensive" without flinching. Practice value framing and avoiding the discount trap.' },
-                    { icon: '🎤', title: 'Demo Close', text: 'Ask for the business when the demo goes well. Practice trial closes and handling "let me think about it."' },
+                    { icon: '🎯', title: 'Cold Call — First 30 Seconds', text: 'Get past "I\'m not interested" and earn the meeting. Battle-test your opener and handle instant rejection.' },
+                    { icon: '💰', title: 'Pricing Objection', text: 'Handle "That\'s too expensive" without flinching. Battle-test value framing and avoiding the discount trap.' },
+                    { icon: '🎤', title: 'Demo Close', text: 'Ask for the business when the demo goes well. Battle-test trial closes and handling "let me think about it."' },
                     { icon: '🚪', title: 'Gatekeeper Bypass', text: 'Get past the front desk to the decision-maker with assertive-but-respectful techniques that work.' },
                   ].map((s, i) => (
                     <div key={i} className="pp-scenario-card">
@@ -338,9 +338,9 @@ const Index = () => {
                 <div className="pp-objection-grid">
                   {[
                     { q: "I don't have time for this.", a: "A session takes under 10 minutes. That's less time than replaying a call you lost in your head on the drive home." },
-                    { q: "Will this actually help me close more?", a: "You practice against realistic objections before the real call. You walk in prepared instead of winging it. Preparation beats talent when talent doesn't prepare." },
+                    { q: "Will this actually help me close more?", a: "You battle-test against realistic objections before the real call. You walk in prepared instead of winging it. Preparation beats talent when talent doesn't prepare." },
                     { q: "Why not just use ChatGPT?", a: "ChatGPT won't push back, won't score you, and won't run structured scenarios. It gives advice. We give reps. There's a difference between reading about pushups and doing them." },
-                    { q: "$29/month seems like a lot.", a: "It's less than the commission on one deal you'd lose by freezing on an objection you never practiced. One closed deal pays for years of PitchPerfect AI." },
+                    { q: "$29/month seems like a lot.", a: "It's less than the commission on one deal you'd lose by freezing on an objection you never battle-tested. One closed deal pays for years of PitchPerfect AI." },
                     { q: "I've been selling for 15 years.", a: "The AI adapts. Veterans get harder pushback — multi-layered objections, misdirections, the kind of thing a VP of Procurement throws at you. This sharpens the edge, not teaches the basics." },
                     { q: "What if I try it and it's not for me?", a: "Free first session. No credit card. Under 10 minutes. If it doesn't help, you've lost nothing except a few minutes." },
                   ].map((faq, i) => (

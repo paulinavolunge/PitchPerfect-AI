@@ -207,9 +207,9 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
           <div className="overflow-y-auto p-6 sm:p-8" style={{ maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh' }}>
             <div className="text-center mb-6">
               <Trophy className="w-12 h-12 mx-auto text-primary mb-3" />
-              <h2 className="text-2xl font-bold text-foreground mb-2">Sign up to practice again</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">You've had your free round. Want to actually get good?</h2>
               <p className="text-sm text-muted-foreground">
-                You've used your free cold call. Sign up free to keep practicing and track your progress.
+                Sales reps who practice 3x per week close 28% more deals. Sign up to keep going.
               </p>
             </div>
 
@@ -278,7 +278,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
               </form>
 
               <p className="text-xs text-muted-foreground text-center mt-3">
-                Free account includes 3 practice sessions/month. No credit card required.
+                3 free rounds per month. No credit card. Cancel anytime.
               </p>
             </div>
           </div>
@@ -360,23 +360,23 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
               // Already logged in — send to practice
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-3">
-                  You scored <strong className="text-foreground">{scorePercent}%</strong>. Think you can beat that?
+                  You scored <strong className="text-foreground">{scorePercent}%</strong>. The next objection is harder. Ready?
                 </p>
                 <Button
                   onClick={() => { handleClose(); navigate('/practice'); }}
                   className="w-full bg-primary-500 hover:bg-primary-600 text-white"
                 >
-                  Keep Practicing <ArrowRight className="w-4 h-4 ml-1" />
+                  Run It Back <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
             ) : (
               // Anonymous — inline signup
               <div className="bg-card border border-border rounded-xl p-5">
                 <h3 className="font-semibold text-foreground text-center mb-1">
-                  You scored {scorePercent}%. Want to beat that?
+                  You scored {scorePercent}%. Here's what's costing you deals.
                 </h3>
                 <p className="text-sm text-muted-foreground text-center mb-4">
-                  Sign up free to keep practicing and track your progress.
+                  Sign up free to master the objections that trip you up — starting with the one that just did.
                 </p>
 
                 {/* Google signup */}
@@ -443,7 +443,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
                 </form>
 
                 <p className="text-xs text-muted-foreground text-center mt-3">
-                  Free account includes 3 practice sessions/month. No credit card required.
+                  3 free rounds per month. No credit card. Cancel anytime.
                 </p>
               </div>
             )}
