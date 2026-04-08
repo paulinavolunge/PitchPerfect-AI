@@ -600,7 +600,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       // Delay so the user can read the prospect's final message before transition
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        await new Promise(resolve => setTimeout(resolve, 3500));
+        await new Promise(resolve => setTimeout(resolve, 5500));
         setIsTransitioningToDebrief(true);
         await runDebriefRef.current!(allMessages);
         return;
@@ -620,7 +620,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       // Even on error, auto-trigger debrief if this was the last round
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        await new Promise(resolve => setTimeout(resolve, 3500));
+        await new Promise(resolve => setTimeout(resolve, 5500));
         setIsTransitioningToDebrief(true);
         await runDebriefRef.current!(allMessages);
         return;
@@ -817,6 +817,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   runDebriefRef.current = runDebrief;
 
   const toggleVoice = useCallback(async () => {
+    console.log('[VOICE] toggleVoice called', {
+      isListening,
+      voiceManagerRef: voiceManagerRef.current,
+      hasMediaDevices: typeof navigator !== 'undefined' && !!navigator.mediaDevices,
+      hasGetUserMedia: typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+    });
     console.log('[VOICE] Mic button clicked, isListening:', isListening);
     // If currently listening, stop recording and process with Whisper
     if (isListening) {

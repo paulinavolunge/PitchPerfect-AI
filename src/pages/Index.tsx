@@ -45,7 +45,7 @@ const Index = () => {
   const [coldCallOpen, setColdCallOpen] = useState(false);
   const coldCallUsed = typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
   const coldCallLocked = coldCallUsed && !user;
-  const coldCallLabel = coldCallLocked ? 'Sign Up to Keep Practicing' : '{coldCallLabel}';
+  const coldCallLabel = coldCallLocked ? 'Sign Up to Keep Practicing' : 'Try a Cold Call — Free';
 
   const handleColdCallClick = () => {
     if (coldCallLocked) {
