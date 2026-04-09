@@ -64,13 +64,13 @@ serve(async (req) => {
         const session = event.data.object as Stripe.Checkout.Session;
 
         // ───── Subscription flow ($29/mo Unlimited Pro) ─────
-        // Unchanged from the existing implementation. Subscriptions are
-        // created by an authenticated user via the app and carry
-        // supabase_user_id in metadata.
         if (session.mode === "subscription") {
-          const userId = session.metadata?.supabase_user_id;
+          const userIdFromMetadata = session.metadata?.supabase_user_id;
           const productType = session.metadata?.product_type || "solo";
-          if (userId) {
+
+          // Path A: app-initiated checkout — supabase_user_id is in metadata.
+          // Unchanged from the original implementation.
+          if (userIdFromMetadata) {
             const credits = PLAN_CREDITS[productType] || 9999;
             await supabase.from("user_profiles").update({
               is_premium: true,
@@ -79,10 +79,93 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string,
               credits_remaining: credits,
               updated_at: new Date().toISOString(),
-            }).eq("id", userId);
-            console.log(`Activated ${productType} plan for user ${userId}`);
+            }).eq("id", userIdFromMetadata);
+            console.log(`Activated ${productType} plan for user ${userIdFromMetadata}`);
+            break;
+          }
+
+          // Path B: static Stripe Payment Link — no metadata, only buyer email.
+          // Mirrors the one-time credit pack flow: queue first (idempotent),
+          // then resolve email → user; if no user, leave for the signup trigger.
+          const subEmail =
+            session.customer_details?.email ?? session.customer_email ?? null;
+          if (!subEmail) {
+            console.error(
+              `Subscription session ${session.id} has no metadata user_id and no buyer email; cannot activate.`,
+            );
+            break;
+          }
+
+          // Idempotency: insert into pending_credits with purchase_type='unlimited'.
+          // The UNIQUE(stripe_session_id) constraint guards against double-processing
+          // if Stripe retries the webhook.
+          const { error: subInsertErr } = await supabase
+            .from("pending_credits")
+            .insert({
+              email: subEmail,
+              credits: 0, // Activation flag, not a credit grant
+              purchase_type: "unlimited",
+              stripe_session_id: session.id,
+              stripe_customer_id: session.customer as string | null,
+              stripe_subscription_id: session.subscription as string | null,
+            });
+
+          if (subInsertErr) {
+            if ((subInsertErr as any).code === "23505") {
+              console.log(`Subscription session ${session.id} already processed — skipping.`);
+              break;
+            }
+            console.error(`Failed to record pending unlimited subscription:`, subInsertErr);
+            throw subInsertErr;
+          }
+
+          // Resolve buyer to an existing auth user
+          const { data: subResolvedId, error: subLookupErr } = await supabase.rpc(
+            "get_user_id_by_email",
+            { p_email: subEmail },
+          );
+          if (subLookupErr) {
+            console.error(`Email lookup failed for ${subEmail}:`, subLookupErr);
+          }
+
+          const subExistingUserId = (subResolvedId as string | null) ?? null;
+
+          if (subExistingUserId) {
+            const { error: subUpdateErr } = await supabase
+              .from("user_profiles")
+              .update({
+                is_premium: true,
+                subscription_plan: "solo",
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: session.subscription as string,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", subExistingUserId);
+
+            if (subUpdateErr) {
+              console.error(
+                `Failed to activate Unlimited Pro for ${subExistingUserId}:`,
+                subUpdateErr,
+              );
+              break;
+            }
+
+            // Mark the pending row consumed so the signup trigger doesn't double-apply
+            await supabase
+              .from("pending_credits")
+              .update({
+                consumed_at: new Date().toISOString(),
+                consumed_user_id: subExistingUserId,
+              })
+              .eq("stripe_session_id", session.id);
+
+            console.log(
+              `Activated Unlimited Pro for existing user ${subExistingUserId} via email lookup.`,
+            );
           } else {
-            console.warn(`Subscription session ${session.id} missing supabase_user_id metadata`);
+            console.log(
+              `No user yet for ${subEmail}; queued Unlimited Pro activation in pending_credits.`,
+            );
           }
           break;
         }
