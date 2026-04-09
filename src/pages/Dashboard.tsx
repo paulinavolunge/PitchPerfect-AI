@@ -196,8 +196,8 @@ const Dashboard = () => {
                       </>
                     ) : (
                       <>
-                        <div className="text-2xl font-bold text-foreground">Free</div>
-                        <p className="text-xs text-muted-foreground mb-2">3 sessions/month</p>
+                        <div className="text-2xl font-bold text-foreground">Pay-as-you-go</div>
+                        <p className="text-xs text-muted-foreground mb-2">Round packs from $4.99</p>
                         {isPricingEnabled() && (
                           <Button
                             size="sm"

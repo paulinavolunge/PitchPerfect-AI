@@ -133,12 +133,13 @@ const Signup = () => {
           if (profileError && profileError.code === 'PGRST116') {
             console.log('Profile not created by trigger, creating manually...');
             
-            // Create profile manually if trigger failed
+            // Create profile manually if trigger failed.
+            // No free credits — users must purchase a pack or subscription.
             const { error: createError } = await supabase
               .from('user_profiles')
               .insert({
                 id: data.user.id,
-                credits_remaining: 1,
+                credits_remaining: 0,
                 trial_used: false
               });
               
@@ -247,9 +248,9 @@ const Signup = () => {
         {/* Benefits section */}
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-brand-dark mb-2">
-            Start your free trial — no credit card required
+            Create your account
           </h1>
-          <p className="text-muted-foreground mb-4">Get 3 free practice sessions when you sign up</p>
+          <p className="text-muted-foreground mb-4">Unlock round packs from $4.99 — or go unlimited with Pro.</p>
           <ul className="text-left space-y-2 max-w-xs mx-auto mb-2">
             <li className="flex items-start gap-2 text-sm text-muted-foreground">
               <span className="text-brand-green font-bold mt-0.5">✓</span>

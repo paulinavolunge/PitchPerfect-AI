@@ -307,7 +307,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
               </form>
 
               <p className="text-xs text-muted-foreground text-center mt-3">
-                3 free rounds per month. No credit card. Cancel anytime.
+                No credit card to sign up. Round packs from $4.99.
               </p>
             </div>
           </div>

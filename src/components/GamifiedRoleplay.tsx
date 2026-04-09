@@ -239,9 +239,6 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     incrementAttempt,
     isGuest,
     remainingAttempts,
-    attemptCount,
-    currentLimit,
-    FREE_ACCOUNT_MONTHLY_LIMIT,
     refreshCount,
   } = useFreeTrialLimit();
 
@@ -966,14 +963,14 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   };
 
   const handleTryAnother = () => {
-    // After completing a session, check if the user has hit their limit
+    // After completing a session, check if the user has any rounds left
     if (hasReachedLimit) {
       if (isGuest) {
-        // Guest used their 1 free session — navigate to signup
+        // Guest used their 1 free session — send to signup
         navigate('/signup');
         return;
       } else if (!isPremium) {
-        // Free user used their 3 monthly sessions — show paywall
+        // Authenticated user with no remaining credits — show paywall
         setShowPaywall(true);
         return;
       }
@@ -1074,7 +1071,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         {user?.id && !hasReachedLimit && remainingAttempts !== Infinity && (
           <div className="mb-6 flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted rounded-lg px-3 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span>{remainingAttempts} of {currentLimit} free sessions remaining this month</span>
+            <span>{remainingAttempts} round{remainingAttempts === 1 ? '' : 's'} remaining</span>
           </div>
         )}
 
@@ -1416,11 +1413,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             <UserPlus className="w-8 h-8 mx-auto text-primary mb-2" />
             <h3 className="font-semibold text-foreground mb-1">Want to keep practicing?</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Create a free account to get 3 practice sessions per month — or go unlimited with Pro.
+              Grab a round pack starting at $4.99 — or go unlimited with Pro.
             </p>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => navigate('/signup')} className="flex-1">
-                Sign Up Free <ArrowRight className="w-4 h-4 ml-1" />
+                Create Account <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
               <Button onClick={() => handleGoProCheckout('solo')} disabled={checkoutLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
                 {checkoutLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</> : <>Go Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" /></>}
@@ -1428,17 +1425,15 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             </div>
           </div>
         ) : !isPremium ? (
-          // Free user (logged in, not subscribed)
+          // Authenticated, not subscribed
           <div className="bg-card border border-border rounded-xl p-5 mb-4 text-center shadow-sm">
             <Sparkles className="w-8 h-8 mx-auto text-primary mb-2" />
             <h3 className="font-semibold text-foreground mb-1">Ready to master every objection?</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              You've used {attemptCount} of 3 free sessions this month. Upgrade to Pro for unlimited practice, custom scenarios, and detailed analytics.
+            <p className="text-sm text-muted-foreground mb-4">
+              {remainingAttempts > 0
+                ? `You have ${remainingAttempts} round${remainingAttempts === 1 ? '' : 's'} left. Upgrade to Pro for unlimited practice, custom scenarios, and detailed analytics.`
+                : `You're out of rounds. Grab another pack or go unlimited with Pro for custom scenarios and detailed analytics.`}
             </p>
-            <div className="mb-4">
-              <Progress value={Math.min((attemptCount / 3) * 100, 100)} className="h-2" />
-              <span className="text-xs text-muted-foreground mt-1 block">{attemptCount}/3 sessions used</span>
-            </div>
             <Button onClick={() => handleGoProCheckout('solo')} disabled={checkoutLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
               {checkoutLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</> : <>Upgrade to Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" /></>}
             </Button>

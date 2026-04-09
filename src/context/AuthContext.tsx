@@ -224,10 +224,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Try to create the profile
           const { data: newProfile, error: insertError } = await supabase
             .from('user_profiles')
-            .insert({ 
-              id: userId, 
-              credits_remaining: 1, // Free credit on signup
-              trial_used: false 
+            .insert({
+              id: userId,
+              credits_remaining: 0, // No free credits — users must purchase a pack or subscription
+              trial_used: false
             })
             .select('credits_remaining, trial_used')
             .single();
@@ -247,35 +247,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('Attempting upsert as fallback...');
               const { data: upsertProfile, error: upsertError } = await supabase
                 .from('user_profiles')
-                .upsert({ 
-                  id: userId, 
-                  credits_remaining: 1,
-                  trial_used: false 
-                }, { 
+                .upsert({
+                  id: userId,
+                  credits_remaining: 0,
+                  trial_used: false
+                }, {
                   onConflict: 'id',
-                  ignoreDuplicates: false 
+                  ignoreDuplicates: false
                 })
                 .select('credits_remaining, trial_used')
                 .single();
-                
+
               if (upsertError) {
                 console.error('Upsert also failed:', upsertError);
                 // Use defaults if all creation attempts fail
-                setCreditsRemaining(1);
+                setCreditsRemaining(0);
                 setTrialUsed(false);
               } else if (upsertProfile) {
                 console.log('✅ Profile created via upsert:', upsertProfile);
-                setCreditsRemaining(upsertProfile.credits_remaining || 1);
+                setCreditsRemaining(upsertProfile.credits_remaining ?? 0);
                 setTrialUsed(upsertProfile.trial_used || false);
               }
             } else {
               // Use defaults if creation fails after retries
-              setCreditsRemaining(1);
+              setCreditsRemaining(0);
               setTrialUsed(false);
             }
           } else {
             console.log('✅ Created new user profile:', newProfile);
-            setCreditsRemaining(newProfile?.credits_remaining || 1);
+            setCreditsRemaining(newProfile?.credits_remaining ?? 0);
             setTrialUsed(newProfile?.trial_used || false);
           }
           } else {
@@ -288,8 +288,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return loadUserProfile(userId, retryCount + 1);
             }
             
-            // Use safe defaults
-          setCreditsRemaining(1); // Give new users 1 free credit
+            // Use safe defaults — no free credits for new users
+          setCreditsRemaining(0);
           setTrialUsed(false);
         }
       } else if (profile) {
@@ -299,29 +299,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsPremium(profile.is_premium ?? false);
       } else {
         console.warn('No profile data returned');
-        
+
         // Retry if no data returned
         if (retryCount < 3) {
           console.log('No profile data, retrying...');
           await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
           return loadUserProfile(userId, retryCount + 1);
         }
-        
-        setCreditsRemaining(1); // Give new users 1 free credit
+
+        setCreditsRemaining(0);
         setTrialUsed(false);
       }
     } catch (error) {
       console.error('Failed to load user profile:', error);
-      
+
       // Retry on network errors
       if (retryCount < 3) {
         console.log('Network error, retrying profile load...');
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return loadUserProfile(userId, retryCount + 1);
       }
-      
+
       // Use safe defaults on any error
-      setCreditsRemaining(1); // Give new users 1 free credit
+      setCreditsRemaining(0);
       setTrialUsed(false);
     }
   };

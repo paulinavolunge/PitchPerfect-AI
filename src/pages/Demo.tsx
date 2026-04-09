@@ -42,8 +42,6 @@ const Demo = () => {
     incrementAttempt,
     isGuest,
     remainingAttempts,
-    currentLimit,
-    FREE_ACCOUNT_MONTHLY_LIMIT,
   } = useFreeTrialLimit();
 
   // Separate state for showing the hard paywall modal (only on second submit attempt)
@@ -153,18 +151,18 @@ const Demo = () => {
     // Gate: if limit reached, show appropriate prompt
     if (hasReachedLimit) {
       if (isGuest) {
-        // Guest who used their 1 free demo - nudge to create account
+        // Guest who used their 1 free demo — nudge to purchase a round pack
         toast({
-          title: "Create a free account to keep practicing",
-          description: `Get ${FREE_ACCOUNT_MONTHLY_LIMIT} practice sessions per month — free forever.`,
+          title: "Unlock more rounds",
+          description: "Grab a starter pack or go unlimited with Pro.",
           variant: "default",
         });
       } else {
-        // Free account user who used their 3 monthly sessions - show paywall
+        // Authenticated user with no credits — show paywall
         setShowPaywall(true);
         toast({
-          title: "Monthly limit reached",
-          description: "Upgrade to get unlimited practice sessions.",
+          title: "Out of rounds",
+          description: "Unlock more rounds or go unlimited with Pro.",
           variant: "default",
         });
       }
@@ -361,11 +359,11 @@ const Demo = () => {
                   Practice handling pricing objections using either voice or text input, and get instant feedback.
                 </p>
 
-                {/* Session counter for logged-in free users */}
+                {/* Round counter for logged-in users with remaining credits */}
                 {user?.id && !hasReachedLimit && remainingAttempts !== Infinity && (
                   <div className="mb-4 flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
                     <Sparkles className="h-4 w-4 text-blue-500" />
-                    <span>{remainingAttempts} of {currentLimit} free sessions remaining this month</span>
+                    <span>{remainingAttempts} round{remainingAttempts === 1 ? '' : 's'} remaining</span>
                   </div>
                 )}
 
@@ -439,7 +437,7 @@ const Demo = () => {
                       }
                     </h3>
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">
-                      Create a free account to get <strong>{FREE_ACCOUNT_MONTHLY_LIMIT} practice sessions every month</strong>, save your scores, and track your improvement over time.
+                      Create an account to save your scores and unlock round packs starting at $4.99 — or go unlimited with Pro.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button
@@ -448,11 +446,11 @@ const Demo = () => {
                         onClick={() => navigate('/signup')}
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
-                        Create Free Account — {FREE_ACCOUNT_MONTHLY_LIMIT} Sessions/Month
+                        Create Account
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-3">
-                      Free forever · No credit card · Takes 30 seconds
+                      No credit card to sign up · Takes 30 seconds
                     </p>
                   </div>
                 )}
@@ -470,7 +468,7 @@ const Demo = () => {
                         ? `You scored ${feedbackScore}/10 — you're getting better. Don't stop now.`
                         : feedbackScore !== null && feedbackScore >= 7
                         ? `${feedbackScore}/10 — you're on a roll! Keep the momentum going.`
-                        : `You've used your ${currentLimit} free sessions this month.`
+                        : `You're out of rounds.`
                       }
                     </h3>
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">
@@ -492,11 +490,11 @@ const Demo = () => {
                   </div>
                 )}
 
-                {/* LOGGED-IN FREE USER with sessions remaining — Show remaining count */}
+                {/* Logged-in user with round credits remaining — show count */}
                 {feedback && !hasReachedLimit && !isGuest && remainingAttempts !== Infinity && (
                   <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
                     <Sparkles className="h-4 w-4 text-blue-500" />
-                    <span>{remainingAttempts} free session{remainingAttempts !== 1 ? 's' : ''} remaining this month · <button onClick={() => navigate('/pricing')} className="text-blue-600 hover:text-blue-700 underline">Get unlimited</button></span>
+                    <span>{remainingAttempts} round{remainingAttempts === 1 ? '' : 's'} remaining · <button onClick={() => navigate('/pricing')} className="text-blue-600 hover:text-blue-700 underline">Get unlimited</button></span>
                   </div>
                 )}
               </div>
