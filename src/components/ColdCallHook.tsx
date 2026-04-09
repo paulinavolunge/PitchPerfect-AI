@@ -106,6 +106,9 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     try {
       localStorage.setItem('pp_cold_call_used', 'true');
       localStorage.setItem('pp_cold_call_last_score', String(Math.round(d.score * 10)));
+      // Persist the full debrief so /scorecard-unlock can render the
+      // unblurred scorecard after the user returns from Stripe checkout.
+      localStorage.setItem('pp_cold_call_last_debrief', JSON.stringify(d));
     } catch {}
     setDebrief(d);
     setPhase('scorecard');

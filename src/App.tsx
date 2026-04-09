@@ -51,6 +51,7 @@ const Practice = React.lazy(() => import('@/pages/Practice'));
 const VoiceTraining = React.lazy(() => import('@/pages/VoiceTraining'));
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
 const AIRoleplay = React.lazy(() => import('@/pages/AIRoleplay'));
+const ScoreUnlock = React.lazy(() => import('@/pages/ScoreUnlock'));
 
 function PageLoader() {
   return (
@@ -110,6 +111,7 @@ function App() {
                                 {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
                                 <Route path="/demo" element={<Navigate to="/practice" replace />} />
                                 <Route path="/free-trial" element={<FreeTrial />} />
+                                <Route path="/scorecard-unlock" element={<ScoreUnlock />} />
                                 
                                 {/* New functional routes */}
                                 <Route path="/voice-training" element={<ProtectedRoute><VoiceTraining /></ProtectedRoute>} />
