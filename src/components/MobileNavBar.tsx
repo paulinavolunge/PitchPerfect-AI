@@ -32,7 +32,7 @@ const MobileNavBar: React.FC = () => {
       active: location.pathname === '/dashboard'
     },
     {
-      label: 'Practice',
+      label: 'Rounds',
       icon: Mic,
       path: '/roleplay',
       active: location.pathname === '/roleplay' || location.pathname === '/practice'

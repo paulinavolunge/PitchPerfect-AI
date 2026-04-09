@@ -27,7 +27,7 @@ const GuestBanner: React.FC<GuestBannerProps> = ({ className = '' }) => {
     <div className={`bg-brand-blue/10 border-b border-brand-blue/20 py-3 ${className}`}>
       <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between">
         <p className="text-sm text-brand-dark mb-3 sm:mb-0 text-center sm:text-left">
-          <span className="font-medium">Guest Mode:</span> Your progress won't be saved. Sign up to unlock all features.
+          <span className="font-medium">Guest Mode:</span> Your progress won't be saved. Get started to unlock all features.
         </p>
         <div className="flex gap-3">
           <Button
@@ -46,7 +46,7 @@ const GuestBanner: React.FC<GuestBannerProps> = ({ className = '' }) => {
             onClick={handleSignup}
           >
             <UserPlus className="h-3 w-3 mr-1.5" />
-            Sign Up Free
+            Get Started Free
           </Button>
         </div>
       </div>

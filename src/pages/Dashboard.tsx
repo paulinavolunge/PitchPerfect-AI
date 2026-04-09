@@ -75,7 +75,7 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Helmet>
         <title>Dashboard | PitchPerfect AI</title>
-        <meta name="description" content="Track your pitch practice progress and improve your sales skills with AI-powered feedback." />
+        <meta name="description" content="Track your rounds and sharpen your close with AI-powered feedback." />
       </Helmet>
 
       <Navbar />
@@ -90,8 +90,8 @@ const Dashboard = () => {
               </h1>
               <p className="text-muted-foreground mt-1">
                 {sessionCount === 0
-                  ? "Ready to start your first practice session?"
-                  : `You've completed ${sessionCount} session${sessionCount !== 1 ? 's' : ''} so far.`}
+                  ? "Ready to start your first round?"
+                  : `You've completed ${sessionCount} round${sessionCount !== 1 ? 's' : ''} so far.`}
               </p>
             </div>
             <Button
@@ -100,7 +100,7 @@ const Dashboard = () => {
               onClick={handleStartPractice}
             >
               <Play className="h-5 w-5 mr-2" />
-              Start Practice
+              Start Your Round
             </Button>
           </div>
 
@@ -225,7 +225,7 @@ const Dashboard = () => {
                           Upgrade to Pro
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Unlock unlimited practice sessions, custom scenarios, and detailed analytics.
+                          Unlock unlimited rounds, custom scenarios, and detailed analytics.
                         </p>
                       </div>
                       <Badge className="bg-blue-100 text-blue-800 border-blue-300">

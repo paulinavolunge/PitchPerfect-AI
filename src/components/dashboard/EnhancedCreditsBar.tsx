@@ -151,7 +151,7 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
           {/* Premium badge */}
           {isPremium && (
             <p className="text-sm text-muted-foreground">
-              Enjoy unlimited practice sessions with your Pro subscription.
+              Enjoy unlimited rounds with your Pro plan.
             </p>
           )}
         </CardContent>
@@ -166,12 +166,12 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
               Running Low on Credits
             </DialogTitle>
             <DialogDescription className="space-y-3 pt-2">
-              <p>You have <strong>{creditsRemaining}</strong> practice sessions remaining.</p>
+              <p>You have <strong>{creditsRemaining}</strong> rounds remaining.</p>
               <p className="font-medium">
-                Consider upgrading to Pro for:
+                Consider going unlimited with Pro for:
               </p>
               <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>Unlimited practice sessions</li>
+                <li>Unlimited rounds</li>
                 <li>Advanced AI feedback</li>
                 <li>Detailed progress analytics</li>
                 <li>Custom scenarios for your industry</li>
@@ -212,13 +212,13 @@ const EnhancedCreditsBar: React.FC<EnhancedCreditsBarProps> = ({
             </DialogTitle>
             <DialogDescription className="space-y-4 pt-3">
               <p className="text-base">
-                You've used all your free practice sessions. Ready to unlock unlimited practice?
+                You've used all your free rounds. Ready to go unlimited?
               </p>
-              
+
               <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 space-y-2">
                 <p className="font-semibold text-primary-900">Pro Plan - $29/month</p>
                 <ul className="space-y-1 text-sm text-primary-800">
-                  <li>✓ Unlimited practice sessions</li>
+                  <li>✓ Unlimited rounds</li>
                   <li>✓ Advanced AI feedback</li>
                   <li>✓ Voice & text modes</li>
                   <li>✓ Progress analytics</li>

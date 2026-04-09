@@ -19,13 +19,13 @@ const features = [
   },
   {
     icon: "🤖",
-    title: "AI Coaching",
-    description: "Receive personalized coaching tips from our advanced AI system trained on top-performing sales pitches."
+    title: "AI Feedback",
+    description: "Get personalized tips from an AI built on top-performing sales pitches."
   },
   {
     icon: "🎭",
-    title: "Scenario Practice",
-    description: "Practice handling various customer scenarios and objections in a safe, simulated environment."
+    title: "Scenario Rounds",
+    description: "Battle realistic customer scenarios and objections in a safe, simulated environment."
   },
   {
     icon: "📚",
@@ -34,8 +34,8 @@ const features = [
   },
   {
     icon: "🔄",
-    title: "Unlimited Practice",
-    description: "Practice as much as you need with unlimited recording sessions and feedback loops."
+    title: "Unlimited Rounds",
+    description: "Run as many rounds as you need with unlimited recording sessions and feedback loops."
   },
 ];
 

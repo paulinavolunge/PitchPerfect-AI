@@ -1065,7 +1065,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">Choose Your Challenge</h2>
-          <p className="text-muted-foreground">Pick an objection to practice overcoming</p>
+          <p className="text-muted-foreground">Pick an objection to crush</p>
         </div>
 
         {user?.id && !hasReachedLimit && remainingAttempts !== Infinity && (
@@ -1092,7 +1092,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             </span>
             <div>
               <span className="font-semibold text-foreground text-base">Build Your Own Scenario</span>
-              <span className="block text-sm text-muted-foreground mt-0.5">Practice with YOUR real product, buyer, and objection</span>
+              <span className="block text-sm text-muted-foreground mt-0.5">Battle YOUR real product, buyer, and objection</span>
             </div>
             <ArrowRight className="w-5 h-5 text-muted-foreground ml-auto shrink-0" />
           </motion.button>
@@ -1128,7 +1128,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     return (
       <div className="max-w-lg mx-auto p-6">
         <h2 className="text-2xl font-bold text-foreground mb-2 text-center">Build Your Scenario</h2>
-        <p className="text-muted-foreground text-center mb-6">Fill in the details to create a realistic practice session</p>
+        <p className="text-muted-foreground text-center mb-6">Fill in the details to create a realistic round</p>
 
         <div className="space-y-4 mb-8">
           <div>
@@ -1373,7 +1373,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
         {/* Tip */}
         <div className="bg-primary-50 border border-primary-200 rounded-xl p-5 mb-6">
-          <h3 className="font-semibold text-foreground mb-1">💡 Practice Tip</h3>
+          <h3 className="font-semibold text-foreground mb-1">💡 Coach's Tip</h3>
           <p className="text-sm text-muted-foreground">{debrief.tip}</p>
         </div>
 
@@ -1431,7 +1431,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             <h3 className="font-semibold text-foreground mb-1">Ready to master every objection?</h3>
             <p className="text-sm text-muted-foreground mb-4">
               {remainingAttempts > 0
-                ? `You have ${remainingAttempts} round${remainingAttempts === 1 ? '' : 's'} left. Upgrade to Pro for unlimited practice, custom scenarios, and detailed analytics.`
+                ? `You have ${remainingAttempts} round${remainingAttempts === 1 ? '' : 's'} left. Go unlimited with Pro for custom scenarios and detailed analytics.`
                 : `You're out of rounds. Grab another pack or go unlimited with Pro for custom scenarios and detailed analytics.`}
             </p>
             <Button onClick={() => handleGoProCheckout('solo')} disabled={checkoutLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
@@ -1446,7 +1446,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             <RotateCcw className="w-4 h-4 mr-2" /> Try Another Objection
           </Button>
           <Button onClick={() => { handleTryAnother(); }} className="flex-1 bg-primary-500 hover:bg-primary-600 text-white">
-            Practice Again <ArrowRight className="w-4 h-4 ml-1" />
+            Run It Back <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
 

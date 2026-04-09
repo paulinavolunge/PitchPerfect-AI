@@ -63,10 +63,10 @@ const UpgradePaywallModal: React.FC<UpgradePaywallModalProps> = ({ open }) => {
             <Crown className="h-7 w-7 text-primary" />
           </div>
           <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground">
-            You've used your free practice round!
+            You've used your free round!
           </DialogTitle>
           <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
-            Ready to close more deals? Upgrade to keep practicing.
+            Ready to close more deals? Go unlimited to keep going.
           </DialogDescription>
         </DialogHeader>
 
@@ -83,7 +83,7 @@ const UpgradePaywallModal: React.FC<UpgradePaywallModalProps> = ({ open }) => {
                 <span className="text-sm text-muted-foreground">/month</span>
               </div>
               <ul className="space-y-1.5 text-sm text-muted-foreground mb-4 flex-1">
-                <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary shrink-0" />Unlimited practice</li>
+                <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary shrink-0" />Unlimited rounds</li>
                 <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary shrink-0" />AI scoring & feedback</li>
                 <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary shrink-0" />Voice & text roleplay</li>
               </ul>

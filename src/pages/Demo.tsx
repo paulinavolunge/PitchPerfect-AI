@@ -127,7 +127,7 @@ const Demo = () => {
         console.error('Error saving practice session:', error);
         toast({
           title: "Save Error",
-          description: "Practice completed but couldn't save to your progress. Your credits were still used.",
+          description: "Round completed but couldn't save to your progress. Your credits were still used.",
           variant: "destructive",
         });
         return;
@@ -135,7 +135,7 @@ const Demo = () => {
 
       toast({
         title: "Progress Saved",
-        description: "Your practice session has been saved to your dashboard!",
+        description: "Your round has been saved to your dashboard!",
         variant: "default",
       });
     } catch (error) {
@@ -292,7 +292,7 @@ const Demo = () => {
       return `🔥 <strong>Smart move</strong> addressing competitors head-on!<br/><br/>🚀 <strong>Differentiate like this:</strong><br/>"Yes, cheaper options exist. Here's why we're worth it: 2x faster implementation, 24/7 support, and 40% better results on average. Company X jumped from 12% to 19% conversion in 3 months after switching. The price difference paid for itself in Q1. What capabilities matter most to you?"`;
     }
 
-    return `✅ <strong>Good start!</strong> Now let's make it irresistible.<br/><br/>🎯 <strong>Try this approach:</strong><br/>"I hear your price concern. Here's the truth: 250% ROI in year one. Recent client in your industry: $180K savings on $60K investment. We include free training, priority support, quarterly strategy reviews. Zero risk: 90-day value guarantee or full refund. Quick demo to see your specific impact?"`;
+    return `✅ <strong>Good start!</strong> Now let's make it irresistible.<br/><br/>🎯 <strong>Try this approach:</strong><br/>"I hear your price concern. Here's the truth: 250% ROI in year one. Recent client in your industry: $180K savings on $60K investment. We include free onboarding, priority support, quarterly strategy reviews. Zero risk: 90-day value guarantee or full refund. Quick demo to see your specific impact?"`;
   };
 
   const handleTryMoreFeatures = () => {
@@ -308,11 +308,11 @@ const Demo = () => {
   return (
     <>
       <Helmet>
-        <title>Try PitchPerfect AI Demo | Free Sales Practice Session</title>
-        <meta name="description" content="Experience PitchPerfect AI with our free interactive demo. Practice handling sales objections and get instant AI-powered feedback on your pitch delivery." />
-        <meta name="keywords" content="sales demo, AI pitch practice, free trial, objection handling, sales training demo" />
-        <meta property="og:title" content="Free PitchPerfect AI Demo - Try AI Sales Training" />
-        <meta property="og:description" content="Test drive our AI-powered sales training platform. Practice objection handling and get instant feedback." />
+        <title>Try PitchPerfect AI Demo | Free Cold Call Round</title>
+        <meta name="description" content="Beat the AI prospect with our free interactive demo. Handle real sales objections and get instant AI-powered feedback on your pitch delivery." />
+        <meta name="keywords" content="sales demo, AI cold call, free round, objection handling, cold call challenge" />
+        <meta property="og:title" content="Free PitchPerfect AI Demo - Try the AI Cold Call Challenge" />
+        <meta property="og:description" content="Test drive the AI-powered cold call challenge. Handle real objections and get instant feedback." />
         <meta property="og:type" content="website" />
         <link rel="canonical" href={`${window.location.origin}/demo`} />
       </Helmet>
@@ -343,7 +343,7 @@ const Demo = () => {
 
               <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                  <h1 className="text-xl sm:text-2xl font-bold text-brand-dark">Try PitchPerfect AI - Objection Handling Practice</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold text-brand-dark">Try PitchPerfect AI — Objection Handling Round</h1>
                   <Button
                     variant="outline"
                     size="sm"
@@ -355,8 +355,7 @@ const Demo = () => {
                   </Button>
                 </div>
                 <p className="text-brand-dark/80 mb-4 sm:mb-6 text-sm sm:text-base">
-                  Experience how PitchPerfect AI helps you improve your sales pitch.
-                  Practice handling pricing objections using either voice or text input, and get instant feedback.
+                  Sharpen your close. Go head-to-head with an AI buyer pushing real pricing objections — voice or text — and get instant feedback.
                 </p>
 
                 {/* Round counter for logged-in users with remaining credits */}
@@ -450,7 +449,7 @@ const Demo = () => {
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-3">
-                      No credit card to sign up · Takes 30 seconds
+                      No credit card to get started · Takes 30 seconds
                     </p>
                   </div>
                 )}
@@ -472,7 +471,7 @@ const Demo = () => {
                       }
                     </h3>
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">
-                      Subscribers get <strong>unlimited practice</strong> across all scenarios, advanced AI coaching, and progress tracking to close more deals.
+                      Pro members get <strong>unlimited rounds</strong> across all scenarios, deeper AI feedback, and progress tracking to close more deals.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button
@@ -480,7 +479,7 @@ const Demo = () => {
                         className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6"
                         onClick={() => navigate('/pricing')}
                       >
-                        Unlock Unlimited Practice — $29/mo
+                        Go Unlimited — $29/mo
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </Button>
                     </div>
@@ -503,7 +502,7 @@ const Demo = () => {
                 <div className="bg-brand-blue/10 rounded-lg p-4 sm:p-6 text-center mb-6 sm:mb-8">
                   <h3 className="text-lg sm:text-xl font-medium mb-2 text-brand-dark">Want to try more features?</h3>
                   <p className="text-brand-dark/70 mb-4 text-sm sm:text-base">
-                    You're using PitchPerfect AI in guest mode. Try our role-playing feature or sign up to save your progress.
+                    You're using PitchPerfect AI in guest mode. Try a head-to-head round or get started to save your progress.
                   </p>
                   <div className="flex flex-col sm:flex-row justify-center gap-3">
                     <Button
@@ -518,7 +517,7 @@ const Demo = () => {
                       className="flex items-center justify-center gap-2 min-h-[44px] w-full sm:w-auto"
                     >
                       <UserPlus className="h-4 w-4" />
-                      Sign Up Free
+                      Get Started Free
                     </Button>
                   </div>
                 </div>

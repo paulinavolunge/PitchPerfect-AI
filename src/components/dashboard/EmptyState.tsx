@@ -21,7 +21,7 @@ interface EmptyStateProps {
 const EmptyState = ({
   title,
   description,
-  actionLabel = "Start Practice",
+  actionLabel = "Start Your Round",
   actionRoute = "/practice",
   icon = <BarChart className="h-12 w-12 text-gray-300 mb-4" />,
   secondaryAction

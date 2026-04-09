@@ -37,18 +37,18 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({ sessions, onStartPracti
     return (
       <Card className="overflow-hidden shadow-md">
         <CardHeader className="bg-gradient-to-r from-brand-blue/10 to-brand-blue/5 pb-4">
-          <CardTitle className="text-xl text-brand-dark">Recent Practice Sessions</CardTitle>
+          <CardTitle className="text-xl text-brand-dark">Recent Rounds</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="text-center py-8">
             <FileAudio className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">No practice sessions yet.</p>
-            <p className="text-gray-400 text-sm mb-6">Start your first practice to see your progress here.</p>
-            <Button 
+            <p className="text-gray-500 mb-4">No rounds yet.</p>
+            <p className="text-gray-400 text-sm mb-6">Start your first round to see your progress here.</p>
+            <Button
               onClick={onStartPractice}
               className="bg-brand-green hover:bg-brand-green/90"
             >
-              Start First Practice
+              Start First Round
             </Button>
           </div>
         </CardContent>
@@ -60,7 +60,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({ sessions, onStartPracti
     <Card className="overflow-hidden shadow-md">
       <CardHeader className="bg-gradient-to-r from-brand-blue/10 to-brand-blue/5 pb-4">
         <CardTitle className="text-xl text-brand-dark flex items-center justify-between">
-          Recent Practice Sessions
+          Recent Rounds
           <span className="text-sm font-normal text-gray-500">
             Last {sessions.length}
           </span>
@@ -128,7 +128,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({ sessions, onStartPracti
             variant="outline"
             className="w-full"
           >
-            View All Sessions
+            View All Rounds
           </Button>
         </div>
       </CardContent>

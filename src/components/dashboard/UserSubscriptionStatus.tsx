@@ -42,16 +42,16 @@ const UserSubscriptionStatus: React.FC = () => {
         <CardContent>
           <div className="space-y-3">
             <p className="text-sm text-gray-600">
-              You have unlimited access to all premium features including advanced analytics, 
-              unlimited practice sessions, and priority support.
+              You have unlimited access to all premium features including advanced analytics,
+              unlimited rounds, and priority support.
             </p>
-            <Button 
+            <Button
               onClick={() => navigate('/subscription')}
-              variant="outline" 
+              variant="outline"
               size="sm"
               className="w-full"
             >
-              Manage Subscription
+              Manage Plan
             </Button>
           </div>
         </CardContent>
@@ -74,8 +74,8 @@ const UserSubscriptionStatus: React.FC = () => {
         <CardContent>
           <div className="space-y-3">
             <p className="text-sm text-gray-600">
-              Welcome! You have <strong>1 free pitch analysis</strong> available. 
-              Try our AI-powered feedback system and see how it can improve your sales skills.
+              Welcome! You have <strong>1 free pitch analysis</strong> available.
+              Try the AI feedback system and sharpen your close.
             </p>
             <div className="flex space-x-2">
               <Button 
@@ -113,15 +113,15 @@ const UserSubscriptionStatus: React.FC = () => {
         <CardContent>
           <div className="space-y-3">
             <p className="text-sm text-gray-600">
-              You have <strong>{creditsRemaining} credits</strong> remaining. 
-              Each practice session uses 1 credit. {isPricingEnabled() ? 'Upgrade to Premium for unlimited access.' : 'Continue practicing with your available credits.'}
+              You have <strong>{creditsRemaining} credits</strong> remaining.
+              Each round uses 1 credit. {isPricingEnabled() ? 'Go unlimited with Pro for unlimited access.' : 'Keep going with your available credits.'}
             </p>
             <div className="flex space-x-2">
-              <Button 
+              <Button
                 onClick={() => navigate('/practice')}
                 className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
               >
-                Start Practice
+                Start Your Round
               </Button>
               <Button 
                 onClick={handleUpgrade}
@@ -152,8 +152,8 @@ const UserSubscriptionStatus: React.FC = () => {
       <CardContent>
         <div className="space-y-3">
           <p className="text-sm text-gray-600">
-            You've used all your credits! Upgrade to Premium for unlimited practice 
-            sessions or purchase more credits to continue training.
+            You've used all your credits! Go unlimited with Pro for unlimited rounds
+            or purchase more credits to keep going.
           </p>
           <div className="flex space-x-2">
             <Button 

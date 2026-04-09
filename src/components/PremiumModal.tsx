@@ -52,10 +52,10 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
     return `Unlock ${feature || 'Premium Features'}`;
   };
   const getDescription = () => {
-    if (!user) return "Create your free account to start analyzing your pitches with AI.";
+    if (!user) return "Create your free account to start running rounds with the AI.";
     if (!trialUsed) return "You have 1 free pitch analysis available. Try it now!";
-    if (creditsRemaining === 0) return "Top up your credits to continue practicing and improving your sales skills.";
-    return `Upgrade to Premium to access ${feature || 'all advanced features'} and unlimited practice sessions.`;
+    if (creditsRemaining === 0) return "Top up your credits to keep running rounds and crushing more deals.";
+    return `Go unlimited to access ${feature || 'all advanced features'} and unlimited rounds.`;
   };
   return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg bg-white border shadow-xl">

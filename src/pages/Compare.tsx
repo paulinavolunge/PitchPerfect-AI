@@ -16,7 +16,7 @@ import { Check, X } from 'lucide-react';
 const Compare = () => {
   const comparisonData = [
     {
-      feature: 'Real-time voice coaching',
+      feature: 'Real-time voice feedback',
       pitchPerfect: true,
       competitors: false,
       note: 'Immediate feedback as you speak'
@@ -51,10 +51,10 @@ const Compare = () => {
     <>
       <Helmet>
         <title>Compare PitchPerfect AI vs Competitors | Feature Comparison</title>
-        <meta name="description" content="See how PitchPerfect AI compares to other AI sales development tools. Compare features, capabilities, and benefits of our AI-powered sales training platform." />
-        <meta name="keywords" content="sales training comparison, AI SDR tools, pitch practice software, sales coaching platforms" />
+        <meta name="description" content="See how PitchPerfect AI compares to other AI sales tools. Compare features, capabilities, and benefits of the AI cold call challenge." />
+        <meta name="keywords" content="sales tool comparison, AI SDR tools, cold call challenge, sales rounds" />
         <meta property="og:title" content="PitchPerfect AI vs Competition - Feature Comparison" />
-        <meta property="og:description" content="Discover why PitchPerfect AI outperforms other sales training platforms with superior AI coaching and real-time feedback." />
+        <meta property="og:description" content="Discover why PitchPerfect AI outperforms other sales tools with superior AI feedback and real-time scoring." />
         <link rel="canonical" href={`${window.location.origin}/compare`} />
       </Helmet>
       
@@ -112,8 +112,8 @@ const Compare = () => {
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-xl font-bold mb-4 text-deep-navy">The PitchPerfect Advantage</h2>
                 <p className="text-deep-navy/80 mb-4">
-                  Our platform is built by sales professionals for sales professionals. We understand that 
-                  effective sales training requires more than just scripted scenarios and basic feedback.
+                  Our platform is built by sales professionals for sales professionals. We understand that
+                  effective rounds require more than just scripted scenarios and basic feedback.
                 </p>
                 <p className="text-deep-navy/80 mb-4">
                   With PitchPerfect AI, you get adaptive learning that evolves with you, customizable 

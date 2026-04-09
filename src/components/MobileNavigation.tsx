@@ -85,7 +85,7 @@ export const MobileNavigation: React.FC = () => {
                 </Link>
                 <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
                   <Button className="w-full h-11 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 border-0 ring-2 ring-green-400/20">
-                    Sign Up Free
+                    Get Started Free
                   </Button>
                 </Link>
               </div>

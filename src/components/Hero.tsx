@@ -41,7 +41,7 @@ const Hero: React.FC = () => {
   const statistics = [
     { icon: Zap, value: "30s", label: "Instant AI Feedback" },
     { icon: TrendingUp, value: "Real", label: "Sales Scenarios" },
-    { icon: Target, value: "Free", label: "To Start Practicing" }
+    { icon: Target, value: "Free", label: "To Start Your First Round" }
   ];
 
   const features = [
@@ -53,7 +53,7 @@ const Hero: React.FC = () => {
     {
       icon: Target,
       title: "Role-Play Scenarios",
-      description: "Practice with realistic customer scenarios tailored to your industry and experience level"
+      description: "Battle realistic customer scenarios tailored to your industry and experience level"
     },
     {
       icon: BarChart3,
@@ -79,7 +79,7 @@ const Hero: React.FC = () => {
                 <div className="space-y-4 sm:space-y-6">
                   <div className="inline-flex items-center space-x-2 bg-white/90 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-full border border-electric-blue-200 shadow-sm">
                     <div className="w-2 h-2 bg-electric-blue-500 rounded-full animate-electric-pulse" />
-                    <span className="text-xs sm:text-sm font-semibold text-navy-700">AI-Powered Sales Training</span>
+                    <span className="text-xs sm:text-sm font-semibold text-navy-700">The AI Cold Call Challenge</span>
                   </div>
                   
                   <h1 className="hero-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
@@ -91,8 +91,8 @@ const Hero: React.FC = () => {
                   </h1>
                   
                   <p className="text-base sm:text-lg lg:text-xl text-navy-600 leading-relaxed max-w-xl font-medium">
-                    Train your sales team with AI-powered role-play scenarios. Get instant feedback, 
-                    improve conversion rates, and close more deals with personalized coaching.
+                    Go head-to-head with AI buyers who push back with real objections. Get instant feedback,
+                    sharpen your close, and crush your next deal.
                   </p>
                 </div>
 
@@ -134,7 +134,7 @@ const Hero: React.FC = () => {
                 <TiltCard className="relative z-10">
                   <div className="professional-card p-6 sm:p-8 space-y-4 sm:space-y-6">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base sm:text-lg font-bold text-navy-900">Live Practice Session</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-navy-900">Live Round</h3>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                         <span className="text-xs sm:text-sm text-navy-600 font-medium">Recording</span>

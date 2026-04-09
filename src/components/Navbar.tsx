@@ -96,13 +96,13 @@ const Navbar: React.FC = () => {
 
   const userNavigationItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Practice', href: '/practice' },
+    { name: 'Rounds', href: '/practice' },
     { name: 'Progress', href: '/progress' },
     { name: 'Tips', href: '/tips' }
   ];
 
   const guestNavigationItems = [
-    { name: 'Practice', href: '/practice' },
+    { name: 'Rounds', href: '/practice' },
     { name: 'About', href: '/about' },
     { name: 'Compare', href: '/compare' },
     // "Pricing" now redirects to the homepage cold call hook — every
@@ -112,13 +112,13 @@ const Navbar: React.FC = () => {
   ];
 
   const guestModeItems = [
-    { name: 'Practice', href: '/practice' },
+    { name: 'Rounds', href: '/practice' },
     { name: 'Demo', href: '/demo' }
   ];
 
   const mainNavItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Practice', href: '/practice' },
+    { name: 'Rounds', href: '/practice' },
     { name: 'Tips', href: '/tips' }
   ];
 
@@ -305,7 +305,7 @@ const Navbar: React.FC = () => {
                   className="bg-primary-600 hover:bg-primary-700 text-white"
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Sign Up Free
+                  Get Started Free
                 </Button>
               </>
             )}

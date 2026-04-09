@@ -7,8 +7,8 @@ const Practice = () => {
   return (
     <>
       <Helmet>
-        <title>Practice | PitchPerfect AI</title>
-        <meta name="description" content="Practice handling sales objections with AI-powered roleplay." />
+        <title>Rounds | PitchPerfect AI</title>
+        <meta name="description" content="Beat the AI prospect. Handle real sales objections in a head-to-head round." />
       </Helmet>
       <Navbar />
       <main className="min-h-screen bg-background pt-4 pb-12">

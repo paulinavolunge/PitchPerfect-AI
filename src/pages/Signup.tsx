@@ -258,7 +258,7 @@ const Signup = () => {
             </li>
             <li className="flex items-start gap-2 text-sm text-muted-foreground">
               <span className="text-brand-green font-bold mt-0.5">✓</span>
-              Practice with realistic sales roleplay scenarios
+              Battle real sales scenarios head-to-head with the AI
             </li>
             <li className="flex items-start gap-2 text-sm text-muted-foreground">
               <span className="text-brand-green font-bold mt-0.5">✓</span>

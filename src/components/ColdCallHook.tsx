@@ -224,7 +224,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
         }}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Cold Call Practice</DialogTitle>
+        <DialogTitle className="sr-only">Cold Call Round</DialogTitle>
 
         {/* Close button */}
         <button
@@ -241,7 +241,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
               <Trophy className="w-12 h-12 mx-auto text-primary mb-3" />
               <h2 className="text-2xl font-bold text-foreground mb-2">You already know what {lastScoreLabel} feels like. Want to find out what 95% sounds like?</h2>
               <p className="text-sm text-muted-foreground">
-                Your first attempt is saved. Sign up to beat it.
+                Your first attempt is saved. Get started to beat it.
               </p>
             </div>
 
@@ -304,13 +304,13 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
                   {isSigningUp ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</>
                   ) : (
-                    <>Sign Up Free <ArrowRight className="w-4 h-4 ml-1" /></>
+                    <>Get Started Free <ArrowRight className="w-4 h-4 ml-1" /></>
                   )}
                 </Button>
               </form>
 
               <p className="text-xs text-muted-foreground text-center mt-3">
-                No credit card to sign up. Round packs from $4.99.
+                No credit card to get started. Round packs from $4.99.
               </p>
             </div>
           </div>

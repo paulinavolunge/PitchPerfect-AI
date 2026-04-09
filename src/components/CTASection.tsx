@@ -262,9 +262,9 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
               </div>
             ) : (
               <>
-                <h3 className="text-2xl font-medium mb-2 text-brand-blue">Start Your Free Analysis Today</h3> {/* Updated title */}
+                <h3 className="text-2xl font-medium mb-2 text-brand-blue">Start Your First Round Today</h3> {/* Updated title */}
                 <p className="text-white/80 mb-6">
-                  Sign up with Google to instantly get 1 Free Pitch Analysis.
+                  Get started with Google to instantly run your first round.
                 </p>
 
                 {/* Removed the form fields, as sign-up is now via Google OAuth directly */}

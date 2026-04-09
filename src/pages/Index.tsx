@@ -47,7 +47,7 @@ const Index = () => {
   const [pendingUnlockSessionId, setPendingUnlockSessionId] = useState<string | null>(null);
   const coldCallUsed = typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
   const coldCallLocked = coldCallUsed && !user;
-  const coldCallLabel = coldCallLocked ? 'Sign Up to Keep Practicing' : 'Try a Cold Call — Free';
+  const coldCallLabel = coldCallLocked ? 'Get Started — More Rounds' : 'Try a Cold Call — Free';
 
   // Check for an unfinished Stripe purchase whose buyer skipped the
   // /scorecard-unlock signup step. If they're still anonymous, surface
@@ -114,17 +114,17 @@ const Index = () => {
     <>
       <Helmet>
         <title>PitchPerfect AI - Stop Losing Deals Because You Weren't Ready</title>
-        <meta name="description" content="Practice sales objections with an AI that fights back. Get scored feedback in 30 seconds. Walk into every call ready. Free demo — no signup required." />
-        <meta name="keywords" content="sales training, pitch practice, AI roleplay, objection handling, sales skills, sales coaching, revenue enablement" />
+        <meta name="description" content="Go head-to-head with AI buyers who push back with real objections. Get scored in 30 seconds. Close more deals. Free round — no signup required." />
+        <meta name="keywords" content="sales rounds, cold call challenge, AI buyer, objection handling, sales skills, close more deals, revenue enablement" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pitchperfectai.ai/" />
         <meta property="og:title" content="PitchPerfect AI - Stop Losing Deals Because You Weren't Ready" />
-        <meta property="og:description" content="Practice objections with an AI that fights back. Get scored feedback in 30 seconds. Free demo — no signup." />
+        <meta property="og:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round — no signup." />
         <meta property="og:image" content="https://pitchperfectai.ai/og-image.png" />
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://pitchperfectai.ai/" />
         <meta property="twitter:title" content="PitchPerfect AI - Stop Losing Deals Because You Weren't Ready" />
-        <meta property="twitter:description" content="Practice objections with an AI that fights back. Get scored feedback in 30 seconds. Free demo — no signup." />
+        <meta property="twitter:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round — no signup." />
         <meta property="twitter:image" content="https://pitchperfectai.ai/og-image.png" />
         <script type="application/ld+json">
           {JSON.stringify({
@@ -134,7 +134,7 @@ const Index = () => {
             "applicationCategory": "BusinessApplication",
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
             "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "127" },
-            "description": "AI-powered sales training platform that helps you practice objection handling and perfect your pitch."
+            "description": "AI cold call challenge that pushes back with real objections so you crush your next deal."
           })}
         </script>
       </Helmet>
@@ -168,10 +168,10 @@ const Index = () => {
                   TRUSTED BY SALES REPS WHO HATE LOSING DEALS
                 </div>
                 <h1 id="hero-heading" className="pp-hero-h1">
-                  Never freeze on a sales call again.
+                  Can you close under pressure?
                 </h1>
                 <p className="pp-hero-sub">
-                  Practice against AI buyers who push back like the real thing. Get scored. Walk into your next call actually ready — in under 2&nbsp;minutes.
+                  Go head-to-head with AI buyers who push back with real objections. Get scored. Get better. Close more deals.
                 </p>
                 <div className="pp-hero-cta-row">
                   <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
@@ -200,7 +200,7 @@ const Index = () => {
                     <div className="pp-dot pp-dot-r" />
                     <div className="pp-dot pp-dot-y" />
                     <div className="pp-dot pp-dot-g" />
-                    <span className="pp-mockup-title">PitchPerfect AI — Cold Call Practice</span>
+                    <span className="pp-mockup-title">PitchPerfect AI — Cold Call Round</span>
                   </div>
                   <div className="pp-mockup-body">
                     <div className="pp-bubble pp-bubble-ai">
@@ -342,7 +342,7 @@ const Index = () => {
                 <div className="text-center">
                   <div className="pp-section-label">See it in action</div>
                   <h2 className="pp-section-title">Here's What a Real Session Looks Like.</h2>
-                  <p className="pp-section-sub mx-auto">A pricing objection practice round — from pushback to score — in under 3 minutes.</p>
+                  <p className="pp-section-sub mx-auto">A pricing objection round — from pushback to score — in under 3 minutes.</p>
                 </div>
                 <div className="pp-demo-window">
                   <div className="pp-demo-topbar">
@@ -353,7 +353,7 @@ const Index = () => {
                   <div className="pp-demo-body">
                     <div className="pp-demo-label">
                       <span className="pp-demo-live-dot" />
-                      Live Practice — Pricing Objection
+                      Live Round — Pricing Objection
                     </div>
                     <div className="pp-chat-bubble pp-bubble-prospect">
                       <span className="pp-chat-label pp-chat-label-prospect">AI Prospect</span>
@@ -431,7 +431,7 @@ const Index = () => {
                     <div className="pp-price-amount">$29<span>/mo</span></div>
                     <p className="pp-price-desc">For individual sales professionals</p>
                     <ul className="pp-price-features">
-                      <li>Unlimited practice sessions</li>
+                      <li>Unlimited rounds</li>
                       <li>All sales scenarios</li>
                       <li>Voice + text input</li>
                       <li>AI voice responses</li>
@@ -488,7 +488,7 @@ const Index = () => {
           <section className="pp-final-cta">
             <div className="pp-container text-center">
               <h2>Your next deal is this week.<br />Are you walking in cold?</h2>
-              <p>One practice cold call. That's all it takes to feel the difference.<br />No signup, no credit card, no one watching.</p>
+              <p>One round against the AI. That's all it takes to feel the difference.<br />No signup, no credit card, no one watching.</p>
               <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
                 <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
                 {coldCallLabel}

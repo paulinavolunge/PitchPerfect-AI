@@ -176,7 +176,7 @@ const Subscription: React.FC = () => {
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">{isPremium ? "∞" : "Limited"}</div>
-                    <div className="text-sm text-gray-600">Practice Sessions</div>
+                    <div className="text-sm text-gray-600">Rounds</div>
                   </div>
                 </div>
               </CardContent>

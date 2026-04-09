@@ -11,8 +11,8 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-1">
             <h3 className="font-semibold text-lg mb-4 text-white">About PitchPerfect AI</h3>
             <p className="text-gray-300 leading-relaxed">
-              Elevate your sales game with AI-powered pitch practice and personalized feedback.
-              Perfect your presentations, close more deals, and grow your career.
+              Elevate your sales game with the AI cold call challenge and personalized feedback.
+              Sharpen your close, crush more deals, and grow your career.
             </p>
           </div>
           
@@ -20,7 +20,7 @@ const Footer = () => {
             <h3 className="font-semibold text-lg mb-4 text-white">Platform</h3>
             <ul className="space-y-2">
               <li><Link to="/dashboard" className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">Dashboard</Link></li>
-              <li><Link to="/practice" className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">Practice</Link></li>
+              <li><Link to="/practice" className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">Rounds</Link></li>
               <li><Link to="/roleplay" className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">Roleplay</Link></li>
               <li><Link to="/tips" className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">AI Tips</Link></li>
             </ul>

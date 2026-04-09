@@ -12,9 +12,9 @@ interface QuickPracticeProps {
 const QuickPractice: React.FC<QuickPracticeProps> = ({ credits, onStartPractice }) => {
   const getButtonText = () => {
     if (credits === 0) {
-      return 'Top Up Credits to Practice';
+      return 'Top Up to Run Another Round';
     }
-    return `Start Practice (${credits} credit${credits !== 1 ? 's' : ''})`;
+    return `Start Round (${credits} credit${credits !== 1 ? 's' : ''})`;
   };
 
   const getButtonRoute = () => {
@@ -33,10 +33,10 @@ const QuickPractice: React.FC<QuickPracticeProps> = ({ credits, onStartPractice 
       <div className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="h-5 w-5 text-brand-green" />
-          <h3 className="text-xl font-medium text-brand-dark">Quick Practice</h3>
+          <h3 className="text-xl font-medium text-brand-dark">Quick Round</h3>
         </div>
         <p className="text-brand-dark/70 mb-6">
-          Ready to improve your pitch skills? Start a new practice session now.
+          Sharpen your close. Start your next round now.
         </p>
         <div className="space-y-3">
           {credits === 0 ? (

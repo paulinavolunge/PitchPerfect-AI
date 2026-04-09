@@ -125,7 +125,7 @@ const Tips = () => {
       }
       toast({
         title: "Tip Applied",
-        description: "This tip will be included in your next practice session",
+        description: "This tip will be included in your next round",
       });
       
       // Save to localStorage for persistence across sessions

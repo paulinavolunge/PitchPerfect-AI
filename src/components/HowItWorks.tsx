@@ -28,8 +28,8 @@ const steps = [
   },
   {
     number: "04",
-    title: "Practice & Improve",
-    description: "Apply the feedback, practice again, and track your improvement over time.",
+    title: "Run It Back",
+    description: "Apply the feedback, run another round, and crush your next deal.",
     icon: RefreshCw,
     color: "#9b87f5"
   }
