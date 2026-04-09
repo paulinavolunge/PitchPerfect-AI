@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Mic, Phone } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -41,11 +41,29 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string }> = ({ c
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [coldCallOpen, setColdCallOpen] = useState(false);
   const coldCallUsed = typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
   const coldCallLocked = coldCallUsed && !user;
   const coldCallLabel = coldCallLocked ? 'Sign Up to Keep Practicing' : 'Try a Cold Call — Free';
+
+  // Auto-open the cold call dialog when visitors arrive via ?cta=cold-call
+  // (used by the Pricing page CTA and the "Pricing" nav link).
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('cta') === 'cold-call') {
+      if (coldCallLocked) {
+        navigate('/login', { replace: true });
+        return;
+      }
+      setColdCallOpen(true);
+      trackEvent('cta_click', { button: 'try_cold_call', location: 'pricing_redirect' });
+      // Strip the query param so reloads / back-navigation don't keep re-opening
+      navigate('/', { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const handleColdCallClick = () => {
     if (coldCallLocked) {
