@@ -343,7 +343,8 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
                 highlights={scoreHighlights}
                 starterPackUrl="https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00"
                 powerPackUrl="https://buy.stripe.com/14AfZjboN9myenM2WK5sA01"
-                unlimitedUrl="/pricing"
+                // unlimitedUrl intentionally omitted — ScorePaywall's default
+                // handles the $29/mo Stripe link (or placeholder until created).
               />
             </Suspense>
           </div>

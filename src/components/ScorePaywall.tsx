@@ -10,8 +10,14 @@ export interface ScorePaywallProps {
   highlights: ScoreHighlight[];
   starterPackUrl?: string;
   powerPackUrl?: string;
-  unlimitedUrl: string;
+  unlimitedUrl?: string;
 }
+
+// TODO: Replace with the Stripe Payment Link for the $29/mo Unlimited Pro
+// subscription once it's been created in the Stripe dashboard. Until then,
+// this points at /signup so clicks from the tertiary link at least capture
+// the lead instead of going nowhere.
+const DEFAULT_UNLIMITED_URL = 'https://pitchperfectai.ai/signup';
 
 /**
  * Post-cold-call paywall. Shows the user's score + a handful of free
@@ -26,7 +32,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
   highlights,
   starterPackUrl = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00',
   powerPackUrl = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01',
-  unlimitedUrl,
+  unlimitedUrl = DEFAULT_UNLIMITED_URL,
 }) => {
   const scoreGradient =
     score < 50
