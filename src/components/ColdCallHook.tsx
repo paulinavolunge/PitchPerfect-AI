@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, Suspense, lazy } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Trophy, XCircle, X } from 'lucide-react';
+import { ArrowRight, Loader2, Trophy, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -10,6 +10,9 @@ import { trackEvent } from '@/utils/analytics';
 import GamifiedRoleplay, { type DebriefData } from '@/components/GamifiedRoleplay';
 
 import { VOICE_FEMALE, VOICE_MALE } from '@/hooks/useProspectVoice';
+
+// Lazy-load the paywall so it doesn't pull into the main bundle.
+const ScorePaywall = lazy(() => import('@/components/ScorePaywall'));
 
 // ── Cold call scenario config ──────────────────────────────────
 const COLD_CALL_PROSPECT_NAMES = [
@@ -185,26 +188,20 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
 
   const scorePercent = debrief ? Math.round(debrief.score * 10) : 0;
 
-  // Pick a "pro response" example once per debrief so it stays stable across re-renders.
-  const proResponse = useMemo(() => {
-    if (!debrief) return '';
-    const responses = [
-      "I hear you — most of my best clients said the same thing on the first call. Quick question: if I could show you how [similar company] cut their costs by 30% in 90 days, would that be worth 2 minutes?",
-      "Totally fair. I wouldn't take a random call either. Here's why I reached out to YOU specifically — I saw your team is scaling fast, and that's exactly the pain point we solve.",
-      "I respect that. Before you go — what if I sent you a 60-second case study? If it's not relevant, I'll never call again. Fair enough?",
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
-  }, [debrief]);
-
-  // Pick a "next challenge" teaser once per debrief.
-  const nextChallenge = useMemo(() => {
-    if (!debrief) return '';
-    const challenges = [
-      "A VP just told you: \"We don't have budget until Q3.\" You have 15 seconds. What do you say?",
-      "Your prospect says: \"Just send me an email.\" This is where 80% of reps lose the deal. Can you save it?",
-      "The gatekeeper says: \"She's in a meeting.\" Most reps hang up. Top reps get transferred. Which are you?",
-    ];
-    return challenges[Math.floor(Math.random() * challenges.length)];
+  // Extract the top 2-3 feedback items from the AI scoring response for the
+  // paywall's free "high-level bullets" row. Lead with one positive to feel good,
+  // then surface up to two gaps to create tension that drives the unlock.
+  const scoreHighlights = useMemo(() => {
+    if (!debrief) return [];
+    const items: Array<{ text: string; passed: boolean }> = [];
+    if (debrief.strengths[0]) items.push({ text: debrief.strengths[0], passed: true });
+    if (debrief.gaps[0]) items.push({ text: debrief.gaps[0], passed: false });
+    if (debrief.gaps[1]) items.push({ text: debrief.gaps[1], passed: false });
+    // If we don't have enough gaps to fill 3 slots, fall back to more strengths.
+    if (items.length < 3 && debrief.strengths[1]) {
+      items.push({ text: debrief.strengths[1], passed: true });
+    }
+    return items.slice(0, 3);
   }, [debrief]);
 
   // Read the guest's last score from localStorage for the locked-state heading.
@@ -330,177 +327,25 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
         )}
 
         {phase === 'scorecard' && debrief && (
-          <div className="overflow-y-auto p-6 sm:p-8" style={{ maxHeight: '90vh' }}>
-            {/* Score header */}
-            <div className="text-center mb-6">
-              {debrief.won ? (
-                <Trophy className="w-12 h-12 mx-auto text-yellow-500 mb-2" />
-              ) : (
-                <XCircle className="w-12 h-12 mx-auto text-red-500 mb-2" />
-              )}
-              <h2 className="text-2xl font-bold text-foreground mb-1">
-                {debrief.sessionStats?.hungUp
-                  ? 'They Hung Up'
-                  : debrief.won
-                    ? 'Nailed It!'
-                    : scorePercent >= 40
-                      ? 'Not Bad — But Can You Do Better?'
-                      : 'Tough Call'}
-              </h2>
-              <p className="text-muted-foreground text-sm">Your cold call score</p>
-            </div>
-
-            {/* Score display */}
-            <div className="bg-card border border-border rounded-xl p-5 mb-4 text-center">
-              <div className="text-4xl font-bold text-foreground mb-2">{scorePercent}%</div>
-              <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{
-                    width: `${scorePercent}%`,
-                    background: scorePercent >= 70 ? '#22c55e' : scorePercent >= 40 ? '#eab308' : '#ef4444',
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Quick feedback */}
-            <div className="bg-card border border-border rounded-xl p-4 mb-4">
-              <div className="space-y-2 text-sm">
-                {debrief.strengths.slice(0, 2).map((s, i) => (
-                  <div key={i} className="flex items-start gap-2 text-muted-foreground">
-                    <span className="text-green-500 shrink-0">+</span> {s}
-                  </div>
-                ))}
-                {debrief.gaps.slice(0, 2).map((g, i) => (
-                  <div key={i} className="flex items-start gap-2 text-muted-foreground">
-                    <span className="text-red-500 shrink-0">-</span> {g}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Tip */}
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4">
-              <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">Tip:</strong> {debrief.tip}
-              </p>
-            </div>
-
-            {/* Pro response example */}
-            <div className="bg-amber-50 border border-amber-200 border-l-4 border-amber-400 rounded-xl p-4 mb-4">
-              <h4 className="text-sm font-semibold text-amber-900 mb-2">
-                💡 What a top closer would say here:
-              </h4>
-              <p className="text-sm text-amber-900 italic mb-2">"{proResponse}"</p>
-              <p className="text-xs text-amber-800/80">
-                Notice the pattern: acknowledge, reframe, offer something specific.
-              </p>
-            </div>
-
-            {/* Your next challenge */}
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
-              <h4 className="text-sm font-semibold text-foreground mb-2">
-                🎯 Your next challenge:
-              </h4>
-              <p className="text-sm text-muted-foreground mb-3">{nextChallenge}</p>
-              <p className="text-sm font-bold text-foreground">
-                Sign up to take this on. It takes 90 seconds.
-              </p>
-            </div>
-
-            {/* CTA — challenge-driven */}
-            {user ? (
-              // Already logged in — send to practice
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-3">
-                  You scored <strong className="text-foreground">{scorePercent}%</strong>. The next objection is harder. Ready?
-                </p>
-                <Button
-                  onClick={() => { handleClose(); navigate('/practice'); }}
-                  className="w-full bg-primary-500 hover:bg-primary-600 text-white"
-                >
-                  Run It Back <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            ) : (
-              // Anonymous — inline signup
-              <div className="bg-card border border-border rounded-xl p-5">
-                <h3 className="font-semibold text-foreground text-center mb-1">
-                  You scored {scorePercent}%. A top rep scores 90%+. Close the gap.
-                </h3>
-                <p className="text-sm text-muted-foreground text-center mb-4">
-                  3 free rounds. That's all it takes to hear the difference in your next call.
-                </p>
-
-                {/* Google signup */}
-                <Button
-                  onClick={handleGoogleSignup}
-                  disabled={isGoogleLoading}
-                  className="w-full mb-3 bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-medium"
-                  variant="outline"
-                >
-                  {isGoogleLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <img src="https://www.google.com/favicon.ico" alt="" className="w-4 h-4 mr-2" />
-                  )}
-                  Continue with Google
-                </Button>
-
-                <div className="relative mb-3">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="bg-card px-2 text-muted-foreground">or</span>
-                  </div>
+          <div
+            className="overflow-y-auto bg-gray-900 p-4 sm:p-6"
+            style={{ maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh' }}
+          >
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center p-8 text-gray-400 text-sm">
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading scorecard…
                 </div>
-
-                {/* Email signup */}
-                <form onSubmit={handleEmailSignup} className="space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Your name"
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email address"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    required
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password (min 6 characters)"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={isSigningUp || !signupEmail || !signupPassword}
-                    className="w-full bg-primary-500 hover:bg-primary-600 text-white"
-                  >
-                    {isSigningUp ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</>
-                    ) : (
-                      <>Sign Up Free <ArrowRight className="w-4 h-4 ml-1" /></>
-                    )}
-                  </Button>
-                </form>
-
-                <p className="text-xs text-muted-foreground text-center mt-3">
-                  3 free rounds per month. No credit card. Cancel anytime.
-                </p>
-              </div>
-            )}
+              }
+            >
+              <ScorePaywall
+                score={scorePercent}
+                highlights={scoreHighlights}
+                starterPackUrl="https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00"
+                powerPackUrl="https://buy.stripe.com/14AfZjboN9myenM2WK5sA01"
+                unlimitedUrl="/pricing"
+              />
+            </Suspense>
           </div>
         )}
       </DialogContent>
