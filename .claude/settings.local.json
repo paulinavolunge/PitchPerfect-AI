@@ -4,7 +4,9 @@
       "Bash(npx vite:*)",
       "Bash(cat ./supabase/functions/*/index.ts)",
       "Bash(npx tsc:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "mcp__77b5a3da-a095-451b-b8b0-41ffb76fbc89__apply_migration",
+      "mcp__77b5a3da-a095-451b-b8b0-41ffb76fbc89__deploy_edge_function"
     ]
   }
 }
