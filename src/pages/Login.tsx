@@ -34,8 +34,13 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
 
+  // Pre-fill email if it was passed via ?email=... (e.g. when ScoreUnlock
+  // redirects a buyer whose email is already registered).
+  const prefilledEmail = new URLSearchParams(location.search).get('email') ?? '';
+
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: prefilledEmail, password: '' },
   });
 
   // Enhanced redirect logic for authenticated users

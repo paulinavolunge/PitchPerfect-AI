@@ -44,9 +44,34 @@ const Index = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [coldCallOpen, setColdCallOpen] = useState(false);
+  const [pendingUnlockSessionId, setPendingUnlockSessionId] = useState<string | null>(null);
   const coldCallUsed = typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
   const coldCallLocked = coldCallUsed && !user;
   const coldCallLabel = coldCallLocked ? 'Sign Up to Keep Practicing' : 'Try a Cold Call — Free';
+
+  // Check for an unfinished Stripe purchase whose buyer skipped the
+  // /scorecard-unlock signup step. If they're still anonymous, surface
+  // a sticky banner so they can finish setup. If they've since logged
+  // in, silently clear the flag.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem('pp_pending_unlock_session_id');
+    } catch {
+      return;
+    }
+    if (!stored) {
+      setPendingUnlockSessionId(null);
+      return;
+    }
+    if (user) {
+      try { localStorage.removeItem('pp_pending_unlock_session_id'); } catch {}
+      setPendingUnlockSessionId(null);
+      return;
+    }
+    setPendingUnlockSessionId(stored);
+  }, [user]);
 
   // Auto-open the cold call dialog when visitors arrive via ?cta=cold-call
   // (used by the Pricing page CTA and the "Pricing" nav link).
@@ -116,6 +141,20 @@ const Index = () => {
 
       <div className="min-h-screen pp-page">
         <SkipLink href="#main-content">Skip to main content</SkipLink>
+        {pendingUnlockSessionId && (
+          <div className="sticky top-0 z-[60] bg-emerald-500 text-gray-900 text-sm font-semibold px-4 py-2.5 shadow-md">
+            <div className="max-w-5xl mx-auto flex items-center justify-center gap-3 text-center">
+              <span>You have a purchase waiting — finish setup to unlock your rounds.</span>
+              <button
+                type="button"
+                onClick={() => navigate(`/scorecard-unlock?session_id=${encodeURIComponent(pendingUnlockSessionId)}`)}
+                className="underline underline-offset-2 hover:text-gray-700 whitespace-nowrap"
+              >
+                Finish setup →
+              </button>
+            </div>
+          </div>
+        )}
         <Navbar />
 
         <main>

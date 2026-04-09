@@ -148,6 +148,17 @@ const ScoreUnlock: React.FC = () => {
       });
 
       if (error) {
+        // If the buyer's email already has an account, send them to login
+        // with the email pre-filled instead of leaving them stuck.
+        const msg = (error.message || '').toLowerCase();
+        if (msg.includes('already registered') || msg.includes('already exists')) {
+          toast({
+            title: 'You already have an account — logging you in',
+          });
+          navigate(`/login?email=${encodeURIComponent(verified.email)}`);
+          return;
+        }
+
         toast({
           title: 'Could not create account',
           description: error.message,
