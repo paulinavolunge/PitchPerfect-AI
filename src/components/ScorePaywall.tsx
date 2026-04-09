@@ -13,11 +13,8 @@ export interface ScorePaywallProps {
   unlimitedUrl?: string;
 }
 
-// TODO: Replace with the Stripe Payment Link for the $29/mo Unlimited Pro
-// subscription once it's been created in the Stripe dashboard. Until then,
-// this points at /signup so clicks from the tertiary link at least capture
-// the lead instead of going nowhere.
-const DEFAULT_UNLIMITED_URL = 'https://pitchperfectai.ai/signup';
+// Stripe Payment Link for the $29/mo Unlimited Pro subscription.
+const DEFAULT_UNLIMITED_URL = 'https://buy.stripe.com/14A14pakJ7eq4NceFs5sA02';
 
 /**
  * Post-cold-call paywall. Shows the user's score + a handful of free
