@@ -6,7 +6,8 @@
       "Bash(npx tsc:*)",
       "Bash(npx supabase:*)",
       "mcp__77b5a3da-a095-451b-b8b0-41ffb76fbc89__apply_migration",
-      "mcp__77b5a3da-a095-451b-b8b0-41ffb76fbc89__deploy_edge_function"
+      "mcp__77b5a3da-a095-451b-b8b0-41ffb76fbc89__deploy_edge_function",
+      "mcp__77b5a3da-a095-451b-b8b0-41ffb76fbc89__execute_sql"
     ]
   }
 }
