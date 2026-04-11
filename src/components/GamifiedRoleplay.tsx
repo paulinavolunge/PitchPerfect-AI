@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { VoiceRecordingManager, processVoiceInput, type VoiceInputResult } from '@/utils/voiceInput';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useProspectVoice } from '@/hooks/useProspectVoice';
+import { isFacebookBrowser } from '@/utils/browserDetection';
 
 const WinCelebration = React.lazy(() => import('@/components/WinCelebration'));
 
@@ -270,6 +271,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     viewport.addEventListener('resize', handleResize);
     return () => viewport.removeEventListener('resize', handleResize);
   }, [scrollToBottom]);
+
+  // ── Facebook in-app browser detection ──────────────────────
+  // The FB WebView silently fails on MediaRecorder / getUserMedia so we
+  // surface a one-tap "Open in Browser" banner and gate voice mode behind
+  // the same check. Memoised so the UA regex runs once per mount.
+  const isFbBrowser = useMemo(() => isFacebookBrowser(), []);
+  const [fbBannerDismissed, setFbBannerDismissed] = useState(false);
 
   // ── Dynamic viewport height for mobile keyboard ───────────
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
@@ -909,6 +917,21 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       return;
     }
 
+    // Facebook in-app browser silently fails on MediaRecorder /
+    // getUserMedia / Web Audio. Block the recording attempt entirely
+    // and point the user at "Open in Browser" via the banner.
+    if (isFbBrowser) {
+      console.log('[VOICE] Facebook in-app browser — voice unsupported');
+      setFbBannerDismissed(false); // re-show banner if they tried to use voice
+      toast({
+        title: "Voice mode not supported here",
+        description: "Tap ⋯ in the top right, then 'Open in Browser' to use voice.",
+        variant: "destructive",
+      });
+      setInputMode('text');
+      return;
+    }
+
     // Check browser support (MediaRecorder-based, not SpeechRecognition)
     if (!navigator.mediaDevices?.getUserMedia) {
       console.log('[VOICE] getUserMedia not supported');
@@ -953,7 +976,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         variant: "destructive",
       });
     }
-  }, [isListening, sendMessage, muteSpeech, unmuteSpeech]);
+  }, [isListening, sendMessage, muteSpeech, unmuteSpeech, isFbBrowser]);
 
   // ── Reset ──────────────────────────────────────────────────
   const handleGoProCheckout = async (planId: string = 'solo', quantity: number = 1) => {
@@ -1512,6 +1535,41 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Facebook in-app browser warning banner */}
+      {isFbBrowser && !fbBannerDismissed && (
+        <div className="mt-3 mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 flex items-start gap-2 shrink-0">
+          <span className="flex-1 leading-snug">
+            For the best experience, tap <span className="font-semibold">⋯</span> in the top right, then <span className="font-semibold">"Open in Browser"</span>.
+          </span>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(window.location.href);
+                toast({ title: 'Link copied', description: 'Paste it into Safari or Chrome.' });
+              } catch {
+                toast({
+                  title: "Couldn't copy link",
+                  description: 'Long-press the address bar to copy manually.',
+                  variant: 'destructive',
+                });
+              }
+            }}
+            className="shrink-0 rounded-md border border-amber-400 bg-white px-2 py-1 text-[11px] font-semibold text-amber-900 hover:bg-amber-100"
+          >
+            Copy Link
+          </button>
+          <button
+            type="button"
+            onClick={() => setFbBannerDismissed(true)}
+            aria-label="Dismiss banner"
+            className="shrink-0 rounded-md p-1 text-amber-900/60 hover:text-amber-900"
+          >
+            <XCircle className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pt-4 shrink-0">

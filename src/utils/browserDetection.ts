@@ -1,4 +1,17 @@
 
+/**
+ * Detects Facebook's in-app browser (the WebView used when a link is opened
+ * from inside the Facebook app). Identified by "FBAN" / "FBAV" in the UA.
+ *
+ * Standalone, SSR-safe, side-effect free — does not touch the existing
+ * detectBrowser() pipeline so it can be tree-shaken independently.
+ */
+export const isFacebookBrowser = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV/.test(ua);
+};
+
 export interface BrowserInfo {
   name: string;
   version: string;
