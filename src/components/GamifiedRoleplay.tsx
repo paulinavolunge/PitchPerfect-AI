@@ -273,17 +273,32 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   // ── Dynamic viewport height for mobile keyboard ───────────
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
     const onResize = () => {
       setViewportHeight(vv.height);
-      // Scroll the last message into view when keyboard resizes viewport
+      // Scroll the last message and input into view when keyboard resizes viewport
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      if (document.activeElement === inputRef.current) {
+        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
     };
     vv.addEventListener('resize', onResize);
     return () => vv.removeEventListener('resize', onResize);
   }, []);
+
+  // Compute mobile keyboard height from visualViewport API (fallback: 300px).
+  // When the keyboard opens on mobile, window.innerHeight stays the same but
+  // visualViewport.height shrinks — the delta is roughly the keyboard height.
+  const keyboardHeight = (
+    typeof window !== 'undefined' &&
+    viewportHeight !== null &&
+    window.innerHeight > viewportHeight + 50
+  )
+    ? window.innerHeight - viewportHeight
+    : 300;
 
   // ── Patience timer: counts down when user is idle ──────────
   useEffect(() => {
@@ -1458,7 +1473,21 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   // ── Render: Conversation ───────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto flex flex-col relative" style={{ height: compact ? (viewportHeight ? `${Math.min(viewportHeight - 20, window.innerHeight * 0.7)}px` : '70vh') : viewportHeight ? `${viewportHeight}px` : '100dvh', padding: '0 1.5rem' }}>
+    <div
+      className="max-w-2xl mx-auto flex flex-col relative"
+      style={{
+        height: compact
+          ? (viewportHeight ? `${Math.min(viewportHeight - 20, window.innerHeight * 0.7)}px` : '70vh')
+          : viewportHeight ? `${viewportHeight}px` : '100dvh',
+        paddingLeft: '1.5rem',
+        paddingRight: '1.5rem',
+        // When the mobile keyboard is open, add bottom padding equal to the
+        // keyboard height so the sticky input is pushed above the keyboard
+        // instead of being obscured by it.
+        paddingBottom: isInputFocused ? `${keyboardHeight}px` : 0,
+        transition: 'padding-bottom 0.2s ease-out',
+      }}
+    >
       {/* Debrief loading overlay */}
       <AnimatePresence>
         {isTransitioningToDebrief && (
@@ -1541,7 +1570,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       {hangUpOverlay}
 
       {/* Chat messages */}
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div ref={chatContainerRef} className="flex-1 min-h-0 overflow-y-auto space-y-3 mb-4 pr-1" style={{ WebkitOverflowScrolling: 'touch' }}>
         <AnimatePresence>
           {messages.map((msg) => (
             <motion.div
@@ -1628,10 +1657,16 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             onChange={(e) => { setUserInput(e.target.value); if (e.target.value.length > 0) setIsUserTyping(true); }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !isListening && !isProcessingVoice) { e.preventDefault(); sendMessage(); } }}
             onFocus={() => {
+              setIsInputFocused(true);
+              // Wait for the mobile keyboard to open + the padding-bottom
+              // transition to settle, then scroll the input and the latest
+              // message into view so both sit above the keyboard.
               setTimeout(() => {
+                inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
               }, 300);
             }}
+            onBlur={() => setIsInputFocused(false)}
             placeholder={isProcessingVoice ? 'Processing voice…' : isListening ? 'Recording… tap mic or Send when done' : 'Type your response…'}
             disabled={isAiTyping || hungUp || isListening || isProcessingVoice}
             className="w-full rounded-xl border border-input bg-card px-4 py-3 pr-14 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
