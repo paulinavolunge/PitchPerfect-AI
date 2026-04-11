@@ -781,6 +781,12 @@
 }
 .pp-mobile-cta .pp-btn-primary { padding: 14px; font-size: 15px; }
 
+/* Hide the sticky mobile CTA while the cold-call scorecard/paywall is
+   visible — its z-index (100) would otherwise sit on top of the Radix
+   Dialog (z-50) and cover the purchase buttons. ColdCallHook adds the
+   .pp-scorecard-open class to <body> while the scorecard phase is mounted. */
+body.pp-scorecard-open .pp-mobile-cta { display: none !important; }
+
 /* ── SCROLL REVEAL ── */
 .pp-reveal {
   opacity: 0;

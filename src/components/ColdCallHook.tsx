@@ -89,6 +89,17 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     return () => vv.removeEventListener('resize', onResize);
   }, []);
 
+  // When the scorecard is visible, hide the page-level sticky mobile CTA
+  // (.pp-mobile-cta at z-index: 100) so it doesn't cover the purchase
+  // buttons inside the paywall. We toggle a body class so a single CSS
+  // rule in homepage.css can target it regardless of where the scorecard
+  // lives in the tree.
+  useEffect(() => {
+    if (!open || phase !== 'scorecard') return;
+    document.body.classList.add('pp-scorecard-open');
+    return () => document.body.classList.remove('pp-scorecard-open');
+  }, [open, phase]);
+
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -331,7 +342,9 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
 
         {phase === 'scorecard' && debrief && (
           <div
-            className="overflow-y-auto bg-gray-900 p-4 sm:p-6"
+            // pb-20 (80px) guarantees the purchase buttons clear any
+            // leftover fixed bottom elements (e.g. iOS Safari home bar).
+            className="overflow-y-auto bg-gray-900 p-4 pb-20 sm:p-6 sm:pb-20"
             style={{ maxHeight: vvHeight ? `${vvHeight - 20}px` : '90vh' }}
           >
             <Suspense
