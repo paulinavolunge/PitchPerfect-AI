@@ -126,21 +126,17 @@ export function useProspectVoice() {
         throw new Error(`TTS edge function error: ${response.status}`);
       }
 
-      const data = await response.json();
-
-      if (!data?.audioContent) {
-        throw new Error('No audioContent in response');
+      // Edge function streams raw MP3 bytes back with Content-Type audio/mpeg.
+      // Build the Blob straight from the arrayBuffer — no re-encoding, no
+      // AudioContext, no resampling — so the audio ElevenLabs produced is
+      // what the user hears.
+      const arrayBuffer = await response.arrayBuffer();
+      if (!arrayBuffer.byteLength) {
+        throw new Error('Empty TTS response body');
       }
+      console.log('[ProspectVoice] Audio received, bytes:', arrayBuffer.byteLength);
 
-      console.log('[ProspectVoice] Audio received, base64 length:', data.audioContent.length);
-
-      // Decode base64 → audio blob → play
-      const binaryStr = atob(data.audioContent);
-      const bytes = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
-      }
-      const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+      const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
 
       const audio = new Audio(audioUrl);

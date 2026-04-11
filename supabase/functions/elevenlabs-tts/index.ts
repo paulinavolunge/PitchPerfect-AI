@@ -63,8 +63,12 @@ serve(async (req) => {
     // Default voice: Roger (CwhRBWXzGAHq8TQ4Fs17) — natural, professional
     const selectedVoiceId = voiceId || 'CwhRBWXzGAHq8TQ4Fs17';
 
+    // output_format is an ElevenLabs query parameter, not a body field.
+    // mp3_44100_128 = 44.1kHz, 128kbps MP3 — the highest-quality standard
+    // MP3 output (pcm formats bypass ElevenLabs' audio post-processing and
+    // sound more robotic; lower-bitrate mp3 audibly degrades).
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}?output_format=mp3_44100_128`,
       {
         method: 'POST',
         headers: {
@@ -78,7 +82,9 @@ serve(async (req) => {
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.75,
-            style: 0.3,
+            // style 0.5 adds natural expressiveness — 0.3 was audibly
+            // flatter and was the primary cause of the "robotic" feel.
+            style: 0.5,
             use_speaker_boost: true,
           },
         }),
@@ -94,25 +100,23 @@ serve(async (req) => {
       );
     }
 
-    // Convert audio stream to base64 in chunks to avoid call stack overflow.
-    // The spread operator (...new Uint8Array(largeBuffer)) crashes on audio
-    // responses >~30KB because it passes every byte as a function argument.
+    // Stream the raw MP3 bytes directly to the client. Previously we
+    // base64-encoded the buffer into a JSON envelope — lossless but with
+    // ~33% bandwidth overhead and a chunking workaround for the V8 call
+    // stack. Returning the arrayBuffer means the client can build its Blob
+    // straight from response.arrayBuffer(), which is both faster and matches
+    // the standard audio/mpeg transport.
     const audioBuffer = await response.arrayBuffer();
-    const uint8 = new Uint8Array(audioBuffer);
-    const chunkSize = 32768; // 32KB chunks
-    const parts: string[] = [];
-    for (let i = 0; i < uint8.length; i += chunkSize) {
-      const chunk = uint8.subarray(i, i + chunkSize);
-      parts.push(String.fromCharCode.apply(null, Array.from(chunk)));
-    }
-    const base64Audio = btoa(parts.join(''));
+    console.log(`TTS generated: ${cleanText.length} chars → ${audioBuffer.byteLength} bytes audio`);
 
-    console.log(`TTS generated: ${cleanText.length} chars → ${audioBuffer.byteLength} bytes audio → ${base64Audio.length} base64 chars`);
-
-    return new Response(
-      JSON.stringify({ audioContent: base64Audio }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(audioBuffer, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': String(audioBuffer.byteLength),
+        'Cache-Control': 'no-store',
+      },
+    });
   } catch (err) {
     console.error('TTS function error:', err);
     return new Response(

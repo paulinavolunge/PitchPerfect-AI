@@ -328,59 +328,76 @@ const ConversationInterface = ({
         timestamp: new Date().toISOString()
       });
       
-      // Call ElevenLabs TTS edge function
-      const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
-        body: {
-          text: cleanText,
-          voiceId: 'CwhRBWXzGAHq8TQ4Fs17' // Roger - natural, friendly male voice
+      // Call ElevenLabs TTS edge function via raw fetch — the function now
+      // streams raw MP3 bytes (Content-Type: audio/mpeg) so we can build the
+      // Blob directly from the arrayBuffer with no re-encoding or decoding.
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
+      const supabaseAnonKey =
+        import.meta.env.VITE_SUPABASE_ANON_KEY ||
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        '';
+      let authToken = supabaseAnonKey;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.access_token) {
+          authToken = sessionData.session.access_token;
         }
+      } catch (_) {
+        /* guest — use anon key */
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+          apikey: supabaseAnonKey,
+        },
+        body: JSON.stringify({
+          text: cleanText,
+          voiceId: 'CwhRBWXzGAHq8TQ4Fs17', // Roger - natural, friendly male voice
+        }),
       });
-      
-      console.log('📡 ElevenLabs API response:', { data, error });
-      
-      if (error) {
-        console.error('❌ ELEVENLABS FAILED - Error:', error);
+
+      console.log('📡 ElevenLabs edge function status:', response.status);
+
+      if (!response.ok) {
+        const errBody = await response.text().catch(() => '');
+        console.error('❌ ELEVENLABS FAILED - Status:', response.status, errBody);
         console.log('🔄 FALLING BACK TO BROWSER TTS');
         fallbackToWebSpeech(cleanText);
         return;
       }
-      
-      if (data?.audioContent) {
-        console.log('✅ ELEVENLABS SUCCESS - Converting base64 audio to blob');
-        
-        // Convert base64 to audio and play
-        const audioBlob = new Blob(
-          [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
-          { type: 'audio/mpeg' }
-        );
-        
-        console.log('🎵 Created audio blob:', {
-          size: audioBlob.size,
-          type: audioBlob.type
-        });
-        
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        
-        audio.onended = () => {
-          console.log('🎵 ElevenLabs audio finished playing');
-          URL.revokeObjectURL(audioUrl);
-        };
-        
-        audio.onerror = (audioError) => {
-          console.error('❌ Audio playback failed:', audioError);
-          console.log('🔄 FALLING BACK TO BROWSER TTS due to audio error');
-          URL.revokeObjectURL(audioUrl);
-          fallbackToWebSpeech(cleanText);
-        };
-        
-        await audio.play();
-        console.log('🎤 ELEVENLABS AUDIO NOW PLAYING - Should be Roger\'s voice!');
-      } else {
-        console.error('❌ No audioContent in response');
+
+      const arrayBuffer = await response.arrayBuffer();
+      if (!arrayBuffer.byteLength) {
+        console.error('❌ Empty TTS response body');
         console.log('🔄 FALLING BACK TO BROWSER TTS - no audio content');
         fallbackToWebSpeech(cleanText);
+        return;
       }
+
+      console.log('✅ ELEVENLABS SUCCESS - Building audio blob from arrayBuffer');
+      const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+      console.log('🎵 Created audio blob:', { size: audioBlob.size, type: audioBlob.type });
+
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+
+      audio.onended = () => {
+        console.log('🎵 ElevenLabs audio finished playing');
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = (audioError) => {
+        console.error('❌ Audio playback failed:', audioError);
+        console.log('🔄 FALLING BACK TO BROWSER TTS due to audio error');
+        URL.revokeObjectURL(audioUrl);
+        fallbackToWebSpeech(cleanText);
+      };
+
+      await audio.play();
+      console.log('🎤 ELEVENLABS AUDIO NOW PLAYING - Should be Roger\'s voice!');
     } catch (error) {
       console.error('❌ ELEVENLABS EXCEPTION:', error);
       console.log('🔄 FALLING BACK TO BROWSER TTS due to exception');
