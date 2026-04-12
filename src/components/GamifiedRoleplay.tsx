@@ -15,6 +15,7 @@ import { useProspectVoice } from '@/hooks/useProspectVoice';
 import { isFacebookBrowser } from '@/utils/browserDetection';
 
 const WinCelebration = React.lazy(() => import('@/components/WinCelebration'));
+const ScorePaywall = React.lazy(() => import('@/components/ScorePaywall'));
 
 // ── Types ──────────────────────────────────────────────────────
 interface ObjectionCard {
@@ -1321,6 +1322,38 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           }}
         />
       </Suspense>
+    );
+  }
+
+  // ── Render: Guest paywall scorecard ─────────────────────────
+  // Guest (not logged in) users on /practice see the ScorePaywall instead of
+  // the full debrief, mirroring the cold-call-hook funnel. The cold call hook
+  // itself renders ScorePaywall from its own parent, so we skip this branch
+  // when isColdCallHook is set to avoid double-rendering.
+  if (phase === 'debrief' && debrief && isGuest && !isColdCallHook) {
+    const scorePercent = Math.round(debrief.score * 10);
+    const highlights: Array<{ text: string; passed: boolean }> = [];
+    if (debrief.strengths[0]) highlights.push({ text: debrief.strengths[0], passed: true });
+    if (debrief.gaps[0]) highlights.push({ text: debrief.gaps[0], passed: false });
+    if (debrief.gaps[1]) highlights.push({ text: debrief.gaps[1], passed: false });
+    if (highlights.length < 3 && debrief.strengths[1]) {
+      highlights.push({ text: debrief.strengths[1], passed: true });
+    }
+    return (
+      <div className="bg-gray-900 -mx-4 px-4 py-8 sm:py-10 rounded-2xl">
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center p-8 text-gray-400 text-sm">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading scorecard…
+            </div>
+          }
+        >
+          <ScorePaywall
+            score={scorePercent}
+            highlights={highlights.slice(0, 3)}
+          />
+        </Suspense>
+      </div>
     );
   }
 

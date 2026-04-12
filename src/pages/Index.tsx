@@ -47,7 +47,7 @@ const Index = () => {
   const [pendingUnlockSessionId, setPendingUnlockSessionId] = useState<string | null>(null);
   const coldCallUsed = typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
   const coldCallLocked = coldCallUsed && !user;
-  const coldCallLabel = coldCallLocked ? 'Get Started — More Rounds' : 'Try a Cold Call — Free';
+  const coldCallLabel = coldCallLocked ? 'Get Started Free' : 'Try a Cold Call — Free';
 
   // Check for an unfinished Stripe purchase whose buyer skipped the
   // /scorecard-unlock signup step. If they're still anonymous, surface
