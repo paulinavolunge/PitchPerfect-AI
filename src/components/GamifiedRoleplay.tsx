@@ -484,8 +484,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     setPhase('conversation');
     setIsAiTyping(true);
 
-    // Play phone ringing sound before first prospect message
-    await playCallStart();
+    // Play phone ringing sound before first prospect message — voice mode only.
+    // In text mode we skip the ringing and go straight to the first prospect message.
+    if (inputMode === 'voice') {
+      await playCallStart();
+    }
 
     try {
       const systemPrompt = presetScenario
