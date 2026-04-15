@@ -64,7 +64,7 @@ const Dashboard = () => {
       handleCheckout('solo');
       return;
     }
-    navigate('/roleplay');
+    navigate('/practice');
   };
 
   const sessionCount = dashboardData?.stats?.totalSessions || 0;

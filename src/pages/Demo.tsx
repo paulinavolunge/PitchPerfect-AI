@@ -296,7 +296,7 @@ const Demo = () => {
   };
 
   const handleTryMoreFeatures = () => {
-    navigate('/roleplay');
+    navigate('/practice');
   };
 
   const handleRetry = () => {

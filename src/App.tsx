@@ -129,7 +129,7 @@ function App() {
                                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                                 <Route path="/practice/:sessionId" element={<ProtectedRoute><SessionDetail /></ProtectedRoute>} />
                                 <Route path="/practice" element={<Practice />} />
-                                <Route path="/roleplay" element={<ProtectedRoute><RolePlay /></ProtectedRoute>} />
+                                <Route path="/roleplay" element={<Navigate to="/practice" replace />} />
                                 <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
                                 <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
                                 <Route path="/call-recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
