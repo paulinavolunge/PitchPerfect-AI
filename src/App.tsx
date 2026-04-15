@@ -29,7 +29,6 @@ const FreeTrial = React.lazy(() => import('@/pages/FreeTrial'));
 const Login = React.lazy(() => import('@/pages/Login'));
 const Signup = React.lazy(() => import('@/pages/Signup'));
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
-const RolePlay = React.lazy(() => import('@/pages/RolePlay'));
 const Progress = React.lazy(() => import('@/pages/Progress'));
 const Tips = React.lazy(() => import('@/pages/Tips'));
 const CallRecordings = React.lazy(() => import('@/pages/CallRecordings'));
@@ -50,7 +49,6 @@ const SessionDetail = React.lazy(() => import('@/pages/SessionDetail'));
 const Practice = React.lazy(() => import('@/pages/Practice'));
 const VoiceTraining = React.lazy(() => import('@/pages/VoiceTraining'));
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
-const AIRoleplay = React.lazy(() => import('@/pages/AIRoleplay'));
 const ScoreUnlock = React.lazy(() => import('@/pages/ScoreUnlock'));
 
 function PageLoader() {
@@ -116,7 +114,6 @@ function App() {
                                 {/* New functional routes */}
                                 <Route path="/voice-training" element={<ProtectedRoute><VoiceTraining /></ProtectedRoute>} />
                                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-                                <Route path="/ai-roleplay" element={<ProtectedRoute><AIRoleplay /></ProtectedRoute>} />
                                 
                                 {/* Authentication routes */}
                                 <Route path="/login" element={<Login />} />
