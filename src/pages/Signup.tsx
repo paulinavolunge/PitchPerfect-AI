@@ -39,8 +39,8 @@ const Signup = () => {
     } catch (err: any) {
       console.error('Post-signup checkout error:', err);
     }
-    // Fallback to dashboard if checkout fails
-    navigate('/dashboard');
+    // Fallback if checkout fails
+    navigate('/practice');
   };
 
   useEffect(() => {
@@ -51,7 +51,7 @@ const Signup = () => {
       if (planParam === 'solo' || planParam === 'team') {
         redirectToCheckout(planParam);
       } else {
-        navigate('/dashboard');
+        navigate('/practice');
       }
     }
   }, [user, navigate, isLoading]);
@@ -154,7 +154,7 @@ const Signup = () => {
           if (planParam === 'solo' || planParam === 'team') {
             redirectToCheckout(planParam);
           } else {
-            navigate('/dashboard');
+            navigate('/practice');
           }
         }, 500);
       }
@@ -179,7 +179,7 @@ const Signup = () => {
       
       const redirectPath = (planParam === 'solo' || planParam === 'team')
         ? `/signup?plan=${planParam}`
-        : '/dashboard';
+        : '/practice';
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

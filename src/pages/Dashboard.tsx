@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AlertCircle, Play, BarChart3, CreditCard, Crown, Lightbulb, Infinity, Zap, Users, Check, Loader2 } from 'lucide-react';
+import { AlertCircle, Play, BarChart3, CreditCard, Crown, Lightbulb, Infinity, Zap, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
@@ -13,9 +13,11 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import RecentSessions from '@/components/dashboard/RecentSessions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { isPricingEnabled } from '@/config/features';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+
+const STRIPE_STARTER_URL = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00';
+const STRIPE_POWER_URL = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01';
+const STRIPE_UNLIMITED_URL = 'https://buy.stripe.com/14A14pakJ7eq4NceFs5sA02';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -27,30 +29,10 @@ const Dashboard = () => {
     refreshSubscription,
   } = useAuth();
 
-  const { toast } = useToast();
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
 
-  const handleCheckout = async (planId: string, quantity: number = 1) => {
-    setCheckoutLoading(planId);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productType: planId, quantity },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (err: any) {
-      console.error('Checkout error:', err);
-      toast({
-        title: 'Payment Error',
-        description: err.message || 'Failed to start checkout. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setCheckoutLoading(null);
-    }
+  const goToCheckout = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   useEffect(() => {
@@ -61,7 +43,7 @@ const Dashboard = () => {
 
   const handleStartPractice = () => {
     if (!isPremium && (creditsRemaining ?? 0) === 0) {
-      handleCheckout('solo');
+      goToCheckout(STRIPE_STARTER_URL);
       return;
     }
     navigate('/practice');
@@ -124,8 +106,8 @@ const Dashboard = () => {
               <AlertDescription className="flex items-center justify-between">
                 <span className="text-amber-800">You have no credits remaining. Upgrade to continue practicing.</span>
                 {isPricingEnabled() && (
-                  <Button onClick={() => handleCheckout('solo')} disabled={checkoutLoading === 'solo'} variant="outline" size="sm" className="ml-4 border-amber-400 text-amber-800 hover:bg-amber-100">
-                    {checkoutLoading === 'solo' ? 'Processing...' : 'Upgrade to Pro — $29/mo'}
+                  <Button onClick={() => goToCheckout(STRIPE_UNLIMITED_URL)} variant="outline" size="sm" className="ml-4 border-amber-400 text-amber-800 hover:bg-amber-100">
+                    Upgrade to Pro — $29/mo
                   </Button>
                 )}
               </AlertDescription>
@@ -201,11 +183,10 @@ const Dashboard = () => {
                         {isPricingEnabled() && (
                           <Button
                             size="sm"
-                            onClick={() => handleCheckout('solo')}
-                            disabled={checkoutLoading === 'solo'}
+                            onClick={() => goToCheckout(STRIPE_UNLIMITED_URL)}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
                           >
-                            {checkoutLoading === 'solo' ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" />...</> : 'Upgrade — $29/mo'}
+                            Upgrade — $29/mo
                           </Button>
                         )}
                       </>
@@ -225,7 +206,7 @@ const Dashboard = () => {
                           Upgrade to Pro
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Unlock unlimited rounds, custom scenarios, and detailed analytics.
+                          Pick a round pack or go unlimited.
                         </p>
                       </div>
                       <Badge className="bg-blue-100 text-blue-800 border-blue-300">
@@ -234,52 +215,63 @@ const Dashboard = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Solo Plan */}
-                      <div className="bg-white rounded-xl border border-border p-5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Zap className="h-5 w-5 text-blue-600" />
-                          <h3 className="font-semibold text-foreground">Solo</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {/* Starter Pack */}
+                      <div className="bg-white rounded-xl border border-border p-5 flex flex-col">
+                        <h3 className="font-semibold text-foreground mb-2">Starter</h3>
+                        <div className="mb-3">
+                          <span className="text-2xl font-bold text-foreground">$4.99</span>
+                          <span className="text-muted-foreground text-sm"> one-time</span>
                         </div>
+                        <ul className="space-y-1.5 mb-4 text-sm text-muted-foreground flex-grow">
+                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Full scorecard unlocked</li>
+                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />5 practice rounds</li>
+                        </ul>
+                        <Button
+                          onClick={() => goToCheckout(STRIPE_STARTER_URL)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Unlock Scorecard + 5 Rounds — $4.99
+                        </Button>
+                      </div>
+
+                      {/* Power Pack */}
+                      <div className="bg-white rounded-xl border-2 border-blue-600 p-5 relative flex flex-col">
+                        <Badge className="absolute -top-2.5 left-4 bg-blue-600 text-white text-xs px-2 py-0.5">Best Value</Badge>
+                        <h3 className="font-semibold text-foreground mb-2">Power</h3>
+                        <div className="mb-3">
+                          <span className="text-2xl font-bold text-foreground">$9.99</span>
+                          <span className="text-muted-foreground text-sm"> one-time</span>
+                        </div>
+                        <ul className="space-y-1.5 mb-4 text-sm text-muted-foreground flex-grow">
+                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Full scorecard unlocked</li>
+                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />15 practice rounds</li>
+                        </ul>
+                        <Button
+                          onClick={() => goToCheckout(STRIPE_POWER_URL)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Get 15 rounds — $9.99
+                        </Button>
+                      </div>
+
+                      {/* Unlimited */}
+                      <div className="bg-white rounded-xl border border-border p-5 flex flex-col">
+                        <h3 className="font-semibold text-foreground mb-2">Unlimited</h3>
                         <div className="mb-3">
                           <span className="text-2xl font-bold text-foreground">$29</span>
                           <span className="text-muted-foreground">/mo</span>
                         </div>
-                        <ul className="space-y-1.5 mb-4 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Unlimited sessions</li>
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />AI scoring & feedback</li>
+                        <ul className="space-y-1.5 mb-4 text-sm text-muted-foreground flex-grow">
+                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Unlimited rounds</li>
                           <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />All objection scenarios</li>
+                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Cancel anytime</li>
                         </ul>
                         <Button
-                          onClick={() => handleCheckout('solo')}
-                          disabled={checkoutLoading === 'solo'}
+                          onClick={() => goToCheckout(STRIPE_UNLIMITED_URL)}
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         >
-                          {checkoutLoading === 'solo' ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Processing...</> : 'Get Solo — $29/mo'}
-                        </Button>
-                      </div>
-                      {/* Team Plan */}
-                      <div className="bg-white rounded-xl border-2 border-blue-600 p-5 relative">
-                        <Badge className="absolute -top-2.5 left-4 bg-blue-600 text-white text-xs px-2 py-0.5">Best Value</Badge>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Users className="h-5 w-5 text-blue-600" />
-                          <h3 className="font-semibold text-foreground">Team</h3>
-                        </div>
-                        <div className="mb-3">
-                          <span className="text-2xl font-bold text-foreground">$49</span>
-                          <span className="text-muted-foreground">/seat/mo</span>
-                        </div>
-                        <ul className="space-y-1.5 mb-4 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Everything in Solo</li>
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Team analytics dashboard</li>
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Shared leaderboards</li>
-                        </ul>
-                        <Button
-                          onClick={() => handleCheckout('team', 3)}
-                          disabled={checkoutLoading === 'team'}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          {checkoutLoading === 'team' ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Processing...</> : 'Get Team — $49/seat/mo'}
+                          Go unlimited — $29/mo
                         </Button>
                       </div>
                     </div>
