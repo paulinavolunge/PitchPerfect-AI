@@ -19,9 +19,7 @@ const Pricing = () => {
   const navigate = useNavigate();
 
   const handleStart = () => {
-    // Land on the homepage with a query flag that Index.tsx reads to
-    // auto-open the ColdCallHook dialog.
-    navigate('/?cta=cold-call');
+    navigate('/#pricing');
   };
 
   return (

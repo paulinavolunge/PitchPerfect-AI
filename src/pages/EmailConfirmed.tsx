@@ -8,12 +8,26 @@ import { CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { trackEvent } from '@/utils/analytics';
+import { useAuth } from '@/context/AuthContext';
 
 const EmailConfirmed = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
   const [countdown, setCountdown] = useState(5);
   const [hasNavigated, setHasNavigated] = useState(false);
+
+  // If Supabase auto-created a session on confirmation, skip the
+  // /login detour and send the user straight to /practice.
+  useEffect(() => {
+    if (!loading && user && !hasNavigated) {
+      setHasNavigated(true);
+      trackEvent('email_verified_auto_signin', {
+        timestamp: new Date().toISOString(),
+      });
+      navigate('/practice', { replace: true });
+    }
+  }, [user, loading, hasNavigated, navigate]);
 
   useEffect(() => {
     // Track email verification success
@@ -62,7 +76,7 @@ const EmailConfirmed = () => {
 
   const handleLoginNow = () => {
     if (hasNavigated) return;
-    
+
     setHasNavigated(true);
     trackEvent('email_verified_manual_redirect', {
       timestamp: new Date().toISOString()

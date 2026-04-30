@@ -92,9 +92,8 @@ const Navbar: React.FC = () => {
     { name: 'Rounds', href: '/practice' },
     { name: 'About', href: '/about' },
     { name: 'Compare', href: '/compare' },
-    // "Pricing" now redirects to the homepage cold call hook — every
-    // pricing decision should happen AFTER a user has tried a round.
-    ...(isPricingEnabled() ? [{ name: 'Pricing', href: '/?cta=cold-call' }] : []),
+    // "Pricing" jumps to the pricing section on the homepage.
+    ...(isPricingEnabled() ? [{ name: 'Pricing', href: '/#pricing' }] : []),
     { name: 'Demo', href: '/demo' }
   ];
 

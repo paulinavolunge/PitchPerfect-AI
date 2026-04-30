@@ -48,8 +48,8 @@ const Login = () => {
     console.log('Login: Auth state check', { user: !!user, loading });
     
     if (user && !loading) {
-      console.log('User already authenticated, redirecting to dashboard');
-      navigate('/dashboard', { replace: true });
+      console.log('User already authenticated, redirecting to practice');
+      navigate('/practice', { replace: true });
     }
   }, [user, loading, navigate]);
 
@@ -72,7 +72,7 @@ const Login = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-brand-dark">Redirecting to dashboard...</p>
+          <p className="text-brand-dark">Redirecting to practice...</p>
         </div>
       </div>
     );
@@ -112,8 +112,8 @@ const Login = () => {
             domain: window.location.hostname
           });
 
-          console.log('Login: Successful sign in, redirecting to dashboard');
-          navigate('/dashboard', { replace: true });
+          console.log('Login: Successful sign in, redirecting to practice');
+          navigate('/practice', { replace: true });
 
         } else if (event === 'SIGNED_OUT') {
           setLoginError(null);

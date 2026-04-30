@@ -73,8 +73,7 @@ const Index = () => {
     setPendingUnlockSessionId(stored);
   }, [user]);
 
-  // Auto-open the cold call dialog when visitors arrive via ?cta=cold-call
-  // (used by the Pricing page CTA and the "Pricing" nav link).
+  // Auto-open the cold call dialog when visitors arrive via ?cta=cold-call.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('cta') === 'cold-call') {
@@ -89,6 +88,23 @@ const Index = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
+
+  // Scroll to anchor sections (e.g. #pricing) on load and on hash change.
+  // Lazy-loaded sections may not be in the DOM yet, so retry briefly.
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    let attempts = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (attempts++ < 20) {
+        setTimeout(tryScroll, 100);
+      }
+    };
+    tryScroll();
+  }, [location.hash]);
 
   const handleColdCallClick = () => {
     if (coldCallLocked) {
