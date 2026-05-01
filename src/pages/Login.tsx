@@ -37,6 +37,10 @@ const Login = () => {
   // Pre-fill email if it was passed via ?email=... (e.g. when ScoreUnlock
   // redirects a buyer whose email is already registered).
   const prefilledEmail = new URLSearchParams(location.search).get('email') ?? '';
+  const redirectPath =
+    (location.state as { from?: { pathname?: string; search?: string } } | null)?.from
+      ? `${(location.state as { from: { pathname?: string; search?: string } }).from.pathname || '/dashboard'}${(location.state as { from: { search?: string } }).from.search || ''}`
+      : '/dashboard';
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -48,10 +52,10 @@ const Login = () => {
     console.log('Login: Auth state check', { user: !!user, loading });
     
     if (user && !loading) {
-      console.log('User already authenticated, redirecting to practice');
-      navigate('/practice', { replace: true });
+      console.log('User already authenticated, redirecting to:', redirectPath);
+      navigate(redirectPath, { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, redirectPath]);
 
   // Show simplified loading state while auth context loads
   if (loading) {
@@ -72,7 +76,7 @@ const Login = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-brand-dark">Redirecting to practice...</p>
+          <p className="text-brand-dark">Redirecting...</p>
         </div>
       </div>
     );
@@ -112,8 +116,8 @@ const Login = () => {
             domain: window.location.hostname
           });
 
-          console.log('Login: Successful sign in, redirecting to practice');
-          navigate('/practice', { replace: true });
+          console.log('Login: Successful sign in, redirecting to:', redirectPath);
+          navigate(redirectPath, { replace: true });
 
         } else if (event === 'SIGNED_OUT') {
           setLoginError(null);
@@ -123,7 +127,7 @@ const Login = () => {
     );
 
     return () => authListener.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, redirectPath]);
 
   // Auto-dismiss alerts after 6 seconds
   useEffect(() => {

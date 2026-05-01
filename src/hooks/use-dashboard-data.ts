@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -66,6 +66,8 @@ export interface DashboardData {
 
 export function useDashboardData() {
   const { user } = useAuth();
+  const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
   const [data, setData] = useState<DashboardData>({
     profile: { credits: 0, trialUsed: false, isPremium: false },
     recentSessions: [],
@@ -76,16 +78,19 @@ export function useDashboardData() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+
     if (!user?.id) {
       console.log('[dashboard] No user, skipping data fetch');
-      setIsLoading(false);
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
       return;
     }
 
+    if (!isMountedRef.current || requestId !== requestIdRef.current) return;
     setIsLoading(true);
     setError(null);
-    
-    const abortController = new AbortController();
 
     try {
       console.log('[dashboard] Loading data for user:', user.id);
@@ -111,7 +116,7 @@ export function useDashboardData() {
           .limit(5),
       ]);
 
-      if (abortController.signal.aborted) return;
+      if (!isMountedRef.current || requestId !== requestIdRef.current) return;
 
       // Validate and process profile data
       let profile = { credits: 0, trialUsed: false, isPremium: false };
@@ -202,6 +207,7 @@ export function useDashboardData() {
         },
       ];
 
+      if (!isMountedRef.current || requestId !== requestIdRef.current) return;
       setData({
         profile,
         recentSessions: recentSessions.slice(0, 5),
@@ -220,13 +226,15 @@ export function useDashboardData() {
     } catch (err) {
       console.error('[dashboard] Error loading data:', err);
       const errorMessage = 'Couldn\'t load dashboard. Please retry.';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
-
-    return () => abortController.abort();
   }, [user?.id]);
 
   const refetch = useCallback(() => {
@@ -234,7 +242,12 @@ export function useDashboardData() {
   }, [fetchDashboardData]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchDashboardData();
+    return () => {
+      isMountedRef.current = false;
+      requestIdRef.current += 1;
+    };
   }, [fetchDashboardData]);
 
   return {
