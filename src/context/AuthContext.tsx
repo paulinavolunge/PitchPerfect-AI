@@ -38,6 +38,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Track if initial auth has been set to prevent race condition
   const authInitialized = useRef(false);
   const previousUserId = useRef<string | null>(null);
+  const userRef = useRef<User | null>(null);
+  const loadingRef = useRef(true);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
 
   useEffect(() => {
     console.log('AuthContext: Initializing auth state');
@@ -51,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authInitialized.current = true;
         
         // Handle different auth events with proper data isolation
-        if (event === 'SIGNED_OUT' || (!currentSession && user)) {
+        if (event === 'SIGNED_OUT' || (!currentSession && userRef.current)) {
           console.log('🧹 User signed out, clearing all session data...');
           
           // Clear all user-specific data (preserve consent)
@@ -67,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           previousUserId.current = null;
           
           console.log('✅ Session data cleared for logout');
+          setInitError(null);
           setLoading(false);
         } else if (event === 'SIGNED_IN' && currentSession?.user?.id) {
           console.log('🚀 User signed in, initializing clean session...');
@@ -104,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           console.log('✅ Clean session initialized for user:', currentSession.user.id);
+          setInitError(null);
           setLoading(false);
         } else if (event === 'TOKEN_REFRESHED' && currentSession?.user?.id) {
           // Token refresh - maintain current state but verify data integrity
@@ -130,11 +142,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setIsNewUser(true);
             }
           }
+          setInitError(null);
           setLoading(false);
         } else {
           // Handle other events (PASSWORD_RECOVERY, etc.)
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
+          setInitError(null);
           setLoading(false);
         }
         
@@ -187,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Add timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      if (loading && !authInitialized.current) {
+      if (loadingRef.current && !authInitialized.current) {
         console.error('Auth initialization timeout - setting loading to false');
         setLoading(false);
         setInitError('Authentication initialization timed out. Please refresh the page.');

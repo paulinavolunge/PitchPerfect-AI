@@ -107,7 +107,7 @@ function App() {
                                 <Route path="/about" element={<About />} />
                                 <Route path="/compare" element={<Compare />} />
                                 {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
-                                <Route path="/demo" element={<Navigate to="/practice" replace />} />
+                                <Route path="/demo" element={<Demo />} />
                                 <Route path="/free-trial" element={<FreeTrial />} />
                                 <Route path="/scorecard-unlock" element={<ScoreUnlock />} />
                                 
@@ -125,7 +125,7 @@ function App() {
                                 {/* Protected routes */}
                                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                                 <Route path="/practice/:sessionId" element={<ProtectedRoute><SessionDetail /></ProtectedRoute>} />
-                                <Route path="/practice" element={<Practice />} />
+                                <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
                                 <Route path="/roleplay" element={<Navigate to="/practice" replace />} />
                                 <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
                                 <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
