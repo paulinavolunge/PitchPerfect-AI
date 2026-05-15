@@ -1,0 +1,20 @@
+# PitchPerfect AI
+
+> AI-powered sales pitch coach. Practice cold calls with realistic AI prospects, handle objections, and get instant scored feedback to close more deals.
+
+## Pages
+
+- [Home](/): Overview of PitchPerfect AI and what it does.
+- [About](/about): Mission and team behind PitchPerfect AI.
+- [Compare](/compare): How PitchPerfect AI compares to other sales training tools.
+- [Pricing](/pricing): Plans and pricing for individuals and teams.
+- [Demo](/demo): Try a live AI roleplay demo without signing up.
+- [Free Trial](/free-trial): Start a free trial with full features.
+- [Sign up](/signup): Create an account.
+- [Login](/login): Sign in to your account.
+
+## Optional
+
+- [Terms of Service](/terms)
+- [Privacy Policy](/privacy)
+- [Data Safety](/data-safety)
