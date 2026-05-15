@@ -137,6 +137,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_credits: {
+        Row: {
+          consumed_at: string | null
+          consumed_user_id: string | null
+          created_at: string
+          credits: number
+          email: string
+          id: string
+          purchase_type: string
+          stripe_customer_id: string | null
+          stripe_session_id: string
+          stripe_subscription_id: string | null
+        }
+        Insert: {
+          consumed_at?: string | null
+          consumed_user_id?: string | null
+          created_at?: string
+          credits: number
+          email: string
+          id?: string
+          purchase_type?: string
+          stripe_customer_id?: string | null
+          stripe_session_id: string
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          consumed_at?: string | null
+          consumed_user_id?: string | null
+          created_at?: string
+          credits?: number
+          email?: string
+          id?: string
+          purchase_type?: string
+          stripe_customer_id?: string | null
+          stripe_session_id?: string
+          stripe_subscription_id?: string | null
+        }
+        Relationships: []
+      }
       pitch_recordings: {
         Row: {
           audio_content: string | null
@@ -645,6 +684,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_user_id_by_email: { Args: { p_email: string }; Returns: string }
       initialize_admin_system: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
       is_authenticated_user: { Args: never; Returns: boolean }
