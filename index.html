@@ -14,13 +14,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#ffffff" />
     <link rel="icon" href="/favicon.ico" />
-    <title>PitchPerfect AI</title>
 
-    <!-- Open Graph — required so Facebook crawlers and the FB in-app
-         browser render link previews with the right title/description. -->
+    <title>PitchPerfect AI — AI Cold Call Practice & Pitch Coach</title>
+    <meta name="description" content="Practice cold calls with AI roleplay. Get instant feedback on your pitch, handle objections, and close more deals with PitchPerfect AI." />
+    <link rel="canonical" href="https://www.pitchperfectai.ai/" />
+
+    <!-- Open Graph / social previews -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="PitchPerfect AI" />
+    <meta property="og:site_name" content="PitchPerfect AI" />
+    <meta property="og:title" content="PitchPerfect AI — AI Cold Call Practice & Pitch Coach" />
     <meta property="og:description" content="Practice cold calls with AI. Get scored. Close more deals." />
+    <meta property="og:url" content="https://www.pitchperfectai.ai/" />
+    <meta property="og:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PitchPerfect AI — AI Cold Call Practice & Pitch Coach" />
+    <meta name="twitter:description" content="Practice cold calls with AI. Get scored. Close more deals." />
+    <meta name="twitter:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "PitchPerfect AI",
+      "url": "https://www.pitchperfectai.ai/",
+      "logo": "https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "PitchPerfect AI",
+      "url": "https://www.pitchperfectai.ai/"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "PitchPerfect AI",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "url": "https://www.pitchperfectai.ai/",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How does PitchPerfect AI work?",
+          "acceptedAnswer": { "@type": "Answer", "text": "You roleplay sales calls with an AI prospect. After each session you get a score and concrete feedback on your pitch, pacing, and objection handling." }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need a credit card to start?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. You can start practicing for free, no credit card required." }
+        },
+        {
+          "@type": "Question",
+          "name": "What kinds of sales scenarios are supported?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Cold calls, discovery calls, objection handling, and custom scenarios across B2B and B2C industries." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work on mobile?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. PitchPerfect AI runs in any modern browser and is available on iOS and Android." }
+        }
+      ]
+    }
+    </script>
 
     <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,7 +95,7 @@
     <link rel="preconnect" href="https://ggpodadyycvmmxifqwlp.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://ggpodadyycvmmxifqwlp.supabase.co" />
 
-    <!-- Async font loading — only weights actually used, display=swap for no FOIT -->
+    <!-- Async font loading — display=swap so text paints with system fallback first -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
@@ -42,8 +109,6 @@
       .root-spinner{width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #2563eb;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
       @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
     </style>
-
-    <!-- Custom event tracking managed by src/utils/analytics.ts -->
   </head>
   <body>
     <div id="root">
