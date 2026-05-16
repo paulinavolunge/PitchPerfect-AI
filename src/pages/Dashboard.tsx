@@ -19,12 +19,14 @@ import { Badge } from '@/components/ui/badge';
 import AICoachingCard from '@/components/dashboard/AICoachingCard';
 import FirstRoundEmptyState from '@/components/dashboard/FirstRoundEmptyState';
 import { useRoundStats } from '@/hooks/useRoundStats';
+import { useOnboardingGate } from '@/hooks/useOnboardingGate';
 
 const STRIPE_STARTER_URL = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00';
 const STRIPE_POWER_URL = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01';
 const STRIPE_UNLIMITED_URL = 'https://buy.stripe.com/14A14pakJ7eq4NceFs5sA02';
 
 const Dashboard = () => {
+  useOnboardingGate(); // redirect to /onboarding when profile.role is NULL
   const navigate = useNavigate();
   const { isGuestMode } = useGuestMode();
   const {

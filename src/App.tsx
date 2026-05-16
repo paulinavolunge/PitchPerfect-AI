@@ -51,6 +51,7 @@ const Practice = React.lazy(() => import('@/pages/Practice'));
 const VoiceTraining = React.lazy(() => import('@/pages/VoiceTraining'));
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
 const ScoreUnlock = React.lazy(() => import('@/pages/ScoreUnlock'));
+const OnboardingRole = React.lazy(() => import('@/pages/OnboardingRole'));
 
 function PageLoader() {
   return (
@@ -118,6 +119,10 @@ function App() {
                                 <Route path="/voice-training" element={<ProtectedRoute><VoiceTraining /></ProtectedRoute>} />
                                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                                 
+                                {/* Onboarding — protected but intentionally outside ProtectedRoute
+                                    so the gate itself can redirect here from any protected page */}
+                                <Route path="/onboarding" element={<ProtectedRoute><OnboardingRole /></ProtectedRoute>} />
+
                                 {/* Authentication routes */}
                                 <Route path="/login" element={<Login />} />
                                 <Route path="/signup" element={<Signup />} />
