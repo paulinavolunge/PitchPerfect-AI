@@ -55,42 +55,50 @@ const DashboardHero: React.FC<DashboardHeroProps> = ({ firstName, onStartPractic
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 items-stretch">
-        {/* LEFT — streak widget */}
+      {/*
+        Mobile: StreakChip on top, greeting + CTA below (stacked).
+        Desktop: streak chip in 1/4 left column, greeting in 3/4 right.
+      */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 items-stretch">
+        {/* Streak chip — full-width pill on mobile, left column on desktop */}
         <div className="md:col-span-1">
           <StreakChipWidget streak={streak} atRisk={atRisk} freezesAvailable={freezesAvailable} />
         </div>
 
-        {/* RIGHT — greeting + CTA */}
-        <div className="md:col-span-3 flex flex-col justify-center gap-3 rounded-2xl bg-card border border-border p-5">
+        {/* Greeting + CTA */}
+        <div className="md:col-span-3 flex flex-col justify-center gap-4 rounded-2xl bg-card border border-border p-5">
           <div>
-            <h1 className="text-3xl font-bold text-foreground leading-tight">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
               Hey, {firstName} —
             </h1>
-            <p className="mt-1 text-base text-muted-foreground">{subtitle}</p>
+            <p className="mt-1 text-sm md:text-base text-muted-foreground">{subtitle}</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
+            {/* Full-width on mobile, auto-width on sm+ */}
             <Button
               onClick={handleCTA}
               className={[
                 "bg-primary text-primary-foreground shadow-lg",
-                "h-14 md:h-16 px-8",
-                "text-lg md:text-xl font-semibold",
-                "flex items-center gap-2",
+                "h-12 md:h-14 px-6 md:px-8",
+                "text-base md:text-lg font-semibold",
+                "w-full sm:w-auto",
+                "flex items-center justify-center gap-2 min-h-[44px]",
               ].join(" ")}
             >
-              <Play className="h-5 w-5 fill-current" />
+              <Play className="h-5 w-5 fill-current flex-shrink-0" />
               Start a 90-sec round
             </Button>
 
-            {/* Show freeze button prominently when streak is at risk */}
+            {/* Freeze button — only shown at-risk, full-width on mobile */}
             {atRisk && streak > 0 && (
-              <StreakFreezeButton
-                freezesAvailable={freezesAvailable}
-                atRisk={atRisk}
-                onUseFreeze={useFreeze}
-              />
+              <div className="w-full sm:w-auto">
+                <StreakFreezeButton
+                  freezesAvailable={freezesAvailable}
+                  atRisk={atRisk}
+                  onUseFreeze={useFreeze}
+                />
+              </div>
             )}
           </div>
         </div>

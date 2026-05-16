@@ -20,6 +20,7 @@ import AICoachingCard from '@/components/dashboard/AICoachingCard';
 import FirstRoundEmptyState from '@/components/dashboard/FirstRoundEmptyState';
 import { useRoundStats } from '@/hooks/useRoundStats';
 import { useOnboardingGate } from '@/hooks/useOnboardingGate';
+import MobileBottomBar from '@/components/layout/MobileBottomBar';
 
 const STRIPE_STARTER_URL = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00';
 const STRIPE_POWER_URL = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01';
@@ -69,8 +70,12 @@ const Dashboard = () => {
 
       <Navbar />
 
-      <main className="flex-grow pt-24 pb-12">
-        <div className="container mx-auto px-4">
+      {/* Sticky bottom action bar — mobile only, hides on keyboard focus */}
+      <MobileBottomBar onStartPractice={handleStartPractice} />
+
+      {/* pb-24 on mobile creates clearance above the MobileBottomBar (56px pill + 8px gap) */}
+      <main className="flex-grow pt-20 pb-24 md:pb-12">
+        <div className="container mx-auto px-4 max-w-5xl">
           {/* First-round empty state — full replacement when user has no scored rounds */}
           {!isLoading && !roundStatsLoading && roundStats.scoredCount === 0 && (
             <FirstRoundEmptyState />
@@ -113,104 +118,93 @@ const Dashboard = () => {
           {isLoading ? (
             <DashboardSkeleton />
           ) : (
-            <>
-              {/* Performance stats strip — Avg Score, Rounds This Week, Weakest Area */}
-              <StatsStrip />
+            /*
+              Mobile-first block order (CSS flex order):
+                order-1 / md:order-1  AICoachingCard — personalised, highest engagement
+                order-2 / md:order-2  StatsStrip      — quick performance numbers
+                order-3 / md:order-3  RecentRoundsList
+                order-4 / md:order-4  Upgrade CTA     — commercial, lowest urgency
+            */
+            <div className="flex flex-col">
+              {/* AICoachingCard: mobile=1st, desktop=1st (everyone benefits) */}
+              <div className="order-1 mb-6">
+                <AICoachingCard />
+              </div>
 
-              {/* Upgrade CTA for free users */}
-              {!isPremium && isPricingEnabled() && (
-                <Card className="mb-8 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-                          <Zap className="h-5 w-5 text-blue-600" />
-                          Upgrade to Pro
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Pick a round pack or go unlimited.
-                        </p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800 border-blue-300">
-                        Current: Free
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {/* Starter Pack */}
-                      <div className="bg-white rounded-xl border border-border p-5 flex flex-col">
-                        <h3 className="font-semibold text-foreground mb-2">Starter</h3>
-                        <div className="mb-3">
-                          <span className="text-2xl font-bold text-foreground">$4.99</span>
-                          <span className="text-muted-foreground text-sm"> one-time</span>
-                        </div>
-                        <ul className="space-y-1.5 mb-4 text-sm text-muted-foreground flex-grow">
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Full scorecard unlocked</li>
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />5 practice rounds</li>
-                        </ul>
-                        <Button
-                          onClick={() => goToCheckout(STRIPE_STARTER_URL)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          Unlock Scorecard + 5 Rounds — $4.99
-                        </Button>
-                      </div>
+              {/* StatsStrip: mobile=2nd, desktop=2nd */}
+              <div className="order-2">
+                <StatsStrip />
+              </div>
 
-                      {/* Power Pack */}
-                      <div className="bg-white rounded-xl border-2 border-blue-600 p-5 relative flex flex-col">
-                        <Badge className="absolute -top-2.5 left-4 bg-blue-600 text-white text-xs px-2 py-0.5">Best Value</Badge>
-                        <h3 className="font-semibold text-foreground mb-2">Power</h3>
-                        <div className="mb-3">
-                          <span className="text-2xl font-bold text-foreground">$9.99</span>
-                          <span className="text-muted-foreground text-sm"> one-time</span>
-                        </div>
-                        <ul className="space-y-1.5 mb-4 text-sm text-muted-foreground flex-grow">
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Full scorecard unlocked</li>
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />15 practice rounds</li>
-                        </ul>
-                        <Button
-                          onClick={() => goToCheckout(STRIPE_POWER_URL)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          Get 15 rounds — $9.99
-                        </Button>
-                      </div>
-
-                      {/* Unlimited */}
-                      <div className="bg-white rounded-xl border border-border p-5 flex flex-col">
-                        <h3 className="font-semibold text-foreground mb-2">Unlimited</h3>
-                        <div className="mb-3">
-                          <span className="text-2xl font-bold text-foreground">$29</span>
-                          <span className="text-muted-foreground">/mo</span>
-                        </div>
-                        <ul className="space-y-1.5 mb-4 text-sm text-muted-foreground flex-grow">
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Unlimited rounds</li>
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />All objection scenarios</li>
-                          <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" />Cancel anytime</li>
-                        </ul>
-                        <Button
-                          onClick={() => goToCheckout(STRIPE_UNLIMITED_URL)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          Go unlimited — $29/mo
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Recent Rounds — self-contained with status filtering */}
-              <div className="mb-8">
+              {/* Recent Rounds: mobile=3rd, desktop=3rd */}
+              <div className="order-3 mb-6">
                 <RecentRoundsList onStartPractice={handleStartPractice} />
               </div>
 
-              {/* AI Coaching Card — most recent scored round with inline suggestions */}
-              <div className="mb-8">
-                <AICoachingCard />
-              </div>
-            </>
+              {/* Upgrade CTA: mobile=4th (least priority), desktop=4th */}
+              {!isPremium && isPricingEnabled() && (
+                <div className="order-4 mb-6">
+                  <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                    <CardHeader>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                            <Zap className="h-4 w-4 text-blue-600" />
+                            Upgrade to Pro
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            Round packs or unlimited — pick your pace.
+                          </p>
+                        </div>
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-300">Free plan</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* Starter */}
+                        <div className="bg-white rounded-xl border border-border p-4 flex flex-col">
+                          <p className="font-semibold text-sm mb-1">Starter</p>
+                          <p className="text-xl font-bold mb-2">$4.99 <span className="text-xs font-normal text-muted-foreground">one-time</span></p>
+                          <ul className="text-xs text-muted-foreground space-y-1 mb-3 flex-grow">
+                            <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />Full scorecard</li>
+                            <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />5 rounds</li>
+                          </ul>
+                          <Button onClick={() => goToCheckout(STRIPE_STARTER_URL)} size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs min-h-[44px]">
+                            Get Starter — $4.99
+                          </Button>
+                        </div>
+                        {/* Power */}
+                        <div className="bg-white rounded-xl border-2 border-blue-600 p-4 relative flex flex-col">
+                          <Badge className="absolute -top-2.5 left-3 bg-blue-600 text-white text-[10px] px-2 py-0.5">Best Value</Badge>
+                          <p className="font-semibold text-sm mb-1">Power</p>
+                          <p className="text-xl font-bold mb-2">$9.99 <span className="text-xs font-normal text-muted-foreground">one-time</span></p>
+                          <ul className="text-xs text-muted-foreground space-y-1 mb-3 flex-grow">
+                            <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />Full scorecard</li>
+                            <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />15 rounds</li>
+                          </ul>
+                          <Button onClick={() => goToCheckout(STRIPE_POWER_URL)} size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs min-h-[44px]">
+                            Get Power — $9.99
+                          </Button>
+                        </div>
+                        {/* Unlimited */}
+                        <div className="bg-white rounded-xl border border-border p-4 flex flex-col">
+                          <p className="font-semibold text-sm mb-1">Unlimited</p>
+                          <p className="text-xl font-bold mb-2">$29<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
+                          <ul className="text-xs text-muted-foreground space-y-1 mb-3 flex-grow">
+                            <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />Unlimited rounds</li>
+                            <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />All scenarios</li>
+                            <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />Cancel anytime</li>
+                          </ul>
+                          <Button onClick={() => goToCheckout(STRIPE_UNLIMITED_URL)} size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs min-h-[44px]">
+                            Go unlimited — $29/mo
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
           )}
           </>)}
         </div>
