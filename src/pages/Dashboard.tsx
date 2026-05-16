@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AlertCircle, BarChart3, CreditCard, Crown, Lightbulb, Infinity, Zap, Check } from 'lucide-react';
+import { AlertCircle, BarChart3, CreditCard, Crown, Infinity, Zap, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
@@ -16,6 +16,7 @@ import DashboardHero from '@/components/dashboard/DashboardHero';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { isPricingEnabled } from '@/config/features';
 import { Badge } from '@/components/ui/badge';
+import AICoachingCard from '@/components/dashboard/AICoachingCard';
 
 const STRIPE_STARTER_URL = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00';
 const STRIPE_POWER_URL = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01';
@@ -255,30 +256,10 @@ const Dashboard = () => {
                 <RecentRoundsList onStartPractice={handleStartPractice} />
               </div>
 
-              {/* Quick Tips - only shown after user has sessions */}
-              {sessionCount > 0 && dashboardData?.tips && dashboardData.tips.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Lightbulb className="h-5 w-5 text-amber-500" />
-                      Quick Tips
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {dashboardData.tips.slice(0, 3).map((tip) => (
-                        <li key={tip.id} className="flex items-start gap-2">
-                          <span className="text-primary mt-1">•</span>
-                          <div>
-                            <p className="font-medium text-sm text-foreground">{tip.title}</p>
-                            <p className="text-xs text-muted-foreground">{tip.description}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
+              {/* AI Coaching Card — most recent scored round with inline suggestions */}
+              <div className="mb-8">
+                <AICoachingCard />
+              </div>
             </>
           )}
         </div>
