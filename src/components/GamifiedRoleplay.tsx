@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import UpgradePaywallModal from '@/components/practice/UpgradePaywallModal';
 import { toast } from '@/hooks/use-toast';
+import { useUpgradeTriggers } from '@/hooks/useUpgradeTriggers';
 import { VoiceRecordingManager, processVoiceInput, type VoiceInputResult } from '@/utils/voiceInput';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useProspectVoice } from '@/hooks/useProspectVoice';
@@ -16,6 +17,7 @@ import { isFacebookBrowser } from '@/utils/browserDetection';
 
 const WinCelebration = React.lazy(() => import('@/components/WinCelebration'));
 const ScorePaywall = React.lazy(() => import('@/components/ScorePaywall'));
+const ContextualUpgradeModal = React.lazy(() => import('@/components/upgrade/ContextualUpgradeModal'));
 
 // ── Types ──────────────────────────────────────────────────────
 interface ObjectionCard {
@@ -161,6 +163,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const [showPaywall, setShowPaywall] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showWinCelebration, setShowWinCelebration] = useState(false);
+  const [showContextualUpgrade, setShowContextualUpgrade] = useState(false);
+  const upgradeEventIdRef = useRef<string | null>(null);
+  const pendingResetRef = useRef<(() => void) | null>(null);
+
+  const { shouldShow: upgradeShouldShow, markShown: upgradeMarkShown,
+          markDismissed: upgradeMarkDismissed, markConverted: upgradeMarkConverted } =
+    useUpgradeTriggers();
 
   const { playCallStart, playCallEnd } = useSoundEffects();
   const { speak: speakEL, stop: stopEL, mute: muteEL, unmute: unmuteEL } = useProspectVoice();
@@ -1004,21 +1013,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     }
   };
 
-  const handleTryAnother = () => {
-    // After completing a session, check if the user has any rounds left
-    if (hasReachedLimit) {
-      if (isGuest) {
-        // Guest used their 1 free session — send to signup
-        navigate('/signup');
-        return;
-      } else if (!isPremium) {
-        // Authenticated user with no remaining credits — show paywall
-        setShowPaywall(true);
-        return;
-      }
-    }
-
-    // Still has attempts (or premium) — reset and go back to objection selection
+  // executeReset: the actual state-reset logic, called after any gate checks pass.
+  const executeReset = useCallback(() => {
     stopSpeech();
     setPhase('select-objection');
     setSelectedObjection(null);
@@ -1040,7 +1036,31 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     setShowHangUpAnimation(false);
     setHangUpReason('');
     setShowWinCelebration(false);
-  };
+  }, [stopSpeech]);
+
+  const handleTryAnother = useCallback(async () => {
+    // After completing a session, check if the user has any rounds left
+    if (hasReachedLimit) {
+      if (isGuest) {
+        navigate('/signup');
+        return;
+      } else if (!isPremium) {
+        setShowPaywall(true);
+        return;
+      }
+    }
+
+    // Check contextual upgrade trigger (free users only, fires after coaching screen)
+    if (upgradeShouldShow && !isPremium && !isGuest) {
+      pendingResetRef.current = executeReset;
+      const eventId = await upgradeMarkShown();
+      upgradeEventIdRef.current = eventId;
+      setShowContextualUpgrade(true);
+      return;
+    }
+
+    executeReset();
+  }, [hasReachedLimit, isGuest, isPremium, upgradeShouldShow, upgradeMarkShown, executeReset, navigate]);
 
   const reset = () => {
     stopSpeech();
@@ -1526,6 +1546,31 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
         {/* Upgrade Paywall Modal */}
         <UpgradePaywallModal open={showPaywall} />
+
+        {/* Contextual upgrade modal — fires AFTER user reads debrief, on continue action */}
+        <Suspense fallback={null}>
+          {showContextualUpgrade && (
+            <ContextualUpgradeModal
+              open={showContextualUpgrade}
+              isUpgradeLoading={checkoutLoading}
+              onUpgrade={async () => {
+                if (upgradeEventIdRef.current) {
+                  await upgradeMarkConverted(upgradeEventIdRef.current);
+                }
+                handleGoProCheckout('solo');
+                setShowContextualUpgrade(false);
+              }}
+              onSkip={async () => {
+                if (upgradeEventIdRef.current) {
+                  await upgradeMarkDismissed(upgradeEventIdRef.current);
+                }
+                setShowContextualUpgrade(false);
+                pendingResetRef.current?.();
+                pendingResetRef.current = null;
+              }}
+            />
+          )}
+        </Suspense>
       </div>
     );
   }
