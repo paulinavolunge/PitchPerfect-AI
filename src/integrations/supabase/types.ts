@@ -232,6 +232,7 @@ export type Database = {
           industry: string
           scenario_type: string
           score: number | null
+          status: string
           transcript: Json | null
           updated_at: string
           user_id: string
@@ -246,6 +247,7 @@ export type Database = {
           industry: string
           scenario_type: string
           score?: number | null
+          status?: string
           transcript?: Json | null
           updated_at?: string
           user_id: string
@@ -260,6 +262,7 @@ export type Database = {
           industry?: string
           scenario_type?: string
           score?: number | null
+          status?: string
           transcript?: Json | null
           updated_at?: string
           user_id?: string

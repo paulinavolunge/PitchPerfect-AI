@@ -11,6 +11,7 @@ import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import RecentSessions from '@/components/dashboard/RecentSessions';
+import StatCardAvgScore from '@/components/dashboard/StatCardAvgScore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { isPricingEnabled } from '@/config/features';
 import { Badge } from '@/components/ui/badge';
@@ -131,19 +132,8 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Avg Score</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-foreground">
-                      {averageScore != null ? `${Math.round(averageScore)}%` : '--'}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {averageScore != null ? 'across sessions' : 'no scores yet'}
-                    </p>
-                  </CardContent>
+                <Card className="bg-card rounded-2xl p-5">
+                  <StatCardAvgScore />
                 </Card>
 
                 <Card>
