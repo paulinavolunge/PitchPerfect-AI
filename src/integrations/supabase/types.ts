@@ -688,6 +688,8 @@ export type Database = {
         Returns: boolean
       }
       get_user_id_by_email: { Args: { p_email: string }; Returns: string }
+      get_user_streak: { Args: { p_user_id: string }; Returns: number }
+      get_user_weakest_area: { Args: { p_user_id: string }; Returns: string | null }
       initialize_admin_system: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
       is_authenticated_user: { Args: never; Returns: boolean }

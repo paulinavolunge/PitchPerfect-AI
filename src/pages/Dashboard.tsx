@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AlertCircle, Play, BarChart3, CreditCard, Crown, Lightbulb, Infinity, Zap, Check } from 'lucide-react';
+import { AlertCircle, BarChart3, CreditCard, Crown, Lightbulb, Infinity, Zap, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
@@ -12,6 +12,7 @@ import { useGuestMode } from '@/context/GuestModeContext';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import RecentSessions from '@/components/dashboard/RecentSessions';
 import StatCardAvgScore from '@/components/dashboard/StatCardAvgScore';
+import DashboardHero from '@/components/dashboard/DashboardHero';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { isPricingEnabled } from '@/config/features';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +52,6 @@ const Dashboard = () => {
   };
 
   const sessionCount = dashboardData?.stats?.totalSessions || 0;
-  const averageScore = dashboardData?.stats?.averageScore;
   const firstName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'there';
 
   return (
@@ -65,27 +65,8 @@ const Dashboard = () => {
 
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Hey, {firstName} 👋
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                {sessionCount === 0
-                  ? "Ready to start your first round?"
-                  : `You've completed ${sessionCount} round${sessionCount !== 1 ? 's' : ''} so far.`}
-              </p>
-            </div>
-            <Button
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
-              onClick={handleStartPractice}
-            >
-              <Play className="h-5 w-5 mr-2" />
-              Start Your Round
-            </Button>
-          </div>
+          {/* Hero */}
+          <DashboardHero firstName={firstName} onStartPractice={handleStartPractice} />
 
           {/* Error */}
           {error && (
