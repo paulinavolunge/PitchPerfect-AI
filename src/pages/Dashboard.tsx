@@ -17,6 +17,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { isPricingEnabled } from '@/config/features';
 import { Badge } from '@/components/ui/badge';
 import AICoachingCard from '@/components/dashboard/AICoachingCard';
+import FirstRoundEmptyState from '@/components/dashboard/FirstRoundEmptyState';
+import { useRoundStats } from '@/hooks/useRoundStats';
 
 const STRIPE_STARTER_URL = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00';
 const STRIPE_POWER_URL = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01';
@@ -33,6 +35,7 @@ const Dashboard = () => {
   } = useAuth();
 
   const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
+  const { stats: roundStats, isLoading: roundStatsLoading } = useRoundStats();
 
   const goToCheckout = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -66,6 +69,14 @@ const Dashboard = () => {
 
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
+          {/* First-round empty state — full replacement when user has no scored rounds */}
+          {!isLoading && !roundStatsLoading && roundStats.scoredCount === 0 && (
+            <FirstRoundEmptyState />
+          )}
+
+          {/* Normal dashboard — only shown after at least one scored round */}
+          {(isLoading || roundStatsLoading || roundStats.scoredCount > 0) && (
+          <>
           {/* Hero */}
           <DashboardHero firstName={firstName} onStartPractice={handleStartPractice} />
 
@@ -262,6 +273,7 @@ const Dashboard = () => {
               </div>
             </>
           )}
+          </>)}
         </div>
       </main>
 
