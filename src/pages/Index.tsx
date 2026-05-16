@@ -454,8 +454,8 @@ const Index = () => {
                       <li>1-10 scoring with specific feedback</li>
                       <li>Progress dashboard</li>
                     </ul>
-                    <button className="pp-btn-primary pp-btn-full" onClick={() => navigate('/pricing')}>
-                      Start Free, Then $29/mo →
+                    <button className="pp-btn-primary pp-btn-full" onClick={() => { window.location.href = 'https://buy.stripe.com/14A14pakJ7eq4NceFs5sA02'; }}>
+                      Subscribe — $29/mo →
                     </button>
                   </div>
                   {/* Team */}
