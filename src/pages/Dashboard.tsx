@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AlertCircle, BarChart3, CreditCard, Crown, Infinity, Zap, Check } from 'lucide-react';
+import { AlertCircle, Zap, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import RecentRoundsList from '@/components/rounds/RecentRoundsList';
-import StatCardAvgScore from '@/components/dashboard/StatCardAvgScore';
+import StatsStrip from '@/components/dashboard/StatsStrip';
 import DashboardHero from '@/components/dashboard/DashboardHero';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { isPricingEnabled } from '@/config/features';
@@ -112,71 +112,8 @@ const Dashboard = () => {
             <DashboardSkeleton />
           ) : (
             <>
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Sessions</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-foreground">{sessionCount}</div>
-                    <p className="text-xs text-muted-foreground">completed</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-card rounded-2xl p-5">
-                  <StatCardAvgScore />
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Credits</CardTitle>
-                    <CreditCard className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-foreground flex items-center gap-1">
-                      {isPremium ? (
-                        <Infinity className="h-6 w-6" />
-                      ) : (
-                        creditsRemaining ?? 0
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {isPremium ? 'unlimited' : 'remaining'}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className={!isPremium ? 'border-blue-200' : ''}>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Plan</CardTitle>
-                    <Crown className={`h-4 w-4 ${isPremium ? 'text-amber-500' : 'text-muted-foreground'}`} />
-                  </CardHeader>
-                  <CardContent>
-                    {isPremium ? (
-                      <>
-                        <div className="text-2xl font-bold text-foreground">Premium</div>
-                        <p className="text-xs text-muted-foreground">active</p>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-2xl font-bold text-foreground">Pay-as-you-go</div>
-                        <p className="text-xs text-muted-foreground mb-2">Round packs from $4.99</p>
-                        {isPricingEnabled() && (
-                          <Button
-                            size="sm"
-                            onClick={() => goToCheckout(STRIPE_UNLIMITED_URL)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
-                          >
-                            Upgrade — $29/mo
-                          </Button>
-                        )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Performance stats strip — Avg Score, Rounds This Week, Weakest Area */}
+              <StatsStrip />
 
               {/* Upgrade CTA for free users */}
               {!isPremium && isPricingEnabled() && (

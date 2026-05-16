@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/components/ui/navigation-menu';
 import { devLog } from '@/utils/secureLogging';
 import NavStreakChip from '@/components/streak/StreakChip';
+import UserAvatarMenu from '@/components/layout/UserAvatarMenu';
 
 const Navbar: React.FC = () => {
   const { user, signOut, isPremium, creditsRemaining, trialUsed } = useAuth();
@@ -215,63 +216,8 @@ const Navbar: React.FC = () => {
                   </button>
                 )}
 
-                {/* User menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="relative h-8 w-8 rounded-full"
-                      aria-label="User account menu"
-                      data-testid="user-menu"
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage
-                          src={user?.user_metadata?.avatar_url}
-                          alt={`Profile picture of ${user?.user_metadata?.name || user?.email}`}
-                        />
-                        <AvatarFallback className="bg-primary-600 text-white text-xs">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-white z-50" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user?.user_metadata?.name || user?.email?.split('@')[0]}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user?.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/dashboard" className="cursor-pointer w-full">
-                        <Home className="mr-2 h-4 w-4" aria-hidden="true" />
-                        Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/progress" className="cursor-pointer w-full">
-                        <UserRound className="mr-2 h-4 w-4" aria-hidden="true" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    {isPremiumFeaturesEnabled() && !isPremium && (
-                      <DropdownMenuItem onClick={handleUpgradeCheckout} className="cursor-pointer">
-                        <Crown className="mr-2 h-4 w-4" aria-hidden="true" />
-                        Upgrade to Pro — $29/mo
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer" data-testid="logout-button-menu">
-                      <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
-                      Sign out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* User avatar menu — Credits + Plan pills live inside the dropdown */}
+                <UserAvatarMenu />
               </>
             ) : (
               <>
