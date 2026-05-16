@@ -441,8 +441,7 @@ const Index = () => {
                 </div>
                 <div className="pp-pricing-grid">
                   {/* Solo */}
-                  <div className="pp-price-card pp-price-featured">
-                    <div className="pp-price-badge">Most Popular</div>
+                  <div className="pp-price-card">
                     <div className="pp-price-name">Solo</div>
                     <div className="pp-price-amount">$29<span>/mo</span></div>
                     <p className="pp-price-desc">For individual sales professionals</p>
