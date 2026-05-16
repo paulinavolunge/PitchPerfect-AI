@@ -440,24 +440,55 @@ const Index = () => {
                   <p className="pp-section-sub mx-auto">Your first session is free. After that, invest less than the price of a lunch meeting.</p>
                 </div>
                 <div className="pp-pricing-grid">
-                  {/* Solo */}
+                  {/* Tier 1 — $4.99 one-time (Most Popular) */}
+                  <div className="pp-price-card pp-price-featured">
+                    <div className="pp-price-badge">Most Popular</div>
+                    <div className="pp-price-name">Starter Pack</div>
+                    <div className="pp-price-amount">$4.99<span> one-time</span></div>
+                    <p className="pp-price-desc">Unlock your full scorecard + 5 rounds</p>
+                    <ul className="pp-price-features">
+                      <li>Unlock full scorecard</li>
+                      <li>5 practice rounds</li>
+                      <li>All sales scenarios</li>
+                      <li>Voice + text input</li>
+                    </ul>
+                    <button className="pp-btn-primary pp-btn-full" onClick={() => { window.location.href = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00'; }}>
+                      Unlock Scorecard — $4.99 →
+                    </button>
+                  </div>
+                  {/* Tier 2 — $9.99 one-time */}
+                  <div className="pp-price-card">
+                    <div className="pp-price-name">Power Pack</div>
+                    <div className="pp-price-amount">$9.99<span> one-time</span></div>
+                    <p className="pp-price-desc">15 rounds + full scorecard every time</p>
+                    <ul className="pp-price-features">
+                      <li>15 practice rounds</li>
+                      <li>Full scorecard every time</li>
+                      <li>All sales scenarios</li>
+                      <li>Voice + text input</li>
+                    </ul>
+                    <button className="pp-btn-outline pp-btn-full" onClick={() => { window.location.href = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01'; }}>
+                      Get 15 Rounds — $9.99 →
+                    </button>
+                  </div>
+                  {/* Tier 3 — $29/mo Solo */}
                   <div className="pp-price-card">
                     <div className="pp-price-name">Solo</div>
                     <div className="pp-price-amount">$29<span>/mo</span></div>
-                    <p className="pp-price-desc">For individual sales professionals</p>
+                    <p className="pp-price-desc">Unlimited rounds · cancel anytime</p>
                     <ul className="pp-price-features">
                       <li>Unlimited rounds</li>
                       <li>All sales scenarios</li>
                       <li>Voice + text input</li>
                       <li>AI voice responses</li>
-                      <li>1-10 scoring with specific feedback</li>
+                      <li>1–10 scoring with feedback</li>
                       <li>Progress dashboard</li>
                     </ul>
-                    <button className="pp-btn-primary pp-btn-full" onClick={() => { window.location.href = 'https://buy.stripe.com/14A14pakJ7eq4NceFs5sA02'; }}>
-                      Subscribe — $29/mo →
+                    <button className="pp-btn-outline pp-btn-full" onClick={() => { window.location.href = 'https://buy.stripe.com/14A14pakJ7eq4NceFs5sA02'; }}>
+                      Go Unlimited — $29/mo →
                     </button>
                   </div>
-                  {/* Team */}
+                  {/* Tier 4 — $49/seat/mo Team */}
                   <div className="pp-price-card">
                     <div className="pp-price-name">Team</div>
                     <div className="pp-price-amount">$49<span>/seat/mo</span></div>
@@ -465,11 +496,11 @@ const Index = () => {
                     <ul className="pp-price-features">
                       <li>Everything in Solo</li>
                       <li>Team management dashboard</li>
-                      <li>Custom scenarios per team</li>
+                      <li>Custom team scenarios</li>
                       <li>Onboarding support</li>
                       <li>Priority support</li>
                     </ul>
-                    <button className="pp-btn-outline pp-btn-full" onClick={() => navigate('/pricing')}>
+                    <button className="pp-btn-outline pp-btn-full" onClick={() => { window.location.href = 'mailto:sales@pitchperfectai.ai?subject=Team Plan Inquiry'; }}>
                       Contact for Team Access
                     </button>
                   </div>
