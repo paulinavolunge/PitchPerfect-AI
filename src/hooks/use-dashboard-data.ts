@@ -106,6 +106,7 @@ export function useDashboardData() {
           .from('practice_sessions')
           .select('id, user_id, created_at, scenario_type, difficulty, score, duration_seconds')
           .eq('user_id', user.id)
+          .eq('status', 'scored')
           .order('created_at', { ascending: false })
           .limit(5),
         supabase

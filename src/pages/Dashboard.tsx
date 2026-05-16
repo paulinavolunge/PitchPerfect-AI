@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import { useGuestMode } from '@/context/GuestModeContext';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import RecentSessions from '@/components/dashboard/RecentSessions';
+import RecentRoundsList from '@/components/rounds/RecentRoundsList';
 import StatCardAvgScore from '@/components/dashboard/StatCardAvgScore';
 import DashboardHero from '@/components/dashboard/DashboardHero';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -250,12 +250,9 @@ const Dashboard = () => {
                 </Card>
               )}
 
-              {/* Recent Sessions */}
+              {/* Recent Rounds — self-contained with status filtering */}
               <div className="mb-8">
-                <RecentSessions
-                  sessions={dashboardData?.recentSessions || []}
-                  onStartPractice={handleStartPractice}
-                />
+                <RecentRoundsList onStartPractice={handleStartPractice} />
               </div>
 
               {/* Quick Tips - only shown after user has sessions */}
