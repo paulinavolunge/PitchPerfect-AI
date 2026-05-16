@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/components/ui/navigation-menu';
 import { devLog } from '@/utils/secureLogging';
+import NavStreakChip from '@/components/streak/StreakChip';
 
 const Navbar: React.FC = () => {
   const { user, signOut, isPremium, creditsRemaining, trialUsed } = useAuth();
@@ -190,6 +191,11 @@ const Navbar: React.FC = () => {
           <div className="flex items-center space-x-4">
             {showAuthenticatedUI ? (
               <>
+                {/* Streak chip — compact flame badge */}
+                <div className="hidden sm:block">
+                  <NavStreakChip />
+                </div>
+
                 {/* Premium Badge */}
                 {isPremiumFeaturesEnabled() && isPremium && (
                   <div className="hidden sm:flex items-center space-x-1 px-2 py-1 bg-amber-100 rounded-full">

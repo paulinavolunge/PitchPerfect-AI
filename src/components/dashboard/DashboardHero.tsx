@@ -1,10 +1,13 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import StreakChip from "./StreakChip";
+import StreakChipWidget from "./StreakChip";
+import StreakFreezeButton from "@/components/streak/StreakFreezeButton";
 import { useStreak } from "@/hooks/useStreak";
 import { useUserWeakness } from "@/hooks/useUserWeakness";
+
+const StreakMilestoneModal = lazy(() => import("@/components/streak/StreakMilestoneModal"));
 
 const AREA_LABELS: Record<string, string> = {
   Price: "price",
@@ -30,7 +33,14 @@ interface DashboardHeroProps {
 
 const DashboardHero: React.FC<DashboardHeroProps> = ({ firstName, onStartPractice }) => {
   const navigate = useNavigate();
-  const { streak, atRisk } = useStreak();
+  const {
+    streak,
+    atRisk,
+    freezesAvailable,
+    newMilestone,
+    useFreeze,
+    dismissMilestone,
+  } = useStreak();
   const { weakestArea, isFirstTime } = useUserWeakness();
 
   const handleCTA = () => {
@@ -44,36 +54,55 @@ const DashboardHero: React.FC<DashboardHeroProps> = ({ firstName, onStartPractic
   const subtitle = getSubtitle(weakestArea, isFirstTime);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 items-stretch">
-      {/* LEFT — streak chip (1/4 desktop, full mobile) */}
-      <div className="md:col-span-1">
-        <StreakChip streak={streak} atRisk={atRisk} />
-      </div>
-
-      {/* RIGHT — greeting + CTA (3/4 desktop, full mobile) */}
-      <div className="md:col-span-3 flex flex-col justify-center gap-3 rounded-2xl bg-card border border-border p-5">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground leading-tight">
-            Hey, {firstName} —
-          </h1>
-          <p className="mt-1 text-base text-muted-foreground">{subtitle}</p>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 items-stretch">
+        {/* LEFT — streak widget */}
+        <div className="md:col-span-1">
+          <StreakChipWidget streak={streak} atRisk={atRisk} freezesAvailable={freezesAvailable} />
         </div>
 
-        <Button
-          onClick={handleCTA}
-          className={[
-            "bg-primary text-primary-foreground shadow-lg",
-            "h-14 md:h-16 px-8",
-            "text-lg md:text-xl font-semibold",
-            "w-full md:w-auto",
-            "flex items-center gap-2 self-start",
-          ].join(" ")}
-        >
-          <Play className="h-5 w-5 fill-current" />
-          Start a 90-sec round
-        </Button>
+        {/* RIGHT — greeting + CTA */}
+        <div className="md:col-span-3 flex flex-col justify-center gap-3 rounded-2xl bg-card border border-border p-5">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground leading-tight">
+              Hey, {firstName} —
+            </h1>
+            <p className="mt-1 text-base text-muted-foreground">{subtitle}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              onClick={handleCTA}
+              className={[
+                "bg-primary text-primary-foreground shadow-lg",
+                "h-14 md:h-16 px-8",
+                "text-lg md:text-xl font-semibold",
+                "flex items-center gap-2",
+              ].join(" ")}
+            >
+              <Play className="h-5 w-5 fill-current" />
+              Start a 90-sec round
+            </Button>
+
+            {/* Show freeze button prominently when streak is at risk */}
+            {atRisk && streak > 0 && (
+              <StreakFreezeButton
+                freezesAvailable={freezesAvailable}
+                atRisk={atRisk}
+                onUseFreeze={useFreeze}
+              />
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Milestone modal — lazy loaded, fires at most once per milestone */}
+      {newMilestone && (
+        <Suspense fallback={null}>
+          <StreakMilestoneModal milestone={newMilestone} onClose={dismissMilestone} />
+        </Suspense>
+      )}
+    </>
   );
 };
 
