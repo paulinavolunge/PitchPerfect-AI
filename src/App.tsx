@@ -14,6 +14,7 @@ import { PrivacyCompliantAnalytics } from '@/components/consent/PrivacyCompliant
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { initializeSecurity } from '@/utils/securityHeaders';
+import CommandPalette from '@/components/CommandPalette';
 import { isPricingEnabled, isSubscriptionEnabled } from '@/config/features';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
@@ -98,6 +99,8 @@ function App() {
                         <PageTrackingProvider>
                           <PrivacyCompliantAnalytics />
                           <ConsentBanner />
+                          {/* Global command palette — Cmd+K / Ctrl+K */}
+                          <CommandPalette />
                           
                           <div className="min-h-screen bg-background font-sans antialiased">
                             <Suspense fallback={<PageLoader />}>
