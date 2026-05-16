@@ -11,7 +11,7 @@ const Privacy = () => {
         <title>Privacy Policy - PitchPerfect AI</title>
         <meta name="description" content="Learn how PitchPerfect AI protects your privacy and handles your personal data. Read our comprehensive privacy policy for transparency on data collection and usage." />
         <meta name="robots" content="noindex, follow" />
-        <link rel="canonical" href={`${window.location.origin}/privacy`} />
+        <link rel="canonical" href="https://www.pitchperfectai.ai/privacy" />
       </Helmet>
       
       <div className="min-h-screen flex flex-col">

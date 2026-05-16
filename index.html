@@ -121,5 +121,41 @@
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!--
+      noscript fallback — crawlers and users without JS see real content.
+      #root is hidden so the spinner doesn't show in noscript context.
+    -->
+    <noscript>
+      <style>
+        #root { display: none; }
+        .ns { font-family: system-ui, -apple-system, sans-serif; max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem; }
+        .ns h1 { font-size: clamp(1.8rem, 5vw, 3.2rem); font-weight: 800; color: #1e293b; line-height: 1.15; margin: 0 0 1rem; }
+        .ns p  { font-size: 1.1rem; color: #475569; max-width: 560px; margin: 0 0 2rem; line-height: 1.7; }
+        .ns-cta { display: inline-block; background: #2563eb; color: #fff; padding: .85rem 2rem; border-radius: .75rem; font-weight: 700; font-size: 1rem; text-decoration: none; }
+        .ns-list { list-style: none; padding: 0; margin: 1.5rem 0 0; display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; font-size: .875rem; color: #475569; }
+        .ns-list li::before { content: "✓ "; color: #16a34a; font-weight: 700; }
+      </style>
+      <div class="ns">
+        <h1>Beat the AI prospect. Get scored instantly.</h1>
+        <p>
+          Practice cold calls and objection handling in a 90-second AI roleplay.
+          Hear your score, see your gaps, improve every round — free to start.
+        </p>
+        <a href="/signup" class="ns-cta">Start free — no credit card</a>
+        <ul class="ns-list">
+          <li>AI-powered cold call &amp; objection practice</li>
+          <li>Score out of 100 after every round</li>
+          <li>SDR, AE, Manager &amp; Founder scenarios</li>
+          <li>No credit card required to start</li>
+        </ul>
+        <p style="margin-top:2rem;font-size:.8rem;color:#94a3b8">
+          JavaScript is required for the full interactive experience.
+          <a href="https://enable-javascript.com" style="color:#2563eb;text-decoration:none">
+            How to enable JavaScript →
+          </a>
+        </p>
+      </div>
+    </noscript>
   </body>
 </html>

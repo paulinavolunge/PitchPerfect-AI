@@ -11,7 +11,7 @@ const Terms = () => {
         <title>Terms of Service - PitchPerfect AI</title>
         <meta name="description" content="Read the terms of service for PitchPerfect AI platform. Understand your rights and responsibilities when using our AI-powered sales training platform." />
         <meta name="robots" content="noindex, follow" />
-        <link rel="canonical" href={`${window.location.origin}/terms`} />
+        <link rel="canonical" href="https://www.pitchperfectai.ai/terms" />
       </Helmet>
       
       <div className="min-h-screen flex flex-col">

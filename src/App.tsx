@@ -52,6 +52,8 @@ const VoiceTraining = React.lazy(() => import('@/pages/VoiceTraining'));
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
 const ScoreUnlock = React.lazy(() => import('@/pages/ScoreUnlock'));
 const OnboardingRole = React.lazy(() => import('@/pages/OnboardingRole'));
+const ForSdrs = React.lazy(() => import('@/pages/ForSdrs'));
+const ForFounders = React.lazy(() => import('@/pages/ForFounders'));
 
 function PageLoader() {
   return (
@@ -109,6 +111,8 @@ function App() {
                                 {/* Public routes — accessible to all visitors */}
                                 <Route path="/" element={<Index />} />
                                 <Route path="/about" element={<About />} />
+                                <Route path="/for-sdrs" element={<ForSdrs />} />
+                                <Route path="/for-founders" element={<ForFounders />} />
                                 <Route path="/compare" element={<Compare />} />
                                 {isPricingEnabled() && <Route path="/pricing" element={<Pricing />} />}
                                 <Route path="/demo" element={<Demo />} />
