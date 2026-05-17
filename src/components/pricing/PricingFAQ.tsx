@@ -1,106 +1,55 @@
+import React from 'react';
 
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+const FAQS = [
+  {
+    q: 'Will my voice recordings be stored?',
+    a: 'No. We process audio in-session and discard it. We never use your voice for training.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Yes — one click in your account settings. No questions, no retention dance.',
+  },
+  {
+    q: 'How is this different from Gong or Chorus?',
+    a: "Gong analyzes real calls after they happen. We let you practice before the call so the real call is the second time you've heard those objections, not the first.",
+  },
+  {
+    q: "What's the difference between Starter Pack and Solo?",
+    a: 'Starter Pack is one-time ($4.99) — perfect for trying the product or a one-off interview prep. Solo is a subscription with unlimited practice — built for reps who practice daily.',
+  },
+  {
+    q: 'Why is there a 3-seat minimum on Team?',
+    a: 'The Team tier includes a manager dashboard and team analytics — features that only make sense with multiple reps. For solo practice, pick Solo at $29/mo.',
+  },
+  {
+    q: 'Is there a free version?',
+    a: 'Yes. Your first session is free, no signup required. After that, Starter Pack at $4.99 is the lowest-commitment way to unlock your full scorecard.',
+  },
+] as const;
 
-interface FAQItem {
-  question: string;
-  answer: string;
-}
-
-const faqData: FAQItem[] = [
-  {
-    question: "Can I change plans anytime?",
-    answer: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any billing adjustments."
-  },
-  {
-    question: "What happens to my data if I cancel?",
-    answer: "Your data remains secure and accessible for 30 days after cancellation. You can export your practice history and analytics during this period."
-  },
-  {
-    question: "Do you offer refunds?",
-    answer: "Yes, we offer a 30-day money-back guarantee for all paid plans. If you're not satisfied, contact our support team for a full refund."
-  },
-  {
-    question: "Is there a setup fee?",
-    answer: "No setup fees ever! All plans include free onboarding, training materials, and customer support to get you started quickly."
-  },
-  {
-    question: "Can I get a custom plan if these don't fit?",
-    answer: "Absolutely! We work with organizations of all sizes to create custom solutions. Contact our sales team to discuss your specific needs."
-  },
-  {
-    question: "How does seat-based pricing work?",
-    answer: "For Team and Professional plans, you pay per active user. You can add or remove users anytime, and billing adjusts automatically on your next cycle."
-  },
-  {
-    question: "Do you offer discounts for annual plans?",
-    answer: "Yes! Annual plans save you 20% compared to monthly billing. That's like getting 2 months free when you pay annually."
-  },
-  {
-    question: "What kind of support do you provide?",
-    answer: "All plans include email support. Professional and higher tiers get priority support, video tutorials, and dedicated account management."
-  }
-];
-
-const PricingFAQ: React.FC = () => {
-  const [openItems, setOpenItems] = useState<number[]>([]);
-
-  const toggleItem = (index: number) => {
-    setOpenItems(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
-    );
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-brand-dark mb-4">Frequently Asked Questions</h2>
-        <p className="text-lg text-brand-dark/70">Everything you need to know about our pricing and plans</p>
-      </div>
-      
-      <div className="space-y-4">
-        {faqData.map((item, index) => (
-          <div 
-            key={index}
-            className="border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-200"
-          >
-            <button
-              className="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2 rounded-lg"
-              onClick={() => toggleItem(index)}
-              aria-expanded={openItems.includes(index)}
-            >
-              <span className="font-medium text-brand-dark pr-4">{item.question}</span>
-              {openItems.includes(index) ? (
-                <ChevronUp className="h-5 w-5 text-brand-blue flex-shrink-0" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
-              )}
-            </button>
-            
-            {openItems.includes(index) && (
-              <div className="px-6 pb-4">
-                <div className="pt-2 border-t border-gray-100">
-                  <p className="text-brand-dark/70 leading-relaxed">{item.answer}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      
-      <div className="text-center mt-12">
-        <p className="text-brand-dark/70 mb-4">Still have questions?</p>
-        <button 
-          onClick={() => window.location.href = "mailto:support@pitchperfectai.com?subject=Pricing Question"}
-          className="bg-brand-blue hover:bg-brand-blue/90 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+const PricingFAQ: React.FC = () => (
+  <section className="mt-16 max-w-2xl mx-auto" aria-label="Frequently asked questions">
+    <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">Common questions</h2>
+    <div className="space-y-2">
+      {FAQS.map(({ q, a }) => (
+        <details
+          key={q}
+          className="group bg-white border border-gray-200 rounded-xl px-5 py-4 open:shadow-sm transition-shadow"
         >
-          Contact Support
-        </button>
-      </div>
+          <summary className="flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden font-semibold text-gray-900 text-sm">
+            {q}
+            <span
+              className="ml-4 text-gray-400 group-open:rotate-45 transition-transform duration-200 text-xl leading-none flex-shrink-0 inline-block"
+              aria-hidden
+            >
+              +
+            </span>
+          </summary>
+          <p className="mt-3 text-sm text-gray-500 leading-relaxed">{a}</p>
+        </details>
+      ))}
     </div>
-  );
-};
+  </section>
+);
 
 export default PricingFAQ;
