@@ -87,17 +87,17 @@ const SEO_ROUTES = [
   {
     path: '/pricing',
     title: 'Pricing — PitchPerfect AI',
-    description: 'Plans start at $4.99. Unlock your scorecard and 5 practice rounds. Go unlimited at $29/mo. No subscription required to get started.',
-    ogTitle: 'PitchPerfect AI Pricing — From $4.99',
-    ogDesc: 'Unlock your full scorecard for $4.99. Go unlimited at $29/mo. Start free — no credit card needed.',
+    description: 'Solo $29/mo. Team $49/seat/mo. 7-day money-back guarantee. Cancel anytime in one click.',
+    ogTitle: 'PitchPerfect AI Pricing — Solo $29/mo · Team $49/seat/mo',
+    ogDesc: 'Solo $29/mo. Team $49/seat/mo. 7-day money-back guarantee. Cancel anytime in one click.',
     body: `
 <div style="font-family:system-ui,sans-serif;max-width:900px;margin:0 auto;padding:2rem 1rem">
   <main>
     <h1 style="font-size:2.5rem;font-weight:800;color:#1e293b;text-align:center;margin-bottom:.75rem">
-      Simple pricing. Start free.
+      Simple pricing. Cancel anytime.
     </h1>
     <p style="text-align:center;color:#64748b;font-size:1.1rem;margin-bottom:2.5rem">
-      Plans start at $4.99. No subscription required.
+      Practice for free. Upgrade when you're ready to take it seriously.
     </p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem">
       <div style="border:1px solid #e2e8f0;border-radius:1rem;padding:1.5rem">

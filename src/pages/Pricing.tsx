@@ -20,7 +20,7 @@ const Pricing = () => {
         <title>Pricing — PitchPerfect AI</title>
         <meta
           name="description"
-          content="Plans start at $4.99. Unlock your scorecard and 5 practice rounds for a one-time payment, or go unlimited at $29/mo. No subscription required."
+          content="Solo $29/mo. Team $49/seat/mo. 7-day money-back guarantee. Cancel anytime in one click."
         />
       </Helmet>
 
@@ -31,10 +31,10 @@ const Pricing = () => {
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
-                Simple pricing. Start free.
+                Simple pricing. Cancel anytime.
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground">
-                Plans start at $4.99. No subscription required.
+                Practice for free. Upgrade when you're ready to take it seriously.
               </p>
             </div>
 
