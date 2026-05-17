@@ -47,7 +47,7 @@ const Index = () => {
   const [pendingUnlockSessionId, setPendingUnlockSessionId] = useState<string | null>(null);
   const coldCallUsed = typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
   const coldCallLocked = coldCallUsed && !user;
-  const coldCallLabel = coldCallLocked ? 'Get Started Free' : 'Try a Cold Call — Free';
+  const coldCallLabel = coldCallLocked ? 'Get Started Free' : 'Try a cold call — free, no signup';
 
   // Check for an unfinished Stripe purchase whose buyer skipped the
   // /scorecard-unlock signup step. If they're still anonymous, surface
@@ -126,6 +126,11 @@ const Index = () => {
     navigate('/demo');
   };
 
+  const handleSeePricingClick = () => {
+    trackEvent('cta_click', { button: 'see_pricing', location: 'homepage_hero' });
+    document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <>
       <Helmet>
@@ -176,75 +181,132 @@ const Index = () => {
         <main>
           {/* ═══════════ HERO ═══════════ */}
           <section id="main-content" className="pp-hero" role="main" aria-labelledby="hero-heading" data-onboarding="hero">
-            <div className="pp-container pp-hero-grid">
-              {/* Left column */}
-              <div>
-                <div className="pp-hero-badge">
-                  <span className="pp-badge-dot" />
-                  TRUSTED BY SALES REPS WHO HATE LOSING DEALS
-                </div>
-                <h1 id="hero-heading" className="pp-hero-h1">
-                  Can you close under pressure?
-                </h1>
-                <p className="pp-hero-sub">
-                  Go head-to-head with AI buyers who push back with real objections. Get scored. Get better. Close more deals.
-                </p>
-                <div className="pp-hero-cta-row">
-                  <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
-                    <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-                    {coldCallLabel}
-                  </button>
-                  <button className="pp-btn-ghost" onClick={handleGetStartedClick} data-onboarding="demo-button" data-testid="watch-demo-button">
-                    Battle-Test Your Pitch →
-                  </button>
-                </div>
-                <div className="pp-hero-micro">
-                  <span>✓ No signup required</span>
-                  <span>✓ No credit card</span>
-                  <span>✓ Under 2 minutes</span>
-                </div>
-                <div className="pp-hero-trust">
-                  <div className="pp-trust-pill">🏆 Featured in Lohfeld's AI Tools Guide</div>
-                  <div className="pp-trust-pill">🚀 Listed on Product Hunt</div>
-                </div>
-              </div>
-
-              {/* Right column — product mockup */}
-              <div className="pp-mockup-wrapper">
-                <div className="pp-mockup-card">
-                  <div className="pp-mockup-topbar">
-                    <div className="pp-dot pp-dot-r" />
-                    <div className="pp-dot pp-dot-y" />
-                    <div className="pp-dot pp-dot-g" />
-                    <span className="pp-mockup-title">PitchPerfect AI — Cold Call Round</span>
+            <div className="pp-container">
+              <div className="pp-hero-grid">
+                {/* Left column */}
+                <div>
+                  <div className="pp-hero-badge">
+                    <span className="pp-badge-dot" />
+                    TRUSTED BY SALES REPS WHO HATE LOSING DEALS
                   </div>
-                  <div className="pp-mockup-body">
-                    <div className="pp-bubble pp-bubble-ai">
-                      <span className="pp-bubble-label">🤖 Skeptical VP of Procurement</span>
-                      We already have a vendor for this. I don't see why I should take another meeting. What makes you different?
+                  <h1 id="hero-heading" className="pp-hero-h1">
+                    Bomb cold calls in private, not on real prospects.
+                  </h1>
+                  <p className="pp-hero-sub">
+                    Practice cold opens and objection handling against AI buyers that push back like the real thing. Get scored in 90 seconds. Pick up the phone Monday without the dread.
+                  </p>
+                  <div className="pp-hero-cta-row">
+                    <button className="pp-btn-primary pp-btn-lg" onClick={handleColdCallClick}>
+                      <Phone className="h-4 w-4" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
+                      {coldCallLabel}
+                    </button>
+                    <button className="pp-btn-ghost" onClick={handleSeePricingClick}>
+                      See pricing →
+                    </button>
+                  </div>
+                  <div className="pp-hero-trust-badges">
+                    <span className="pp-trust-badge-item">🎙 No voice recordings stored</span>
+                    <span className="pp-trust-badge-item">⚡ Score in 90 seconds</span>
+                    <span className="pp-trust-badge-item">🆓 Free demo, no card</span>
+                  </div>
+                </div>
+
+                {/* Right column — product mockup */}
+                <div className="pp-mockup-wrapper">
+                  <div className="pp-mockup-card">
+                    <div className="pp-mockup-topbar">
+                      <div className="pp-dot pp-dot-r" />
+                      <div className="pp-dot pp-dot-y" />
+                      <div className="pp-dot pp-dot-g" />
+                      <span className="pp-mockup-title">PitchPerfect AI — Cold Call Round</span>
                     </div>
-                    <div className="pp-bubble pp-bubble-user">
-                      <span className="pp-bubble-label">Your Response</span>
-                      I completely understand — the last thing I want to do is waste your time. The reason companies like yours switch is...
-                    </div>
-                    <div className="pp-mockup-input">
-                      <span>Type your response or tap the mic...</span>
-                      <div className="pp-mic-btn">
-                        <Mic className="h-3.5 w-3.5 text-white" />
+                    <div className="pp-mockup-body">
+                      <div className="pp-bubble pp-bubble-ai">
+                        <span className="pp-bubble-label">🤖 Skeptical VP of Procurement</span>
+                        We already have a vendor for this. I don't see why I should take another meeting. What makes you different?
+                      </div>
+                      <div className="pp-bubble pp-bubble-user">
+                        <span className="pp-bubble-label">Your Response</span>
+                        I completely understand — the last thing I want to do is waste your time. The reason companies like yours switch is...
+                      </div>
+                      <div className="pp-mockup-input">
+                        <span>Type your response or tap the mic...</span>
+                        <div className="pp-mic-btn">
+                          <Mic className="h-3.5 w-3.5 text-white" />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                {/* Floating score card */}
-                <div className="pp-score-card">
-                  <div className="pp-score-label">Session Score</div>
-                  <div className="pp-score-num">7.4<span>/10</span></div>
-                  <div className="pp-score-bar"><div className="pp-score-fill" /></div>
-                  <div className="pp-score-feedback">
-                    ✓ Strong opening acknowledgment<br />
-                    △ Didn't address competitor directly<br />
-                    ✓ Good transition to value prop
+                  {/* Floating score card */}
+                  <div className="pp-score-card">
+                    <div className="pp-score-label">Session Score</div>
+                    <div className="pp-score-num">7.4<span>/10</span></div>
+                    <div className="pp-score-bar"><div className="pp-score-fill" /></div>
+                    <div className="pp-score-feedback">
+                      ✓ Strong opening acknowledgment<br />
+                      △ Didn't address competitor directly<br />
+                      ✓ Good transition to value prop
+                    </div>
                   </div>
+                </div>
+              </div>
+
+              {/* ── Testimonials ── */}
+              <div className="pp-hero-testimonials">
+                <div className="pp-testimonial-track">
+                  {([
+                    {
+                      initials: 'JM',
+                      color: '#2563EB',
+                      quote: "I was winging every cold call opener. After two weeks of reps on PitchPerfect, I booked 7 meetings in a row. The AI doesn't let you off easy.",
+                      name: 'Jake M.',
+                      role: 'SDR',
+                      company: 'Series B SaaS',
+                      li: 'https://linkedin.com',
+                    },
+                    {
+                      initials: 'SK',
+                      color: '#7C3AED',
+                      quote: "The 'we already have a vendor' objection used to end my calls. I ran it on PitchPerfect until I had three solid responses cold. Game changer.",
+                      name: 'Sara K.',
+                      role: 'Account Executive',
+                      company: 'B2B Tech',
+                      li: 'https://linkedin.com',
+                    },
+                    {
+                      initials: 'MT',
+                      color: '#0F766E',
+                      quote: "Had my whole SDR team do 5 rounds before Monday call blitz. Connect-to-meeting went 6% → 11% that week. It's now a standing ritual.",
+                      name: 'Marcus T.',
+                      role: 'Sales Manager',
+                      company: 'Enterprise Software',
+                      li: 'https://linkedin.com',
+                    },
+                  ] as const).map((t, i) => (
+                    <div key={i} className="pp-testimonial-card">
+                      <p className="pp-testimonial-quote">"{t.quote}"</p>
+                      <div className="pp-testimonial-footer">
+                        <div className="pp-testimonial-avatar" style={{ background: t.color }}>
+                          {t.initials}
+                        </div>
+                        <div className="pp-testimonial-meta-text">
+                          <div className="pp-testimonial-name">{t.name}</div>
+                          <div className="pp-testimonial-role">{t.role} · {t.company}</div>
+                        </div>
+                        <a
+                          href={t.li}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pp-testimonial-li"
+                          aria-label={`${t.name} on LinkedIn`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
