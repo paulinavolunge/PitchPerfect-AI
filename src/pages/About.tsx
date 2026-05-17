@@ -5,7 +5,7 @@ import { Linkedin } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
-const LINKEDIN_URL = ''; // TODO: Paulina to confirm LinkedIn URL
+const LINKEDIN_URL = 'https://www.linkedin.com/in/paulina-volungeviciute-235a503b/';
 
 const BELIEFS = [
   {
