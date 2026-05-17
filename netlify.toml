@@ -67,7 +67,81 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# SPA redirect — single rule, no chains
+# Prerendered static pages — must be before the SPA catch-all so Netlify
+# serves the route-specific index.html instead of falling back to root.
+[[redirects]]
+  from = "/pricing"
+  to = "/pricing/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/pricing/"
+  to = "/pricing/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/about"
+  to = "/about/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/about/"
+  to = "/about/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/for-sdrs"
+  to = "/for-sdrs/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/for-sdrs/"
+  to = "/for-sdrs/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/for-founders"
+  to = "/for-founders/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/for-founders/"
+  to = "/for-founders/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/privacy/"
+  to = "/privacy/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/terms"
+  to = "/terms/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/terms/"
+  to = "/terms/index.html"
+  status = 200
+  force = true
+
+# SPA redirect — must be last; catches all unmatched routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
