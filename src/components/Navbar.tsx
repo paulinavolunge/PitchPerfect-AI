@@ -96,12 +96,10 @@ const Navbar: React.FC = () => {
     { name: 'Compare', href: '/compare' },
     // "Pricing" jumps to the pricing section on the homepage.
     ...(isPricingEnabled() ? [{ name: 'Pricing', href: '/#pricing' }] : []),
-    { name: 'Demo', href: '/demo' }
   ];
 
   const guestModeItems = [
     { name: 'Rounds', href: '/practice' },
-    { name: 'Demo', href: '/demo' }
   ];
 
   const mainNavItems = [
