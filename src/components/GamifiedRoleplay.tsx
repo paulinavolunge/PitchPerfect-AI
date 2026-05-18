@@ -171,7 +171,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           markDismissed: upgradeMarkDismissed, markConverted: upgradeMarkConverted } =
     useUpgradeTriggers();
 
-  const { playCallStart, playCallEnd } = useSoundEffects();
+  const { unlock, playCallStart, playCallEnd } = useSoundEffects();
   const { speak: speakEL, stop: stopEL, mute: muteEL, unmute: unmuteEL } = useProspectVoice();
 
   // ── Patience & Timer state ─────────────────────────────────
@@ -491,14 +491,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   // ── Start conversation ─────────────────────────────────────
   const startConversation = useCallback(async () => {
     if (!selectedObjection && !isCustomMode && !presetScenario) return;
+    unlock(); // resume AudioContext during user gesture, before any await
     setPhase('conversation');
     setIsAiTyping(true);
 
-    // Play phone ringing sound before first prospect message — voice mode only.
-    // In text mode we skip the ringing and go straight to the first prospect message.
-    if (inputMode === 'voice') {
-      await playCallStart();
-    }
+    // Play phone ringing sound before first prospect message — all modes.
+    await playCallStart();
 
     try {
       const systemPrompt = presetScenario
@@ -543,7 +541,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     } finally {
       setIsAiTyping(false);
     }
-  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle, playCallStart, presetScenario]);
+  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle, unlock, playCallStart, presetScenario]);
 
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async (overrideText?: string) => {

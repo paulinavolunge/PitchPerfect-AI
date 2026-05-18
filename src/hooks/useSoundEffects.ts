@@ -77,11 +77,20 @@ export function useSoundEffects() {
     }
   }, []);
 
+  const unlock = useCallback(async () => {
+    try {
+      await SoundEffects.unlock();
+    } catch (e) {
+      console.warn('Audio unlock failed:', e);
+    }
+  }, []);
+
   return {
-    playCallStart,  // Ring ring → silence → ready
-    playCallEnd,    // Click → busy signal
-    playWinSound,   // Ascending chime → ding
-    playHangUp,     // Busy signal only
-    playClick,      // Sharp click only
+    unlock,
+    playCallStart,
+    playCallEnd,
+    playWinSound,
+    playHangUp,
+    playClick,
   };
 }
