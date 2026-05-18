@@ -214,15 +214,59 @@ const Tips = () => {
             className="mb-4"
           />
           
+          {appliedTips.length > 0 && (
+            <Card className="mb-8 border-brand-blue/30">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-medium text-brand-dark">Your Applied Tips</h2>
+                  <span className="text-xs text-brand-dark/60">{appliedTips.length} active</span>
+                </div>
+                <div className="space-y-3">
+                  {appliedTips.map((tip, index) => (
+                    <div key={index} className="p-3 bg-brand-blue/5 border border-brand-blue/20 rounded-lg flex justify-between items-start gap-3">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-brand-dark">{tip.title}</h3>
+                        {tip.description && (
+                          <p className="text-sm text-brand-dark/70 mt-1">{tip.description}</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-brand-dark/60 hover:text-destructive shrink-0"
+                        onClick={() => handleRemoveTip(tip.title)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-brand-dark/60 mt-4">
+                  These tips will be referenced as guidance in your next practice round.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {activeScripts.length > 0 && (
             <Card className="mb-8 border-purple-300/30">
               <CardContent className="p-6">
                 <h2 className="text-xl font-medium mb-4 text-brand-dark">Your Active Scripts</h2>
                 <div className="space-y-4">
                   {activeScripts.map((script, index) => (
-                    <div key={index} className="p-3 bg-purple-300/5 border border-purple-300/20 rounded-lg">
-                      <h3 className="font-medium text-brand-dark">{script.title}</h3>
-                      <p className="text-sm text-brand-dark/70 mt-1">{script.description}</p>
+                    <div key={index} className="p-3 bg-purple-300/5 border border-purple-300/20 rounded-lg flex justify-between items-start gap-3">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-brand-dark">{script.title}</h3>
+                        <p className="text-sm text-brand-dark/70 mt-1">{script.description}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-brand-dark/60 hover:text-destructive shrink-0"
+                        onClick={() => handleRemoveScript(script.title)}
+                      >
+                        Remove
+                      </Button>
                     </div>
                   ))}
                 </div>
