@@ -9,7 +9,8 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
+const supabase: any = supabaseClient;
 
 // Pages where the gate must never redirect (would create a redirect loop or
 // interrupt a flow the user explicitly navigated to).

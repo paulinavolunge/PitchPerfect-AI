@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
+const supabase: any = supabaseClient;
 
 export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 365] as const;
 export type MilestoneValue = typeof STREAK_MILESTONES[number];

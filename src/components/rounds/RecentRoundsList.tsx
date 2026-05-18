@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileAudio, Clock, TrendingUp, RotateCcw, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as supabaseClient } from '@/integrations/supabase/client';
+// Cast to any: generated Supabase types are out of sync with actual DB schema
+const supabase: any = supabaseClient;
 import { useAuth } from '@/context/AuthContext';
 import { format, isToday, isYesterday, subHours } from 'date-fns';
 import { cn } from '@/lib/utils';

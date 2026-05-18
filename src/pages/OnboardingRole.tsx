@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Phone, Target, Users, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
+const supabase: any = supabaseClient;
 import { ROLE_DEFAULTS, DEFAULT_ROLE, type UserRole } from "@/lib/roleDefaults";
 
 interface RoleCard {
