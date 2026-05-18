@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // ElevenLabs voice IDs
 export const VOICE_FEMALE = '21m00Tcm4TlvDq8ikWAM'; // Rachel — warm, professional female
-export const VOICE_MALE = 'CwhRBWXzGAHq8TQ4Fs17';   // Roger — natural, professional male
+export const VOICE_MALE = 'nPczCjzI2devNBz1zQrb';   // Brian — deeper, gruffer male
 const DEFAULT_VOICE_ID = VOICE_FEMALE;
 
 /**

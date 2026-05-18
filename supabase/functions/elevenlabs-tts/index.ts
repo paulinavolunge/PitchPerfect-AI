@@ -80,11 +80,9 @@ serve(async (req) => {
           text: cleanText,
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            // style 0.5 adds natural expressiveness — 0.3 was audibly
-            // flatter and was the primary cause of the "robotic" feel.
-            style: 0.5,
+            stability: 0.35,
+            similarity_boost: 0.80,
+            style: 0.50,
             use_speaker_boost: true,
           },
         }),
