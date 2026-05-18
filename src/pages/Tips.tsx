@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
@@ -14,8 +14,35 @@ const Tips = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All Tips');
   const [displayedTips, setDisplayedTips] = useState(6);
-  const [appliedTips, setAppliedTips] = useState<string[]>([]);
+  const [appliedTips, setAppliedTips] = useState<{title: string, description: string}[]>([]);
   const [activeScripts, setActiveScripts] = useState<{title: string, description: string}[]>([]);
+
+  useEffect(() => {
+    try {
+      const savedTips = JSON.parse(localStorage.getItem('appliedSalesTips') || '[]');
+      // migrate legacy format (array of strings)
+      const normalized = savedTips.map((t: any) =>
+        typeof t === 'string' ? { title: t, description: '' } : t
+      );
+      setAppliedTips(normalized);
+      const savedScripts = JSON.parse(localStorage.getItem('activeSalesScripts') || '[]');
+      setActiveScripts(savedScripts);
+    } catch (e) {
+      console.error('Failed to load saved tips/scripts', e);
+    }
+  }, []);
+
+  const handleRemoveTip = (title: string) => {
+    const updated = appliedTips.filter(t => t.title !== title);
+    setAppliedTips(updated);
+    localStorage.setItem('appliedSalesTips', JSON.stringify(updated));
+  };
+
+  const handleRemoveScript = (title: string) => {
+    const updated = activeScripts.filter(s => s.title !== title);
+    setActiveScripts(updated);
+    localStorage.setItem('activeSalesScripts', JSON.stringify(updated));
+  };
 
   const allSalesTips = [
     {
@@ -119,20 +146,17 @@ const Tips = () => {
 
   const handleApplyTipOrScript = (title: string, description: string, type: 'tip' | 'script') => {
     if (type === 'tip') {
-      // Handle tip application
-      if (!appliedTips.includes(title)) {
-        setAppliedTips(prev => [...prev, title]);
-      }
+      const newTip = { title, description };
+      setAppliedTips(prev => {
+        if (prev.some(t => t.title === title)) return prev;
+        const updated = [...prev, newTip];
+        localStorage.setItem('appliedSalesTips', JSON.stringify(updated));
+        return updated;
+      });
       toast({
         title: "Tip Applied",
-        description: "This tip will be included in your next round",
+        description: "Added to 'Your Applied Tips' — it will guide your next round.",
       });
-      
-      // Save to localStorage for persistence across sessions
-      const savedTips = JSON.parse(localStorage.getItem('appliedSalesTips') || '[]');
-      if (!savedTips.includes(title)) {
-        localStorage.setItem('appliedSalesTips', JSON.stringify([...savedTips, title]));
-      }
     } else {
       // Handle script application
       const newScript = { title, description };
@@ -190,15 +214,59 @@ const Tips = () => {
             className="mb-4"
           />
           
+          {appliedTips.length > 0 && (
+            <Card className="mb-8 border-brand-blue/30">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-medium text-brand-dark">Your Applied Tips</h2>
+                  <span className="text-xs text-brand-dark/60">{appliedTips.length} active</span>
+                </div>
+                <div className="space-y-3">
+                  {appliedTips.map((tip, index) => (
+                    <div key={index} className="p-3 bg-brand-blue/5 border border-brand-blue/20 rounded-lg flex justify-between items-start gap-3">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-brand-dark">{tip.title}</h3>
+                        {tip.description && (
+                          <p className="text-sm text-brand-dark/70 mt-1">{tip.description}</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-brand-dark/60 hover:text-destructive shrink-0"
+                        onClick={() => handleRemoveTip(tip.title)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-brand-dark/60 mt-4">
+                  These tips will be referenced as guidance in your next practice round.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {activeScripts.length > 0 && (
             <Card className="mb-8 border-purple-300/30">
               <CardContent className="p-6">
                 <h2 className="text-xl font-medium mb-4 text-brand-dark">Your Active Scripts</h2>
                 <div className="space-y-4">
                   {activeScripts.map((script, index) => (
-                    <div key={index} className="p-3 bg-purple-300/5 border border-purple-300/20 rounded-lg">
-                      <h3 className="font-medium text-brand-dark">{script.title}</h3>
-                      <p className="text-sm text-brand-dark/70 mt-1">{script.description}</p>
+                    <div key={index} className="p-3 bg-purple-300/5 border border-purple-300/20 rounded-lg flex justify-between items-start gap-3">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-brand-dark">{script.title}</h3>
+                        <p className="text-sm text-brand-dark/70 mt-1">{script.description}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-brand-dark/60 hover:text-destructive shrink-0"
+                        onClick={() => handleRemoveScript(script.title)}
+                      >
+                        Remove
+                      </Button>
                     </div>
                   ))}
                 </div>
