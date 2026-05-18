@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
@@ -14,8 +14,35 @@ const Tips = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All Tips');
   const [displayedTips, setDisplayedTips] = useState(6);
-  const [appliedTips, setAppliedTips] = useState<string[]>([]);
+  const [appliedTips, setAppliedTips] = useState<{title: string, description: string}[]>([]);
   const [activeScripts, setActiveScripts] = useState<{title: string, description: string}[]>([]);
+
+  useEffect(() => {
+    try {
+      const savedTips = JSON.parse(localStorage.getItem('appliedSalesTips') || '[]');
+      // migrate legacy format (array of strings)
+      const normalized = savedTips.map((t: any) =>
+        typeof t === 'string' ? { title: t, description: '' } : t
+      );
+      setAppliedTips(normalized);
+      const savedScripts = JSON.parse(localStorage.getItem('activeSalesScripts') || '[]');
+      setActiveScripts(savedScripts);
+    } catch (e) {
+      console.error('Failed to load saved tips/scripts', e);
+    }
+  }, []);
+
+  const handleRemoveTip = (title: string) => {
+    const updated = appliedTips.filter(t => t.title !== title);
+    setAppliedTips(updated);
+    localStorage.setItem('appliedSalesTips', JSON.stringify(updated));
+  };
+
+  const handleRemoveScript = (title: string) => {
+    const updated = activeScripts.filter(s => s.title !== title);
+    setActiveScripts(updated);
+    localStorage.setItem('activeSalesScripts', JSON.stringify(updated));
+  };
 
   const allSalesTips = [
     {
@@ -119,20 +146,17 @@ const Tips = () => {
 
   const handleApplyTipOrScript = (title: string, description: string, type: 'tip' | 'script') => {
     if (type === 'tip') {
-      // Handle tip application
-      if (!appliedTips.includes(title)) {
-        setAppliedTips(prev => [...prev, title]);
-      }
+      const newTip = { title, description };
+      setAppliedTips(prev => {
+        if (prev.some(t => t.title === title)) return prev;
+        const updated = [...prev, newTip];
+        localStorage.setItem('appliedSalesTips', JSON.stringify(updated));
+        return updated;
+      });
       toast({
         title: "Tip Applied",
-        description: "This tip will be included in your next round",
+        description: "Added to 'Your Applied Tips' — it will guide your next round.",
       });
-      
-      // Save to localStorage for persistence across sessions
-      const savedTips = JSON.parse(localStorage.getItem('appliedSalesTips') || '[]');
-      if (!savedTips.includes(title)) {
-        localStorage.setItem('appliedSalesTips', JSON.stringify([...savedTips, title]));
-      }
     } else {
       // Handle script application
       const newScript = { title, description };
