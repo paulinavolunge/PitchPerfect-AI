@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 
 export interface ScoreHighlight {
   text: string;
@@ -11,6 +12,10 @@ export interface ScorePaywallProps {
   starterPackUrl?: string;
   powerPackUrl?: string;
   unlimitedUrl?: string;
+  /** Dismiss the paywall (close X + "Try another free call" link). */
+  onClose?: () => void;
+  /** Open the existing signup flow. */
+  onSignup?: () => void;
 }
 
 // Stripe Payment Link for the $29/mo Unlimited Pro subscription.
@@ -30,6 +35,8 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
   starterPackUrl = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00',
   powerPackUrl = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01',
   unlimitedUrl = DEFAULT_UNLIMITED_URL,
+  onClose,
+  onSignup,
 }) => {
   const scoreGradient =
     score < 50
@@ -39,7 +46,18 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
         : 'from-green-400 to-emerald-500';
 
   return (
-    <div className="bg-gray-900 text-white rounded-2xl p-5 sm:p-8 w-full max-w-lg mx-auto shadow-2xl">
+    <div className="relative bg-gray-900 text-white rounded-2xl p-5 sm:p-8 w-full max-w-lg mx-auto shadow-2xl">
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-3 top-3 sm:right-4 sm:top-4 text-gray-400 hover:text-white rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+
       {/* Score */}
       <div className="text-center mb-6">
         <div className="uppercase tracking-[0.2em] text-[10px] sm:text-xs text-gray-400 mb-2">
@@ -139,6 +157,29 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
       <p className="text-center text-[11px] sm:text-xs text-gray-500 mt-4">
         No subscription required. One-time purchase.
       </p>
+
+      {(onClose || onSignup) && (
+        <div className="mt-5 pt-4 border-t border-gray-800 flex flex-col items-center gap-2">
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-xs sm:text-sm text-gray-400 hover:text-gray-200 underline underline-offset-2"
+            >
+              Try another free call →
+            </button>
+          )}
+          {onSignup && (
+            <button
+              type="button"
+              onClick={onSignup}
+              className="text-xs sm:text-sm text-gray-400 hover:text-gray-200 underline underline-offset-2"
+            >
+              Save your progress — sign up free →
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
