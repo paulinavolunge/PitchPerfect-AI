@@ -16,12 +16,12 @@ const ScorePaywall = lazy(() => import('@/components/ScorePaywall'));
 
 // ── Cold call scenario config ──────────────────────────────────
 const COLD_CALL_PROSPECT_NAMES = [
-  { first: 'Dana', last: 'Kowalski', title: 'VP of Operations', gender: 'female' as const },
-  { first: 'Priya', last: 'Nair', title: 'Head of Procurement', gender: 'female' as const },
-  { first: 'Rachel', last: 'Brennan', title: 'Director of Sales', gender: 'female' as const },
-  { first: 'Samira', last: 'Hadid', title: 'VP of Marketing', gender: 'female' as const },
-  { first: 'Lauren', last: 'Chen', title: 'COO', gender: 'female' as const },
-  { first: 'Marcus', last: 'Rivera', title: 'VP of Operations', gender: 'male' as const },
+  { first: 'Dana', last: 'Kowalski', title: 'VP of Operations', gender: 'female' as const, industry: 'saas' },
+  { first: 'Priya', last: 'Nair', title: 'Head of Procurement', gender: 'female' as const, industry: 'saas' },
+  { first: 'Rachel', last: 'Brennan', title: 'Director of Sales', gender: 'female' as const, industry: 'logistics' },
+  { first: 'Samira', last: 'Hadid', title: 'VP of Marketing', gender: 'female' as const, industry: 'saas' },
+  { first: 'Lauren', last: 'Chen', title: 'COO', gender: 'female' as const, industry: 'consulting' },
+  { first: 'Marcus', last: 'Rivera', title: 'VP of Operations', gender: 'male' as const, industry: 'saas' },
 ];
 
 function pickColdCallProspect() {
@@ -30,6 +30,7 @@ function pickColdCallProspect() {
     name: `${p.first} ${p.last}`,
     title: p.title,
     voiceId: p.gender === 'male' ? VOICE_MALE : VOICE_FEMALE,
+    industry: p.industry,
   };
 }
 
@@ -111,6 +112,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     prospectName: prospect.name,
     prospectTitle: prospect.title,
     voiceId: prospect.voiceId,
+    industry: prospect.industry,
   };
 
   const handleComplete = useCallback((d: DebriefData) => {

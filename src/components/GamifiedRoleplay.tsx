@@ -69,6 +69,7 @@ export interface GamifiedRoleplayProps {
     prospectName: string;
     prospectTitle: string;
     voiceId?: string;
+    industry?: string;
   };
   /** Called when the session ends with debrief data */
   onComplete?: (debrief: DebriefData) => void;
@@ -422,7 +423,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       scenario: {
         objection: presetScenario?.objectionLabel || selectedObjection?.label || customScenario?.objection || 'Need',
         difficulty: 'medium',
-        industry: customScenario?.industry || 'general',
+        industry: presetScenario?.industry || customScenario?.industry || 'general',
+        contactName: presetScenario ? currentProspectName : undefined,
       },
       voiceStyle: 'skeptical',
       userScript: null,
