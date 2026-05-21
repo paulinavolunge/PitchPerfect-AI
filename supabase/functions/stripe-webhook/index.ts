@@ -14,6 +14,32 @@ const PLAN_CREDITS: Record<string, number> = {
   team: 9999,
 };
 
+// Resolve a Stripe Subscription to a Supabase user id.
+// Prefer metadata.supabase_user_id (set by app-initiated checkouts), then fall
+// back to looking up user_profiles by stripe_customer_id — needed because
+// Payment Link subscriptions don't carry our metadata.
+async function resolveUserId(
+  supabase: ReturnType<typeof createClient>,
+  subscription: Stripe.Subscription,
+): Promise<string | null> {
+  const fromMetadata = subscription.metadata?.supabase_user_id ?? null;
+  if (fromMetadata) return fromMetadata;
+
+  const customerId = subscription.customer as string | null;
+  if (!customerId) return null;
+
+  const { data: profile, error: lookupErr } = await supabase
+    .from("user_profiles")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle();
+  if (lookupErr) {
+    console.error("Failed to look up user by stripe_customer_id:", lookupErr);
+    return null;
+  }
+  return (profile?.id as string | undefined) ?? null;
+}
+
 // One-time credit packs sold via Stripe Payment Links.
 //
 // We detect the pack from `session.amount_total` (in cents) because Stripe
@@ -69,17 +95,55 @@ serve(async (req) => {
           const productType = session.metadata?.product_type || "solo";
 
           // Path A: app-initiated checkout — supabase_user_id is in metadata.
-          // Unchanged from the original implementation.
           if (userIdFromMetadata) {
+            // Idempotency: record this session in pending_credits before mutating
+            // user_profiles. The UNIQUE(stripe_session_id) constraint short-circuits
+            // Stripe webhook retries. pending_credits.email is NOT NULL, so we fall
+            // back to a synthetic marker when Stripe didn't capture a buyer email.
+            const pathAEmail =
+              session.customer_details?.email ??
+              session.customer_email ??
+              `user:${userIdFromMetadata}`;
+
+            const { error: pathAInsertErr } = await supabase
+              .from("pending_credits")
+              .insert({
+                email: pathAEmail,
+                credits: 0,
+                purchase_type: "unlimited",
+                stripe_session_id: session.id,
+                stripe_customer_id: session.customer as string | null,
+                stripe_subscription_id: session.subscription as string | null,
+                consumed_at: new Date().toISOString(),
+                consumed_user_id: userIdFromMetadata,
+              });
+
+            if (pathAInsertErr) {
+              if ((pathAInsertErr as any).code === "23505") {
+                console.log(`Path A session ${session.id} already processed — skipping.`);
+                break;
+              }
+              console.error("Failed to record Path A pending_credits row:", pathAInsertErr);
+              throw pathAInsertErr;
+            }
+
             const credits = PLAN_CREDITS[productType] || 9999;
-            await supabase.from("user_profiles").update({
-              is_premium: true,
-              subscription_plan: productType,
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: session.subscription as string,
-              credits_remaining: credits,
-              updated_at: new Date().toISOString(),
-            }).eq("id", userIdFromMetadata);
+            const { error: pathAUpdateErr } = await supabase
+              .from("user_profiles")
+              .update({
+                is_premium: true,
+                subscription_plan: productType,
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: session.subscription as string,
+                credits_remaining: credits,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", userIdFromMetadata);
+
+            if (pathAUpdateErr) {
+              console.error("Failed to update user_profiles (Path A):", pathAUpdateErr);
+              throw pathAUpdateErr;
+            }
             console.log(`Activated ${productType} plan for user ${userIdFromMetadata}`);
             break;
           }
@@ -282,49 +346,82 @@ serve(async (req) => {
 
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.supabase_user_id;
-        if (userId) {
-          const isActive = ["active", "trialing"].includes(subscription.status);
-          await supabase.from("user_profiles").update({
+        const userId = await resolveUserId(supabase, subscription);
+        if (!userId) {
+          console.warn(
+            `No user found for subscription ${subscription.id} — skipping ${event.type}`,
+          );
+          break;
+        }
+        const isActive = ["active", "trialing"].includes(subscription.status);
+        const { error: updErr } = await supabase
+          .from("user_profiles")
+          .update({
             is_premium: isActive,
             updated_at: new Date().toISOString(),
-          }).eq("id", userId);
-          console.log(`Subscription ${subscription.status} for user ${userId}`);
+          })
+          .eq("id", userId);
+        if (updErr) {
+          console.error("Failed to update user_profiles (subscription.updated):", updErr);
+          throw updErr;
         }
+        console.log(`Subscription ${subscription.status} for user ${userId}`);
         break;
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.supabase_user_id;
-        if (userId) {
-          await supabase.from("user_profiles").update({
+        const userId = await resolveUserId(supabase, subscription);
+        if (!userId) {
+          console.warn(
+            `No user found for subscription ${subscription.id} — skipping ${event.type}`,
+          );
+          break;
+        }
+        const { error: delErr } = await supabase
+          .from("user_profiles")
+          .update({
             is_premium: false,
             subscription_plan: "free",
             stripe_subscription_id: null,
             updated_at: new Date().toISOString(),
-          }).eq("id", userId);
-          console.log(`Subscription cancelled for user ${userId}`);
+          })
+          .eq("id", userId);
+        if (delErr) {
+          console.error("Failed to update user_profiles (subscription.deleted):", delErr);
+          throw delErr;
         }
+        console.log(`Subscription cancelled for user ${userId}`);
         break;
       }
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         const subscriptionId = invoice.subscription as string;
-        if (subscriptionId) {
-          const sub = await stripe.subscriptions.retrieve(subscriptionId);
-          const userId = sub.metadata?.supabase_user_id;
-          const productType = sub.metadata?.product_type || "solo";
-          if (userId) {
-            const credits = PLAN_CREDITS[productType] || 9999;
-            await supabase.from("user_profiles").update({
-              credits_remaining: credits,
-              updated_at: new Date().toISOString(),
-            }).eq("id", userId);
-            console.log(`Refreshed ${credits} credits for user ${userId}`);
-          }
+        if (!subscriptionId) break;
+
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        const userId = await resolveUserId(supabase, sub);
+        if (!userId) {
+          console.warn(
+            `No user found for subscription ${sub.id} — skipping ${event.type}`,
+          );
+          break;
         }
+        const productType = sub.metadata?.product_type || "solo";
+        const credits = PLAN_CREDITS[productType] || 9999;
+        const { error: invErr } = await supabase
+          .from("user_profiles")
+          .update({
+            credits_remaining: credits,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userId);
+        if (invErr) {
+          console.error("Failed to refresh credits (invoice.payment_succeeded):", invErr);
+          throw invErr;
+        }
+        console.log(`Refreshed ${credits} credits for user ${userId}`);
         break;
       }
 
