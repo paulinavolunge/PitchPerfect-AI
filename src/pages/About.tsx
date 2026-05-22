@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { Linkedin } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import paulinaPhoto from '@/assets/paulina.jpg';
 
 const LINKEDIN_URL = 'https://www.linkedin.com/in/paulina-volungeviciute-235a503b/';
 
