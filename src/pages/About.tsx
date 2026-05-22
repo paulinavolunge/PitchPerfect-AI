@@ -70,10 +70,14 @@ const About: React.FC = () => (
           <div className="bg-white rounded-2xl shadow-md px-10 py-8 flex flex-col items-center gap-4 w-full max-w-xs">
             {/* Photo placeholder — swap for real headshot after deploy */}
             <div
-              className="w-[200px] h-[200px] rounded-full bg-purple-100 flex items-center justify-center overflow-hidden flex-shrink-0"
-              aria-label="Founder photo placeholder"
+              className="w-[200px] h-[200px] rounded-full bg-purple-100 overflow-hidden flex-shrink-0"
             >
-              <span className="text-5xl font-bold text-purple-400 select-none">PV</span>
+              <img
+                src={paulinaPhoto}
+                alt="Paulina Vol, founder of PitchPerfect AI"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-gray-900">Paulina Vol</p>
