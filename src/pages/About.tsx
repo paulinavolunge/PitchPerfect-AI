@@ -65,13 +65,11 @@ const About: React.FC = () => (
           </p>
         </section>
 
-        {/* ── Founder card ── */}
-        <section className="px-4 pb-16 flex justify-center">
-          <div className="bg-white rounded-2xl shadow-md px-10 py-8 flex flex-col items-center gap-4 w-full max-w-xs">
-            {/* Photo placeholder — swap for real headshot after deploy */}
-            <div
-              className="w-[200px] h-[200px] rounded-full bg-purple-100 overflow-hidden flex-shrink-0"
-            >
+        {/* ── Founder: photo + story side-by-side ── */}
+        <section className="px-4 pb-20 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8 md:gap-12 items-start">
+            {/* Portrait — rectangular 3:4 */}
+            <div className="w-full max-w-[300px] mx-auto md:mx-0 aspect-[3/4] overflow-hidden rounded-lg bg-purple-100">
               <img
                 src={paulinaPhoto}
                 alt="Paulina Vol, Founder of PitchPerfect AI"
@@ -79,53 +77,50 @@ const About: React.FC = () => (
                 loading="lazy"
               />
             </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-gray-900">Paulina Vol</p>
-              <p className="text-sm text-gray-500">Founder, PitchPerfect AI</p>
+
+            {/* Story + attribution */}
+            <div>
+              <div className="space-y-6 text-base sm:text-lg text-gray-700 leading-relaxed">
+                <p>
+                  I've worked in sales — and in clinical research, and in a few other things before
+                  that. What kept coming back was the same problem on the phone: knowing what to say,
+                  then freezing when the prospect threw something I wasn't ready for.
+                </p>
+                <p>
+                  I looked for a way to practice in private. A tool where I could actually hear
+                  myself, get told where I sounded weak, and try again. The closest options were
+                  either expensive enterprise platforms (built for sales teams with budget) or generic
+                  communication coaches that didn't simulate real buyers. Nothing felt like what I
+                  actually needed: a low-pressure place to rep cold calls before real ones.
+                </p>
+                <p>
+                  So on my last day at a sales role, I decided to build it. PitchPerfect AI is the
+                  tool I wanted — for me, and now for anyone else who'd rather bomb a cold call in
+                  private than on a real prospect.
+                </p>
+              </div>
+
+              <div className="mt-8 text-sm text-gray-700">
+                <span className="font-bold text-gray-900">Paulina Vol — Founder</span>
+                <span className="text-gray-400 mx-2">·</span>
+                {LINKEDIN_URL ? (
+                  <a
+                    href={LINKEDIN_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Paulina Vol on LinkedIn"
+                    className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                  >
+                    LinkedIn
+                  </a>
+                ) : (
+                  <span className="text-gray-300">LinkedIn</span>
+                )}
+              </div>
             </div>
-            {/* LinkedIn — update LINKEDIN_URL above once confirmed */}
-            {LINKEDIN_URL ? (
-              <a
-                href={LINKEDIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Paulina Vol on LinkedIn"
-                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
-              >
-                <Linkedin className="h-4 w-4" aria-hidden />
-                LinkedIn
-              </a>
-            ) : (
-              <span className="flex items-center gap-2 text-sm text-gray-300 cursor-default select-none">
-                <Linkedin className="h-4 w-4" aria-hidden />
-                LinkedIn
-              </span>
-            )}
           </div>
         </section>
 
-        {/* ── The story ── */}
-        <section className="px-4 pb-20 max-w-[800px] mx-auto">
-          <div className="space-y-6 text-base sm:text-lg text-gray-700 leading-relaxed">
-            <p>
-              I've worked in sales — and in clinical research, and in a few other things before
-              that. What kept coming back was the same problem on the phone: knowing what to say,
-              then freezing when the prospect threw something I wasn't ready for.
-            </p>
-            <p>
-              I looked for a way to practice in private. A tool where I could actually hear
-              myself, get told where I sounded weak, and try again. The closest options were
-              either expensive enterprise platforms (built for sales teams with budget) or generic
-              communication coaches that didn't simulate real buyers. Nothing felt like what I
-              actually needed: a low-pressure place to rep cold calls before real ones.
-            </p>
-            <p>
-              So on my last day at a sales role, I decided to build it. PitchPerfect AI is the
-              tool I wanted — for me, and now for anyone else who'd rather bomb a cold call in
-              private than on a real prospect.
-            </p>
-          </div>
-        </section>
 
         {/* ── What I believe ── */}
         <section className="px-4 pb-20 max-w-5xl mx-auto">
