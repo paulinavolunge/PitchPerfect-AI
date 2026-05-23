@@ -582,10 +582,9 @@ const Index = () => {
                   <div className="pp-founder-avatar">P</div>
                   <div>
                     <p className="pp-founder-text">
-                      I built PitchPerfect AI because I spent years as an Account Executive, handling objections on hundreds of sales calls and learning the hard way that preparation beats talent. Every rep deserves a sparring partner that tells them the truth — not a chatbot that says "great job."
+                      I built this because I needed it. I was in B2B sales and kept freezing when prospects threw something I wasn't ready for. Every rep deserves a sparring partner that tells them the truth — not a chatbot that says "great job."
                     </p>
                     <div className="pp-founder-name">Paulina Vol — Founder</div>
-                    <div className="pp-founder-role">Former Account Executive · 5+ years in B2B sales</div>
                   </div>
                 </div>
               </div>
