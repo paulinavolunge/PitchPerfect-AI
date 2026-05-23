@@ -74,7 +74,7 @@ const About: React.FC = () => (
             >
               <img
                 src={paulinaPhoto}
-                alt="Paulina Vol, founder of PitchPerfect AI"
+                alt="Paulina Vol, Founder of PitchPerfect AI"
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
