@@ -36,6 +36,18 @@ serve(async (req) => {
 
     const { returnUrl } = await req.json();
 
+    // Validate returnUrl against allowlist to prevent open redirect
+    const ALLOWED_RETURN_PREFIXES = [
+      "https://pitchperfectai.ai/",
+      "https://www.pitchperfectai.ai/",
+      "https://pitchperfectai-02.lovable.app/",
+    ];
+    const isAllowedReturn = (url: unknown): url is string =>
+      typeof url === "string" && ALLOWED_RETURN_PREFIXES.some((p) => url.startsWith(p));
+    const safeReturnUrl = isAllowedReturn(returnUrl)
+      ? returnUrl
+      : "https://pitchperfectai.ai/subscription";
+
     const { data: profile } = await supabase
       .from("user_profiles")
       .select("stripe_customer_id")
@@ -46,11 +58,9 @@ serve(async (req) => {
       throw new Error("No active subscription found. Please subscribe first.");
     }
 
-    const origin = req.headers.get("origin") || "https://pitchperfectai.ai";
-
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
-      return_url: returnUrl || `${origin}/subscription`,
+      return_url: safeReturnUrl,
     });
 
     return new Response(JSON.stringify({ url: portalSession.url }), {
