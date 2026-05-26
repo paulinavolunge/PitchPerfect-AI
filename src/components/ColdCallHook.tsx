@@ -156,12 +156,13 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
       signupCompletedRef.current = false;
       return;
     }
-    const gateVisible = phase === 'scorecard' || (phase === 'roleplay' && guestLocked);
+    const isGuestLocked = !user && typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
+    const gateVisible = phase === 'scorecard' || (phase === 'roleplay' && isGuestLocked);
     if (gateVisible && !gateShownRef.current) {
       gateShownRef.current = true;
       fireGateEvent('signup_gate_shown');
     }
-  }, [open, phase, guestLocked, fireGateEvent]);
+  }, [open, phase, user, fireGateEvent]);
 
   const handleClose = () => {
     if (gateShownRef.current && !signupCompletedRef.current) {
