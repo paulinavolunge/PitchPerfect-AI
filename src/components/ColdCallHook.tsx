@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef, Suspense, lazy } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2, Trophy, X } from 'lucide-react';
@@ -8,6 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@/utils/analytics';
 import GamifiedRoleplay, { type DebriefData } from '@/components/GamifiedRoleplay';
+
+const GATE_SOURCE = 'cold_call_hook';
 
 import { VOICE_FEMALE, VOICE_MALE } from '@/hooks/useProspectVoice';
 
