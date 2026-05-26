@@ -428,9 +428,14 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       },
       voiceStyle: 'skeptical',
       userScript: null,
+      // Full conversation history so the prospect can respond contextually
+      // (acknowledges names, callbacks, prior exchanges).
       conversationHistory,
       isReversedRole: true,
       prospectName: currentProspectName,
+      // Pass the carefully-tuned client-side persona prompt so the edge
+      // function honors it instead of substituting a rigid built-in script.
+      systemPromptOverride: systemPrompt || undefined,
     };
 
     // Add custom fields if in custom mode
