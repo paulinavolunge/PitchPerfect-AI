@@ -117,6 +117,19 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     industry: prospect.industry,
   };
 
+  // Track responses_sent and whether signup completed so dismissal events are accurate.
+  const responsesSentRef = useRef<number>(0);
+  const gateShownRef = useRef<boolean>(false);
+  const signupCompletedRef = useRef<boolean>(false);
+
+  const fireGateEvent = useCallback((eventName: string, extra: Record<string, any> = {}) => {
+    trackEvent(eventName, {
+      source: GATE_SOURCE,
+      responses_sent: responsesSentRef.current,
+      ...extra,
+    });
+  }, []);
+
   const handleComplete = useCallback((d: DebriefData) => {
     try {
       localStorage.setItem('pp_cold_call_used', 'true');
@@ -125,6 +138,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
       // unblurred scorecard after the user returns from Stripe checkout.
       localStorage.setItem('pp_cold_call_last_debrief', JSON.stringify(d));
     } catch {}
+    responsesSentRef.current = d.sessionStats?.roundsCompleted ?? 3;
     setDebrief(d);
     setPhase('scorecard');
     trackEvent('cold_call_hook_completed', {
@@ -134,7 +148,25 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     });
   }, []);
 
+  // Fire signup_gate_shown once when the post-practice gate becomes visible
+  // (either the scorecard or the guest-locked signup form).
+  useEffect(() => {
+    if (!open) {
+      gateShownRef.current = false;
+      signupCompletedRef.current = false;
+      return;
+    }
+    const gateVisible = phase === 'scorecard' || (phase === 'roleplay' && guestLocked);
+    if (gateVisible && !gateShownRef.current) {
+      gateShownRef.current = true;
+      fireGateEvent('signup_gate_shown');
+    }
+  }, [open, phase, guestLocked, fireGateEvent]);
+
   const handleClose = () => {
+    if (gateShownRef.current && !signupCompletedRef.current) {
+      fireGateEvent('signup_gate_dismissed');
+    }
     onOpenChange(false);
     // Reset state for next open
     setTimeout(() => {
