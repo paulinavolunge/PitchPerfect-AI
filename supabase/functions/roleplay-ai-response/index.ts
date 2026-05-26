@@ -64,21 +64,31 @@ serve(async (req) => {
       customIndustry,
       customObjection,
       prospectName,
+      systemPromptOverride,
     } = JSON.parse(rawBody);
 
-    console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName });
+    console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, hasOverride: !!systemPromptOverride, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
 
     const isCustom = !!(customProduct || customBuyerTitle || customIndustry || customObjection);
 
-    const systemPrompt = isReversedRole 
+    // If the client supplies a fully-formed persona prompt (e.g. the cold-call
+    // hook), use it verbatim — it has context the generic builders don't.
+    const baseSystemPrompt = isReversedRole 
       ? (isCustom
           ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
           : createProspectSystemPrompt(scenario, voiceStyle))
       : createSalespersonSystemPrompt(scenario, voiceStyle);
 
+    const systemPrompt = (typeof systemPromptOverride === 'string' && systemPromptOverride.trim().length > 50)
+      ? `${systemPromptOverride.trim()}\n\nCRITICAL: Read the entire conversation above carefully before replying. Always acknowledge information the rep has already given you (name, company, callback reference, prior pitch). Never ask "Who is this?" if they have introduced themselves. Never ask "What's this about?" if they have already told you why they are calling. Respond to what was actually said.`
+      : baseSystemPrompt;
+
+    // Send the full conversation history (capped to keep tokens sane) so the
+    // prospect responds contextually instead of acting like each turn is new.
+    const history = Array.isArray(conversationHistory) ? conversationHistory.slice(-30) : [];
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-6).map((msg: { sender: string; text: string }) => ({
+      ...history.map((msg: { sender: string; text: string }) => ({
         role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
         content: msg.text
       })),
