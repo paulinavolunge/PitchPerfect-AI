@@ -11,7 +11,10 @@ const corsHeaders = {
 
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) console.log('No auth token, guest access'); return null;
+  if (!token) {
+    console.log('No auth token, guest access');
+    return null;
+  }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -20,12 +23,8 @@ const verifyAuth = async (request: Request) => {
 
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) {
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    if (token === anonKey) {
-      console.log('Guest user access via anon key');
-      return null;
-    }
-    console.log('Allowing unauthenticated access'); return null;
+    console.log('Allowing unauthenticated access');
+    return null;
   }
 
   return user;
@@ -181,12 +180,11 @@ Provide detailed analysis and scoring as requested.`;
     });
 
   } catch (error) {
-    console.error('Error in pitch-analysis function:', error);
-    
-    // Handle authentication errors
+    console.error('[INTERNAL] Error in pitch-analysis function:', error);
+
     const errMsg = error instanceof Error ? error.message : String(error);
     if (errMsg.includes('authorization') || errMsg.includes('token')) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: 'Authentication required',
         code: 'AUTH_ERROR'
       }), {
@@ -194,10 +192,10 @@ Provide detailed analysis and scoring as requested.`;
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    
-    return new Response(JSON.stringify({ 
-      error: errMsg,
-      fallback: true 
+
+    return new Response(JSON.stringify({
+      error: 'Service temporarily unavailable',
+      fallback: true,
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

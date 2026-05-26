@@ -115,8 +115,8 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in roleplay-ai-response:', error);
-    
+    console.error('[INTERNAL] Error in roleplay-ai-response:', error);
+
     const errMsg = error instanceof Error ? error.message : String(error);
     if (errMsg.includes('authorization') || errMsg.includes('token')) {
       return new Response(JSON.stringify({
@@ -127,9 +127,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    
+
     return new Response(JSON.stringify({
-      error: errMsg,
+      error: 'Service temporarily unavailable',
       fallback: true,
     }), {
       status: 500,

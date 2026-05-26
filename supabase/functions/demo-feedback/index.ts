@@ -168,16 +168,13 @@ Focus on sales communication best practices:
     });
 
   } catch (error) {
-    console.error('Error in demo-feedback function:', error);
-
-    const fallbackFeedback = "Great effort! Your response shows good understanding of the value proposition. Consider adding a specific example or case study to make your pitch even more compelling.";
+    console.error('[INTERNAL] Error in demo-feedback function:', error);
 
     return new Response(JSON.stringify({
-      feedback: fallbackFeedback,
+      error: 'Service temporarily unavailable',
       fallback: true,
-      error: (error as Error).message
     }), {
-      status: 200,
+      status: 503,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

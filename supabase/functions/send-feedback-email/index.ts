@@ -153,49 +153,33 @@ serve(async (req) => {
   }
 
   try {
-    // Optional authentication - supports both authenticated and guest users
+    // Require authentication — only deliver to the verified user's own email
     const user = await verifyAuth(req);
-    const isGuest = user === null;
-
-    const { email, sessionData }: FeedbackEmailRequest = await req.json();
-
-    // Validate email format for all users
-    if (!email || typeof email !== "string") {
+    if (!user || !user.email) {
       return new Response(
-        JSON.stringify({ error: "Email is required" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin!) } }
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders(origin!) } }
       );
     }
 
-    // For authenticated users, optionally verify email matches (relaxed for demo flexibility)
-    if (!isGuest && user.email && email !== user.email) {
-      console.log(`[send-feedback-email] User ${user.id} sending to different email: ${email}`);
-    }
+    const { sessionData }: FeedbackEmailRequest = await req.json();
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid email format" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin!) } }
-      );
-    }
+    // Always send to the authenticated user's verified email — ignore any client-supplied recipient
+    const recipient = user.email;
 
     const subject = "Your PitchPerfect AI feedback";
     const html = buildEmailHtml(sessionData);
 
     const result = await resend.emails.send({
       from: "PitchPerfect <onboarding@resend.dev>",
-      to: [email],
+      to: [recipient],
       subject,
       html,
     });
 
     console.log("[send-feedback-email] Email sent:", {
       id: (result as any)?.data?.id || (result as any)?.id,
-      userId: isGuest ? 'guest' : user.id,
-      isGuest,
-      recipient: email,
+      userId: user.id,
       ip: clientIp,
     });
 
@@ -204,9 +188,9 @@ serve(async (req) => {
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders(origin!) } }
     );
   } catch (error: any) {
-    console.error("[send-feedback-email] Error:", error?.message || error);
+    console.error("[INTERNAL][send-feedback-email] Error:", error?.message || error);
     return new Response(
-      JSON.stringify({ success: false, error: error?.message || "Unknown error" }),
+      JSON.stringify({ success: false, error: "Service temporarily unavailable" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin!) } }
     );
   }

@@ -109,18 +109,36 @@ serve(async (req) => {
 
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
   const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
   const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
   if (!OPENAI_API_KEY) {
-    return new Response(JSON.stringify({ error: 'OPENAI_API_KEY not set' }), {
+    return new Response(JSON.stringify({ error: 'Service not configured' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
+  // Require authentication — derive user_id from JWT, never trust the client
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const token = authHeader.replace('Bearer ', '');
+  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data: authData, error: authErr } = await authClient.auth.getUser(token);
+  if (authErr || !authData?.user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const authedUserId = authData.user.id;
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    const { round_id, audio, user_id } = await req.json();
+    const { round_id, audio } = await req.json();
 
     if (!round_id || !audio) {
       return new Response(JSON.stringify({ error: 'round_id and audio required' }), {
@@ -128,15 +146,21 @@ serve(async (req) => {
       });
     }
 
-    // Fetch round metadata for duration (needed for coaching prompt)
+    // Fetch round metadata and verify the authenticated user owns it
     const { data: roundMeta } = await supabase
       .from('practice_sessions')
       .select('duration_seconds, user_id')
       .eq('id', round_id)
       .single();
 
+    if (!roundMeta || roundMeta.user_id !== authedUserId) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const durationSeconds = roundMeta?.duration_seconds ?? 0;
-    const resolvedUserId = user_id ?? roundMeta?.user_id;
+    const resolvedUserId = authedUserId;
 
     // ── Whisper transcription ────────────────────────────────────────
     const audioBuffer = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0));
@@ -209,8 +233,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('score-round error:', err);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
+    console.error('[INTERNAL] score-round error:', err);
+    return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
