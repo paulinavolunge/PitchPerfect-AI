@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef, Suspense, lazy } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2, Trophy, X } from 'lucide-react';
@@ -8,6 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@/utils/analytics';
 import GamifiedRoleplay, { type DebriefData } from '@/components/GamifiedRoleplay';
+
+const GATE_SOURCE = 'cold_call_hook';
 
 import { VOICE_FEMALE, VOICE_MALE } from '@/hooks/useProspectVoice';
 
@@ -115,6 +117,19 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     industry: prospect.industry,
   };
 
+  // Track responses_sent and whether signup completed so dismissal events are accurate.
+  const responsesSentRef = useRef<number>(0);
+  const gateShownRef = useRef<boolean>(false);
+  const signupCompletedRef = useRef<boolean>(false);
+
+  const fireGateEvent = useCallback((eventName: string, extra: Record<string, any> = {}) => {
+    trackEvent(eventName, {
+      source: GATE_SOURCE,
+      responses_sent: responsesSentRef.current,
+      ...extra,
+    });
+  }, []);
+
   const handleComplete = useCallback((d: DebriefData) => {
     try {
       localStorage.setItem('pp_cold_call_used', 'true');
@@ -123,6 +138,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
       // unblurred scorecard after the user returns from Stripe checkout.
       localStorage.setItem('pp_cold_call_last_debrief', JSON.stringify(d));
     } catch {}
+    responsesSentRef.current = d.sessionStats?.roundsCompleted ?? 3;
     setDebrief(d);
     setPhase('scorecard');
     trackEvent('cold_call_hook_completed', {
@@ -132,7 +148,26 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     });
   }, []);
 
+  // Fire signup_gate_shown once when the post-practice gate becomes visible
+  // (either the scorecard or the guest-locked signup form).
+  useEffect(() => {
+    if (!open) {
+      gateShownRef.current = false;
+      signupCompletedRef.current = false;
+      return;
+    }
+    const isGuestLocked = !user && typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
+    const gateVisible = phase === 'scorecard' || (phase === 'roleplay' && isGuestLocked);
+    if (gateVisible && !gateShownRef.current) {
+      gateShownRef.current = true;
+      fireGateEvent('signup_gate_shown');
+    }
+  }, [open, phase, user, fireGateEvent]);
+
   const handleClose = () => {
+    if (gateShownRef.current && !signupCompletedRef.current) {
+      fireGateEvent('signup_gate_dismissed');
+    }
     onOpenChange(false);
     // Reset state for next open
     setTimeout(() => {
@@ -147,6 +182,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!signupEmail || !signupPassword) return;
+    fireGateEvent('signup_gate_cta_clicked', { method: 'email' });
     setIsSigningUp(true);
 
     try {
@@ -162,6 +198,11 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
       if (error) {
         toast({ title: 'Signup Error', description: error.message, variant: 'destructive' });
         return;
+      }
+
+      if (data.user) {
+        signupCompletedRef.current = true;
+        fireGateEvent('signup_completed', { method: 'email', confirmed: !!data.session });
       }
 
       if (data.user && !data.session) {
@@ -183,6 +224,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   };
 
   const handleGoogleSignup = async () => {
+    fireGateEvent('signup_gate_cta_clicked', { method: 'google' });
     setIsGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -193,6 +235,8 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
         },
       });
       if (error) throw error;
+      // OAuth completion is tracked post-redirect via AuthContext listener.
+      signupCompletedRef.current = true;
       trackEvent('cold_call_hook_signup', { method: 'google' });
     } catch (err: any) {
       toast({ title: 'Google Sign Up Issue', description: 'Please try email signup instead.', variant: 'destructive' });
@@ -364,7 +408,10 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
                 // unlimitedUrl intentionally omitted — ScorePaywall's default
                 // handles the $29/mo Stripe link (or placeholder until created).
                 onClose={handleClose}
-                onSignup={() => setPhase('roleplay')}
+                onSignup={() => {
+                  fireGateEvent('signup_gate_cta_clicked', { method: 'scorecard_link' });
+                  setPhase('roleplay');
+                }}
               />
             </Suspense>
           </div>
