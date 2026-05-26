@@ -182,6 +182,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!signupEmail || !signupPassword) return;
+    fireGateEvent('signup_gate_cta_clicked', { method: 'email' });
     setIsSigningUp(true);
 
     try {
@@ -197,6 +198,11 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
       if (error) {
         toast({ title: 'Signup Error', description: error.message, variant: 'destructive' });
         return;
+      }
+
+      if (data.user) {
+        signupCompletedRef.current = true;
+        fireGateEvent('signup_completed', { method: 'email', confirmed: !!data.session });
       }
 
       if (data.user && !data.session) {
@@ -218,6 +224,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   };
 
   const handleGoogleSignup = async () => {
+    fireGateEvent('signup_gate_cta_clicked', { method: 'google' });
     setIsGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -228,6 +235,8 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
         },
       });
       if (error) throw error;
+      // OAuth completion is tracked post-redirect via AuthContext listener.
+      signupCompletedRef.current = true;
       trackEvent('cold_call_hook_signup', { method: 'google' });
     } catch (err: any) {
       toast({ title: 'Google Sign Up Issue', description: 'Please try email signup instead.', variant: 'destructive' });
