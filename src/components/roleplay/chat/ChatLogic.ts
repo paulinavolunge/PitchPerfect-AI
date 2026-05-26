@@ -99,7 +99,7 @@ export const generateAIResponse = async (
         scenario: scenario,
         voiceStyle: getVoiceStyleFromPersona(persona),
         userScript: userScript,
-        conversationHistory: conversationHistory.slice(-6), // Last 6 messages for context
+        conversationHistory: conversationHistory.slice(-30), // Send full recent context
         isReversedRole: true // New flag to indicate reversed roles
       }
     });
