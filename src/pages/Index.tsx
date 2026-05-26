@@ -134,30 +134,20 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>PitchPerfect AI - Stop Losing Deals Because You Weren't Ready</title>
+        <title>PitchPerfect AI — Cold Call Practice With AI Buyers</title>
         <meta name="description" content="Go head-to-head with AI buyers who push back with real objections. Get scored in 30 seconds. Close more deals. Free round — no signup required." />
         <meta name="keywords" content="sales rounds, cold call challenge, AI buyer, objection handling, sales skills, close more deals, revenue enablement" />
+        <link rel="canonical" href="https://www.pitchperfectai.ai/" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://pitchperfectai.ai/" />
-        <meta property="og:title" content="PitchPerfect AI - Stop Losing Deals Because You Weren't Ready" />
+        <meta property="og:url" content="https://www.pitchperfectai.ai/" />
+        <meta property="og:title" content="PitchPerfect AI — Cold Call Practice With AI Buyers" />
         <meta property="og:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round — no signup." />
-        <meta property="og:image" content="https://pitchperfectai.ai/og-image.png" />
+        <meta property="og:image" content="https://www.pitchperfectai.ai/og-image.png" />
         <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content="https://pitchperfectai.ai/" />
-        <meta property="twitter:title" content="PitchPerfect AI - Stop Losing Deals Because You Weren't Ready" />
+        <meta property="twitter:url" content="https://www.pitchperfectai.ai/" />
+        <meta property="twitter:title" content="PitchPerfect AI — Cold Call Practice With AI Buyers" />
         <meta property="twitter:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round — no signup." />
-        <meta property="twitter:image" content="https://pitchperfectai.ai/og-image.png" />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "SoftwareApplication",
-            "name": "PitchPerfect AI",
-            "applicationCategory": "BusinessApplication",
-            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-            "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "127" },
-            "description": "AI cold call challenge that pushes back with real objections so you crush your next deal."
-          })}
-        </script>
+        <meta property="twitter:image" content="https://www.pitchperfectai.ai/og-image.png" />
       </Helmet>
 
       <div className="min-h-screen pp-page">

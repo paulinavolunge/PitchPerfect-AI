@@ -34,6 +34,12 @@ const Pricing = () => {
           name="description"
           content="Solo $29/mo. Team $49/seat/mo. 7-day money-back guarantee. Cancel anytime in one click."
         />
+        <link rel="canonical" href="https://www.pitchperfectai.ai/pricing" />
+        <meta property="og:title" content="PitchPerfect AI Pricing — Solo, Team & Pay-As-You-Go" />
+        <meta property="og:description" content="Solo $29/mo, Team $49/seat/mo, or one-time packs from $4.99. 7-day money-back guarantee." />
+        <meta property="og:url" content="https://www.pitchperfectai.ai/pricing" />
+        <meta name="twitter:title" content="PitchPerfect AI Pricing — Solo, Team & Pay-As-You-Go" />
+        <meta name="twitter:description" content="Solo $29/mo, Team $49/seat/mo, or one-time packs from $4.99. 7-day money-back guarantee." />
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-gray-50">
