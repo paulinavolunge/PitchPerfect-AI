@@ -408,7 +408,10 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
                 // unlimitedUrl intentionally omitted — ScorePaywall's default
                 // handles the $29/mo Stripe link (or placeholder until created).
                 onClose={handleClose}
-                onSignup={() => setPhase('roleplay')}
+                onSignup={() => {
+                  fireGateEvent('signup_gate_cta_clicked', { method: 'scorecard_link' });
+                  setPhase('roleplay');
+                }}
               />
             </Suspense>
           </div>
