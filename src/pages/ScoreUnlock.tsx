@@ -261,7 +261,7 @@ const ScoreUnlock: React.FC = () => {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/15 border border-emerald-500/40 mb-3">
             <CheckCircle2 className="w-8 h-8 text-emerald-400" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black mb-2">You're in!</h1>
+          <h1 className="text-3xl sm:text-4xl font-black mb-2">Your AI Cold Call Scorecard is Unlocked</h1>
           <p className="text-base text-gray-300">
             {verified?.productLabel
               ? `Unlocked: ${verified.productLabel}. Here's your scorecard.`
