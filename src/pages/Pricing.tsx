@@ -72,14 +72,14 @@ const Pricing = () => {
                 </div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Starter Pack</p>
                 <p className="text-3xl font-black text-gray-900 mb-1">$4.99</p>
-                <p className="text-xs text-gray-400 mb-4">one-time · no subscription</p>
+                <p className="text-xs text-gray-600 mb-4">one-time · no subscription</p>
                 <ul className="text-sm text-gray-700 space-y-2 flex-grow list-none p-0 mb-4">
                   <li>✓ Unlock full scorecard</li>
                   <li>✓ 5 practice rounds</li>
                   <li>✓ All sales scenarios</li>
                   <li>✓ Voice + text input</li>
                 </ul>
-                <p className="text-xs text-gray-400 italic mb-4">Less than a coffee. Worth one practice session.</p>
+                <p className="text-xs text-gray-600 italic mb-4">Less than a coffee. Worth one practice session.</p>
                 <a
                   href={STRIPE.starter}
                   className="block w-full text-center rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 transition-colors"
@@ -92,14 +92,14 @@ const Pricing = () => {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col">
                 <p className="text-sm font-semibold text-gray-500 mb-1">Power Pack</p>
                 <p className="text-3xl font-black text-gray-900 mb-1">$9.99</p>
-                <p className="text-xs text-gray-400 mb-4">one-time · no subscription</p>
+                <p className="text-xs text-gray-600 mb-4">one-time · no subscription</p>
                 <ul className="text-sm text-gray-700 space-y-2 flex-grow list-none p-0 mb-4">
                   <li>✓ 15 practice rounds</li>
                   <li>✓ Full scorecard every time</li>
                   <li>✓ All sales scenarios</li>
                   <li>✓ Voice + text input</li>
                 </ul>
-                <p className="text-xs text-gray-400 italic mb-4">Less than a fast-food lunch. 15 real reps.</p>
+                <p className="text-xs text-gray-600 italic mb-4">Less than a fast-food lunch. 15 real reps.</p>
                 <a
                   href={STRIPE.power}
                   className="block w-full text-center rounded-xl border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-4 transition-colors"
@@ -118,9 +118,9 @@ const Pricing = () => {
                 <p className="text-sm font-semibold text-gray-500 mb-1">Solo</p>
                 <div className="mb-1">
                   <span className="text-3xl font-black text-gray-900">{solo.amount}</span>
-                  <span className="text-base text-gray-400 font-normal">{solo.period}</span>
+                  <span className="text-base text-gray-600 font-normal">{solo.period}</span>
                 </div>
-                <p className="text-xs text-gray-400 mb-4">{solo.subtext}</p>
+                <p className="text-xs text-gray-600 mb-4">{solo.subtext}</p>
                 <ul className="text-sm text-gray-700 space-y-2 flex-grow list-none p-0 mb-4">
                   <li>✓ Unlimited rounds</li>
                   <li>✓ All sales scenarios</li>
@@ -129,7 +129,7 @@ const Pricing = () => {
                   <li>✓ 1–10 scoring with feedback</li>
                   <li>✓ Progress dashboard</li>
                 </ul>
-                <p className="text-xs text-gray-400 italic mb-4">One booked meeting per month covers the entire year.</p>
+                <p className="text-xs text-gray-600 italic mb-4">One booked meeting per month covers the entire year.</p>
                 <a
                   href={STRIPE.solo}
                   className="block w-full text-center rounded-xl border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-4 transition-colors"
@@ -148,9 +148,9 @@ const Pricing = () => {
                 <p className="text-sm font-semibold text-gray-500 mb-1">Team</p>
                 <div className="mb-1">
                   <span className="text-3xl font-black text-gray-900">{team.amount}</span>
-                  <span className="text-base text-gray-400 font-normal">{team.period}</span>
+                  <span className="text-base text-gray-600 font-normal">{team.period}</span>
                 </div>
-                <p className="text-xs text-gray-400 mb-4">{team.subtext}</p>
+                <p className="text-xs text-gray-600 mb-4">{team.subtext}</p>
                 <ul className="text-sm text-gray-700 space-y-2 flex-grow list-none p-0 mb-4">
                   <li>✓ Everything in Solo</li>
                   <li>✓ Manager dashboard</li>
@@ -158,7 +158,7 @@ const Pricing = () => {
                   <li>✓ Onboarding support</li>
                   <li>✓ Priority support</li>
                 </ul>
-                <p className="text-xs text-gray-400 italic mb-4">Breaks even at one extra deal per rep per quarter.</p>
+                <p className="text-xs text-gray-600 italic mb-4">Breaks even at one extra deal per rep per quarter.</p>
                 <a
                   href="mailto:sales@pitchperfectai.ai?subject=Team Plan Inquiry"
                   className="block w-full text-center rounded-xl border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-4 transition-colors"

@@ -102,7 +102,7 @@ const About: React.FC = () => (
 
               <div className="mt-8 text-sm text-gray-700">
                 <span className="font-bold text-gray-900">Paulina Vol — Founder</span>
-                <span className="text-gray-400 mx-2">·</span>
+                <span className="text-gray-600 mx-2">·</span>
                 {LINKEDIN_URL ? (
                   <a
                     href={LINKEDIN_URL}
@@ -114,7 +114,7 @@ const About: React.FC = () => (
                     LinkedIn
                   </a>
                 ) : (
-                  <span className="text-gray-300">LinkedIn</span>
+                  <span className="text-gray-600">LinkedIn</span>
                 )}
               </div>
             </div>
