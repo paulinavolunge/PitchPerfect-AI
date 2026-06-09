@@ -13,17 +13,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const Subscription: React.FC = () => {
-  const { user, isPremium, creditsRemaining, trialUsed } = useAuth();
+  const { user, loading: authLoading, isPremium, creditsRemaining, trialUsed } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    // Wait for auth to finish loading before deciding to redirect.
+    // ProtectedRoute already gates this route; this is a safety net only.
+    if (!authLoading && !user) {
       navigate('/login');
-      return;
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const handleManageSubscription = async () => {
     if (!user) return;

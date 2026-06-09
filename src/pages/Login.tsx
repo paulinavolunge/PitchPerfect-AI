@@ -57,6 +57,24 @@ const Login = () => {
     }
   }, [user, loading, navigate, redirectPath]);
 
+  // NOTE: All hooks must run before any early return — moved this above the
+  // loading/user guards below to keep hook order stable across renders.
+  useEffect(() => {
+    // Check for verification message in URL params
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('verified') === 'true') {
+      setVerificationMessage("Email verified successfully! You can now log in.");
+    }
+
+    // Handle OAuth callback errors
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    if (error) {
+      console.error('OAuth error:', error, errorDescription);
+      setGoogleError(errorDescription || 'Google authentication failed. Please try again or use email login.');
+    }
+  }, [location]);
+
   // Show simplified loading state while auth context loads
   if (loading) {
     console.log('Login: Showing loading state');
@@ -81,22 +99,6 @@ const Login = () => {
       </div>
     );
   }
-
-  useEffect(() => {
-    // Check for verification message in URL params
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get('verified') === 'true') {
-      setVerificationMessage("Email verified successfully! You can now log in.");
-    }
-
-    // Handle OAuth callback errors
-    const error = searchParams.get('error');
-    const errorDescription = searchParams.get('error_description');
-    if (error) {
-      console.error('OAuth error:', error, errorDescription);
-      setGoogleError(errorDescription || 'Google authentication failed. Please try again or use email login.');
-    }
-  }, [location]);
 
   useEffect(() => {
     // Listen for auth state changes with proper cleanup

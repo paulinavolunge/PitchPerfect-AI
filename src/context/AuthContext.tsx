@@ -61,7 +61,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authInitialized.current = true;
         
         // Handle different auth events with proper data isolation
-        if (event === 'SIGNED_OUT' || (!currentSession && userRef.current)) {
+        // Only treat explicit SIGNED_OUT as sign-out. A transient null session
+        // on TOKEN_REFRESHED / USER_UPDATED previously bounced users to /login.
+        if (event === 'SIGNED_OUT') {
           console.log('🧹 User signed out, clearing all session data...');
           
           // Clear all user-specific data (preserve consent)
