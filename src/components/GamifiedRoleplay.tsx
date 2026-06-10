@@ -738,71 +738,22 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       hungUp: hungUp || patienceRef.current <= 0,
     };
 
+    // Build full transcript in Rep/Prospect format (hoisted so persistence can read it)
+    const transcript = finalMessages
+      .map(m => `${m.role === 'user' ? 'Rep' : 'Prospect'}: ${m.text}`)
+      .join('\n');
+
+    // Hoisted so the `finally` persistence call can read the real score/feedback.
+    // Default to local score on failure rather than null so the row is never empty.
+    let finalScore: number = computeLocalScore(finalMessages);
+    let feedbackData: any = null;
+
     try {
-      // Build full transcript in Rep/Prospect format
-      const transcript = finalMessages
-        .map(m => `${m.role === 'user' ? 'Rep' : 'Prospect'}: ${m.text}`)
-        .join('\n');
-
-      // Use direct fetch for guest auth support
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
-
-      let authToken = supabaseAnonKey;
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData?.session?.access_token) {
-          authToken = sessionData.session.access_token;
-        }
-      } catch (e) {
-        console.warn('[GamifiedRoleplay] Could not get session for debrief, using anon key:', e);
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/pitch-analysis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-          'apikey': supabaseAnonKey,
-        },
-        body: JSON.stringify({
-          transcript,
-          practiceMode: inputMode,
-          scenario: {
-            objection: isCustomMode && customScenario ? customScenario.objection : (selectedObjection?.id || 'general'),
-            industry: isCustomMode && customScenario ? customScenario.industry : 'general',
-            difficulty: 'medium',
-          },
-          context: 'sales roleplay objection handling practice',
-          ...(isCustomMode && customScenario ? {
-            customProduct: customScenario.product,
-            customBuyerTitle: customScenario.buyerTitle,
-            customIndustry: customScenario.industry,
-            customObjection: customScenario.objection,
-          } : {}),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[GamifiedRoleplay] pitch-analysis error:', response.status, errorText);
-        throw new Error(`pitch-analysis error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data?.analysis) {
-        const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
-
-        // pitch-analysis returns overallScore on a 1-100 scale; convert to X.X/10
-        const rawScore = parsed.overallScore ?? parsed.overall_score ?? parsed.score ?? 50;
-        const apiScore = rawScore > 10 ? Math.round(rawScore) / 10 : rawScore;
-
-        // Compute local fallback score based on conversation content
+...
         const localScore = computeLocalScore(finalMessages);
 
         // Use the HIGHER of the two scores to avoid unfairly low ratings
-        const finalScore = Math.max(apiScore, localScore);
+        finalScore = Math.max(apiScore, localScore);
 
         console.log('API score:', apiScore, 'Local score:', localScore, 'Final:', finalScore);
 
@@ -810,6 +761,15 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         const didHangUp = sessionStats.hungUp;
         const lowPatience = sessionStats.finalPatience < 30;
         const won = !didHangUp && !lowPatience && finalScore >= 7;
+
+        feedbackData = {
+          score: finalScore,
+          strengths: parsed.strengths ?? ['Engaged with the prospect'],
+          improvements: parsed.improvements ?? ['Could dig deeper into root concerns'],
+          recommendation: parsed.recommendation ?? 'Focus on asking discovery questions before presenting solutions.',
+          sessionStats,
+          won,
+        };
 
         setDebrief({
           won,
@@ -827,19 +787,33 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     } catch (err) {
       console.error('[GamifiedRoleplay] Debrief error, using local scoring:', err);
       const localScore = computeLocalScore(finalMessages);
+      finalScore = localScore;
       // Determine outcome factoring in patience state
       const didHangUp = sessionStats.hungUp;
       const lowPatience = sessionStats.finalPatience < 30;
       const won = !didHangUp && !lowPatience && localScore >= 7;
 
+      const gaps = sessionStats.hungUp
+        ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
+        : ['Consider asking more discovery questions', 'Provide more specific evidence and ROI data'];
+      const tip = 'Next time, acknowledge the objection first before presenting your counter-argument.';
+
+      feedbackData = {
+        score: localScore,
+        strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
+        improvements: gaps,
+        recommendation: tip,
+        sessionStats,
+        won,
+        fallback: true,
+      };
+
       setDebrief({
         won,
         score: localScore,
         strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
-        gaps: sessionStats.hungUp
-          ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
-          : ['Consider asking more discovery questions', 'Provide more specific evidence and ROI data'],
-        tip: 'Next time, acknowledge the objection first before presenting your counter-argument.',
+        gaps,
+        tip,
         sessionStats,
       });
     } finally {
@@ -856,7 +830,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           difficulty: 'medium',
           industry: isCustomMode && customScenario ? customScenario.industry : 'general',
           duration_seconds: sessionStartTimeRef.current ? Math.round((Date.now() - sessionStartTimeRef.current) / 1000) : 0,
-          score: null,
+          score: finalScore,
+          transcript,
+          feedback_data: feedbackData,
         });
         refreshCount();
       }
