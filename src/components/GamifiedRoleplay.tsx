@@ -749,7 +749,61 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     let feedbackData: any = null;
 
     try {
-...
+      // Use direct fetch for guest auth support
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
+
+      let authToken = supabaseAnonKey;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.access_token) {
+          authToken = sessionData.session.access_token;
+        }
+      } catch (e) {
+        console.warn('[GamifiedRoleplay] Could not get session for debrief, using anon key:', e);
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/pitch-analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify({
+          transcript,
+          practiceMode: inputMode,
+          scenario: {
+            objection: isCustomMode && customScenario ? customScenario.objection : (selectedObjection?.id || 'general'),
+            industry: isCustomMode && customScenario ? customScenario.industry : 'general',
+            difficulty: 'medium',
+          },
+          context: 'sales roleplay objection handling practice',
+          ...(isCustomMode && customScenario ? {
+            customProduct: customScenario.product,
+            customBuyerTitle: customScenario.buyerTitle,
+            customIndustry: customScenario.industry,
+            customObjection: customScenario.objection,
+          } : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[GamifiedRoleplay] pitch-analysis error:', response.status, errorText);
+        throw new Error(`pitch-analysis error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data?.analysis) {
+        const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
+
+        // pitch-analysis returns overallScore on a 1-100 scale; convert to X.X/10
+        const rawScore = parsed.overallScore ?? parsed.overall_score ?? parsed.score ?? 50;
+        const apiScore = rawScore > 10 ? Math.round(rawScore) / 10 : rawScore;
+
+        // Compute local fallback score based on conversation content
         const localScore = computeLocalScore(finalMessages);
 
         // Use the HIGHER of the two scores to avoid unfairly low ratings
