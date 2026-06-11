@@ -358,14 +358,14 @@ const Login = () => {
                   )}
                 </div>
 
-                <Button 
+                <Button
                   type="submit"
                   data-testid="login-submit"
                   disabled={isSubmitting}
-                  className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-3 px-4 rounded-md shadow-md transition-all duration-150 flex items-center justify-center gap-2"
+                  className="w-full"
                 >
                   <Mail className="h-4 w-4" />
-                  {isSubmitting ? 'Signing In...' : 'Sign In with Email'}
+                  {isSubmitting ? 'Signing In...' : 'Log In'}
                 </Button>
               </form>
 
