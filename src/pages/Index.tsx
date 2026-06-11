@@ -47,7 +47,7 @@ const Index = () => {
   const [pendingUnlockSessionId, setPendingUnlockSessionId] = useState<string | null>(null);
   const coldCallUsed = typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
   const coldCallLocked = coldCallUsed && !user;
-  const coldCallLabel = coldCallLocked ? 'Get Started Free' : 'Try a cold call — free, no signup';
+  const coldCallLabel = coldCallLocked ? 'Get Started Free' : 'Try a cold call. Free, no signup.';
 
   // Check for an unfinished Stripe purchase whose buyer skipped the
   // /scorecard-unlock signup step. If they're still anonymous, surface
@@ -127,19 +127,19 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>PitchPerfect AI — Cold Call Practice With AI Buyers</title>
-        <meta name="description" content="Go head-to-head with AI buyers who push back with real objections. Get scored in 30 seconds. Close more deals. Free round — no signup required." />
+        <title>PitchPerfect AI. Cold Call Practice With AI Buyers</title>
+        <meta name="description" content="Go head-to-head with AI buyers who push back with real objections. Get scored in 30 seconds. Close more deals. Free round. No signup required." />
         <meta name="keywords" content="sales rounds, cold call challenge, AI buyer, objection handling, sales skills, close more deals, revenue enablement" />
         <link rel="canonical" href="https://www.pitchperfectai.ai/" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.pitchperfectai.ai/" />
-        <meta property="og:title" content="PitchPerfect AI — Cold Call Practice With AI Buyers" />
-        <meta property="og:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round — no signup." />
+        <meta property="og:title" content="PitchPerfect AI. Cold Call Practice With AI Buyers" />
+        <meta property="og:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round. No signup." />
         <meta property="og:image" content="https://www.pitchperfectai.ai/og-image.png" />
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://www.pitchperfectai.ai/" />
-        <meta property="twitter:title" content="PitchPerfect AI — Cold Call Practice With AI Buyers" />
-        <meta property="twitter:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round — no signup." />
+        <meta property="twitter:title" content="PitchPerfect AI. Cold Call Practice With AI Buyers" />
+        <meta property="twitter:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round. No signup." />
         <meta property="twitter:image" content="https://www.pitchperfectai.ai/og-image.png" />
       </Helmet>
 
@@ -148,7 +148,7 @@ const Index = () => {
         {pendingUnlockSessionId && (
           <div className="sticky top-0 z-[60] bg-emerald-500 text-gray-900 text-sm font-semibold px-4 py-2.5 shadow-md">
             <div className="max-w-5xl mx-auto flex items-center justify-center gap-3 text-center">
-              <span>You have a purchase waiting — finish setup to unlock your rounds.</span>
+              <span>You have a purchase waiting. Finish setup to unlock your rounds.</span>
               <button
                 type="button"
                 onClick={() => navigate(`/scorecard-unlock?session_id=${encodeURIComponent(pendingUnlockSessionId)}`)}
@@ -201,7 +201,7 @@ const Index = () => {
                       <div className="pp-dot pp-dot-r" />
                       <div className="pp-dot pp-dot-y" />
                       <div className="pp-dot pp-dot-g" />
-                      <span className="pp-mockup-title">PitchPerfect AI — Cold Call Round</span>
+                      <span className="pp-mockup-title">PitchPerfect AI. Cold Call Round</span>
                     </div>
                     <div className="pp-mockup-body">
                       <div className="pp-bubble pp-bubble-ai">
@@ -210,7 +210,7 @@ const Index = () => {
                       </div>
                       <div className="pp-bubble pp-bubble-user">
                         <span className="pp-bubble-label">Your Response</span>
-                        I completely understand — the last thing I want to do is waste your time. The reason companies like yours switch is...
+                        I completely understand. The last thing I want to do is waste your time. The reason companies like yours switch is...
                       </div>
                       <div className="pp-mockup-input">
                         <span>Type your response or tap the mic...</span>
@@ -241,9 +241,9 @@ const Index = () => {
                   <div className="pp-founder-avatar">P</div>
                   <div>
                     <p className="pp-founder-text">
-                      I built this because I needed it. I was in B2B sales and kept freezing when prospects threw something I wasn't ready for. Every rep deserves a sparring partner that tells them the truth — not a chatbot that says "great job."
+                      I built this because I needed it. I was in B2B sales and kept freezing when prospects threw something I wasn't ready for. Every rep deserves a sparring partner that tells them the truth, not a chatbot that says "great job."
                     </p>
-                    <div className="pp-founder-name">Paulina Vol — Founder</div>
+                    <div className="pp-founder-name">Paulina Vol, Founder</div>
                   </div>
                 </div>
               </div>
@@ -254,7 +254,7 @@ const Index = () => {
           <div className="pp-trust-bar">
             <div className="pp-container pp-trust-inner">
               <div className="pp-trust-item"><span>🏢</span> Listed in Lohfeld Consulting's AI Tools Guide</div>
-              <div className="pp-trust-item"><span>🔒</span> 100% Private — No manager dashboards</div>
+              <div className="pp-trust-item"><span>🔒</span> 100% Private. No manager dashboards.</div>
               <div className="pp-trust-item"><span>🚀</span> Featured on <strong>Product Hunt</strong></div>
             </div>
           </div>
@@ -299,8 +299,8 @@ const Index = () => {
                 </div>
                 <div className="pp-steps-grid">
                   {[
-                    { n: '1', title: 'Pick Your Scenario', text: 'Cold call, pricing objection, demo close, gatekeeper bypass — choose the exact conversation you need to nail.' },
-                    { n: '2', title: 'Spar With a Tough Buyer', text: 'Type or use your mic. The AI pushes back with realistic objections — no softballs, because your prospects won\'t throw softballs.' },
+                    { n: '1', title: 'Pick Your Scenario', text: 'Cold call, pricing objection, demo close, gatekeeper bypass. Choose the exact conversation you need to nail.' },
+                    { n: '2', title: 'Spar With a Tough Buyer', text: 'Type or use your mic. The AI pushes back with realistic objections. No softballs, because your prospects won\'t throw softballs.' },
                     { n: '3', title: 'Get Scored & Improve', text: 'See your 1-10 performance score with specific notes on what worked, what didn\'t, and what to say differently next time.' },
                   ].map((s) => (
                     <div key={s.n} className="pp-step-card">
@@ -312,7 +312,7 @@ const Index = () => {
                 </div>
                 <div className="text-center" style={{ marginTop: 40 }}>
                   <button className="pp-btn-primary pp-btn-lg" onClick={handleGetStartedClick}>
-                    Try It Free — Pick Your First Scenario →
+                    Try It Free. Pick Your First Scenario →
                   </button>
                 </div>
               </div>
@@ -330,7 +330,7 @@ const Index = () => {
                 </div>
                 <div className="pp-scenario-grid">
                   {[
-                    { icon: '🎯', title: 'Cold Call — First 30 Seconds', text: 'Get past "I\'m not interested" and earn the meeting. Battle-test your opener and handle instant rejection.' },
+                    { icon: '🎯', title: 'Cold Call. First 30 Seconds', text: 'Get past "I\'m not interested" and earn the meeting. Battle-test your opener and handle instant rejection.' },
                     { icon: '💰', title: 'Pricing Objection', text: 'Handle "That\'s too expensive" without flinching. Battle-test value framing and avoiding the discount trap.' },
                     { icon: '🎤', title: 'Demo Close', text: 'Ask for the business when the demo goes well. Battle-test trial closes and handling "let me think about it."' },
                     { icon: '🚪', title: 'Gatekeeper Bypass', text: 'Get past the front desk to the decision-maker with assertive-but-respectful techniques that work.' },
@@ -344,7 +344,7 @@ const Index = () => {
                 </div>
                 <div className="text-center" style={{ marginTop: 40 }}>
                   <button className="pp-btn-outline" onClick={() => navigate('/practice')}>
-                    Start With Any Scenario — Free →
+                    Start With Any Scenario. Free →
                   </button>
                 </div>
               </div>
@@ -358,7 +358,7 @@ const Index = () => {
                 <div className="text-center">
                   <div className="pp-section-label">See it in action</div>
                   <h2 className="pp-section-title">Here's What a Real Session Looks Like.</h2>
-                  <p className="pp-section-sub mx-auto">A pricing objection round — from pushback to score — in under 3 minutes.</p>
+                  <p className="pp-section-sub mx-auto">A pricing objection round, from pushback to score, in under 3 minutes.</p>
                 </div>
                 <div className="pp-demo-window">
                   <div className="pp-demo-topbar">
@@ -369,7 +369,7 @@ const Index = () => {
                   <div className="pp-demo-body">
                     <div className="pp-demo-label">
                       <span className="pp-demo-live-dot" />
-                      Live Round — Pricing Objection
+                      Live Round. Pricing Objection
                     </div>
                     <div className="pp-chat-bubble pp-bubble-prospect">
                       <span className="pp-chat-label pp-chat-label-prospect">AI Prospect</span>
@@ -377,7 +377,7 @@ const Index = () => {
                     </div>
                     <div className="pp-chat-bubble pp-bubble-you">
                       <span className="pp-chat-label pp-chat-label-you">You</span>
-                      "I understand budget is a priority. Before we talk numbers — what would the cost be if your team keeps losing 3-4 deals a month to the same objections?"
+                      "I understand budget is a priority. Before we talk numbers. What would the cost be if your team keeps losing 3-4 deals a month to the same objections?"
                     </div>
                     <div className="pp-chat-bubble pp-bubble-prospect">
                       <span className="pp-chat-label pp-chat-label-prospect">AI Prospect</span>
@@ -385,13 +385,13 @@ const Index = () => {
                     </div>
                     <div className="pp-chat-bubble pp-bubble-you">
                       <span className="pp-chat-label pp-chat-label-you">You</span>
-                      "Absolutely — I'll walk you through two case studies from teams your size. But first, is budget the only thing standing between us and a decision?"
+                      "Absolutely. I'll walk you through two case studies from teams your size. But first, is budget the only thing standing between us and a decision?"
                     </div>
                     <div className="pp-demo-score-inline">
                       <div className="pp-demo-score-num">7.4</div>
                       <div className="pp-demo-score-detail">
                         <h4>Session Score</h4>
-                        <p>Strong reframe on value. Good isolating question at the end. Work on: providing the proof faster — the prospect asked twice.</p>
+                        <p>Strong reframe on value. Good isolating question at the end. Work on: providing the proof faster. The prospect asked twice.</p>
                       </div>
                     </div>
                   </div>
@@ -406,7 +406,7 @@ const Index = () => {
               <div className="pp-container">
                 <div className="text-center">
                   <div className="pp-section-label">Straight answers</div>
-                  <h2 className="pp-section-title">You're Skeptical. Good — That Means You're a Real Salesperson.</h2>
+                  <h2 className="pp-section-title">You're Skeptical. Good. That means you're a real salesperson.</h2>
                 </div>
                 <div className="pp-objection-grid">
                   {[
@@ -414,7 +414,7 @@ const Index = () => {
                     { q: "Will this actually help me close more?", a: "You battle-test against realistic objections before the real call. You walk in prepared instead of winging it. Preparation beats talent when talent doesn't prepare." },
                     { q: "Why not just use ChatGPT?", a: "ChatGPT won't push back, won't score you, and won't run structured scenarios. It gives advice. We give reps. There's a difference between reading about pushups and doing them." },
                     { q: "$29/month seems like a lot.", a: "It's less than the commission on one deal you'd lose by freezing on an objection you never battle-tested. One closed deal pays for years of PitchPerfect AI." },
-                    { q: "I've been selling for 15 years.", a: "The AI adapts. Veterans get harder pushback — multi-layered objections, misdirections, the kind of thing a VP of Procurement throws at you. This sharpens the edge, not teaches the basics." },
+                    { q: "I've been selling for 15 years.", a: "The AI adapts. Veterans get harder pushback. Multi-layered objections, misdirections, the kind of thing a VP of Procurement throws at you. This sharpens the edge, not teaches the basics." },
                     { q: "What if I try it and it's not for me?", a: "Free first session. No credit card. Under 10 minutes. If it doesn't help, you've lost nothing except a few minutes." },
                   ].map((faq, i) => (
                     <div key={i} className="pp-objection-card">
@@ -453,7 +453,7 @@ const Index = () => {
                       <li>Voice + text input</li>
                     </ul>
                     <button className="pp-btn-primary pp-btn-full" onClick={() => { window.location.href = 'https://buy.stripe.com/cNifZjcsR2YadjI68W5sA00'; }}>
-                      Unlock Scorecard — $4.99 →
+                      Unlock Scorecard for $4.99 →
                     </button>
                   </div>
                   {/* Tier 2 — $9.99 one-time */}
@@ -468,7 +468,7 @@ const Index = () => {
                       <li>Voice + text input</li>
                     </ul>
                     <button className="pp-btn-outline pp-btn-full" onClick={() => { window.location.href = 'https://buy.stripe.com/14AfZjboN9myenM2WK5sA01'; }}>
-                      Get 15 Rounds — $9.99 →
+                      Get 15 Rounds for $9.99 →
                     </button>
                   </div>
                   {/* Tier 3 — $29/mo Solo */}
@@ -485,7 +485,7 @@ const Index = () => {
                       <li>Progress dashboard</li>
                     </ul>
                     <button className="pp-btn-outline pp-btn-full" onClick={() => { window.location.href = 'https://buy.stripe.com/14A14pakJ7eq4NceFs5sA02'; }}>
-                      Go Unlimited — $29/mo →
+                      Go Unlimited for $29/mo →
                     </button>
                   </div>
                   {/* Tier 4 — $49/seat/mo Team */}
@@ -520,9 +520,9 @@ const Index = () => {
                   <div className="pp-founder-avatar">P</div>
                   <div>
                     <p className="pp-founder-text">
-                      I built this because I needed it. I was in B2B sales and kept freezing when prospects threw something I wasn't ready for. Every rep deserves a sparring partner that tells them the truth — not a chatbot that says "great job."
+                      I built this because I needed it. I was in B2B sales and kept freezing when prospects threw something I wasn't ready for. Every rep deserves a sparring partner that tells them the truth, not a chatbot that says "great job."
                     </p>
-                    <div className="pp-founder-name">Paulina Vol — Founder</div>
+                    <div className="pp-founder-name">Paulina Vol, Founder</div>
                   </div>
                 </div>
               </div>
