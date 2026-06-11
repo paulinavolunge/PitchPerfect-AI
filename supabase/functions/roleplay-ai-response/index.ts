@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,6 +39,13 @@ serve(async (req) => {
   try {
     const user = await verifyAuth(req);
     console.log('Request from:', user ? `user ${user.id}` : 'guest');
+
+    // Per-IP rate limit to prevent paid-API cost abuse by unauthenticated callers.
+    // Authenticated users get a higher cap; guests are kept tight.
+    const ip = getClientIp(req);
+    const rlKey = `roleplay:${user?.id ?? `ip:${ip}`}`;
+    const rl = checkRateLimit(rlKey, user ? 60 : 20, 60_000);
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
@@ -64,24 +72,20 @@ serve(async (req) => {
       customIndustry,
       customObjection,
       prospectName,
-      systemPromptOverride,
     } = JSON.parse(rawBody);
 
-    console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, hasOverride: !!systemPromptOverride, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
+    console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
 
     const isCustom = !!(customProduct || customBuyerTitle || customIndustry || customObjection);
 
-    // If the client supplies a fully-formed persona prompt (e.g. the cold-call
-    // hook), use it verbatim — it has context the generic builders don't.
-    const baseSystemPrompt = isReversedRole 
+    // System prompt is built server-side only. We intentionally do NOT accept a
+    // client-supplied systemPromptOverride — that would let any unauthenticated
+    // caller jailbreak the AI's persona / content policies.
+    const systemPrompt = isReversedRole 
       ? (isCustom
           ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
           : createProspectSystemPrompt(scenario, voiceStyle))
       : createSalespersonSystemPrompt(scenario, voiceStyle);
-
-    const systemPrompt = (typeof systemPromptOverride === 'string' && systemPromptOverride.trim().length > 50)
-      ? `${systemPromptOverride.trim()}\n\nCRITICAL: Read the entire conversation above carefully before replying. Always acknowledge information the rep has already given you (name, company, callback reference, prior pitch). Never ask "Who is this?" if they have introduced themselves. Never ask "What's this about?" if they have already told you why they are calling. Respond to what was actually said.`
-      : baseSystemPrompt;
 
     // Send the full conversation history (capped to keep tokens sane) so the
     // prospect responds contextually instead of acting like each turn is new.

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,6 +39,11 @@ serve(async (req) => {
   try {
     const user = await verifyAuth(req);
     console.log('TTS request from:', user ? `user ${user.id}` : 'guest');
+
+    // Per-IP rate limit to prevent ElevenLabs credit-drain abuse.
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`tts:${user?.id ?? `ip:${ip}`}`, user ? 60 : 20, 60_000);
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
     const { text, voiceId } = await req.json();
 

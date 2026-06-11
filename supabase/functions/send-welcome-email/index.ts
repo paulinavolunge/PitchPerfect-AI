@@ -11,6 +11,20 @@ serve(async (req) => {
   }
 
   try {
+    // Require a shared secret from the Supabase database webhook so random
+    // callers cannot trigger welcome emails to arbitrary addresses.
+    const webhookSecret = Deno.env.get("WELCOME_EMAIL_WEBHOOK_SECRET");
+    const provided =
+      req.headers.get("x-webhook-secret") ||
+      req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+      "";
+    if (!webhookSecret || provided !== webhookSecret) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const payload = await req.json();
     const record = payload?.record;
     

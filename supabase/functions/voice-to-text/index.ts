@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,6 +39,11 @@ serve(async (req) => {
     const callerId = user?.id ?? 'guest';
     console.log('Voice transcription request from:', callerId);
 
+    // Per-IP rate limit to cap Whisper API spend by unauthenticated callers.
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`stt:${user?.id ?? `ip:${ip}`}`, user ? 60 : 15, 60_000);
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
@@ -45,8 +51,17 @@ serve(async (req) => {
 
     const { audio, format } = await req.json();
 
-    if (!audio) {
+    if (!audio || typeof audio !== 'string') {
       throw new Error('No audio data provided');
+    }
+
+    // Cap base64 payload to ~8 MB (≈6 MB raw audio) to prevent abuse.
+    const MAX_AUDIO_B64 = 8 * 1024 * 1024;
+    if (audio.length > MAX_AUDIO_B64) {
+      return new Response(
+        JSON.stringify({ error: 'Audio payload too large' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Processing voice transcription for:', callerId);
