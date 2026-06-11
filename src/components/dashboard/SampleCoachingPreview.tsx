@@ -23,7 +23,7 @@ const SAMPLE_CARDS = [
   {
     emoji: "🎤",
     label: "Pace",
-    finding: "Slowed down before the close — great instinct.",
+    finding: "Slowed down before the close. Great instinct.",
     why: "Deliberate pacing signals confidence and invites the other side to respond.",
     severity: "info",
   },

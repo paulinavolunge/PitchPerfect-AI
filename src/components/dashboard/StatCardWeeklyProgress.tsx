@@ -129,8 +129,8 @@ const StatCardWeeklyProgress: React.FC = () => {
             <p className="text-xs text-muted-foreground mt-2">
               {left === 0
                 ? weekCount >= WEEKLY_GOAL
-                  ? "Week complete — great work! 🎉"
-                  : "Last chance — practice today!"
+                  ? "Week complete. Great work! 🎉"
+                  : "Last chance. Practice today!"
                 : `${left} day${left !== 1 ? "s" : ""} left in the week`}
             </p>
           </>

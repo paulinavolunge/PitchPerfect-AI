@@ -19,7 +19,7 @@ const FAQS = [
   },
   {
     q: 'Why is there a 3-seat minimum on Team?',
-    a: 'The Team tier includes a manager dashboard and team analytics — features that only make sense with multiple reps. For solo practice, pick Solo at $29/mo.',
+    a: 'The Team tier includes a manager dashboard and team analytics, features that only make sense with multiple reps. For solo practice, pick Solo at $29/mo.',
   },
   {
     q: 'Is there a free version?',

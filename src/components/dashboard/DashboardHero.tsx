@@ -21,7 +21,7 @@ const AREA_LABELS: Record<string, string> = {
 
 function getSubtitle(weakestArea: string | null, isFirstTime: boolean): string {
   if (isFirstTime) return "Let's see what you're made of. Drop in and get scored.";
-  if (!weakestArea) return "Consistency is everything — keep showing up.";
+  if (!weakestArea) return "Consistency is everything. Keep showing up.";
   const label = AREA_LABELS[weakestArea] ?? weakestArea.toLowerCase();
   return `Your ${label} objections need work. Let's fix that today.`;
 }

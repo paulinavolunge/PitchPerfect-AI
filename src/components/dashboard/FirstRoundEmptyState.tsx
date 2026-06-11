@@ -24,7 +24,7 @@ const FirstRoundEmptyState: React.FC = () => {
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
             We'll listen, transcribe, and tell you exactly where you sound
-            confident — and where you don't.
+            confident, and where you don't.
           </p>
         </div>
 
