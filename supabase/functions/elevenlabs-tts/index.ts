@@ -40,6 +40,11 @@ serve(async (req) => {
     const user = await verifyAuth(req);
     console.log('TTS request from:', user ? `user ${user.id}` : 'guest');
 
+    // Per-IP rate limit to prevent ElevenLabs credit-drain abuse.
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`tts:${user?.id ?? `ip:${ip}`}`, user ? 60 : 20, 60_000);
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     const { text, voiceId } = await req.json();
 
     if (!text || typeof text !== 'string') {
