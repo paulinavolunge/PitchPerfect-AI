@@ -29,16 +29,16 @@ const Pricing = () => {
   return (
     <>
       <Helmet>
-        <title>Pricing — PitchPerfect AI</title>
+        <title>Pricing. PitchPerfect AI</title>
         <meta
           name="description"
           content="Solo $29/mo. Team $49/seat/mo. 7-day money-back guarantee. Cancel anytime in one click."
         />
         <link rel="canonical" href="https://www.pitchperfectai.ai/pricing" />
-        <meta property="og:title" content="PitchPerfect AI Pricing — Solo, Team & Pay-As-You-Go" />
+        <meta property="og:title" content="PitchPerfect AI Pricing. Solo, Team & Pay-As-You-Go" />
         <meta property="og:description" content="Solo $29/mo, Team $49/seat/mo, or one-time packs from $4.99. 7-day money-back guarantee." />
         <meta property="og:url" content="https://www.pitchperfectai.ai/pricing" />
-        <meta name="twitter:title" content="PitchPerfect AI Pricing — Solo, Team & Pay-As-You-Go" />
+        <meta name="twitter:title" content="PitchPerfect AI Pricing. Solo, Team & Pay-As-You-Go" />
         <meta name="twitter:description" content="Solo $29/mo, Team $49/seat/mo, or one-time packs from $4.99. 7-day money-back guarantee." />
       </Helmet>
 
@@ -84,7 +84,7 @@ const Pricing = () => {
                   href={STRIPE.starter}
                   className="block w-full text-center rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 transition-colors"
                 >
-                  Unlock Scorecard — $4.99
+                  Unlock Scorecard for $4.99
                 </a>
               </div>
 
@@ -104,7 +104,7 @@ const Pricing = () => {
                   href={STRIPE.power}
                   className="block w-full text-center rounded-xl border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-4 transition-colors"
                 >
-                  Get 15 Rounds — $9.99
+                  Get 15 Rounds for $9.99
                 </a>
               </div>
 

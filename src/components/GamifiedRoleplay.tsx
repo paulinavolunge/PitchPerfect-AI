@@ -676,7 +676,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       const fallbackMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'prospect',
-        text: "I'm running short on time. Let's wrap this up — what's the bottom line?",
+        text: "I'm running short on time. Let's wrap this up. What's the bottom line?",
         timestamp: new Date(),
       };
       const allMessages = [...updatedMessages, fallbackMsg];
@@ -1458,7 +1458,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                 : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
                   ? 'Deal Lost'
                   : debrief.score >= 4
-                    ? 'Almost There — Keep Practicing'
+                    ? 'Almost There. Keep Practicing.'
                     : 'Deal Lost'}
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -1467,7 +1467,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
               : debrief.won
                 ? 'You earned the prospect\'s trust.'
                 : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
-                  ? 'The prospect was losing patience — the deal slipped away.'
+                  ? 'The prospect was losing patience. The deal slipped away.'
                   : debrief.score >= 4
                     ? 'Getting closer! A few tweaks and you\'ll close it next time.'
                     : 'The prospect wasn\'t convinced.'}
@@ -1564,14 +1564,14 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             <UserPlus className="w-8 h-8 mx-auto text-primary mb-2" />
             <h3 className="font-semibold text-foreground mb-1">Want to keep practicing?</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Grab a round pack starting at $4.99 — or go unlimited with Pro.
+              Grab a round pack starting at $4.99, or go unlimited with Pro.
             </p>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => navigate('/signup')} className="flex-1">
                 Create Account <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
               <Button onClick={() => handleGoProCheckout('solo')} disabled={checkoutLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
-                {checkoutLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</> : <>Go Pro — $29/mo <ArrowRight className="w-4 h-4 ml-1" /></>}
+                {checkoutLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</> : <>Go Pro for $29/mo <ArrowRight className="w-4 h-4 ml-1" /></>}
               </Button>
             </div>
           </div>

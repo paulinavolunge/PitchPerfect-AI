@@ -232,13 +232,13 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Log In — PitchPerfect AI</title>
+        <title>Log In. PitchPerfect AI</title>
         <meta name="description" content="Log in to your PitchPerfect AI account to access your practice rounds, scorecard, and coaching history." />
         <link rel="canonical" href="https://www.pitchperfectai.ai/login" />
-        <meta property="og:title" content="Log In — PitchPerfect AI" />
+        <meta property="og:title" content="Log In. PitchPerfect AI" />
         <meta property="og:description" content="Access your practice rounds, scores, and AI coaching history." />
         <meta property="og:url" content="https://www.pitchperfectai.ai/login" />
-        <meta name="twitter:title" content="Log In — PitchPerfect AI" />
+        <meta name="twitter:title" content="Log In. PitchPerfect AI" />
         <meta name="twitter:description" content="Access your practice rounds, scores, and AI coaching history." />
         <meta name="robots" content="noindex, follow" />
       </Helmet>

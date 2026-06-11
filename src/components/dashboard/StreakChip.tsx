@@ -41,7 +41,7 @@ const StreakChip: React.FC<StreakChipProps> = ({ streak, atRisk, freezesAvailabl
         {hasStreak
           ? atRisk
             ? "Practice today to keep it alive"
-            : "You practiced today — keep it up!"
+            : "You practiced today. Keep it up!"
           : "Start your streak today"}
       </p>
 

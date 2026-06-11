@@ -130,7 +130,7 @@ const StatCardWeakestArea: React.FC = () => {
         ) : !area ? (
           <div>
             <div className="text-2xl font-bold text-foreground">—</div>
-            <p className="text-xs text-muted-foreground mt-1">No weakness detected — great variety!</p>
+            <p className="text-xs text-muted-foreground mt-1">No weakness detected. Great variety!</p>
           </div>
         ) : (
           <div className="space-y-3">

@@ -104,7 +104,7 @@ const ContextualUpgradeModal: React.FC<ContextualUpgradeModalProps> = ({
               </>
             ) : (
               <>
-                Unlock Pro — $29/mo
+                Unlock Pro for $29/mo
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
@@ -118,7 +118,7 @@ const ContextualUpgradeModal: React.FC<ContextualUpgradeModalProps> = ({
             onClick={onSkip}
             className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
           >
-            Skip — keep practicing free
+            Skip. Keep practicing free.
           </button>
         </div>
       </div>

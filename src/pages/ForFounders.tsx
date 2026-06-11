@@ -11,19 +11,19 @@ const BASE_URL = 'https://www.pitchperfectai.ai';
 const ForFounders = () => (
   <>
     <Helmet>
-      <title>PitchPerfect AI for Founders — Practice Your Sales Pitch</title>
+      <title>PitchPerfect AI for Founders. Practice Your Sales Pitch</title>
       <meta
         name="description"
         content="Founders doing their own sales: practice discovery calls and pitch objections with AI. Get scored, get feedback, close your first customers faster."
       />
       <link rel="canonical" href={`${BASE_URL}/for-founders`} />
       <meta property="og:type" content="website" />
-      <meta property="og:title" content="PitchPerfect AI for Founders — Nail Your First Sales Calls" />
+      <meta property="og:title" content="PitchPerfect AI for Founders. Nail Your First Sales Calls" />
       <meta property="og:description" content="Practice discovery calls with AI. Know your pitch cold before talking to your first enterprise buyer." />
       <meta property="og:url" content={`${BASE_URL}/for-founders`} />
       <meta property="og:image" content={`${BASE_URL}/og-image.png`} />
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="PitchPerfect AI for Founders — Nail Your First Sales Calls" />
+      <meta name="twitter:title" content="PitchPerfect AI for Founders. Nail Your First Sales Calls" />
       <meta name="twitter:description" content="Practice discovery calls with AI. Know your pitch cold before talking to your first enterprise buyer." />
       <meta name="twitter:image" content={`${BASE_URL}/og-image.png`} />
     </Helmet>
@@ -43,14 +43,14 @@ const ForFounders = () => (
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mb-8 leading-relaxed">
               You built the product. Now practice selling it. PitchPerfect AI runs you through
-              discovery calls, budget objections, and "we already have a vendor" pushback —
-              so the real call feels like a replay.
+              discovery calls, budget objections, and "we already have a vendor" pushback.
+              So the real call feels like a replay.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button asChild size="lg" className="text-lg px-8 h-14 bg-violet-600 hover:bg-violet-700">
                 <Link to="/signup">
                   <Play className="h-5 w-5 fill-current mr-2" />
-                  Start free — no credit card
+                  Start free. No credit card.
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="text-lg px-8 h-14">
@@ -81,7 +81,7 @@ const ForFounders = () => (
                 {
                   Icon: BarChart3,
                   title: 'Instant AI feedback',
-                  body: 'Get scored on talk ratio, filler words, confidence, and closing ask — after every 90-second round.',
+                  body: 'Get scored on talk ratio, filler words, confidence, and closing ask after every 90-second round.',
                 },
               ].map(({ Icon, title, body }) => (
                 <div key={title} className="bg-violet-50 rounded-2xl p-6">
@@ -103,7 +103,7 @@ const ForFounders = () => (
               "I closed my first $50k enterprise deal two weeks after starting to practice
               with PitchPerfect. The AI pushback prepared me for every objection they threw."
             </blockquote>
-            <cite className="text-gray-500 text-sm not-italic">— Founder, Series A startup</cite>
+            <cite className="text-gray-500 text-sm not-italic">Founder, Series A startup</cite>
           </div>
         </section>
 
@@ -113,7 +113,7 @@ const ForFounders = () => (
             Start selling like you've done it 100 times.
           </h2>
           <p className="text-gray-600 mb-8 text-lg">
-            Practice your discovery call right now — free, no credit card, 90 seconds.
+            Practice your discovery call right now. Free, no credit card, 90 seconds.
           </p>
           <Button asChild size="lg" className="text-lg px-10 h-14 bg-violet-600 hover:bg-violet-700">
             <Link to="/signup">Get started free</Link>

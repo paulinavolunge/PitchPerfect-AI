@@ -138,7 +138,7 @@ const OnboardingRole: React.FC = () => {
             Set this later
           </button>
           <p className="text-xs text-muted-foreground/60">
-            We'll default to AE scenarios — you can change anytime in profile settings.
+            We'll default to AE scenarios. You can change anytime in profile settings.
           </p>
         </div>
       </main>

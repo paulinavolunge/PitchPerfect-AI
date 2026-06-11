@@ -98,7 +98,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
             <div className="text-[10px] tracking-widest text-gray-400 mb-1">DISCOVERY</div>
             <p className="text-sm text-gray-600 leading-relaxed">
               Your opener was strong, but you failed to establish pain before pitching the
-              product — this is why the prospect pushed back on price instead of…
+              product. This is why the prospect pushed back on price instead of…
             </p>
           </div>
           <div>
@@ -134,7 +134,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
         href={starterPackUrl}
         className="block w-full text-center rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-gray-900 font-extrabold py-4 px-5 text-base sm:text-lg shadow-lg shadow-emerald-500/30 transition-colors animate-pulse"
       >
-        🔓 Unlock Scorecard + 5 Rounds — $4.99
+        🔓 Unlock Scorecard + 5 Rounds for $4.99
       </a>
 
       {/* Secondary CTA */}
@@ -142,7 +142,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
         href={powerPackUrl}
         className="block w-full text-center mt-3 rounded-xl border border-gray-300 hover:border-gray-400 text-gray-900 font-semibold py-3 px-5 text-sm sm:text-base transition-colors"
       >
-        Get 15 rounds — $9.99
+        Get 15 rounds for $9.99
       </a>
 
       {/* Tertiary link */}
@@ -150,7 +150,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
         href={unlimitedUrl}
         className="block text-center mt-3 text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
       >
-        Go unlimited — $29/mo
+        Go unlimited for $29/mo
       </a>
 
       {/* Reassurance */}
@@ -175,7 +175,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
               onClick={onSignup}
               className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
             >
-              Save your progress — sign up free →
+              Save your progress. Sign up free →
             </button>
           )}
         </div>

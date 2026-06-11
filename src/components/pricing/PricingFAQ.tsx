@@ -7,7 +7,7 @@ const FAQS = [
   },
   {
     q: 'Can I cancel anytime?',
-    a: 'Yes — one click in your account settings. No questions, no retention dance.',
+    a: 'Yes. One click in your account settings. No questions, no retention dance.',
   },
   {
     q: 'How is this different from Gong or Chorus?',
@@ -15,11 +15,11 @@ const FAQS = [
   },
   {
     q: "What's the difference between Starter Pack and Solo?",
-    a: 'Starter Pack is one-time ($4.99) — perfect for trying the product or a one-off interview prep. Solo is a subscription with unlimited practice — built for reps who practice daily.',
+    a: 'Starter Pack is one-time ($4.99), perfect for trying the product or a one-off interview prep. Solo is a subscription with unlimited practice, built for reps who practice daily.',
   },
   {
     q: 'Why is there a 3-seat minimum on Team?',
-    a: 'The Team tier includes a manager dashboard and team analytics — features that only make sense with multiple reps. For solo practice, pick Solo at $29/mo.',
+    a: 'The Team tier includes a manager dashboard and team analytics, features that only make sense with multiple reps. For solo practice, pick Solo at $29/mo.',
   },
   {
     q: 'Is there a free version?',

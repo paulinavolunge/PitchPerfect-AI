@@ -219,13 +219,13 @@ const Signup = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <Helmet>
-        <title>Sign Up Free — PitchPerfect AI</title>
+        <title>Sign Up Free. PitchPerfect AI</title>
         <meta name="description" content="Create your free PitchPerfect AI account. Start practicing cold calls with AI in under 2 minutes. No credit card required." />
         <link rel="canonical" href="https://www.pitchperfectai.ai/signup" />
-        <meta property="og:title" content="Sign Up Free — PitchPerfect AI" />
+        <meta property="og:title" content="Sign Up Free. PitchPerfect AI" />
         <meta property="og:description" content="Start practicing cold calls with AI in 2 minutes. No credit card required." />
         <meta property="og:url" content="https://www.pitchperfectai.ai/signup" />
-        <meta name="twitter:title" content="Sign Up Free — PitchPerfect AI" />
+        <meta name="twitter:title" content="Sign Up Free. PitchPerfect AI" />
         <meta name="twitter:description" content="Start practicing cold calls with AI in 2 minutes. No credit card required." />
       </Helmet>
       <div className="max-w-md mx-auto">
@@ -257,7 +257,7 @@ const Signup = () => {
           <h1 className="text-2xl font-bold text-brand-dark mb-2">
             Create your account
           </h1>
-          <p className="text-muted-foreground mb-4">Unlock round packs from $4.99 — or go unlimited with Pro.</p>
+          <p className="text-muted-foreground mb-4">Unlock round packs from $4.99, or go unlimited with Pro.</p>
           <ul className="text-left space-y-2 max-w-xs mx-auto mb-2">
             <li className="flex items-start gap-2 text-sm text-muted-foreground">
               <span className="text-brand-green font-bold mt-0.5">✓</span>
