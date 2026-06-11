@@ -39,6 +39,13 @@ serve(async (req) => {
   try {
     const user = await verifyAuth(req);
     console.log('Request from:', user ? `user ${user.id}` : 'guest');
+
+    // Per-IP rate limit to prevent paid-API cost abuse by unauthenticated callers.
+    // Authenticated users get a higher cap; guests are kept tight.
+    const ip = getClientIp(req);
+    const rlKey = `roleplay:${user?.id ?? `ip:${ip}`}`;
+    const rl = checkRateLimit(rlKey, user ? 60 : 20, 60_000);
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
