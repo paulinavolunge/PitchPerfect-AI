@@ -91,26 +91,33 @@ const CommandPalette: React.FC = () => {
 
   // ── Global key listeners ───────────────────────────────────────────────
   useEffect(() => {
+    const isEditableTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      ) return true;
+      return target.isContentEditable;
+    };
+
     const onKey = (e: KeyboardEvent) => {
+      // Never hijack keys while the user is typing in a field — let them type normally.
+      if (isEditableTarget(e.target)) return;
+
       // Cmd+K / Ctrl+K — toggle palette
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setOpen((v) => !v);
         return;
       }
-      // "?" — open shortcuts when no text input is focused and palette is closed
-      if (
-        e.key === "?" &&
-        !open &&
-        !(e.target instanceof HTMLInputElement) &&
-        !(e.target instanceof HTMLTextAreaElement) &&
-        !(e.target instanceof HTMLSelectElement) &&
-        !(e.target as HTMLElement).isContentEditable
-      ) {
+      // "?" — open shortcuts when palette is closed
+      if (e.key === "?" && !open) {
         e.preventDefault();
         setShortcutsOpen(true);
       }
     };
+
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
