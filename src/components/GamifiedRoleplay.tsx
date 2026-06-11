@@ -184,6 +184,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const [showHangUpAnimation, setShowHangUpAnimation] = useState(false);
   const [hangUpReason, setHangUpReason] = useState('');
   const [isUserTyping, setIsUserTyping] = useState(false);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+
   const lastProspectMsgTimeRef = useRef<number>(Date.now());
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const patienceRef = useRef(100); // keep ref in sync for interval callbacks
