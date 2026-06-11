@@ -14,11 +14,12 @@ const CORS = { 'Access-Control-Allow-Origin': '*' };
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
-  // Only callable by pg_cron via a shared secret
+  // Only callable by pg_cron via a shared secret. Always required —
+  // a missing CRON_SECRET must NOT silently disable the auth check.
   const cronSecret = Deno.env.get('CRON_SECRET');
   const auth = req.headers.get('Authorization') ?? '';
-  if (cronSecret && auth !== `Bearer ${cronSecret}`) {
-    return new Response('Unauthorized', { status: 401 });
+  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
+    return new Response('Unauthorized', { status: 401, headers: CORS });
   }
 
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
