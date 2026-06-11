@@ -41,15 +41,23 @@ serve(async (req) => {
     // Verify authentication
     const user = await verifyAuth(req);
     console.log('Request from:', user ? `user ${user.id}` : 'guest');
+
+    // Per-IP rate limit — pitch-analysis is expensive (GPT-4 class) so we cap
+    // unauthenticated callers tightly.
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`pitch:${user?.id ?? `ip:${ip}`}`, user ? 30 : 5, 60_000);
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
     const rawBody = await req.text();
-    
-    // Validate request body size (max 50MB)
-    if (rawBody.length > 50 * 1024 * 1024) {
+
+    // Cap payload: 1 MB for guests, 50 MB for authenticated users.
+    const MAX_BODY = user ? 50 * 1024 * 1024 : 1 * 1024 * 1024;
+    if (rawBody.length > MAX_BODY) {
       return new Response(
         JSON.stringify({ error: 'Request body too large' }),
         { status: 413, headers: corsHeaders }
