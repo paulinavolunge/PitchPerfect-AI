@@ -325,7 +325,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   useEffect(() => {
     // Only run timer during conversation phase, when it's user's turn (not AI typing), and not hung up
     // PAUSE when user is actively typing or speaking in voice mode
-    if (phase !== 'conversation' || isAiTyping || hungUp || isUserTyping || isListening || isProcessingVoice) {
+    if (phase !== 'conversation' || isAiTyping || hungUp || isUserTyping || isListening || isProcessingVoice || isOverlayOpen) {
       // Clear any existing timer
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
