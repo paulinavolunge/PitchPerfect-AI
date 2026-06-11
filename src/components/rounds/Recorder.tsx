@@ -146,7 +146,7 @@ const Recorder: React.FC<RecorderProps> = ({ scenarioId: _scenarioId, onComplete
       stopStream();
       const msg = err instanceof Error ? err.message : '';
       if (msg === 'empty_blob' || msg === 'onstop_timeout') {
-        toast.error('Recording was empty — please try again.');
+        toast.error('Recording was empty. Please try again.');
       } else {
         setError('Failed to process recording. Please try again.');
       }

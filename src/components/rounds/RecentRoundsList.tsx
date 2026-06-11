@@ -212,7 +212,7 @@ const RecentRoundsList: React.FC<RecentRoundsListProps> = ({ onStartPractice }) 
       .delete()
       .eq('id', roundId);
     if (error) {
-      toast.error('Could not delete round — please try again.');
+      toast.error('Could not delete round. Please try again.');
       fetchRounds(); // restore on error
     } else {
       toast.success('Round deleted.');
@@ -239,7 +239,7 @@ const RecentRoundsList: React.FC<RecentRoundsListProps> = ({ onStartPractice }) 
       <Card className="overflow-hidden shadow-sm">
         <CardContent className="py-10 text-center">
           <FileAudio className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground mb-4">No rounds yet — your history appears here.</p>
+          <p className="text-sm text-muted-foreground mb-4">No rounds yet. Your history appears here.</p>
           <Button onClick={onStartPractice} size="sm" className="min-h-[44px]">
             Start First Round
           </Button>
