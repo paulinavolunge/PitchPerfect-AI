@@ -123,7 +123,7 @@ const Recorder: React.FC<RecorderProps> = ({ scenarioId: _scenarioId, onComplete
 
     // Client-side minimum duration gate (before any async work)
     if (elapsed < MIN_DURATION_SECONDS) {
-      toast.error('Recording was too short — try again with at least 10 seconds.');
+      toast.error('Recording was too short. Try again with at least 10 seconds.');
       // Cleanly stop the recorder and discard
       const mr = mediaRecorderRef.current;
       if (mr && mr.state !== 'inactive') mr.stop();
