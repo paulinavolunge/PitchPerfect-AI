@@ -46,13 +46,13 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
         : 'from-green-400 to-emerald-500';
 
   return (
-    <div className="relative bg-gray-900 text-white rounded-2xl p-5 sm:p-8 w-full max-w-lg mx-auto shadow-2xl">
+    <div className="relative bg-white text-gray-900 rounded-2xl p-5 sm:p-8 w-full max-w-lg mx-auto shadow-2xl border border-gray-200">
       {onClose && (
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 sm:right-4 sm:top-4 text-gray-400 hover:text-white rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+          className="absolute right-3 top-3 sm:right-4 sm:top-4 text-gray-400 hover:text-gray-900 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
           <X className="w-5 h-5" />
         </button>
@@ -60,7 +60,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
 
       {/* Score */}
       <div className="text-center mb-6">
-        <div className="uppercase tracking-[0.2em] text-[10px] sm:text-xs text-gray-400 mb-2">
+        <div className="uppercase tracking-[0.2em] text-[10px] sm:text-xs text-gray-500 mb-2">
           Your Score
         </div>
         <div
@@ -68,7 +68,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
           style={{ fontSize: 'clamp(3.5rem, 14vw, 5.5rem)' }}
         >
           {score}
-          <span className="text-2xl sm:text-3xl text-gray-500 font-bold ml-1">/100</span>
+          <span className="text-2xl sm:text-3xl text-gray-400 font-bold ml-1">/100</span>
         </div>
       </div>
 
@@ -77,42 +77,42 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
         {highlights.map((h, i) => (
           <li key={i} className="flex items-start gap-3 text-sm sm:text-base">
             <span
-              className={`shrink-0 font-bold ${h.passed ? 'text-green-400' : 'text-red-400'}`}
+              className={`shrink-0 font-bold ${h.passed ? 'text-green-500' : 'text-red-500'}`}
               aria-hidden="true"
             >
               {h.passed ? '✓' : '✗'}
             </span>
-            <span className="text-gray-200">{h.text}</span>
+            <span className="text-gray-700">{h.text}</span>
           </li>
         ))}
       </ul>
 
       {/* Locked scorecard (frosted glass) */}
-      <div className="relative rounded-xl overflow-hidden mb-6 border border-gray-700/60 bg-gray-800/40">
+      <div className="relative rounded-xl overflow-hidden mb-6 border border-gray-200 bg-gray-50">
         {/* Placeholder coaching lines sitting behind the blur */}
         <div
           className="p-5 space-y-3 select-none pointer-events-none"
           aria-hidden="true"
         >
           <div>
-            <div className="text-[10px] tracking-widest text-gray-500 mb-1">DISCOVERY</div>
-            <p className="text-sm text-gray-300 leading-relaxed">
+            <div className="text-[10px] tracking-widest text-gray-400 mb-1">DISCOVERY</div>
+            <p className="text-sm text-gray-600 leading-relaxed">
               Your opener was strong, but you failed to establish pain before pitching the
               product — this is why the prospect pushed back on price instead of…
             </p>
           </div>
           <div>
-            <div className="text-[10px] tracking-widest text-gray-500 mb-1">
+            <div className="text-[10px] tracking-widest text-gray-400 mb-1">
               OBJECTION HANDLING
             </div>
-            <p className="text-sm text-gray-300 leading-relaxed">
+            <p className="text-sm text-gray-600 leading-relaxed">
               When the prospect said budget was an issue you pivoted to discount instead of
               anchoring value. The fix is a 3-step reframe that top reps use to…
             </p>
           </div>
           <div>
-            <div className="text-[10px] tracking-widest text-gray-500 mb-1">CLOSE</div>
-            <p className="text-sm text-gray-300 leading-relaxed">
+            <div className="text-[10px] tracking-widest text-gray-400 mb-1">CLOSE</div>
+            <p className="text-sm text-gray-600 leading-relaxed">
               You never asked for the next step. Closers convert 3× higher by using the
               assumed-next-step technique, which sounds like…
             </p>
@@ -120,12 +120,12 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
         </div>
 
         {/* Frosted overlay */}
-        <div className="absolute inset-0 backdrop-blur-md bg-gray-900/70 flex flex-col items-center justify-center p-4 text-center">
+        <div className="absolute inset-0 backdrop-blur-md bg-white/70 flex flex-col items-center justify-center p-4 text-center">
           <div className="text-3xl mb-1" aria-hidden="true">🔒</div>
-          <div className="text-[10px] tracking-[0.25em] font-bold text-gray-300">
+          <div className="text-[10px] tracking-[0.25em] font-bold text-gray-600">
             FULL SCORECARD
           </div>
-          <div className="text-xl sm:text-2xl font-black text-white">LOCKED</div>
+          <div className="text-xl sm:text-2xl font-black text-gray-900">LOCKED</div>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
       {/* Secondary CTA */}
       <a
         href={powerPackUrl}
-        className="block w-full text-center mt-3 rounded-xl border border-gray-600 hover:border-gray-400 text-white font-semibold py-3 px-5 text-sm sm:text-base transition-colors"
+        className="block w-full text-center mt-3 rounded-xl border border-gray-300 hover:border-gray-400 text-gray-900 font-semibold py-3 px-5 text-sm sm:text-base transition-colors"
       >
         Get 15 rounds — $9.99
       </a>
@@ -148,23 +148,23 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
       {/* Tertiary link */}
       <a
         href={unlimitedUrl}
-        className="block text-center mt-3 text-xs sm:text-sm text-gray-400 hover:text-gray-200 underline underline-offset-2"
+        className="block text-center mt-3 text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
       >
         Go unlimited — $29/mo
       </a>
 
       {/* Reassurance */}
-      <p className="text-center text-[11px] sm:text-xs text-gray-500 mt-4">
+      <p className="text-center text-[11px] sm:text-xs text-gray-400 mt-4">
         No subscription required. One-time purchase.
       </p>
 
       {(onClose || onSignup) && (
-        <div className="mt-5 pt-4 border-t border-gray-800 flex flex-col items-center gap-2">
+        <div className="mt-5 pt-4 border-t border-gray-200 flex flex-col items-center gap-2">
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="text-xs sm:text-sm text-gray-400 hover:text-gray-200 underline underline-offset-2"
+              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
             >
               Try another free call →
             </button>
@@ -173,7 +173,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
             <button
               type="button"
               onClick={onSignup}
-              className="text-xs sm:text-sm text-gray-400 hover:text-gray-200 underline underline-offset-2"
+              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
             >
               Save your progress — sign up free →
             </button>
