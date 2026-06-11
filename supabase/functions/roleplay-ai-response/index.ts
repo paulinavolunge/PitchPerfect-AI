@@ -72,17 +72,20 @@ serve(async (req) => {
       customIndustry,
       customObjection,
       prospectName,
-      systemPromptOverride,
     } = JSON.parse(rawBody);
 
-    console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, hasOverride: !!systemPromptOverride, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
+    console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
 
     const isCustom = !!(customProduct || customBuyerTitle || customIndustry || customObjection);
 
-    // If the client supplies a fully-formed persona prompt (e.g. the cold-call
-    // hook), use it verbatim — it has context the generic builders don't.
-    const baseSystemPrompt = isReversedRole 
+    // System prompt is built server-side only. We intentionally do NOT accept a
+    // client-supplied systemPromptOverride — that would let any unauthenticated
+    // caller jailbreak the AI's persona / content policies.
+    const systemPrompt = isReversedRole 
       ? (isCustom
+          ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
+          : createProspectSystemPrompt(scenario, voiceStyle))
+      : createSalespersonSystemPrompt(scenario, voiceStyle);
           ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
           : createProspectSystemPrompt(scenario, voiceStyle))
       : createSalespersonSystemPrompt(scenario, voiceStyle);
