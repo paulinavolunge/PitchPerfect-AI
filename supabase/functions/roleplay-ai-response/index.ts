@@ -86,13 +86,6 @@ serve(async (req) => {
           ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
           : createProspectSystemPrompt(scenario, voiceStyle))
       : createSalespersonSystemPrompt(scenario, voiceStyle);
-          ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
-          : createProspectSystemPrompt(scenario, voiceStyle))
-      : createSalespersonSystemPrompt(scenario, voiceStyle);
-
-    const systemPrompt = (typeof systemPromptOverride === 'string' && systemPromptOverride.trim().length > 50)
-      ? `${systemPromptOverride.trim()}\n\nCRITICAL: Read the entire conversation above carefully before replying. Always acknowledge information the rep has already given you (name, company, callback reference, prior pitch). Never ask "Who is this?" if they have introduced themselves. Never ask "What's this about?" if they have already told you why they are calling. Respond to what was actually said.`
-      : baseSystemPrompt;
 
     // Send the full conversation history (capped to keep tokens sane) so the
     // prospect responds contextually instead of acting like each turn is new.
