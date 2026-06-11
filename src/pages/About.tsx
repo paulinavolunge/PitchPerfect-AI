@@ -82,7 +82,7 @@ const About: React.FC = () => (
             <div>
               <div className="space-y-6 text-base sm:text-lg text-gray-700 leading-relaxed">
                 <p>
-                  I've worked in sales — and in clinical research, and in a few other things before
+                  I've worked in sales, and in clinical research, and in a few other things before
                   that. What kept coming back was the same problem on the phone: knowing what to say,
                   then freezing when the prospect threw something I wasn't ready for.
                 </p>

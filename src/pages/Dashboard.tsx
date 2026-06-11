@@ -67,7 +67,7 @@ const Dashboard = () => {
         <title>Dashboard | PitchPerfect AI</title>
         <meta name="description" content="Track your rounds and sharpen your close with AI-powered feedback." />
         <link rel="canonical" href="https://www.pitchperfectai.ai/dashboard" />
-        <meta property="og:title" content="Your Dashboard — PitchPerfect AI" />
+        <meta property="og:title" content="Your Dashboard. PitchPerfect AI" />
         <meta property="og:description" content="Your practice rounds, scores, and coaching history in one place." />
         <meta property="og:url" content="https://www.pitchperfectai.ai/dashboard" />
         <meta name="robots" content="noindex, follow" />
@@ -113,7 +113,7 @@ const Dashboard = () => {
                 <span className="text-amber-800">You have no credits remaining. Upgrade to continue practicing.</span>
                 {isPricingEnabled() && (
                   <Button onClick={() => goToCheckout(STRIPE_UNLIMITED_URL)} variant="outline" size="sm" className="ml-4 border-amber-400 text-amber-800 hover:bg-amber-100">
-                    Upgrade to Pro — $29/mo
+                    Upgrade to Pro for $29/mo
                   </Button>
                 )}
               </AlertDescription>
@@ -158,7 +158,7 @@ const Dashboard = () => {
                             Upgrade to Pro
                           </CardTitle>
                           <p className="text-sm text-muted-foreground mt-0.5">
-                            Round packs or unlimited — pick your pace.
+                            Round packs or unlimited. Pick your pace.
                           </p>
                         </div>
                         <Badge className="bg-blue-100 text-blue-800 border-blue-300">Free plan</Badge>
@@ -175,7 +175,7 @@ const Dashboard = () => {
                             <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />5 rounds</li>
                           </ul>
                           <Button onClick={() => goToCheckout(STRIPE_STARTER_URL)} size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs min-h-[44px]">
-                            Get Starter — $4.99
+                            Get Starter for $4.99
                           </Button>
                         </div>
                         {/* Power */}
@@ -188,7 +188,7 @@ const Dashboard = () => {
                             <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />15 rounds</li>
                           </ul>
                           <Button onClick={() => goToCheckout(STRIPE_POWER_URL)} size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs min-h-[44px]">
-                            Get Power — $9.99
+                            Get Power for $9.99
                           </Button>
                         </div>
                         {/* Unlimited */}
@@ -201,7 +201,7 @@ const Dashboard = () => {
                             <li className="flex items-center gap-1"><Check className="h-3 w-3 text-green-600 shrink-0" />Cancel anytime</li>
                           </ul>
                           <Button onClick={() => goToCheckout(STRIPE_UNLIMITED_URL)} size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs min-h-[44px]">
-                            Go unlimited — $29/mo
+                            Go unlimited for $29/mo
                           </Button>
                         </div>
                       </div>

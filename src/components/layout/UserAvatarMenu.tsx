@@ -137,7 +137,7 @@ const UserAvatarMenu: React.FC = () => {
         {isPremiumFeaturesEnabled() && !isPremium && (
           <DropdownMenuItem onClick={handleUpgrade} className="cursor-pointer text-blue-600">
             <Crown className="mr-2 h-4 w-4" />
-            Upgrade to Pro — $29/mo
+            Upgrade to Pro for $29/mo
           </DropdownMenuItem>
         )}
 
