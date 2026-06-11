@@ -812,6 +812,16 @@
   font-weight: 700;
 }
 
+/* ── SOCIAL PROOF ── */
+.pp-social-proof-label {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pp-text-dim);
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+
 /* ── FOUNDER ── */
 .pp-founder-section {
   background: var(--pp-bg-soft);
