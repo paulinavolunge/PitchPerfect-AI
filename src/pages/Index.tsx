@@ -234,62 +234,17 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* ── Testimonials ── */}
+              {/* ── Social Proof ── */}
               <div className="pp-hero-testimonials">
-                <div className="pp-testimonial-track">
-                  {([
-                    {
-                      initials: 'JM',
-                      color: '#2563EB',
-                      quote: "I was winging every cold call opener. After two weeks of reps on PitchPerfect, I booked 7 meetings in a row. The AI doesn't let you off easy.",
-                      name: 'Jake M.',
-                      role: 'SDR',
-                      company: 'Series B SaaS',
-                      li: 'https://linkedin.com',
-                    },
-                    {
-                      initials: 'SK',
-                      color: '#7C3AED',
-                      quote: "The 'we already have a vendor' objection used to end my calls. I ran it on PitchPerfect until I had three solid responses cold. Game changer.",
-                      name: 'Sara K.',
-                      role: 'Account Executive',
-                      company: 'B2B Tech',
-                      li: 'https://linkedin.com',
-                    },
-                    {
-                      initials: 'MT',
-                      color: '#0F766E',
-                      quote: "Had my whole SDR team do 5 rounds before Monday call blitz. Connect-to-meeting went 6% → 11% that week. It's now a standing ritual.",
-                      name: 'Marcus T.',
-                      role: 'Sales Manager',
-                      company: 'Enterprise Software',
-                      li: 'https://linkedin.com',
-                    },
-                  ] as const).map((t, i) => (
-                    <div key={i} className="pp-testimonial-card">
-                      <p className="pp-testimonial-quote">"{t.quote}"</p>
-                      <div className="pp-testimonial-footer">
-                        <div className="pp-testimonial-avatar" style={{ background: t.color }}>
-                          {t.initials}
-                        </div>
-                        <div className="pp-testimonial-meta-text">
-                          <div className="pp-testimonial-name">{t.name}</div>
-                          <div className="pp-testimonial-role">{t.role} · {t.company}</div>
-                        </div>
-                        <a
-                          href={t.li}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="pp-testimonial-li"
-                          aria-label={`${t.name} on LinkedIn`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                          </svg>
-                        </a>
-                      </div>
-                    </div>
-                  ))}
+                <p className="pp-social-proof-label">Built by a sales rep, battle-tested in early access.</p>
+                <div className="pp-founder-inner" style={{ marginTop: 20 }}>
+                  <div className="pp-founder-avatar">P</div>
+                  <div>
+                    <p className="pp-founder-text">
+                      I built this because I needed it. I was in B2B sales and kept freezing when prospects threw something I wasn't ready for. Every rep deserves a sparring partner that tells them the truth — not a chatbot that says "great job."
+                    </p>
+                    <div className="pp-founder-name">Paulina Vol — Founder</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -298,7 +253,7 @@ const Index = () => {
           {/* ═══════════ TRUST BAR ═══════════ */}
           <div className="pp-trust-bar">
             <div className="pp-container pp-trust-inner">
-              <div className="pp-trust-item"><span>🏢</span> Listed in <strong>Lohfeld Consulting</strong> AI Guide — $170B+ in proposals won</div>
+              <div className="pp-trust-item"><span>🏢</span> Listed in Lohfeld Consulting's AI Tools Guide</div>
               <div className="pp-trust-item"><span>🔒</span> 100% Private — No manager dashboards</div>
               <div className="pp-trust-item"><span>🚀</span> Featured on <strong>Product Hunt</strong></div>
             </div>
