@@ -2,8 +2,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Shield } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const Footer = () => {
+  const { user } = useAuth();
+  const roundsHref = user ? '/practice' : '/?cta=cold-call';
   return (
     <footer className="bg-deep-navy text-white py-8 md:py-12">
       <div className="container mx-auto px-6">
@@ -20,7 +23,7 @@ const Footer = () => {
             <h3 className="font-semibold text-lg mb-4 text-white">Platform</h3>
             <ul className="space-y-2">
               <li><Link to="/dashboard" className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">Dashboard</Link></li>
-              <li><Link to="/practice" className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">Rounds</Link></li>
+              <li><Link to={roundsHref} className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">Rounds</Link></li>
               <li><Link to="/tips" className="text-gray-300 hover:text-vibrant-blue-300 transition-colors">AI Tips</Link></li>
             </ul>
           </div>

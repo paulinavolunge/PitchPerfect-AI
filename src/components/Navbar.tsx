@@ -91,7 +91,7 @@ const Navbar: React.FC = () => {
   ];
 
   const guestNavigationItems = [
-    { name: 'Rounds', href: '/practice' },
+    { name: 'Rounds', href: '/?cta=cold-call' },
     { name: 'About', href: '/about' },
     { name: 'Compare', href: '/compare' },
     // "Pricing" jumps to the pricing section on the homepage.
@@ -99,7 +99,7 @@ const Navbar: React.FC = () => {
   ];
 
   const guestModeItems = [
-    { name: 'Rounds', href: '/practice' },
+    { name: 'Rounds', href: '/?cta=cold-call' },
   ];
 
   const mainNavItems = [

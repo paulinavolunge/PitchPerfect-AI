@@ -77,10 +77,6 @@ const Index = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('cta') === 'cold-call') {
-      if (coldCallLocked) {
-        navigate('/login', { replace: true });
-        return;
-      }
       setColdCallOpen(true);
       trackEvent('cta_click', { button: 'try_cold_call', location: 'pricing_redirect' });
       // Strip the query param so reloads / back-navigation don't keep re-opening
@@ -107,11 +103,8 @@ const Index = () => {
   }, [location.hash]);
 
   const handleColdCallClick = () => {
-    if (coldCallLocked) {
-      trackEvent('cta_click', { button: 'cold_call_locked_signup', location: 'homepage_hero' });
-      navigate('/login');
-      return;
-    }
+    // Anonymous visitors must always be able to start the cold call roleplay
+    // directly from the homepage — no signup, no login wall.
     trackEvent('cta_click', { button: 'try_cold_call', location: 'homepage_hero' });
     setColdCallOpen(true);
   };
