@@ -2,8 +2,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Shield } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const Footer = () => {
+  const { user } = useAuth();
+  const roundsHref = user ? '/practice' : '/?cta=cold-call';
   return (
     <footer className="bg-deep-navy text-white py-8 md:py-12">
       <div className="container mx-auto px-6">
