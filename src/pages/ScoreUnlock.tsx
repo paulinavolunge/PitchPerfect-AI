@@ -153,7 +153,7 @@ const ScoreUnlock: React.FC = () => {
         const msg = (error.message || '').toLowerCase();
         if (msg.includes('already registered') || msg.includes('already exists')) {
           toast({
-            title: 'You already have an account — logging you in',
+            title: 'You already have an account. Logging you in.',
           });
           navigate(`/login?email=${encodeURIComponent(verified.email)}`);
           return;
@@ -202,7 +202,7 @@ const ScoreUnlock: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center px-4">
         <Helmet>
-          <title>Unlocking your scorecard… — PitchPerfect AI</title>
+          <title>Unlocking your scorecard…. PitchPerfect AI</title>
         </Helmet>
         <div className="text-center">
           <Loader2 className="w-10 h-10 animate-spin text-emerald-400 mx-auto mb-4" />
@@ -218,14 +218,14 @@ const ScoreUnlock: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center px-4">
         <Helmet>
-          <title>Could not verify purchase — PitchPerfect AI</title>
+          <title>Could not verify purchase. PitchPerfect AI</title>
         </Helmet>
         <div className="max-w-md w-full text-center bg-gray-800/50 border border-gray-700 rounded-2xl p-8">
           <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">We couldn't verify that purchase</h1>
           <p className="text-sm text-gray-400 mb-6">
             If you just paid, give it a moment and refresh. Otherwise contact support and
-            we'll sort it out — your payment is safe.
+            we'll sort it out. Your payment is safe.
           </p>
           <Button
             onClick={() => navigate('/')}
@@ -242,7 +242,7 @@ const ScoreUnlock: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Helmet>
-        <title>You're in! — PitchPerfect AI</title>
+        <title>You're in! PitchPerfect AI</title>
         <meta name="description" content="Your full scorecard is unlocked. Save your rounds by creating an account." />
       </Helmet>
 
@@ -292,9 +292,9 @@ const ScoreUnlock: React.FC = () => {
                   : debrief.won
                     ? 'You earned the next meeting.'
                     : scorePercent >= 70
-                      ? 'Strong run — close to a win.'
+                      ? 'Strong run. Close to a win.'
                       : scorePercent >= 40
-                        ? 'Mixed bag — clear places to tighten.'
+                        ? 'Mixed bag. Clear places to tighten.'
                         : 'Tough call. Plenty to work on.'}
               </div>
             </div>
@@ -346,7 +346,7 @@ const ScoreUnlock: React.FC = () => {
         ) : (
           <div className="bg-gray-800/40 border border-gray-700 rounded-2xl p-6 mb-5 text-center">
             <p className="text-sm text-gray-400">
-              Your scorecard isn't on this device — sign in after creating your account
+              Your scorecard isn't on this device. Sign in after creating your account
               to find it on your dashboard.
             </p>
           </div>
@@ -360,7 +360,7 @@ const ScoreUnlock: React.FC = () => {
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-white">
-                Save your rounds — create your account in 10 seconds
+                Save your rounds. Create your account in 10 seconds.
               </h2>
               <p className="text-xs sm:text-sm text-gray-400 mt-1">
                 Set a password to lock in your purchase and access your rounds anywhere.

@@ -155,7 +155,7 @@ const Tips = () => {
       });
       toast({
         title: "Tip Applied",
-        description: "Added to 'Your Applied Tips' — it will guide your next round.",
+        description: "Added to 'Your Applied Tips'. It will guide your next round.",
       });
     } else {
       // Handle script application

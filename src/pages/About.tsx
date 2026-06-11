@@ -26,19 +26,19 @@ const BELIEFS = [
 const About: React.FC = () => (
   <>
     <Helmet>
-      <title>About — PitchPerfect AI</title>
+      <title>About. PitchPerfect AI</title>
       <meta
         name="description"
         content="Built on my last day at a sales job, because the tool I needed didn't exist. The honest story behind PitchPerfect AI."
       />
-      <meta property="og:title" content="About — PitchPerfect AI" />
+      <meta property="og:title" content="About. PitchPerfect AI" />
       <meta
         property="og:description"
         content="Built on my last day at a sales job, because the tool I needed didn't exist. The honest story behind PitchPerfect AI."
       />
       <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary" />
-      <meta name="twitter:title" content="About — PitchPerfect AI" />
+      <meta name="twitter:title" content="About. PitchPerfect AI" />
       <meta
         name="twitter:description"
         content="Built on my last day at a sales job, because the tool I needed didn't exist. The honest story behind PitchPerfect AI."
@@ -59,7 +59,7 @@ const About: React.FC = () => (
             I built this because I needed it.
           </h1>
           <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            I'm Paulina. PitchPerfect AI started on my last day at a sales job — the tool I
+            I'm Paulina. PitchPerfect AI started on my last day at a sales job. The tool I
             wished existed when I was preparing for cold calls. So I built it. For me, and for
             anyone else who's ever stared at the phone and stalled.
           </p>
@@ -95,13 +95,13 @@ const About: React.FC = () => (
                 </p>
                 <p>
                   So on my last day at a sales role, I decided to build it. PitchPerfect AI is the
-                  tool I wanted — for me, and now for anyone else who'd rather bomb a cold call in
+                  tool I wanted. For me, and now for anyone else who'd rather bomb a cold call in
                   private than on a real prospect.
                 </p>
               </div>
 
               <div className="mt-8 text-sm text-gray-700">
-                <span className="font-bold text-gray-900">Paulina Vol — Founder</span>
+                <span className="font-bold text-gray-900">Paulina Vol, Founder</span>
                 <span className="text-gray-600 mx-2">·</span>
                 {LINKEDIN_URL ? (
                   <a
@@ -146,7 +146,7 @@ const About: React.FC = () => (
             Stop dreading the phone.
           </h2>
           <p className="text-base text-gray-600 mb-8">
-            Try a cold call free — no signup, no card, 90 seconds.
+            Try a cold call free. No signup, no card, 90 seconds.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
