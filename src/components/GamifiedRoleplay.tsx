@@ -367,7 +367,27 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         timerIntervalRef.current = null;
       }
     };
-  }, [phase, isAiTyping, hungUp, isUserTyping, isListening, isProcessingVoice, currentRound, messages.length]);
+  }, [phase, isAiTyping, hungUp, isUserTyping, isListening, isProcessingVoice, isOverlayOpen, currentRound, messages.length]);
+
+  // Detect any modal/overlay (Radix dialog, cmdk palette, alert dialog, popover) opened on top of the session.
+  // While one is open the patience timer is paused so the prospect doesn't drain off-screen.
+  useEffect(() => {
+    const checkOverlays = () => {
+      const open = document.querySelector(
+        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [data-radix-popper-content-wrapper] [data-state="open"]'
+      );
+      setIsOverlayOpen(!!open);
+    };
+    checkOverlays();
+    const observer = new MutationObserver(checkOverlays);
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['data-state', 'role'],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   // Keep patienceRef in sync
   useEffect(() => {
