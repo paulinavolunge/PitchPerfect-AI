@@ -702,34 +702,38 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     }
   }, [userInput, isAiTyping, hungUp, selectedObjection, isCustomMode, customScenario, messages, currentRound, callAI, stopSpeech, speakText, inputMode, currentProspectName, currentProspectTitle]);
 
-  // ── Local fallback scoring ─────────────────────────────────
+  // ── Local fallback scoring (0-100 scale) ──────────────────
   const computeLocalScore = useCallback((finalMessages: ChatMessage[]): number => {
     const userMessages = finalMessages.filter(m => m.role === 'user');
     const allUserText = userMessages.map(m => m.text.toLowerCase()).join(' ');
     let score = 0;
 
-    // Did the rep acknowledge the objection? (+2)
+    // Did the rep acknowledge the objection? (+20)
     const ackPatterns = /understand|hear you|appreciate|that makes sense|i get that|totally fair|valid concern|fair point|makes sense|respect/i;
-    if (ackPatterns.test(allUserText)) score += 2;
+    if (ackPatterns.test(allUserText)) score += 20;
 
-    // Did they ask a discovery question? (+2)
+    // Did they ask a discovery question? (+20)
     const hasQuestion = userMessages.some(m => m.text.includes('?'));
-    if (hasQuestion) score += 2;
+    if (hasQuestion) score += 20;
 
-    // Did they provide social proof or data? (+2)
+    // Did they provide social proof or data? (+20)
     const proofPatterns = /\d|%|\$|roi|clients|client|customers|customer|company|companies|percent|result|case study|data|saved|increased|reduced|example|similar|industry|revenue|growth|return/i;
-    if (proofPatterns.test(allUserText)) score += 2;
+    if (proofPatterns.test(allUserText)) score += 20;
 
-    // Did they propose a next step? (+2)
+    // Did they propose a next step? (+20)
     const nextStepPatterns = /schedule|meeting|call|next step|demo|pilot|trial|let me show|walk you through|send you|quick call|follow up|set up|book|agenda/i;
-    if (nextStepPatterns.test(allUserText)) score += 2;
+    if (nextStepPatterns.test(allUserText)) score += 20;
 
-    // Did they stay professional and give substantive responses? (+2)
+    // Did they stay professional and give substantive responses? (+20)
     const unprofessional = /whatever|don't care|your loss|fine then|forget it|stupid/i;
     const avgWordCount = userMessages.reduce((sum, m) => sum + m.text.split(/\s+/).length, 0) / (userMessages.length || 1);
-    if (!unprofessional.test(allUserText) && avgWordCount > 10) score += 2;
+    if (!unprofessional.test(allUserText) && avgWordCount > 10) score += 20;
 
-    return Math.max(1, Math.min(10, score));
+    // Sanity cap: near-empty transcripts can never score well
+    const totalChars = allUserText.replace(/\s+/g, '').length;
+    if (totalChars < 40) score = Math.min(score, 15);
+
+    return Math.max(0, Math.min(100, score));
   }, []);
 
   // ── End & Debrief ──────────────────────────────────────────
