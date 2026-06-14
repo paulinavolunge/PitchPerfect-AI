@@ -1,5 +1,11 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+// Redirect /rounds/new (and any sub-path) to /practice, preserving the scenario query string.
+const RoundsNewRedirect: React.FC = () => {
+  const location = useLocation();
+  return <Navigate to={`/practice${location.search}`} replace />;
+};
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
@@ -141,6 +147,8 @@ function App() {
                                 <Route path="/practice/:sessionId" element={<ProtectedRoute><SessionDetail /></ProtectedRoute>} />
                                 <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
                                 <Route path="/roleplay" element={<Navigate to="/practice" replace />} />
+                                <Route path="/rounds/new" element={<ProtectedRoute><RoundsNewRedirect /></ProtectedRoute>} />
+                                <Route path="/rounds/*" element={<Navigate to="/practice" replace />} />
                                 <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
                                 <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
                                 <Route path="/call-recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
