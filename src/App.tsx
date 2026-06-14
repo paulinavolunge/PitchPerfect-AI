@@ -147,6 +147,8 @@ function App() {
                                 <Route path="/practice/:sessionId" element={<ProtectedRoute><SessionDetail /></ProtectedRoute>} />
                                 <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
                                 <Route path="/roleplay" element={<Navigate to="/practice" replace />} />
+                                <Route path="/rounds/new" element={<ProtectedRoute><RoundsNewRedirect /></ProtectedRoute>} />
+                                <Route path="/rounds/*" element={<Navigate to="/practice" replace />} />
                                 <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
                                 <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
                                 <Route path="/call-recordings" element={<ProtectedRoute><CallRecordings /></ProtectedRoute>} />
