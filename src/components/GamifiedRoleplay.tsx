@@ -702,34 +702,38 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     }
   }, [userInput, isAiTyping, hungUp, selectedObjection, isCustomMode, customScenario, messages, currentRound, callAI, stopSpeech, speakText, inputMode, currentProspectName, currentProspectTitle]);
 
-  // ── Local fallback scoring ─────────────────────────────────
+  // ── Local fallback scoring (0-100 scale) ──────────────────
   const computeLocalScore = useCallback((finalMessages: ChatMessage[]): number => {
     const userMessages = finalMessages.filter(m => m.role === 'user');
     const allUserText = userMessages.map(m => m.text.toLowerCase()).join(' ');
     let score = 0;
 
-    // Did the rep acknowledge the objection? (+2)
+    // Did the rep acknowledge the objection? (+20)
     const ackPatterns = /understand|hear you|appreciate|that makes sense|i get that|totally fair|valid concern|fair point|makes sense|respect/i;
-    if (ackPatterns.test(allUserText)) score += 2;
+    if (ackPatterns.test(allUserText)) score += 20;
 
-    // Did they ask a discovery question? (+2)
+    // Did they ask a discovery question? (+20)
     const hasQuestion = userMessages.some(m => m.text.includes('?'));
-    if (hasQuestion) score += 2;
+    if (hasQuestion) score += 20;
 
-    // Did they provide social proof or data? (+2)
+    // Did they provide social proof or data? (+20)
     const proofPatterns = /\d|%|\$|roi|clients|client|customers|customer|company|companies|percent|result|case study|data|saved|increased|reduced|example|similar|industry|revenue|growth|return/i;
-    if (proofPatterns.test(allUserText)) score += 2;
+    if (proofPatterns.test(allUserText)) score += 20;
 
-    // Did they propose a next step? (+2)
+    // Did they propose a next step? (+20)
     const nextStepPatterns = /schedule|meeting|call|next step|demo|pilot|trial|let me show|walk you through|send you|quick call|follow up|set up|book|agenda/i;
-    if (nextStepPatterns.test(allUserText)) score += 2;
+    if (nextStepPatterns.test(allUserText)) score += 20;
 
-    // Did they stay professional and give substantive responses? (+2)
+    // Did they stay professional and give substantive responses? (+20)
     const unprofessional = /whatever|don't care|your loss|fine then|forget it|stupid/i;
     const avgWordCount = userMessages.reduce((sum, m) => sum + m.text.split(/\s+/).length, 0) / (userMessages.length || 1);
-    if (!unprofessional.test(allUserText) && avgWordCount > 10) score += 2;
+    if (!unprofessional.test(allUserText) && avgWordCount > 10) score += 20;
 
-    return Math.max(1, Math.min(10, score));
+    // Sanity cap: near-empty transcripts can never score well
+    const totalChars = allUserText.replace(/\s+/g, '').length;
+    if (totalChars < 40) score = Math.min(score, 15);
+
+    return Math.max(0, Math.min(100, score));
   }, []);
 
   // ── End & Debrief ──────────────────────────────────────────
@@ -821,22 +825,29 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       if (data?.analysis) {
         const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
 
-        // pitch-analysis returns overallScore on a 1-100 scale; convert to X.X/10
+        // pitch-analysis returns overallScore on a 0-100 scale; if a stray small
+        // value comes back (legacy / fallback), upscale so 7 doesn't become "perfect".
         const rawScore = parsed.overallScore ?? parsed.overall_score ?? parsed.score ?? 50;
-        const apiScore = rawScore > 10 ? Math.round(rawScore) / 10 : rawScore;
+        const normalized = rawScore <= 10 ? rawScore * 10 : rawScore;
+        const apiScore = Math.max(0, Math.min(100, Math.round(normalized)));
 
         // Compute local fallback score based on conversation content
         const localScore = computeLocalScore(finalMessages);
 
         // Use the HIGHER of the two scores to avoid unfairly low ratings
-        finalScore = Math.max(apiScore, localScore);
+        let combined = Math.max(apiScore, localScore);
+
+        // Sanity penalties: a hung-up call or low-patience exit can never score high
+        const didHangUp = sessionStats.hungUp;
+        const lowPatience = sessionStats.finalPatience < 30;
+        if (didHangUp) combined = Math.min(combined, 30);
+        else if (lowPatience) combined = Math.min(combined, 50);
+
+        finalScore = combined;
 
         console.log('API score:', apiScore, 'Local score:', localScore, 'Final:', finalScore);
 
-        // Determine outcome factoring in patience state
-        const didHangUp = sessionStats.hungUp;
-        const lowPatience = sessionStats.finalPatience < 30;
-        const won = !didHangUp && !lowPatience && finalScore >= 7;
+        const won = !didHangUp && !lowPatience && finalScore >= 70;
 
         feedbackData = {
           score: finalScore,
@@ -862,12 +873,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       }
     } catch (err) {
       console.error('[GamifiedRoleplay] Debrief error, using local scoring:', err);
-      const localScore = computeLocalScore(finalMessages);
-      finalScore = localScore;
-      // Determine outcome factoring in patience state
+      let localScore = computeLocalScore(finalMessages);
       const didHangUp = sessionStats.hungUp;
       const lowPatience = sessionStats.finalPatience < 30;
-      const won = !didHangUp && !lowPatience && localScore >= 7;
+      if (didHangUp) localScore = Math.min(localScore, 30);
+      else if (lowPatience) localScore = Math.min(localScore, 50);
+      finalScore = localScore;
+      const won = !didHangUp && !lowPatience && localScore >= 70;
 
       const gaps = sessionStats.hungUp
         ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
@@ -1457,7 +1469,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                 ? 'Deal Won!'
                 : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
                   ? 'Deal Lost'
-                  : debrief.score >= 4
+                  : debrief.score >= 40
                     ? 'Almost There. Keep Practicing.'
                     : 'Deal Lost'}
           </h2>
@@ -1468,7 +1480,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                 ? 'You earned the prospect\'s trust.'
                 : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
                   ? 'The prospect was losing patience. The deal slipped away.'
-                  : debrief.score >= 4
+                  : debrief.score >= 40
                     ? 'Getting closer! A few tweaks and you\'ll close it next time.'
                     : 'The prospect wasn\'t convinced.'}
           </p>
@@ -1491,9 +1503,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         <div className="bg-card border border-border rounded-xl p-5 mb-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-muted-foreground">Overall Score</span>
-            <span className="text-2xl font-bold text-foreground">{debrief.score.toFixed(1)}/10</span>
+            <span className={`text-2xl font-bold ${debrief.score >= 70 ? 'text-green-600' : debrief.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>{Math.round(debrief.score)}/100</span>
           </div>
-          <Progress value={debrief.score * 10} className="h-2" />
+          <Progress value={Math.max(0, Math.min(100, debrief.score))} className="h-2" />
         </div>
 
         {/* Strengths */}

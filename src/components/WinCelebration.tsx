@@ -129,7 +129,7 @@ export default function WinCelebration({
           setDisplayScore(target);
           clearInterval(interval);
         } else {
-          setDisplayScore(Math.round(current * 10) / 10);
+          setDisplayScore(Math.round(current));
         }
       }, duration / steps);
 
@@ -137,7 +137,7 @@ export default function WinCelebration({
     }
   }, [phase, score]);
 
-  const scoreColor = score >= 8 ? '#22C55E' : score >= 6 ? '#FBBF24' : '#F59E0B';
+  const scoreColor = score >= 80 ? '#22C55E' : score >= 60 ? '#FBBF24' : '#F59E0B';
 
   return (
     <div
@@ -205,9 +205,9 @@ export default function WinCelebration({
               className="font-bold tabular-nums"
               style={{ fontSize: '3.5rem', color: scoreColor }}
             >
-              {displayScore.toFixed(1)}
+              {Math.round(displayScore)}
             </span>
-            <span className="text-gray-500 text-xl">/10</span>
+            <span className="text-gray-500 text-xl">/100</span>
           </div>
         </div>
 
