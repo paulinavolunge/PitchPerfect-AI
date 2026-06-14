@@ -54,6 +54,7 @@ const ScoreUnlock = React.lazy(() => import('@/pages/ScoreUnlock'));
 const OnboardingRole = React.lazy(() => import('@/pages/OnboardingRole'));
 const ForSdrs = React.lazy(() => import('@/pages/ForSdrs'));
 const ForFounders = React.lazy(() => import('@/pages/ForFounders'));
+const AuthCallback = React.lazy(() => import('@/pages/AuthCallback'));
 
 function PageLoader() {
   return (
