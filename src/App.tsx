@@ -54,6 +54,7 @@ const ScoreUnlock = React.lazy(() => import('@/pages/ScoreUnlock'));
 const OnboardingRole = React.lazy(() => import('@/pages/OnboardingRole'));
 const ForSdrs = React.lazy(() => import('@/pages/ForSdrs'));
 const ForFounders = React.lazy(() => import('@/pages/ForFounders'));
+const AuthCallback = React.lazy(() => import('@/pages/AuthCallback'));
 
 function PageLoader() {
   return (
@@ -110,6 +111,7 @@ function App() {
                               <Routes>
                                 {/* Public routes — accessible to all visitors */}
                                 <Route path="/" element={<Index />} />
+                                <Route path="/auth/callback" element={<AuthCallback />} />
                                 <Route path="/about" element={<About />} />
                                 <Route path="/for-sdrs" element={<ForSdrs />} />
                                 <Route path="/for-founders" element={<ForFounders />} />

@@ -91,10 +91,11 @@ const CTASection: React.FC<CTASectionProps> = ({ activeSection }) => {
     try {
       // This will now initiate a Google OAuth signup which will then trigger
       // the handle_new_user function in Supabase to grant 1 free credit.
+      try { sessionStorage.setItem('postLoginRedirect', '/dashboard'); } catch {}
       const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after signup
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 

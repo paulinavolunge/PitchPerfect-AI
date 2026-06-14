@@ -236,10 +236,11 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     fireGateEvent('signup_gate_cta_clicked', { method: 'google' });
     setIsGoogleLoading(true);
     try {
+      try { sessionStorage.setItem('postLoginRedirect', '/practice'); } catch {}
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/practice`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: { access_type: 'offline', prompt: 'consent' },
         },
       });

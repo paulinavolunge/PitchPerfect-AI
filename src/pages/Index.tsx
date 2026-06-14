@@ -49,6 +49,14 @@ const Index = () => {
   const coldCallLocked = coldCallUsed && !user;
   const coldCallLabel = coldCallLocked ? 'Get Started Free' : 'Try a cold call. Free, no signup.';
 
+  // OAuth fallback: if Supabase redirected to "/" with a PKCE ?code=, hand it to /auth/callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('code')) {
+      navigate('/auth/callback' + window.location.search, { replace: true });
+    }
+  }, [navigate]);
+
   // Check for an unfinished Stripe purchase whose buyer skipped the
   // /scorecard-unlock signup step. If they're still anonymous, surface
   // a sticky banner so they can finish setup. If they've since logged
