@@ -1469,7 +1469,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                 ? 'Deal Won!'
                 : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
                   ? 'Deal Lost'
-                  : debrief.score >= 4
+                  : debrief.score >= 40
                     ? 'Almost There. Keep Practicing.'
                     : 'Deal Lost'}
           </h2>
@@ -1480,7 +1480,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                 ? 'You earned the prospect\'s trust.'
                 : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
                   ? 'The prospect was losing patience. The deal slipped away.'
-                  : debrief.score >= 4
+                  : debrief.score >= 40
                     ? 'Getting closer! A few tweaks and you\'ll close it next time.'
                     : 'The prospect wasn\'t convinced.'}
           </p>
@@ -1503,9 +1503,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         <div className="bg-card border border-border rounded-xl p-5 mb-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-muted-foreground">Overall Score</span>
-            <span className="text-2xl font-bold text-foreground">{debrief.score.toFixed(1)}/10</span>
+            <span className={`text-2xl font-bold ${debrief.score >= 70 ? 'text-green-600' : debrief.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>{Math.round(debrief.score)}/100</span>
           </div>
-          <Progress value={debrief.score * 10} className="h-2" />
+          <Progress value={Math.max(0, Math.min(100, debrief.score))} className="h-2" />
         </div>
 
         {/* Strengths */}
