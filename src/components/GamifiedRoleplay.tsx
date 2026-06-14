@@ -873,12 +873,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       }
     } catch (err) {
       console.error('[GamifiedRoleplay] Debrief error, using local scoring:', err);
-      const localScore = computeLocalScore(finalMessages);
-      finalScore = localScore;
-      // Determine outcome factoring in patience state
+      let localScore = computeLocalScore(finalMessages);
       const didHangUp = sessionStats.hungUp;
       const lowPatience = sessionStats.finalPatience < 30;
-      const won = !didHangUp && !lowPatience && localScore >= 7;
+      if (didHangUp) localScore = Math.min(localScore, 30);
+      else if (lowPatience) localScore = Math.min(localScore, 50);
+      finalScore = localScore;
+      const won = !didHangUp && !lowPatience && localScore >= 70;
 
       const gaps = sessionStats.hungUp
         ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
