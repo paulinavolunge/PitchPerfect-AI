@@ -26,18 +26,33 @@ interface DemoScorecardProps {
 
 const DemoScorecard: React.FC<DemoScorecardProps> = ({ scoreData }) => {
   const {
-    overallScore,
-    categories,
+    overallScore: rawOverall,
+    categories: rawCategories,
     feedback,
     strengths,
     improvements,
     percentile,
     sessionCount = 0 // Default to 0 if not provided
   } = scoreData;
-  
+
+  // Normalize to a 0-100 scale so this card matches the rest of the app.
+  // Legacy producers emit 0-10 — detect and upscale.
+  const toHundred = (n: number) => {
+    if (n == null || isNaN(n)) return 0;
+    const v = n <= 10 ? n * 10 : n;
+    return Math.max(0, Math.min(100, Math.round(v)));
+  };
+  const overallScore = toHundred(rawOverall);
+  const categories = {
+    clarity: toHundred(rawCategories.clarity),
+    confidence: toHundred(rawCategories.confidence),
+    handling: toHundred(rawCategories.handling),
+    vocabulary: toHundred(rawCategories.vocabulary),
+  };
+
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-600';
-    if (score >= 6) return 'text-amber-500';
+    if (score >= 70) return 'text-green-600';
+    if (score >= 50) return 'text-amber-500';
     return 'text-red-500';
   };
   
@@ -69,7 +84,7 @@ const DemoScorecard: React.FC<DemoScorecardProps> = ({ scoreData }) => {
             {renderPercentileBadge()}
           </div>
           <div className={`text-4xl font-bold ${getScoreColor(overallScore)}`}>
-            {overallScore}/10
+            {overallScore}/100
           </div>
         </div>
         
@@ -77,28 +92,28 @@ const DemoScorecard: React.FC<DemoScorecardProps> = ({ scoreData }) => {
           <div className="text-center">
             <h4 className="text-sm font-medium text-brand-dark/60">CLARITY</h4>
             <div className={`text-xl font-semibold ${getScoreColor(categories.clarity)}`}>
-              {categories.clarity}/10
+              {categories.clarity}/100
             </div>
           </div>
           
           <div className="text-center">
             <h4 className="text-sm font-medium text-brand-dark/60">CONFIDENCE</h4>
             <div className={`text-xl font-semibold ${getScoreColor(categories.confidence)}`}>
-              {categories.confidence}/10
+              {categories.confidence}/100
             </div>
           </div>
           
           <div className="text-center">
             <h4 className="text-sm font-medium text-brand-dark/60">OBJECTION HANDLING</h4>
             <div className={`text-xl font-semibold ${getScoreColor(categories.handling)}`}>
-              {categories.handling}/10
+              {categories.handling}/100
             </div>
           </div>
           
           <div className="text-center">
             <h4 className="text-sm font-medium text-brand-dark/60">VOCABULARY</h4>
             <div className={`text-xl font-semibold ${getScoreColor(categories.vocabulary)}`}>
-              {categories.vocabulary}/10
+              {categories.vocabulary}/100
             </div>
           </div>
         </div>
