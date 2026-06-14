@@ -205,9 +205,9 @@ export default function WinCelebration({
               className="font-bold tabular-nums"
               style={{ fontSize: '3.5rem', color: scoreColor }}
             >
-              {displayScore.toFixed(1)}
+              {Math.round(displayScore)}
             </span>
-            <span className="text-gray-500 text-xl">/10</span>
+            <span className="text-gray-500 text-xl">/100</span>
           </div>
         </div>
 
