@@ -202,13 +202,14 @@ const Login = () => {
     setGoogleError(null);
 
     try {
-      const redirectTo = `${window.location.origin}/login`;
+      const redirectTo = `${window.location.origin}/auth/callback`;
       console.log('Login: Using redirect URL:', redirectTo);
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTo,
+          redirectTo,
+          queryParams: { access_type: 'offline', prompt: 'consent' },
         },
       });
 
