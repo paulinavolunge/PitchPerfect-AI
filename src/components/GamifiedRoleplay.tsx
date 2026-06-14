@@ -825,22 +825,29 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       if (data?.analysis) {
         const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
 
-        // pitch-analysis returns overallScore on a 1-100 scale; convert to X.X/10
+        // pitch-analysis returns overallScore on a 0-100 scale; if a stray small
+        // value comes back (legacy / fallback), upscale so 7 doesn't become "perfect".
         const rawScore = parsed.overallScore ?? parsed.overall_score ?? parsed.score ?? 50;
-        const apiScore = rawScore > 10 ? Math.round(rawScore) / 10 : rawScore;
+        const normalized = rawScore <= 10 ? rawScore * 10 : rawScore;
+        const apiScore = Math.max(0, Math.min(100, Math.round(normalized)));
 
         // Compute local fallback score based on conversation content
         const localScore = computeLocalScore(finalMessages);
 
         // Use the HIGHER of the two scores to avoid unfairly low ratings
-        finalScore = Math.max(apiScore, localScore);
+        let combined = Math.max(apiScore, localScore);
+
+        // Sanity penalties: a hung-up call or low-patience exit can never score high
+        const didHangUp = sessionStats.hungUp;
+        const lowPatience = sessionStats.finalPatience < 30;
+        if (didHangUp) combined = Math.min(combined, 30);
+        else if (lowPatience) combined = Math.min(combined, 50);
+
+        finalScore = combined;
 
         console.log('API score:', apiScore, 'Local score:', localScore, 'Final:', finalScore);
 
-        // Determine outcome factoring in patience state
-        const didHangUp = sessionStats.hungUp;
-        const lowPatience = sessionStats.finalPatience < 30;
-        const won = !didHangUp && !lowPatience && finalScore >= 7;
+        const won = !didHangUp && !lowPatience && finalScore >= 70;
 
         feedbackData = {
           score: finalScore,
