@@ -31,12 +31,14 @@ const About: React.FC = () => (
         name="description"
         content="Built on my last day at a sales job, because the tool I needed didn't exist. The honest story behind PitchPerfect AI."
       />
+      <link rel="canonical" href="https://www.pitchperfectai.ai/about" />
       <meta property="og:title" content="About. PitchPerfect AI" />
       <meta
         property="og:description"
         content="Built on my last day at a sales job, because the tool I needed didn't exist. The honest story behind PitchPerfect AI."
       />
       <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://www.pitchperfectai.ai/about" />
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:title" content="About. PitchPerfect AI" />
       <meta
