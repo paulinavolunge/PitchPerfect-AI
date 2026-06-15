@@ -377,6 +377,7 @@ const Tips = () => {
       
       <Footer />
     </div>
+    </>
   );
 };
 
