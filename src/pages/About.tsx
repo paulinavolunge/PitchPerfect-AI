@@ -39,9 +39,9 @@ const About: React.FC = () => (
       />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://www.pitchperfectai.ai/about" />
-      <meta property="og:image" content="https://www.pitchperfectai.ai/og-image.png" />
+      <meta property="og:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:image" content="https://www.pitchperfectai.ai/og-image.png" />
+      <meta name="twitter:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
       <meta name="twitter:title" content="About. PitchPerfect AI" />
       <meta
         name="twitter:description"
