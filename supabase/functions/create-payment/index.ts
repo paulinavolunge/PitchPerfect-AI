@@ -71,7 +71,15 @@ serve(async (req) => {
       await supabase.from("user_profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
     }
 
-    const origin = req.headers.get("origin") || "https://pitchperfectai.ai";
+    const ALLOWED_ORIGINS = [
+      "https://pitchperfectai.ai",
+      "https://www.pitchperfectai.ai",
+      "https://pitchperfectai-02.lovable.app",
+    ];
+    const requestOrigin = req.headers.get("origin") ?? "";
+    const origin = ALLOWED_ORIGINS.includes(requestOrigin)
+      ? requestOrigin
+      : "https://pitchperfectai.ai";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
