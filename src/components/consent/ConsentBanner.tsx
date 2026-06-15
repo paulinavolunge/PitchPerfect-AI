@@ -109,7 +109,7 @@ export const ConsentBanner: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowBanner(false)}
-                className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+                className="h-8 w-8 p-0 text-gray-600 hover:text-gray-800"
               >
                 <X className="h-4 w-4" />
               </Button>
