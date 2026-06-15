@@ -98,9 +98,9 @@
     <link rel="preconnect" href="https://ggpodadyycvmmxifqwlp.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://ggpodadyycvmmxifqwlp.supabase.co" />
 
-    <!-- Async font loading — display=swap so text paints with system fallback first -->
+    <!-- Critical font — preload + blocking link so @font-face with display=swap is available immediately -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
 
     <!-- Inline critical CSS for instant first paint -->
