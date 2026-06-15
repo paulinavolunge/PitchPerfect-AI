@@ -44,6 +44,42 @@ const Pricing = () => {
         <meta name="twitter:title" content="PitchPerfect AI Pricing. Solo, Team & Pay-As-You-Go" />
         <meta name="twitter:description" content="Solo $29/mo, Team $49/seat/mo, or one-time packs from $4.99. 7-day money-back guarantee." />
         <meta name="twitter:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Will my voice recordings be stored?",
+              "acceptedAnswer": { "@type": "Answer", "text": "No. We process audio in-session and discard it. We never use your voice for training." }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I cancel anytime?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Yes. One click in your account settings. No questions, no retention dance." }
+            },
+            {
+              "@type": "Question",
+              "name": "How is this different from Gong or Chorus?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Gong analyzes real calls after they happen. We let you practice before the call so the real call is the second time you've heard those objections, not the first." }
+            },
+            {
+              "@type": "Question",
+              "name": "What's the difference between Starter Pack and Solo?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Starter Pack is one-time ($4.99), perfect for trying the product or a one-off interview prep. Solo is a subscription with unlimited practice, built for reps who practice daily." }
+            },
+            {
+              "@type": "Question",
+              "name": "Why is there a 3-seat minimum on Team?",
+              "acceptedAnswer": { "@type": "Answer", "text": "The Team tier includes a manager dashboard and team analytics, features that only make sense with multiple reps. For solo practice, pick Solo at $29/mo." }
+            },
+            {
+              "@type": "Question",
+              "name": "Is there a free version?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Yes. Your first session is free, no signup required. After that, Starter Pack at $4.99 is the lowest-commitment way to unlock your full scorecard." }
+            }
+          ]
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-gray-50">

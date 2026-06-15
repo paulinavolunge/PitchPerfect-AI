@@ -149,6 +149,53 @@ const Index = () => {
         <meta property="twitter:title" content="PitchPerfect AI. Cold Call Practice With AI Buyers" />
         <meta property="twitter:description" content="Go head-to-head with AI buyers who fight back. Get scored in 30 seconds. Free round. No signup." />
         <meta property="twitter:image" content="https://www.pitchperfectai.ai/og-image.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "PitchPerfect AI",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "url": "https://www.pitchperfectai.ai/",
+          "description": "AI cold call practice that pushes back with real objections so you crush your next deal.",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "127" }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "I don't have time for this.",
+              "acceptedAnswer": { "@type": "Answer", "text": "A session takes under 10 minutes. That's less time than replaying a call you lost in your head on the drive home." }
+            },
+            {
+              "@type": "Question",
+              "name": "Will this actually help me close more?",
+              "acceptedAnswer": { "@type": "Answer", "text": "You battle-test against realistic objections before the real call. You walk in prepared instead of winging it. Preparation beats talent when talent doesn't prepare." }
+            },
+            {
+              "@type": "Question",
+              "name": "Why not just use ChatGPT?",
+              "acceptedAnswer": { "@type": "Answer", "text": "ChatGPT won't push back, won't score you, and won't run structured scenarios. It gives advice. We give reps. There's a difference between reading about pushups and doing them." }
+            },
+            {
+              "@type": "Question",
+              "name": "$29/month seems like a lot.",
+              "acceptedAnswer": { "@type": "Answer", "text": "It's less than the commission on one deal you'd lose by freezing on an objection you never battle-tested. One closed deal pays for years of PitchPerfect AI." }
+            },
+            {
+              "@type": "Question",
+              "name": "I've been selling for 15 years.",
+              "acceptedAnswer": { "@type": "Answer", "text": "The AI adapts. Veterans get harder pushback — multi-layered objections, misdirections, the kind of thing a VP of Procurement throws at you. This sharpens the edge, not teaches the basics." }
+            },
+            {
+              "@type": "Question",
+              "name": "What if I try it and it's not for me?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Free first session. No credit card. Under 10 minutes. If it doesn't help, you've lost nothing except a few minutes." }
+            }
+          ]
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen pp-page">
