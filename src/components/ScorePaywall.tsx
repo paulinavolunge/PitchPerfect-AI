@@ -52,7 +52,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 sm:right-4 sm:top-4 text-gray-400 hover:text-gray-900 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+          className="absolute right-3 top-3 sm:right-4 sm:top-4 text-gray-600 hover:text-gray-900 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
           <X className="w-5 h-5" />
         </button>
@@ -60,7 +60,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
 
       {/* Score */}
       <div className="text-center mb-6">
-        <div className="uppercase tracking-[0.2em] text-[10px] sm:text-xs text-gray-500 mb-2">
+        <div className="uppercase tracking-[0.2em] text-[10px] sm:text-xs text-gray-700 mb-2">
           Your Score
         </div>
         <div
@@ -68,7 +68,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
           style={{ fontSize: 'clamp(3.5rem, 14vw, 5.5rem)' }}
         >
           {score}
-          <span className="text-2xl sm:text-3xl text-gray-400 font-bold ml-1">/100</span>
+          <span className="text-2xl sm:text-3xl text-gray-600 font-bold ml-1">/100</span>
         </div>
       </div>
 
@@ -95,14 +95,14 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
           aria-hidden="true"
         >
           <div>
-            <div className="text-[10px] tracking-widest text-gray-400 mb-1">DISCOVERY</div>
+            <div className="text-[10px] tracking-widest text-gray-600 mb-1">DISCOVERY</div>
             <p className="text-sm text-gray-600 leading-relaxed">
               Your opener was strong, but you failed to establish pain before pitching the
               product. This is why the prospect pushed back on price instead of…
             </p>
           </div>
           <div>
-            <div className="text-[10px] tracking-widest text-gray-400 mb-1">
+            <div className="text-[10px] tracking-widest text-gray-600 mb-1">
               OBJECTION HANDLING
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
@@ -111,7 +111,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
             </p>
           </div>
           <div>
-            <div className="text-[10px] tracking-widest text-gray-400 mb-1">CLOSE</div>
+            <div className="text-[10px] tracking-widest text-gray-600 mb-1">CLOSE</div>
             <p className="text-sm text-gray-600 leading-relaxed">
               You never asked for the next step. Closers convert 3× higher by using the
               assumed-next-step technique, which sounds like…
@@ -148,13 +148,13 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
       {/* Tertiary link */}
       <a
         href={unlimitedUrl}
-        className="block text-center mt-3 text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
+        className="block text-center mt-3 text-xs sm:text-sm text-gray-700 hover:text-gray-900 underline underline-offset-2"
       >
         Go unlimited for $29/mo
       </a>
 
       {/* Reassurance */}
-      <p className="text-center text-[11px] sm:text-xs text-gray-400 mt-4">
+      <p className="text-center text-[11px] sm:text-xs text-gray-600 mt-4">
         No subscription required. One-time purchase.
       </p>
 
@@ -164,7 +164,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
+              className="text-xs sm:text-sm text-gray-700 hover:text-gray-900 underline underline-offset-2"
             >
               Try another free call →
             </button>
@@ -173,7 +173,7 @@ const ScorePaywall: React.FC<ScorePaywallProps> = ({
             <button
               type="button"
               onClick={onSignup}
-              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
+              className="text-xs sm:text-sm text-gray-700 hover:text-gray-900 underline underline-offset-2"
             >
               Save your progress. Sign up free →
             </button>

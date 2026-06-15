@@ -74,7 +74,7 @@ const ROICalculator = () => {
               Quota Type
               <Dialog>
                 <DialogTrigger>
-                  <InfoIcon className="h-4 w-4 text-gray-400 cursor-help" />
+                  <InfoIcon className="h-4 w-4 text-gray-600 cursor-help" />
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -100,7 +100,7 @@ const ROICalculator = () => {
             {quotaType === "monthly" ? "Monthly Quota" : "Quarterly Quota"}
             <Dialog>
               <DialogTrigger>
-                <InfoIcon className="h-4 w-4 text-gray-400 cursor-help" />
+                <InfoIcon className="h-4 w-4 text-gray-600 cursor-help" />
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -113,7 +113,7 @@ const ROICalculator = () => {
             </Dialog>
           </Label>
           <div className="relative mt-1">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-700">$</span>
             <Input
               id="monthly-quota"
               type="text"
@@ -130,7 +130,7 @@ const ROICalculator = () => {
             Win Rate Increase
             <Dialog>
               <DialogTrigger>
-                <InfoIcon className="h-4 w-4 text-gray-400 cursor-help" />
+                <InfoIcon className="h-4 w-4 text-gray-600 cursor-help" />
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -151,7 +151,7 @@ const ROICalculator = () => {
               value={winRateLift}
               onChange={(e) => handleNumericInput(e, setWinRateLift)}
             />
-            <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">%</span>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-700">%</span>
           </div>
         </div>
 
@@ -160,7 +160,7 @@ const ROICalculator = () => {
             Average Deal Size
             <Dialog>
               <DialogTrigger>
-                <InfoIcon className="h-4 w-4 text-gray-400 cursor-help" />
+                <InfoIcon className="h-4 w-4 text-gray-600 cursor-help" />
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -173,7 +173,7 @@ const ROICalculator = () => {
             </Dialog>
           </Label>
           <div className="relative mt-1">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-700">$</span>
             <Input
               id="avg-selling-price"
               type="text"
@@ -191,9 +191,9 @@ const ROICalculator = () => {
           <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Estimated Additional Monthly Revenue</h3>
           <div className={`mt-2 transition-all duration-500 ${isCalculating ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
             <span className="text-4xl font-bold text-brand-green">{formatCurrency(roi)}</span>
-            <span className="text-lg text-gray-500 dark:text-gray-400 ml-2">/ month</span>
+            <span className="text-lg text-gray-700 dark:text-gray-300 ml-2">/ month</span>
           </div>
-          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">
             Return on investment based on your inputs
           </p>
         </div>
