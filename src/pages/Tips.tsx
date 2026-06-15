@@ -202,8 +202,21 @@ const Tips = () => {
   const salesTips = filteredTips.slice(0, displayedTips);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
+    <>
+      <Helmet>
+        <title>Sales Tips &amp; Scripts. PitchPerfect AI</title>
+        <meta name="description" content="Curated sales tips, opening lines, objection rebuttals, and ready-to-use scripts. Apply them in your next PitchPerfect AI practice round." />
+        <link rel="canonical" href="https://www.pitchperfectai.ai/tips" />
+        <meta property="og:title" content="Sales Tips &amp; Scripts. PitchPerfect AI" />
+        <meta property="og:description" content="Curated sales tips, opening lines, objection rebuttals, and ready-to-use scripts." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.pitchperfectai.ai/tips" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Sales Tips &amp; Scripts. PitchPerfect AI" />
+        <meta name="twitter:description" content="Curated sales tips, opening lines, objection rebuttals, and ready-to-use scripts." />
+      </Helmet>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
       
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
