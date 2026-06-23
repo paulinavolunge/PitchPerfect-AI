@@ -302,9 +302,9 @@ const ScoreUnlock: React.FC = () => {
             {/* Strengths */}
             {debrief.strengths.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-xs uppercase tracking-widest text-emerald-400 mb-2">
+                <h2 className="text-xs uppercase tracking-widest text-emerald-400 mb-2">
                   What worked
-                </h3>
+                </h2>
                 <ul className="space-y-2 text-sm">
                   {debrief.strengths.map((s, i) => (
                     <li key={i} className="flex items-start gap-2 text-gray-200">
@@ -319,9 +319,9 @@ const ScoreUnlock: React.FC = () => {
             {/* Gaps */}
             {debrief.gaps.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-xs uppercase tracking-widest text-red-400 mb-2">
+                <h2 className="text-xs uppercase tracking-widest text-red-400 mb-2">
                   What to fix
-                </h3>
+                </h2>
                 <ul className="space-y-2 text-sm">
                   {debrief.gaps.map((g, i) => (
                     <li key={i} className="flex items-start gap-2 text-gray-200">
@@ -336,9 +336,9 @@ const ScoreUnlock: React.FC = () => {
             {/* Coaching tip */}
             {debrief.tip && (
               <div className="bg-amber-500/10 border border-amber-500/30 border-l-4 border-l-amber-400 rounded-xl p-4">
-                <h3 className="text-xs uppercase tracking-widest text-amber-400 mb-1">
+                <h2 className="text-xs uppercase tracking-widest text-amber-400 mb-1">
                   Coach's tip
-                </h3>
+                </h2>
                 <p className="text-sm text-amber-100">{debrief.tip}</p>
               </div>
             )}

@@ -445,7 +445,7 @@ const Index = () => {
                     <div className="pp-demo-score-inline">
                       <div className="pp-demo-score-num">7.4</div>
                       <div className="pp-demo-score-detail">
-                        <h4>Session Score</h4>
+                        <h3>Session Score</h3>
                         <p>Strong reframe on value. Good isolating question at the end. Work on: providing the proof faster. The prospect asked twice.</p>
                       </div>
                     </div>
