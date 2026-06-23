@@ -35,9 +35,17 @@ serve(async (req) => {
       });
     }
 
+    const escapeHtml = (s: string) =>
+      s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
     const email = record.email;
     const fullName = record.raw_user_meta_data?.full_name || record.raw_user_meta_data?.name || "";
-    const firstName = fullName.split(" ")[0] || "there";
+    const firstName = escapeHtml(fullName.split(" ")[0] || "there");
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
