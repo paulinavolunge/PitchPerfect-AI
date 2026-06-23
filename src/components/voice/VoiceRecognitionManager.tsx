@@ -302,8 +302,9 @@ const VoiceRecognitionManager: React.FC<VoiceRecognitionManagerProps> = ({
           onClick={() => setShowDebugTools(!showDebugTools)}
           className="h-8 w-8"
           title="Debug Tools"
+          aria-label="Toggle microphone debug tools"
         >
-          <Bug size={14} />
+          <Bug size={14} aria-hidden="true" />
         </Button>
       </div>
       

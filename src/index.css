@@ -49,7 +49,9 @@ body {
     --secondary: 248 0.7% 96.8%;
     --secondary-foreground: 266 4% 20.8%;
     --muted: 248 0.7% 96.8%;
-    --muted-foreground: 257 4.6% 55.4%;
+    /* WCAG AA: darkened so text-muted-foreground hits 4.5:1 on white.
+       Was 257 4.6% 55.4% (#8B8892, 3.48:1). Now 5.33:1. */
+    --muted-foreground: 257 6% 44%;
     --accent: 248 0.7% 96.8%;
     --accent-foreground: 266 4% 20.8%;
     --destructive: 27 24.5% 57.7%;
@@ -189,6 +191,13 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* WCAG AA contrast override for the foreground text utility only.
+     Border/background/fill/stroke variants of gray-400 are NOT touched,
+     so input borders, icon strokes, and dividers keep their look. */
+  .text-gray-400 {
+    color: #6B7484; /* was #9CA3AF (2.54:1 on white) -> 4.71:1 on white */
   }
 }
 

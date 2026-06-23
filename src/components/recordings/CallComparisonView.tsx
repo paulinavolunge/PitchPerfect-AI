@@ -84,8 +84,8 @@ const CallComparisonView: React.FC<CallComparisonViewProps> = ({ realCall, onBac
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" onClick={onBack} className="p-2">
-          <ArrowLeft className="h-5 w-5" />
+        <Button variant="ghost" onClick={onBack} className="p-2" aria-label="Back to call list">
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Button>
         <h2 className="text-xl font-semibold">Comparing Real Call vs Practice</h2>
       </div>
@@ -128,25 +128,26 @@ const CallComparisonView: React.FC<CallComparisonViewProps> = ({ realCall, onBac
                           className="my-1"
                         />
                         <div className="flex justify-center items-center gap-2 mt-4">
-                          <Button variant="outline" size="icon">
-                            <SkipBack className="h-4 w-4" />
+                          <Button variant="outline" size="icon" aria-label="Skip backward in real call">
+                            <SkipBack className="h-4 w-4" aria-hidden="true" />
                           </Button>
-                          <Button 
+                          <Button
                             onClick={togglePlay}
                             className="h-10 w-10 rounded-full bg-brand-blue"
+                            aria-label={isPlaying ? "Pause real call playback" : "Play real call playback"}
                           >
                             {isPlaying ? (
-                              <Pause className="h-5 w-5 text-white" />
+                              <Pause className="h-5 w-5 text-white" aria-hidden="true" />
                             ) : (
-                              <Play className="h-5 w-5 text-white" />
+                              <Play className="h-5 w-5 text-white" aria-hidden="true" />
                             )}
                           </Button>
-                          <Button variant="outline" size="icon">
-                            <SkipForward className="h-4 w-4" />
+                          <Button variant="outline" size="icon" aria-label="Skip forward in real call">
+                            <SkipForward className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                         <div className="flex items-center gap-2 mt-4">
-                          <Volume2 className="h-4 w-4" />
+                          <Volume2 className="h-4 w-4" aria-hidden="true" />
                           <Slider
                             value={[volume]}
                             min={0}
@@ -155,14 +156,14 @@ const CallComparisonView: React.FC<CallComparisonViewProps> = ({ realCall, onBac
                             onValueChange={handleVolumeChange}
                             className="w-24"
                           />
-                          <Button variant="outline" size="icon">
-                            <Download className="h-4 w-4" />
+                          <Button variant="outline" size="icon" aria-label="Download real call recording">
+                            <Download className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </div>
                     </div>
                   </TabsContent>
-                  
+
                   <TabsContent value="transcript">
                     <div className="bg-gray-50 rounded-md p-3 max-h-60 overflow-y-auto">
                       <p className="text-sm">
@@ -263,25 +264,26 @@ const CallComparisonView: React.FC<CallComparisonViewProps> = ({ realCall, onBac
                           className="my-1"
                         />
                         <div className="flex justify-center items-center gap-2 mt-4">
-                          <Button variant="outline" size="icon">
-                            <SkipBack className="h-4 w-4" />
+                          <Button variant="outline" size="icon" aria-label="Skip backward in practice session">
+                            <SkipBack className="h-4 w-4" aria-hidden="true" />
                           </Button>
-                          <Button 
+                          <Button
                             onClick={togglePlay}
                             className="h-10 w-10 rounded-full bg-brand-blue"
+                            aria-label={isPlaying ? "Pause practice session playback" : "Play practice session playback"}
                           >
                             {isPlaying ? (
-                              <Pause className="h-5 w-5 text-white" />
+                              <Pause className="h-5 w-5 text-white" aria-hidden="true" />
                             ) : (
-                              <Play className="h-5 w-5 text-white" />
+                              <Play className="h-5 w-5 text-white" aria-hidden="true" />
                             )}
                           </Button>
-                          <Button variant="outline" size="icon">
-                            <SkipForward className="h-4 w-4" />
+                          <Button variant="outline" size="icon" aria-label="Skip forward in practice session">
+                            <SkipForward className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                         <div className="flex items-center gap-2 mt-4">
-                          <Volume2 className="h-4 w-4" />
+                          <Volume2 className="h-4 w-4" aria-hidden="true" />
                           <Slider
                             value={[volume]}
                             min={0}
@@ -290,14 +292,14 @@ const CallComparisonView: React.FC<CallComparisonViewProps> = ({ realCall, onBac
                             onValueChange={handleVolumeChange}
                             className="w-24"
                           />
-                          <Button variant="outline" size="icon">
-                            <Download className="h-4 w-4" />
+                          <Button variant="outline" size="icon" aria-label="Download practice session recording">
+                            <Download className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </div>
                     </div>
                   </TabsContent>
-                  
+
                   <TabsContent value="transcript">
                     <div className="bg-gray-50 rounded-md p-3 max-h-60 overflow-y-auto">
                       <p className="text-sm">

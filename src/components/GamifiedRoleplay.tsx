@@ -1853,8 +1853,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             className={isListening ? 'border-destructive text-destructive animate-pulse' : isProcessingVoice ? 'border-yellow-500 text-yellow-500' : ''}
             disabled={isAiTyping || hungUp || isProcessingVoice}
             title={isProcessingVoice ? 'Processing voice...' : isListening ? 'Stop recording' : 'Tap to speak'}
+            aria-label={isProcessingVoice ? 'Processing voice…' : isListening ? 'Stop recording' : 'Start voice recording'}
           >
-            {isProcessingVoice ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
+            {isProcessingVoice ? <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" /> : <Mic className="w-5 h-5" aria-hidden="true" />}
           </Button>
         )}
         <div className="flex-1 relative">

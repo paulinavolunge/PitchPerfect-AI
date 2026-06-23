@@ -115,17 +115,17 @@ const RecentCalls: React.FC<RecentCallsProps> = ({ onSelectCall, selectedCall })
                   </div>
                   
                   <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={(e) => {
+                    <Button size="icon" variant="ghost" aria-label={`Play recording: ${call.title}`} onClick={(e) => {
                       e.stopPropagation();
                       // Play audio logic would go here
                     }}>
-                      <Play className="h-4 w-4" />
+                      <Play className="h-4 w-4" aria-hidden="true" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={(e) => {
+                    <Button size="icon" variant="ghost" aria-label={`Download recording: ${call.title}`} onClick={(e) => {
                       e.stopPropagation();
                       // Download audio logic would go here
                     }}>
-                      <Download className="h-4 w-4" />
+                      <Download className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
