@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Allow insert by authenticated users" ON public.login_events;
