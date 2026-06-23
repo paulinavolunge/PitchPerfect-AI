@@ -323,7 +323,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
                 {isGoogleLoading ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <img src="https://www.google.com/favicon.ico" alt="" className="w-4 h-4 mr-2" />
+                  <img src="https://www.google.com/favicon.ico" alt="" width={16} height={16} loading="lazy" decoding="async" className="w-4 h-4 mr-2" />
                 )}
                 Continue with Google
               </Button>

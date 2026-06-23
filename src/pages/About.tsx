@@ -78,7 +78,10 @@ const About: React.FC = () => (
                 src={paulinaPhoto}
                 alt="Paulina Vol, Founder of PitchPerfect AI"
                 className="w-full h-full object-cover"
+                width={300}
+                height={400}
                 loading="lazy"
+                decoding="async"
               />
             </div>
 

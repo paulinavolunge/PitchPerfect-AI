@@ -47,9 +47,16 @@
     <link rel="preconnect" href="https://ggpodadyycvmmxifqwlp.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://ggpodadyycvmmxifqwlp.supabase.co" />
 
-    <!-- Critical font — preload + blocking link so @font-face with display=swap is available immediately -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Critical font — loaded asynchronously so it never blocks first paint / LCP.
+         The preload fetches the CSS at high priority, then onload flips it to a
+         stylesheet without blocking render. display=swap paints the hero text in a
+         system fallback immediately and swaps to Inter when it arrives. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
 
     <!-- Inline critical CSS for instant first paint -->
