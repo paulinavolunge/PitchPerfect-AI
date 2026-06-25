@@ -214,8 +214,11 @@ const Pricing = () => {
               Cancel anytime · Free first session on all plans
             </p>
 
+            <h2 className="sr-only">Frequently asked questions</h2>
             <PricingFAQ />
+            <h2 className="sr-only">Plan comparison</h2>
             <ComparisonTable />
+
           </div>
         </main>
 
