@@ -58,21 +58,12 @@ const CRMIntegrationSettings: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [connectionData, setConnectionData] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    // Load saved connections from localStorage
-    const savedConnections = localStorage.getItem('crm_connections');
-    if (savedConnections) {
-      try {
-        const connections = JSON.parse(savedConnections);
-        setProviders(prev => prev.map(provider => ({
-          ...provider,
-          isConnected: !!connections[provider.id]
-        })));
-      } catch (error) {
-        console.error('Error loading CRM connections:', error);
-      }
-    }
-  }, []);
+  // SECURITY: Third-party API keys, webhook URLs, and OAuth tokens must never
+  // be persisted in localStorage/sessionStorage — they are readable by any
+  // JS running in the page (XSS, malicious extensions). Connection state is
+  // kept in memory for the current session only. A production implementation
+  // must proxy CRM calls through an edge function that reads credentials from
+  // Supabase Vault / a server-side encrypted secrets store.
 
   const handleConnect = async (providerId: string) => {
     const provider = providers.find(p => p.id === providerId);
@@ -83,7 +74,7 @@ const CRMIntegrationSettings: React.FC = () => {
         // Simulate OAuth flow
         const authUrl = `https://api.${provider.id}.com/oauth/authorize?client_id=demo&redirect_uri=${window.location.origin}/auth/callback`;
         window.open(authUrl, '_blank', 'width=600,height=600');
-        
+
         // Simulate successful connection after delay
         setTimeout(() => {
           updateConnectionStatus(providerId, true);
@@ -102,8 +93,7 @@ const CRMIntegrationSettings: React.FC = () => {
           });
           return;
         }
-        
-        // Validate API key (simulation)
+
         if (apiKey.length < 10) {
           toast({
             title: "Invalid API Key",
@@ -112,12 +102,17 @@ const CRMIntegrationSettings: React.FC = () => {
           });
           return;
         }
-        
+
         updateConnectionStatus(providerId, true);
-        saveConnectionData(providerId, { apiKey });
+        // Clear the entered secret from component state so it doesn't linger.
+        setConnectionData(prev => {
+          const next = { ...prev };
+          delete next[`${providerId}_api_key`];
+          return next;
+        });
         toast({
           title: "Integration Connected",
-          description: `Successfully connected to ${provider.name}`,
+          description: `Connected to ${provider.name} for this session. Credentials are not stored in the browser.`,
         });
       } else if (provider.authType === 'webhook') {
         const webhookUrl = connectionData[`${providerId}_webhook`];
@@ -129,12 +124,16 @@ const CRMIntegrationSettings: React.FC = () => {
           });
           return;
         }
-        
+
         updateConnectionStatus(providerId, true);
-        saveConnectionData(providerId, { webhookUrl });
+        setConnectionData(prev => {
+          const next = { ...prev };
+          delete next[`${providerId}_webhook`];
+          return next;
+        });
         toast({
           title: "Webhook Connected",
-          description: `Successfully configured ${provider.name} webhook`,
+          description: `Configured ${provider.name} webhook for this session.`,
         });
       }
     } catch (error) {
@@ -148,8 +147,7 @@ const CRMIntegrationSettings: React.FC = () => {
 
   const handleDisconnect = (providerId: string) => {
     updateConnectionStatus(providerId, false);
-    removeConnectionData(providerId);
-    
+
     const provider = providers.find(p => p.id === providerId);
     toast({
       title: "Integration Disconnected",
@@ -158,22 +156,11 @@ const CRMIntegrationSettings: React.FC = () => {
   };
 
   const updateConnectionStatus = (providerId: string, isConnected: boolean) => {
-    setProviders(prev => prev.map(provider => 
+    setProviders(prev => prev.map(provider =>
       provider.id === providerId ? { ...provider, isConnected } : provider
     ));
   };
 
-  const saveConnectionData = (providerId: string, data: Record<string, string>) => {
-    const connections = JSON.parse(localStorage.getItem('crm_connections') || '{}');
-    connections[providerId] = data;
-    localStorage.setItem('crm_connections', JSON.stringify(connections));
-  };
-
-  const removeConnectionData = (providerId: string) => {
-    const connections = JSON.parse(localStorage.getItem('crm_connections') || '{}');
-    delete connections[providerId];
-    localStorage.setItem('crm_connections', JSON.stringify(connections));
-  };
 
   const testConnection = async (providerId: string) => {
     try {
