@@ -103,7 +103,9 @@ const Pricing = () => {
             <BillingToggle isAnnual={isAnnual} onChange={handleBillingChange} />
 
             {/* ── Tier cards ── */}
+            <h2 className="sr-only">Pricing plans</h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+
 
               {/* Tier 1 — $4.99 one-time */}
               <div className="relative bg-white rounded-2xl border-2 border-emerald-500 shadow-lg p-6 flex flex-col">
@@ -212,8 +214,11 @@ const Pricing = () => {
               Cancel anytime · Free first session on all plans
             </p>
 
+            <h2 className="sr-only">Frequently asked questions</h2>
             <PricingFAQ />
+            <h2 className="sr-only">Plan comparison</h2>
             <ComparisonTable />
+
           </div>
         </main>
 
