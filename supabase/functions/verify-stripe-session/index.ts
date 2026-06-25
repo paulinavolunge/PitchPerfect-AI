@@ -73,9 +73,10 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
+    // Keep full error details server-side only; return generic message to clients.
     console.error("verify-stripe-session error:", error);
     return new Response(
-      JSON.stringify({ error: error?.message ?? "Verification failed" }),
+      JSON.stringify({ error: "Verification failed" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
