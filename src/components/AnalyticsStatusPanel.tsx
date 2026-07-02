@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, Download } from 'lucide-react';
-import { checkAnalyticsConnection, getLastPageview } from '@/utils/analytics';
+import { CheckCircle2, XCircle, Download, Activity } from 'lucide-react';
+import { checkAnalyticsConnection, getLastPageview, forceTrackPageView } from '@/utils/analytics';
 
 function formatRelative(ts: number): string {
   const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
