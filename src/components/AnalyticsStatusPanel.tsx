@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, XCircle, Download } from 'lucide-react';
 import { checkAnalyticsConnection, getLastPageview } from '@/utils/analytics';
 
 function formatRelative(ts: number): string {
