@@ -63,6 +63,10 @@ const Analytics = () => {
             </CardContent>
           </Card>
         </div>
+        <div className="mb-6">
+          <AnalyticsStatusPanel />
+        </div>
+
 
         <Card>
           <CardHeader>
