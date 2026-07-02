@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, XCircle, Download } from 'lucide-react';
 import { checkAnalyticsConnection, getLastPageview } from '@/utils/analytics';
 
 function formatRelative(ts: number): string {
@@ -12,6 +13,46 @@ function formatRelative(ts: number): string {
 }
 
 type Row = { label: string; ok: boolean; detail?: string };
+
+function buildDiagnostics() {
+  const status = checkAnalyticsConnection();
+  const last = getLastPageview();
+  return {
+    generatedAt: new Date().toISOString(),
+    url: window.location.href,
+    hostname: window.location.hostname,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    checks: {
+      lovableTagger: status.taggerLoaded,
+      ga4Script: status.scriptLoaded,
+      gtagFunction: status.ga4Loaded,
+      dataLayer: status.gtmLoaded,
+      consentGranted: status.consentValid,
+      productionHost: status.productionHost,
+    },
+    lastPageview: last
+      ? {
+          path: last.path,
+          at: last.at,
+          atFormatted: new Date(last.at).toISOString(),
+          relative: formatRelative(last.at),
+        }
+      : null,
+  };
+}
+
+function exportDiagnostics() {
+  const payload = buildDiagnostics();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pitchperfect-analytics-diagnostics-${new Date().toISOString().slice(0, 19)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 export default function AnalyticsStatusPanel() {
   const [status, setStatus] = useState(() => checkAnalyticsConnection());
@@ -72,6 +113,16 @@ export default function AnalyticsStatusPanel() {
               No pageview tracked yet this session. Pageviews are only sent on the production host with consent granted.
             </div>
           )}
+        </div>
+
+        <div className="border-t pt-4">
+          <Button variant="outline" size="sm" onClick={exportDiagnostics} className="w-full">
+            <Download className="h-4 w-4 mr-2" />
+            Export diagnostics
+          </Button>
+          <p className="text-xs text-brand-dark/50 mt-2">
+            Downloads a JSON report of the checks above and the last tracked pageview for sharing.
+          </p>
         </div>
       </CardContent>
     </Card>
