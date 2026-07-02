@@ -91,6 +91,8 @@ export const initGA = () => {
   loadGAScript();
 };
 
+export const LAST_PAGEVIEW_KEY = 'analytics-last-pageview';
+
 export const trackPageView = (path: string) => {
   if (!isProductionHost()) return;
   if (typeof window.gtag !== 'function') return;
@@ -102,6 +104,9 @@ export const trackPageView = (path: string) => {
     page_location: cleanLocation,
     send_to: GA_ID,
   });
+  try {
+    sessionStorage.setItem(LAST_PAGEVIEW_KEY, JSON.stringify({ path: cleanPath, at: Date.now() }));
+  } catch {}
 };
 
 export const trackEvent = (eventName: string, eventParams: Record<string, any> = {}) => {
@@ -114,11 +119,22 @@ export const autoInitAnalytics = () => {
   if (hasValidConsent()) initGA();
 };
 
+export const getLastPageview = (): { path: string; at: number } | null => {
+  try {
+    const raw = sessionStorage.getItem(LAST_PAGEVIEW_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const checkAnalyticsConnection = () => ({
   gtmLoaded: typeof window.dataLayer !== 'undefined',
   ga4Loaded: typeof window.gtag === 'function',
   consentValid: hasValidConsent(),
   scriptLoaded: !!document.querySelector('script[src*="googletagmanager.com/gtag/js"]'),
+  taggerLoaded: !!document.querySelector('script[src*="cdn.gpteng.co/gptengineer"]'),
+  productionHost: isProductionHost(),
 });
 
 // Global loadAnalytics for consent banner
