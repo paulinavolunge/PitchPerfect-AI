@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, Download } from 'lucide-react';
-import { checkAnalyticsConnection, getLastPageview } from '@/utils/analytics';
+import { CheckCircle2, XCircle, Download, Activity } from 'lucide-react';
+import { checkAnalyticsConnection, getLastPageview, forceTrackPageView } from '@/utils/analytics';
 
 function formatRelative(ts: number): string {
   const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
@@ -77,6 +77,12 @@ export default function AnalyticsStatusPanel() {
     { label: 'Production host', ok: status.productionHost, detail: window.location.hostname },
   ];
 
+  const handleTestPageview = () => {
+    forceTrackPageView();
+    setLast(getLastPageview());
+    tick((n) => n + 1);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -115,13 +121,17 @@ export default function AnalyticsStatusPanel() {
           )}
         </div>
 
-        <div className="border-t pt-4">
+        <div className="border-t pt-4 space-y-2">
+          <Button variant="outline" size="sm" onClick={handleTestPageview} className="w-full">
+            <Activity className="h-4 w-4 mr-2" />
+            Track test pageview
+          </Button>
           <Button variant="outline" size="sm" onClick={exportDiagnostics} className="w-full">
             <Download className="h-4 w-4 mr-2" />
             Export diagnostics
           </Button>
           <p className="text-xs text-brand-dark/50 mt-2">
-            Downloads a JSON report of the checks above and the last tracked pageview for sharing.
+            Tracking a test pageview fires a <code>page_view</code> event immediately and updates the timestamp above, even outside production.
           </p>
         </div>
       </CardContent>
