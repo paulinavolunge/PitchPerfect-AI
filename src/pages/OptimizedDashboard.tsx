@@ -1,7 +1,7 @@
 // Optimized Dashboard component with performance improvements
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { debounce } from 'lodash';
+import debounce from 'lodash.debounce';
 
 // Import available components directly
 import DashboardStats from '@/components/DashboardStats';
