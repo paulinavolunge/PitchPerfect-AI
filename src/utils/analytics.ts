@@ -109,6 +109,22 @@ export const trackPageView = (path: string) => {
   } catch {}
 };
 
+export const forceTrackPageView = (path: string = window.location.pathname + window.location.search) => {
+  const cleanPath = stripInternalParams(path);
+  const cleanLocation = stripInternalParams(window.location.href);
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'page_view', {
+      page_path: cleanPath,
+      page_title: `${document.title} [test]`,
+      page_location: cleanLocation,
+      send_to: GA_ID,
+    });
+  }
+  try {
+    sessionStorage.setItem(LAST_PAGEVIEW_KEY, JSON.stringify({ path: cleanPath, at: Date.now() }));
+  } catch {}
+};
+
 export const trackEvent = (eventName: string, eventParams: Record<string, any> = {}) => {
   if (!isProductionHost()) return;
   if (typeof window.gtag !== 'function') return;
