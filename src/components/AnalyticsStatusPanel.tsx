@@ -114,6 +114,16 @@ export default function AnalyticsStatusPanel() {
             </div>
           )}
         </div>
+
+        <div className="border-t pt-4">
+          <Button variant="outline" size="sm" onClick={exportDiagnostics} className="w-full">
+            <Download className="h-4 w-4 mr-2" />
+            Export diagnostics
+          </Button>
+          <p className="text-xs text-brand-dark/50 mt-2">
+            Downloads a JSON report of the checks above and the last tracked pageview for sharing.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
