@@ -14,6 +14,46 @@ function formatRelative(ts: number): string {
 
 type Row = { label: string; ok: boolean; detail?: string };
 
+function buildDiagnostics() {
+  const status = checkAnalyticsConnection();
+  const last = getLastPageview();
+  return {
+    generatedAt: new Date().toISOString(),
+    url: window.location.href,
+    hostname: window.location.hostname,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    checks: {
+      lovableTagger: status.taggerLoaded,
+      ga4Script: status.scriptLoaded,
+      gtagFunction: status.ga4Loaded,
+      dataLayer: status.gtmLoaded,
+      consentGranted: status.consentValid,
+      productionHost: status.productionHost,
+    },
+    lastPageview: last
+      ? {
+          path: last.path,
+          at: last.at,
+          atFormatted: new Date(last.at).toISOString(),
+          relative: formatRelative(last.at),
+        }
+      : null,
+  };
+}
+
+function exportDiagnostics() {
+  const payload = buildDiagnostics();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pitchperfect-analytics-diagnostics-${new Date().toISOString().slice(0, 19)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export default function AnalyticsStatusPanel() {
   const [status, setStatus] = useState(() => checkAnalyticsConnection());
   const [last, setLast] = useState(() => getLastPageview());
