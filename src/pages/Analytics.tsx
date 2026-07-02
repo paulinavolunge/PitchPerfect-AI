@@ -1,9 +1,9 @@
 
 import React, { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, BarChart, TrendingUp, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import AnalyticsStatusPanel from '@/components/AnalyticsStatusPanel';
 
 const Analytics = () => {
   useEffect(() => {
