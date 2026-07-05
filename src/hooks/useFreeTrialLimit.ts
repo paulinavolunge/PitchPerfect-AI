@@ -101,6 +101,15 @@ export function useFreeTrialLimit() {
     setAttemptCount(newCount);
 
     if (user?.id) {
+      // Never rely on the DB default ('scored') — set status explicitly.
+      // A row is only 'scored' if it actually has a score AND feedback.
+      // Anything else is 'failed' so dashboards/streaks skip it and
+      // the failure is visible instead of silent. (Bug: May–Jun 2026,
+      // scoring failures were saved as status='scored' with null data.)
+      const hasScore = practiceData?.score !== null && practiceData?.score !== undefined;
+      const hasFeedback = practiceData?.feedback_data !== null && practiceData?.feedback_data !== undefined;
+      const scoringSucceeded = hasScore && hasFeedback;
+
       // Persist the session row for analytics / dashboard history
       try {
         const { error } = await supabase
@@ -114,6 +123,7 @@ export function useFreeTrialLimit() {
             score: practiceData?.score ?? null,
             transcript: practiceData?.transcript ?? null,
             feedback_data: practiceData?.feedback_data ?? null,
+            status: scoringSucceeded ? 'scored' : 'failed',
             completed_at: new Date().toISOString(),
           });
 
@@ -124,8 +134,10 @@ export function useFreeTrialLimit() {
         console.error('Failed to persist practice attempt:', err);
       }
 
-      // Decrement credits for credit-pack users (premium users don't consume credits)
-      if (!isPremium) {
+      // Decrement credits for credit-pack users (premium users don't consume credits).
+      // If scoring failed, the user got nothing — don't charge them a credit for it.
+      if (!isPremium && scoringSucceeded) {
+
         try {
           const ok = await deductUserCredits('practice_session', 1);
           if (!ok) {

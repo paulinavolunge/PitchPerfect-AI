@@ -47,6 +47,8 @@ export interface DebriefData {
   strengths: string[];
   gaps: string[];
   tip: string;
+  /** True when neither AI nor local scoring produced a result — session was not charged. */
+  scoringFailed?: boolean;
   sessionStats?: {
     roundsCompleted: number;
     avgResponseTime: number;
@@ -789,7 +791,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         console.warn('[GamifiedRoleplay] Could not get session for debrief, using anon key:', e);
       }
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/pitch-analysis`, {
+      // One automatic retry: transient edge-function/network blips were the
+      // main cause of sessions falling to fallback (or, pre-June-10, to
+      // silent null feedback). Retry once with a short backoff before
+      // giving up and using local scoring.
+      const callPitchAnalysis = async (): Promise<Response> => {
+        const doFetch = () => fetch(`${supabaseUrl}/functions/v1/pitch-analysis`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -812,11 +819,24 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             customObjection: customScenario.objection,
           } : {}),
         }),
-      });
+        });
+
+        try {
+          const first = await doFetch();
+          if (first.ok) return first;
+          console.warn('[GamifiedRoleplay] pitch-analysis returned', first.status, '— retrying once');
+        } catch (e) {
+          console.warn('[GamifiedRoleplay] pitch-analysis network error — retrying once:', e);
+        }
+        await new Promise(r => setTimeout(r, 1500));
+        return doFetch();
+      };
+
+      const response = await callPitchAnalysis();
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[GamifiedRoleplay] pitch-analysis error:', response.status, errorText);
+        console.error('[GamifiedRoleplay] pitch-analysis error after retry:', response.status, errorText);
         throw new Error(`pitch-analysis error: ${response.status}`);
       }
 
@@ -873,37 +893,55 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       }
     } catch (err) {
       console.error('[GamifiedRoleplay] Debrief error, using local scoring:', err);
-      let localScore = computeLocalScore(finalMessages);
-      const didHangUp = sessionStats.hungUp;
-      const lowPatience = sessionStats.finalPatience < 30;
-      if (didHangUp) localScore = Math.min(localScore, 30);
-      else if (lowPatience) localScore = Math.min(localScore, 50);
-      finalScore = localScore;
-      const won = !didHangUp && !lowPatience && localScore >= 70;
+      // Fallback scoring is wrapped in its own try so that even an unexpected
+      // throw here can never leave feedbackData null while the session gets
+      // saved. If BOTH the AI call and local scoring fail, we surface an
+      // honest "couldn't score" state instead of silence.
+      try {
+        let localScore = computeLocalScore(finalMessages);
+        const didHangUp = sessionStats.hungUp;
+        const lowPatience = sessionStats.finalPatience < 30;
+        if (didHangUp) localScore = Math.min(localScore, 30);
+        else if (lowPatience) localScore = Math.min(localScore, 50);
+        finalScore = localScore;
+        const won = !didHangUp && !lowPatience && localScore >= 70;
 
-      const gaps = sessionStats.hungUp
-        ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
-        : ['Consider asking more discovery questions', 'Provide more specific evidence and ROI data'];
-      const tip = 'Next time, acknowledge the objection first before presenting your counter-argument.';
+        const gaps = sessionStats.hungUp
+          ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
+          : ['Consider asking more discovery questions', 'Provide more specific evidence and ROI data'];
+        const tip = 'Next time, acknowledge the objection first before presenting your counter-argument.';
 
-      feedbackData = {
-        score: localScore,
-        strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
-        improvements: gaps,
-        recommendation: tip,
-        sessionStats,
-        won,
-        fallback: true,
-      };
+        feedbackData = {
+          score: localScore,
+          strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
+          improvements: gaps,
+          recommendation: tip,
+          sessionStats,
+          won,
+          fallback: true,
+        };
 
-      setDebrief({
-        won,
-        score: localScore,
-        strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
-        gaps,
-        tip,
-        sessionStats,
-      });
+        setDebrief({
+          won,
+          score: localScore,
+          strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
+          gaps,
+          tip,
+          sessionStats,
+        });
+      } catch (fallbackErr) {
+        console.error('[GamifiedRoleplay] Local fallback scoring ALSO failed:', fallbackErr);
+        feedbackData = null; // persisted as status='failed', no credit charged
+        setDebrief({
+          won: false,
+          score: 0,
+          strengths: [],
+          gaps: [],
+          tip: '',
+          sessionStats,
+          scoringFailed: true,
+        });
+      }
     } finally {
       setIsAiTyping(false);
       // Wait briefly to ensure TTS audio has fully stopped before showing debrief
@@ -918,7 +956,10 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           difficulty: 'medium',
           industry: isCustomMode && customScenario ? customScenario.industry : 'general',
           duration_seconds: sessionStartTimeRef.current ? Math.round((Date.now() - sessionStartTimeRef.current) / 1000) : 0,
-          score: finalScore,
+          // If scoring fully failed (feedbackData null), persist score as null too —
+          // incrementAttempt will then save the row as status='failed' and
+          // skip the credit charge, instead of a fake 'scored' row.
+          score: feedbackData ? finalScore : null,
           transcript,
           feedback_data: feedbackData,
         });
@@ -1419,8 +1460,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   // the full debrief, mirroring the cold-call-hook funnel. The cold call hook
   // itself renders ScorePaywall from its own parent, so we skip this branch
   // when isColdCallHook is set to avoid double-rendering.
-  if (phase === 'debrief' && debrief && isGuest && !isColdCallHook) {
-    const scorePercent = Math.round(debrief.score * 10);
+  if (phase === 'debrief' && debrief && !debrief.scoringFailed && isGuest && !isColdCallHook) {
+    // debrief.score is already on a 0-100 scale (scorecard scale fix, June 2026).
+    // The old * 10 here was a leftover from the 1-10 era and showed guests
+    // scores like "300".
+    const scorePercent = Math.max(0, Math.min(100, Math.round(debrief.score)));
     const highlights: Array<{ text: string; passed: boolean }> = [];
     if (debrief.strengths[0]) highlights.push({ text: debrief.strengths[0], passed: true });
     if (debrief.gaps[0]) highlights.push({ text: debrief.gaps[0], passed: false });
@@ -1442,6 +1486,30 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             highlights={highlights.slice(0, 3)}
           />
         </Suspense>
+      </div>
+    );
+  }
+
+  // ── Render: Scoring failed ─────────────────────────────────
+  if (phase === 'debrief' && debrief?.scoringFailed) {
+    return (
+      <div className="max-w-lg mx-auto p-6">
+        {hangUpOverlay}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center space-y-4"
+        >
+          <div className="text-5xl">⚠️</div>
+          <h2 className="text-2xl font-bold">We couldn't score this one</h2>
+          <p className="text-muted-foreground">
+            Something went wrong on our end while scoring your session.
+            You weren't charged a practice credit for this run.
+          </p>
+          <Button onClick={handleTryAnother} className="mt-2">
+            Run it back
+          </Button>
+        </motion.div>
       </div>
     );
   }
