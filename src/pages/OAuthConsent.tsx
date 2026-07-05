@@ -3,15 +3,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet-async";
 
-// Typed wrapper for the beta supabase.auth.oauth namespace so TS doesn't complain.
-type AuthWithOAuth = typeof supabase.auth & {
-  oauth: {
-    getAuthorizationDetails: (id: string) => Promise<{ data: any; error: any }>;
-    approveAuthorization: (id: string) => Promise<{ data: any; error: any }>;
-    denyAuthorization: (id: string) => Promise<{ data: any; error: any }>;
-  };
+// The supabase.auth.oauth namespace is beta and its return types don't yet
+// expose redirect_url / client fields, so cast through `any`.
+const authOauth = () => (supabase.auth as any).oauth as {
+  getAuthorizationDetails: (id: string) => Promise<{ data: any; error: any }>;
+  approveAuthorization: (id: string) => Promise<{ data: any; error: any }>;
+  denyAuthorization: (id: string) => Promise<{ data: any; error: any }>;
 };
-const authOauth = () => (supabase.auth as AuthWithOAuth).oauth;
+
 
 export default function OAuthConsent() {
   const [params] = useSearchParams();
