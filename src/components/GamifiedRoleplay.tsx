@@ -1490,6 +1490,30 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     );
   }
 
+  // ── Render: Scoring failed ─────────────────────────────────
+  if (phase === 'debrief' && debrief?.scoringFailed) {
+    return (
+      <div className="max-w-lg mx-auto p-6">
+        {hangUpOverlay}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center space-y-4"
+        >
+          <div className="text-5xl">⚠️</div>
+          <h2 className="text-2xl font-bold">We couldn't score this one</h2>
+          <p className="text-muted-foreground">
+            Something went wrong on our end while scoring your session.
+            You weren't charged a practice credit for this run.
+          </p>
+          <Button onClick={handleTryAnother} className="mt-2">
+            Run it back
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   // ── Render: Debrief ────────────────────────────────────────
   if (phase === 'debrief' && debrief) {
     const won = debrief.won;
