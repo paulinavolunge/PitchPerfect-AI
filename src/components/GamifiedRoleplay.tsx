@@ -956,7 +956,10 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           difficulty: 'medium',
           industry: isCustomMode && customScenario ? customScenario.industry : 'general',
           duration_seconds: sessionStartTimeRef.current ? Math.round((Date.now() - sessionStartTimeRef.current) / 1000) : 0,
-          score: finalScore,
+          // If scoring fully failed (feedbackData null), persist score as null too —
+          // incrementAttempt will then save the row as status='failed' and
+          // skip the credit charge, instead of a fake 'scored' row.
+          score: feedbackData ? finalScore : null,
           transcript,
           feedback_data: feedbackData,
         });
@@ -1457,8 +1460,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   // the full debrief, mirroring the cold-call-hook funnel. The cold call hook
   // itself renders ScorePaywall from its own parent, so we skip this branch
   // when isColdCallHook is set to avoid double-rendering.
-  if (phase === 'debrief' && debrief && isGuest && !isColdCallHook) {
-    const scorePercent = Math.round(debrief.score * 10);
+  if (phase === 'debrief' && debrief && !debrief.scoringFailed && isGuest && !isColdCallHook) {
+    // debrief.score is already on a 0-100 scale (scorecard scale fix, June 2026).
+    // The old * 10 here was a leftover from the 1-10 era and showed guests
+    // scores like "300".
+    const scorePercent = Math.max(0, Math.min(100, Math.round(debrief.score)));
     const highlights: Array<{ text: string; passed: boolean }> = [];
     if (debrief.strengths[0]) highlights.push({ text: debrief.strengths[0], passed: true });
     if (debrief.gaps[0]) highlights.push({ text: debrief.gaps[0], passed: false });
