@@ -30,6 +30,8 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
     plugins: [
       tsconfigPaths(),
       react(),
+      mcpPlugin(),
+
       // Make CSS non-render-blocking in production builds
       isProduction && {
         name: 'async-css',
