@@ -48,6 +48,8 @@ const DataSafety = React.lazy(() => import('@/pages/DataSafety'));
 const AccountDelete = React.lazy(() => import('@/pages/AccountDelete'));
 const Subscription = React.lazy(() => import('@/pages/Subscription'));
 const SubscriptionManagement = React.lazy(() => import('@/pages/SubscriptionManagement'));
+const OAuthConsent = React.lazy(() => import('@/pages/OAuthConsent'));
+
 const Success = React.lazy(() => import('@/pages/Success'));
 const Cancel = React.lazy(() => import('@/pages/Cancel'));
 const TeamDashboard = React.lazy(() => import('@/pages/TeamDashboard'));
@@ -118,6 +120,8 @@ function App() {
                                 {/* Public routes — accessible to all visitors */}
                                 <Route path="/" element={<Index />} />
                                 <Route path="/auth/callback" element={<AuthCallback />} />
+                                <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+
                                 <Route path="/about" element={<About />} />
                                 <Route path="/for-sdrs" element={<ForSdrs />} />
                                 <Route path="/for-founders" element={<ForFounders />} />

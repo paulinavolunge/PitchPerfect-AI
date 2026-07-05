@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ggpodadyycvmmxifqwlp.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "pitchperfect-ai-mcp",
+      "version": "0.1.0",
+      "title": "PitchPerfect AI"
+    },
+    "tools": [
+      {
+        "name": "list_practice_sessions",
+        "title": "List practice sessions",
+        "description": "List the signed-in user's recent PitchPerfect AI practice sessions (roleplay rounds), most recent first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "description": "Maximum number of sessions to return (1-50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_practice_session",
+        "title": "Get practice session",
+        "description": "Fetch the full transcript, score, and AI feedback for one of the signed-in user's practice sessions by id.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "session_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The practice session id (UUID)."
+            }
+          },
+          "required": [
+            "session_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_user_stats",
+        "title": "Get user practice stats",
+        "description": "Summarize the signed-in user's PitchPerfect AI practice performance: total sessions, average score, best score, and last session date.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

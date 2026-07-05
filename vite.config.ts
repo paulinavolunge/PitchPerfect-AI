@@ -5,6 +5,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
+
 
 export default async function defineViteConfig({ mode }: { mode: 'development' | 'production' | 'test' }) {
 
@@ -28,6 +30,8 @@ export default async function defineViteConfig({ mode }: { mode: 'development' |
     plugins: [
       tsconfigPaths(),
       react(),
+      mcpPlugin(),
+
       // Make CSS non-render-blocking in production builds
       isProduction && {
         name: 'async-css',
