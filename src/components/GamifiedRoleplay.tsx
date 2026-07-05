@@ -47,6 +47,8 @@ export interface DebriefData {
   strengths: string[];
   gaps: string[];
   tip: string;
+  /** True when neither AI nor local scoring produced a result — session was not charged. */
+  scoringFailed?: boolean;
   sessionStats?: {
     roundsCompleted: number;
     avgResponseTime: number;
@@ -789,7 +791,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         console.warn('[GamifiedRoleplay] Could not get session for debrief, using anon key:', e);
       }
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/pitch-analysis`, {
+      // One automatic retry: transient edge-function/network blips were the
+      // main cause of sessions falling to fallback (or, pre-June-10, to
+      // silent null feedback). Retry once with a short backoff before
+      // giving up and using local scoring.
+      const callPitchAnalysis = async (): Promise<Response> => {
+        const doFetch = () => fetch(`${supabaseUrl}/functions/v1/pitch-analysis`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -812,11 +819,24 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             customObjection: customScenario.objection,
           } : {}),
         }),
-      });
+        });
+
+        try {
+          const first = await doFetch();
+          if (first.ok) return first;
+          console.warn('[GamifiedRoleplay] pitch-analysis returned', first.status, '— retrying once');
+        } catch (e) {
+          console.warn('[GamifiedRoleplay] pitch-analysis network error — retrying once:', e);
+        }
+        await new Promise(r => setTimeout(r, 1500));
+        return doFetch();
+      };
+
+      const response = await callPitchAnalysis();
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[GamifiedRoleplay] pitch-analysis error:', response.status, errorText);
+        console.error('[GamifiedRoleplay] pitch-analysis error after retry:', response.status, errorText);
         throw new Error(`pitch-analysis error: ${response.status}`);
       }
 
@@ -873,37 +893,55 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       }
     } catch (err) {
       console.error('[GamifiedRoleplay] Debrief error, using local scoring:', err);
-      let localScore = computeLocalScore(finalMessages);
-      const didHangUp = sessionStats.hungUp;
-      const lowPatience = sessionStats.finalPatience < 30;
-      if (didHangUp) localScore = Math.min(localScore, 30);
-      else if (lowPatience) localScore = Math.min(localScore, 50);
-      finalScore = localScore;
-      const won = !didHangUp && !lowPatience && localScore >= 70;
+      // Fallback scoring is wrapped in its own try so that even an unexpected
+      // throw here can never leave feedbackData null while the session gets
+      // saved. If BOTH the AI call and local scoring fail, we surface an
+      // honest "couldn't score" state instead of silence.
+      try {
+        let localScore = computeLocalScore(finalMessages);
+        const didHangUp = sessionStats.hungUp;
+        const lowPatience = sessionStats.finalPatience < 30;
+        if (didHangUp) localScore = Math.min(localScore, 30);
+        else if (lowPatience) localScore = Math.min(localScore, 50);
+        finalScore = localScore;
+        const won = !didHangUp && !lowPatience && localScore >= 70;
 
-      const gaps = sessionStats.hungUp
-        ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
-        : ['Consider asking more discovery questions', 'Provide more specific evidence and ROI data'];
-      const tip = 'Next time, acknowledge the objection first before presenting your counter-argument.';
+        const gaps = sessionStats.hungUp
+          ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
+          : ['Consider asking more discovery questions', 'Provide more specific evidence and ROI data'];
+        const tip = 'Next time, acknowledge the objection first before presenting your counter-argument.';
 
-      feedbackData = {
-        score: localScore,
-        strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
-        improvements: gaps,
-        recommendation: tip,
-        sessionStats,
-        won,
-        fallback: true,
-      };
+        feedbackData = {
+          score: localScore,
+          strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
+          improvements: gaps,
+          recommendation: tip,
+          sessionStats,
+          won,
+          fallback: true,
+        };
 
-      setDebrief({
-        won,
-        score: localScore,
-        strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
-        gaps,
-        tip,
-        sessionStats,
-      });
+        setDebrief({
+          won,
+          score: localScore,
+          strengths: ['Stayed engaged throughout the conversation', 'Attempted to address objections'],
+          gaps,
+          tip,
+          sessionStats,
+        });
+      } catch (fallbackErr) {
+        console.error('[GamifiedRoleplay] Local fallback scoring ALSO failed:', fallbackErr);
+        feedbackData = null; // persisted as status='failed', no credit charged
+        setDebrief({
+          won: false,
+          score: 0,
+          strengths: [],
+          gaps: [],
+          tip: '',
+          sessionStats,
+          scoringFailed: true,
+        });
+      }
     } finally {
       setIsAiTyping(false);
       // Wait briefly to ensure TTS audio has fully stopped before showing debrief
