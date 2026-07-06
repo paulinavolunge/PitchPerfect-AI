@@ -342,8 +342,14 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     return window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
   }, []);
 
-  const currentProspectName = isCustomMode ? prospectInfo.name : prospectInfo.name;
-  const currentProspectTitle = isCustomMode && customScenario?.buyerTitle ? customScenario.buyerTitle : prospectInfo.title;
+  const currentProspectName = (!isCustomMode && !presetScenario && selectedObjection && OBJECTION_PERSONAS[selectedObjection.id])
+    ? OBJECTION_PERSONAS[selectedObjection.id].name
+    : prospectInfo.name;
+  const currentProspectTitle = isCustomMode && customScenario?.buyerTitle
+    ? customScenario.buyerTitle
+    : (!isCustomMode && !presetScenario && selectedObjection && OBJECTION_PERSONAS[selectedObjection.id])
+      ? OBJECTION_PERSONAS[selectedObjection.id].title
+      : prospectInfo.title;
 
   const DEBRIEF_LOADING_MESSAGES = ['Analyzing your performance...', 'Reviewing your objection handling...', 'Generating your score...'];
   const [debriefLoadingMsgIndex, setDebriefLoadingMsgIndex] = useState(0);
