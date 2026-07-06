@@ -787,7 +787,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       const response = await callAI(
         presetScenario
           ? presetScenario.systemPrompt
-          : isCustomMode ? '' : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle),
+          : isCustomMode ? '' : (OBJECTION_PERSONAS[selectedObjection!.id]?.systemPrompt ?? buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle)),
         text,
         updatedMessages
       );
