@@ -63,7 +63,7 @@ const EmailConfirmed = () => {
           clearInterval(timer);
           if (!hasNavigated) {
             setHasNavigated(true);
-            navigate('/login?verified=true');
+            navigate('/login?verified=true&redirect=/practice');
           }
           return 0;
         }
@@ -81,7 +81,7 @@ const EmailConfirmed = () => {
     trackEvent('email_verified_manual_redirect', {
       timestamp: new Date().toISOString()
     });
-    navigate('/login?verified=true');
+    navigate('/login?verified=true&redirect=/practice');
   };
 
   return (

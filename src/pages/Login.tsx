@@ -36,11 +36,17 @@ const Login = () => {
 
   // Pre-fill email if it was passed via ?email=... (e.g. when ScoreUnlock
   // redirects a buyer whose email is already registered).
-  const prefilledEmail = new URLSearchParams(location.search).get('email') ?? '';
+  const loginSearchParams = new URLSearchParams(location.search);
+  const prefilledEmail = loginSearchParams.get('email') ?? '';
+  // Honor an explicit ?redirect= target (set by EmailConfirmed.tsx after
+  // email verification) when there's no React Router `state.from` — this
+  // is the normal case for a fresh email-confirmation link visit, and
+  // previously always fell through to /dashboard regardless of intent.
+  const redirectQueryParam = loginSearchParams.get('redirect');
   const redirectPath =
     (location.state as { from?: { pathname?: string; search?: string } } | null)?.from
       ? `${(location.state as { from: { pathname?: string; search?: string } }).from.pathname || '/dashboard'}${(location.state as { from: { search?: string } }).from.search || ''}`
-      : '/dashboard';
+      : (redirectQueryParam || '/dashboard');
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
