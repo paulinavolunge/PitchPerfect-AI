@@ -684,7 +684,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         ? presetScenario.systemPrompt
         : isCustomMode
           ? '' // custom prompt is built server-side
-          : buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle);
+          : (OBJECTION_PERSONAS[selectedObjection!.id]?.systemPrompt ?? buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle));
       const openingLine = presetScenario
         ? presetScenario.openingLine
         : isCustomMode && customScenario
