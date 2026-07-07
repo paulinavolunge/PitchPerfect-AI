@@ -1,6 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateLimit.ts";
+
+// Anti-abuse: cap new Stripe checkout sessions per client IP to blunt
+// card-testing bots. To adjust, change these two constants.
+const MAX_CHECKOUTS_PER_WINDOW = 5;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +26,13 @@ serve(async (req) => {
   }
 
   try {
+    // Server-side rate limit, enforced before any auth/DB/Stripe work so it
+    // can't be bypassed from the client. Keyed on client IP: 5 new checkout
+    // sessions per hour. Returns HTTP 429 with Retry-After when exceeded.
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`create-payment:ip:${ip}`, MAX_CHECKOUTS_PER_WINDOW, RATE_WINDOW_MS);
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("Stripe secret key not configured");
 
