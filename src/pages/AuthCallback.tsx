@@ -29,12 +29,22 @@ export default function AuthCallback() {
         }
 
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(url);
-          if (error) {
-            console.error('[AuthCallback] exchangeCodeForSession error:', error);
-            toast.error('Sign-in failed', { description: error.message });
-            navigate('/login', { replace: true });
-            return;
+          // detectSessionInUrl: true means supabase-js may have already
+          // auto-exchanged this code. Only exchange manually if no session
+          // exists yet, and treat "verifier not found" as a lost race with
+          // the auto-exchange rather than a real failure.
+          const { data: { session: existingSession } } = await supabase.auth.getSession();
+          if (!existingSession) {
+            const { error } = await supabase.auth.exchangeCodeForSession(url);
+            if (error) {
+              const { data: { session: retrySession } } = await supabase.auth.getSession();
+              if (!retrySession) {
+                console.error('[AuthCallback] exchangeCodeForSession error:', error);
+                toast.error('Sign-in failed', { description: error.message });
+                navigate('/login', { replace: true });
+                return;
+              }
+            }
           }
         }
 
