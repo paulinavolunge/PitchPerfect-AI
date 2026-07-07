@@ -16,45 +16,45 @@ import { Check, X } from 'lucide-react';
 const Compare = () => {
   const comparisonData = [
     {
-      feature: 'Real-time voice feedback',
+      feature: 'Getting started',
       pitchPerfect: true,
       competitors: false,
-      note: 'Immediate feedback as you speak'
+      note: 'Free round in 90 seconds, no signup. Most enterprise tools require booking a demo call first.'
     },
     {
-      feature: 'Adaptive objection bank',
+      feature: 'Pricing',
       pitchPerfect: true,
       competitors: 'limited',
-      note: 'Competitors offer only scripted responses'
+      note: '$29/month, cancel anytime. Most competitors require a custom quote and annual contract.'
     },
     {
-      feature: 'Progress analytics',
+      feature: 'Seat minimum',
       pitchPerfect: true,
       competitors: false,
-      note: 'Track improvement over time'
+      note: 'None — works for a team of one. Many enterprise tools require 5+ seats minimum.'
     },
     {
-      feature: 'Custom scenario building',
+      feature: 'Who sees your scores',
+      pitchPerfect: true,
+      competitors: false,
+      note: "Just you. Most team-focused tools put your scores on a manager's dashboard."
+    },
+    {
+      feature: 'Built for',
       pitchPerfect: true,
       competitors: 'limited',
-      note: 'Create scenarios specific to your product'
-    },
-    {
-      feature: 'AI-powered feedback',
-      pitchPerfect: true,
-      competitors: true,
-      note: 'In-depth analysis of your performance'
+      note: 'An individual rep who wants to get better. Most competitors are built to be rolled out by a sales org.'
     }
   ];
 
   return (
     <>
       <Helmet>
-        <title>Compare PitchPerfect AI vs Competitors | Feature Comparison</title>
-        <meta name="description" content="See how PitchPerfect AI compares to other AI sales tools. Compare features, capabilities, and benefits of the AI cold call challenge." />
-        <meta name="keywords" content="sales tool comparison, AI SDR tools, cold call challenge, sales rounds" />
-        <meta property="og:title" content="PitchPerfect AI vs Competition - Feature Comparison" />
-        <meta property="og:description" content="Discover why PitchPerfect AI outperforms other sales tools with superior AI feedback and real-time scoring." />
+        <title>PitchPerfect AI vs Enterprise Sales Training Tools</title>
+        <meta name="description" content="Most AI sales roleplay tools are built for sales orgs buying seats for a whole team. See what's different about a tool built for one rep instead." />
+        <meta name="keywords" content="sales tool comparison, AI SDR tools, cold call practice, sales roleplay, objection handling practice" />
+        <meta property="og:title" content="PitchPerfect AI vs Enterprise Sales Training Tools" />
+        <meta property="og:description" content="No demo call, no seat minimum, no manager dashboard. Built for the rep, not the sales org." />
         <link rel="canonical" href={`${window.location.origin}/compare`} />
       </Helmet>
       
@@ -63,9 +63,9 @@ const Compare = () => {
         <main className="flex-grow pt-24 pb-12">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <h1 className="text-3xl font-bold mb-2 text-deep-navy">Why Choose PitchPerfect?</h1>
+              <h1 className="text-3xl font-bold mb-2 text-deep-navy">Why not an enterprise sales tool instead?</h1>
               <p className="text-deep-navy/80 mb-8">
-                See how PitchPerfect compares to other AI sales development tools on the market.
+                Most AI roleplay tools are built for VPs buying seats for a whole team. Here's what changes when it's built for one rep instead.
               </p>
               
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8 overflow-x-auto">
@@ -110,18 +110,24 @@ const Compare = () => {
               </div>
               
               <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-xl font-bold mb-4 text-deep-navy">The PitchPerfect Advantage</h2>
+                <h2 className="text-xl font-bold mb-4 text-deep-navy">Built for the rep, not the sales org</h2>
                 <p className="text-deep-navy/80 mb-4">
-                  Our platform is built by sales professionals for sales professionals. We understand that
-                  effective rounds require more than just scripted scenarios and basic feedback.
+                  I built this because I was the rep freezing on a call, not the VP shopping for a platform.
+                  Most tools in this space are built to be sold to a sales org — a manager watching a dashboard,
+                  a demo call before you can even try it, a contract sized for a whole team.
                 </p>
                 <p className="text-deep-navy/80 mb-4">
-                  With PitchPerfect AI, you get adaptive learning that evolves with you, customizable 
-                  scenarios that match your specific selling environment, and detailed analytics that 
-                  help you track your progress over time.
+                  PitchPerfect AI skips all of that. You find out if it actually helps you in the time it takes
+                  to make one practice call — not a 30-minute sales pitch to buy a tool that's supposed to help you sell.
+                </p>
+                <p className="text-deep-navy/80 mb-4">
+                  If you're already inside a sales org with budget for an enterprise platform and a manager who
+                  wants to track the whole team, those tools might be the right fit. If you're the rep who wants
+                  to stop freezing on the same objection — on your own time, with no one else seeing your scores —
+                  that's exactly who this is for.
                 </p>
                 <p className="font-medium text-primary-600">
-                  Try our free demo today and experience the difference yourself!
+                  Try your first round free. No demo call required.
                 </p>
               </div>
             </div>
