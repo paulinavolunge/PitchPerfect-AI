@@ -308,9 +308,23 @@ const Index = () => {
           {/* ═══════════ TRUST BAR ═══════════ */}
           <div className="pp-trust-bar">
             <div className="pp-container pp-trust-inner">
-              <div className="pp-trust-item"><span>🏢</span> Listed in Lohfeld Consulting's AI Tools Guide</div>
+              <a
+                href="https://lohfeldconsulting.com/blog/2025/11/how-ai-tools-can-transform-proposal-management-now/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pp-trust-item"
+              >
+                <span>🏢</span> Listed in Lohfeld Consulting's AI Tools Guide
+              </a>
               <div className="pp-trust-item"><span>🔒</span> 100% Private. No manager dashboards.</div>
-              <div className="pp-trust-item"><span>🚀</span> Featured on <strong>Product Hunt</strong></div>
+              <a
+                href="https://www.producthunt.com/products/pitchperfect-ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pp-trust-item"
+              >
+                <span>🚀</span> Featured on <strong>Product Hunt</strong>
+              </a>
             </div>
           </div>
 
