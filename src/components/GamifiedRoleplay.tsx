@@ -174,6 +174,7 @@ RULES:
   think: {
     name: 'Devon Ashworth',
     title: 'Marketing Manager',
+    openingLine: "Devon speaking. Sure, you've got a minute. But I'll tell you now, this sounds like the kind of thing I'd need to think over and get back to you on.",
     systemPrompt: `You are Devon Ashworth, Marketing Manager at a B2B software company. "Let me think about it" is your default reflex when you're not actually the final decision-maker and don't want to admit that on a first call.
 
 YOUR REAL SITUATION:
