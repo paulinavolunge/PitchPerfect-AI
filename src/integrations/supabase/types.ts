@@ -77,6 +77,50 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_feedback: {
+        Row: {
+          category: string | null
+          created_at: string
+          finding_text: string | null
+          id: string
+          round_id: string
+          severity: number | null
+          timestamp_sec: number | null
+          user_id: string
+          why_text: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          finding_text?: string | null
+          id?: string
+          round_id: string
+          severity?: number | null
+          timestamp_sec?: number | null
+          user_id: string
+          why_text?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          finding_text?: string | null
+          id?: string
+          round_id?: string
+          severity?: number | null
+          timestamp_sec?: number | null
+          user_id?: string
+          why_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_feedback_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "practice_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       data_access_logs: {
         Row: {
           accessed_at: string
@@ -230,6 +274,7 @@ export type Database = {
           feedback_data: Json | null
           id: string
           industry: string
+          reason: string | null
           scenario_type: string
           score: number | null
           status: string
@@ -245,6 +290,7 @@ export type Database = {
           feedback_data?: Json | null
           id?: string
           industry: string
+          reason?: string | null
           scenario_type: string
           score?: number | null
           status?: string
@@ -260,6 +306,7 @@ export type Database = {
           feedback_data?: Json | null
           id?: string
           industry?: string
+          reason?: string | null
           scenario_type?: string
           score?: number | null
           status?: string
@@ -422,6 +469,30 @@ export type Database = {
         }
         Relationships: []
       }
+      streak_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          milestone_value: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          milestone_value?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          milestone_value?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -455,6 +526,33 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      upgrade_prompt_events: {
+        Row: {
+          converted: boolean
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          trigger: string
+          user_id: string
+        }
+        Insert: {
+          converted?: boolean
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          trigger: string
+          user_id: string
+        }
+        Update: {
+          converted?: boolean
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          trigger?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -542,6 +640,8 @@ export type Database = {
           credits_remaining: number
           id: string
           is_premium: boolean | null
+          role: string | null
+          streak_freezes_available: number
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_plan: string | null
@@ -553,6 +653,8 @@ export type Database = {
           credits_remaining?: number
           id: string
           is_premium?: boolean | null
+          role?: string | null
+          streak_freezes_available?: number
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_plan?: string | null
@@ -564,6 +666,8 @@ export type Database = {
           credits_remaining?: number
           id?: string
           is_premium?: boolean | null
+          role?: string | null
+          streak_freezes_available?: number
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_plan?: string | null
