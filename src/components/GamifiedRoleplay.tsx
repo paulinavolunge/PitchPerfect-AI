@@ -95,7 +95,7 @@ const OBJECTIONS: ObjectionCard[] = [
   { id: 'team', label: 'Loop in Team', emoji: '👥', description: '"I need to loop in my team before deciding."' },
 ];
 
-const OBJECTION_PERSONAS: Record<string, { name: string; title: string; systemPrompt: string }> = {
+const OBJECTION_PERSONAS: Record<string, { name: string; title: string; openingLine: string; systemPrompt: string }> = {
   budget: {
     name: 'Renee Castellano',
     title: 'Director of Ops',
