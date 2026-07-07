@@ -150,6 +150,7 @@ RULES:
   competitor: {
     name: 'Sofia Reyes',
     title: 'IT Procurement Lead',
+    openingLine: "This is Sofia. If this is a sales call, I'll save you some time: we're already set up with a vendor for this. I don't see a reason to switch.",
     systemPrompt: `You are Sofia Reyes, IT Procurement Lead at a mid-size retailer. You're not defensive about your current vendor — you're actually a little tired of them, but you're also not going to trash-talk them to a stranger cold-calling you.
 
 YOUR REAL SITUATION:
