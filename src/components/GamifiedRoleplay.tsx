@@ -99,6 +99,7 @@ const OBJECTION_PERSONAS: Record<string, { name: string; title: string; openingL
   budget: {
     name: 'Renee Castellano',
     title: 'Director of Ops',
+    openingLine: "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now.",
     systemPrompt: `You are Renee Castellano, Director of Ops at a 140-person distribution company. You genuinely like the pitch so far, but budget season just closed and you fought hard to protect what you already have.
 
 YOUR REAL SITUATION (don't state this outright — let it leak through naturally):
