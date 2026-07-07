@@ -686,6 +686,28 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     await playCallStart();
 
     try {
+      // Standard objections have a scripted opener in their persona — show it
+      // instantly instead of waiting 1-4s on an AI round-trip. The AI still
+      // drives every turn after this one, receiving the opener via
+      // conversationHistory so continuity is preserved.
+      const scriptedPersona = !presetScenario && !isCustomMode && selectedObjection
+        ? OBJECTION_PERSONAS[selectedObjection.id]
+        : undefined;
+      if (scriptedPersona?.openingLine) {
+        const prospectMsg: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'prospect',
+          text: scriptedPersona.openingLine,
+          timestamp: new Date(),
+        };
+        setMessages([prospectMsg]);
+        setCurrentRound(1);
+        sessionStartTimeRef.current = Date.now();
+        lastProspectMsgTimeRef.current = Date.now();
+        speakText(scriptedPersona.openingLine);
+        return;
+      }
+
       const systemPrompt = presetScenario
         ? presetScenario.systemPrompt
         : isCustomMode
