@@ -95,10 +95,11 @@ const OBJECTIONS: ObjectionCard[] = [
   { id: 'team', label: 'Loop in Team', emoji: '👥', description: '"I need to loop in my team before deciding."' },
 ];
 
-const OBJECTION_PERSONAS: Record<string, { name: string; title: string; systemPrompt: string }> = {
+const OBJECTION_PERSONAS: Record<string, { name: string; title: string; openingLine: string; systemPrompt: string }> = {
   budget: {
     name: 'Renee Castellano',
     title: 'Director of Ops',
+    openingLine: "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now.",
     systemPrompt: `You are Renee Castellano, Director of Ops at a 140-person distribution company. You genuinely like the pitch so far, but budget season just closed and you fought hard to protect what you already have.
 
 YOUR REAL SITUATION (don't state this outright — let it leak through naturally):
@@ -125,6 +126,7 @@ RULES:
   timing: {
     name: 'Marcus Webb',
     title: 'Ops Director',
+    openingLine: "Marcus Webb. Look, you've caught me in the middle of a reorg and we're down two people. I don't have room for anything new right now, sales pitch or not.",
     systemPrompt: `You are Marcus Webb, Ops Director at a regional healthcare staffing firm. You're not stalling to be polite — you're mid-reorg, your team lost two people last month, and anything new right now means training time you don't have.
 
 YOUR REAL SITUATION (let it leak, don't announce it):
@@ -148,6 +150,7 @@ RULES:
   competitor: {
     name: 'Sofia Reyes',
     title: 'IT Procurement Lead',
+    openingLine: "This is Sofia. If this is a sales call, I'll save you some time: we're already set up with a vendor for this. I don't see a reason to switch.",
     systemPrompt: `You are Sofia Reyes, IT Procurement Lead at a mid-size retailer. You're not defensive about your current vendor — you're actually a little tired of them, but you're also not going to trash-talk them to a stranger cold-calling you.
 
 YOUR REAL SITUATION:
@@ -171,6 +174,7 @@ RULES:
   think: {
     name: 'Devon Ashworth',
     title: 'Marketing Manager',
+    openingLine: "Devon speaking. Sure, you've got a minute. But I'll tell you now, this sounds like the kind of thing I'd need to think over and get back to you on.",
     systemPrompt: `You are Devon Ashworth, Marketing Manager at a B2B software company. "Let me think about it" is your default reflex when you're not actually the final decision-maker and don't want to admit that on a first call.
 
 YOUR REAL SITUATION:
@@ -194,6 +198,7 @@ RULES:
   email: {
     name: 'Keisha Odom',
     title: 'Office Manager',
+    openingLine: "This is Keisha. I really don't have time to talk right now, can you just send me something over email?",
     systemPrompt: `You are Keisha Odom, Office Manager at a construction supply company. You're not the decision-maker for most things, you're busy, and "send me an email" is how you get people off the phone without being rude.
 
 YOUR REAL SITUATION:
@@ -217,6 +222,7 @@ RULES:
   team: {
     name: 'Andre Kowalski',
     title: 'Sales Ops Manager',
+    openingLine: "Andre here. I'll hear you out, but fair warning: anything like this goes through my team before we'd move forward on it.",
     systemPrompt: `You are Andre Kowalski, Sales Ops Manager at a logistics company with a genuinely collaborative culture — this isn't a stall for you, it's how your team actually operates, which makes it a harder objection to crack than a fake one.
 
 YOUR REAL SITUATION:
@@ -680,6 +686,28 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     await playCallStart();
 
     try {
+      // Standard objections have a scripted opener in their persona — show it
+      // instantly instead of waiting 1-4s on an AI round-trip. The AI still
+      // drives every turn after this one, receiving the opener via
+      // conversationHistory so continuity is preserved.
+      const scriptedPersona = !presetScenario && !isCustomMode && selectedObjection
+        ? OBJECTION_PERSONAS[selectedObjection.id]
+        : undefined;
+      if (scriptedPersona?.openingLine) {
+        const prospectMsg: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'prospect',
+          text: scriptedPersona.openingLine,
+          timestamp: new Date(),
+        };
+        setMessages([prospectMsg]);
+        setCurrentRound(1);
+        sessionStartTimeRef.current = Date.now();
+        lastProspectMsgTimeRef.current = Date.now();
+        speakText(scriptedPersona.openingLine);
+        return;
+      }
+
       const systemPrompt = presetScenario
         ? presetScenario.systemPrompt
         : isCustomMode
