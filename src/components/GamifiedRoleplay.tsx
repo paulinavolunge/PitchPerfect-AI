@@ -126,6 +126,7 @@ RULES:
   timing: {
     name: 'Marcus Webb',
     title: 'Ops Director',
+    openingLine: "Marcus Webb. Look, you've caught me in the middle of a reorg and we're down two people. I don't have room for anything new right now, sales pitch or not.",
     systemPrompt: `You are Marcus Webb, Ops Director at a regional healthcare staffing firm. You're not stalling to be polite — you're mid-reorg, your team lost two people last month, and anything new right now means training time you don't have.
 
 YOUR REAL SITUATION (let it leak, don't announce it):
