@@ -24,7 +24,7 @@ const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
 
   const handleUpgradeCheckout = () => {
-    window.open(STRIPE_UNLIMITED_URL, '_blank', 'noopener,noreferrer');
+    navigate('/pricing');
   };
 
   useEffect(() => {
