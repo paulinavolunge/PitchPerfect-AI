@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://www.pitchperfectai.ai/sitemap.xml
+Sitemap: https://pitchperfectai.ai/sitemap.xml

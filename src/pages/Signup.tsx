@@ -222,10 +222,10 @@ const Signup = () => {
       <Helmet>
         <title>Sign Up Free. PitchPerfect AI</title>
         <meta name="description" content="Create your free PitchPerfect AI account. Start practicing cold calls with AI in under 2 minutes. No credit card required." />
-        <link rel="canonical" href="https://www.pitchperfectai.ai/signup" />
+        <link rel="canonical" href="https://pitchperfectai.ai/signup" />
         <meta property="og:title" content="Sign Up Free. PitchPerfect AI" />
         <meta property="og:description" content="Start practicing cold calls with AI in 2 minutes. No credit card required." />
-        <meta property="og:url" content="https://www.pitchperfectai.ai/signup" />
+        <meta property="og:url" content="https://pitchperfectai.ai/signup" />
         <meta name="twitter:title" content="Sign Up Free. PitchPerfect AI" />
         <meta name="twitter:description" content="Start practicing cold calls with AI in 2 minutes. No credit card required." />
       </Helmet>

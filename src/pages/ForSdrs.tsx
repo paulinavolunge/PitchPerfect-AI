@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 
-const BASE_URL = 'https://www.pitchperfectai.ai';
+const BASE_URL = 'https://pitchperfectai.ai';
 
 const ForSdrs = () => (
   <>

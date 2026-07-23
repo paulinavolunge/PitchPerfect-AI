@@ -31,17 +31,17 @@ const About: React.FC = () => (
         name="description"
         content="Built on my last day at a sales job, because the tool I needed didn't exist. The honest story behind PitchPerfect AI."
       />
-      <link rel="canonical" href="https://www.pitchperfectai.ai/about" />
+      <link rel="canonical" href="https://pitchperfectai.ai/about" />
       <meta property="og:title" content="About. PitchPerfect AI" />
       <meta
         property="og:description"
         content="Built on my last day at a sales job, because the tool I needed didn't exist. The honest story behind PitchPerfect AI."
       />
       <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://www.pitchperfectai.ai/about" />
-      <meta property="og:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
+      <meta property="og:url" content="https://pitchperfectai.ai/about" />
+      <meta property="og:image" content="https://pitchperfectai.ai/assets/logo-pitchperfectai.png" />
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
+      <meta name="twitter:image" content="https://pitchperfectai.ai/assets/logo-pitchperfectai.png" />
       <meta name="twitter:title" content="About. PitchPerfect AI" />
       <meta
         name="twitter:description"

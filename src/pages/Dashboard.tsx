@@ -66,10 +66,10 @@ const Dashboard = () => {
       <Helmet>
         <title>Dashboard | PitchPerfect AI</title>
         <meta name="description" content="Track your rounds and sharpen your close with AI-powered feedback." />
-        <link rel="canonical" href="https://www.pitchperfectai.ai/dashboard" />
+        <link rel="canonical" href="https://pitchperfectai.ai/dashboard" />
         <meta property="og:title" content="Your Dashboard. PitchPerfect AI" />
         <meta property="og:description" content="Your practice rounds, scores, and coaching history in one place." />
-        <meta property="og:url" content="https://www.pitchperfectai.ai/dashboard" />
+        <meta property="og:url" content="https://pitchperfectai.ai/dashboard" />
         <meta name="robots" content="noindex, follow" />
       </Helmet>
 
