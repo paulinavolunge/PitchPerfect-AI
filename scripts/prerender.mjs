@@ -18,7 +18,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT    = resolve(__dirname, '..');
 const DIST    = resolve(ROOT, 'dist');
-const BASE    = 'https://www.pitchperfectai.ai';
+const BASE    = 'https://pitchperfectai.ai';
 const OG_IMG  = `${BASE}/og-image.png`;
 
 // ── Escape helper ────────────────────────────────────────────────────────────
