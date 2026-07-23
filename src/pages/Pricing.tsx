@@ -34,16 +34,16 @@ const Pricing = () => {
           name="description"
           content="Solo $29/mo. Team $49/seat/mo. 7-day money-back guarantee. Cancel anytime in one click."
         />
-        <link rel="canonical" href="https://www.pitchperfectai.ai/pricing" />
+        <link rel="canonical" href="https://pitchperfectai.ai/pricing" />
         <meta property="og:title" content="PitchPerfect AI Pricing. Solo, Team & Pay-As-You-Go" />
         <meta property="og:description" content="Solo $29/mo, Team $49/seat/mo, or one-time packs from $4.99. 7-day money-back guarantee." />
-        <meta property="og:url" content="https://www.pitchperfectai.ai/pricing" />
+        <meta property="og:url" content="https://pitchperfectai.ai/pricing" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
+        <meta property="og:image" content="https://pitchperfectai.ai/assets/logo-pitchperfectai.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="PitchPerfect AI Pricing. Solo, Team & Pay-As-You-Go" />
         <meta name="twitter:description" content="Solo $29/mo, Team $49/seat/mo, or one-time packs from $4.99. 7-day money-back guarantee." />
-        <meta name="twitter:image" content="https://www.pitchperfectai.ai/assets/logo-pitchperfectai.png" />
+        <meta name="twitter:image" content="https://pitchperfectai.ai/assets/logo-pitchperfectai.png" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",

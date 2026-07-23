@@ -206,11 +206,11 @@ const Tips = () => {
       <Helmet>
         <title>Sales Tips &amp; Scripts. PitchPerfect AI</title>
         <meta name="description" content="Curated sales tips, opening lines, objection rebuttals, and ready-to-use scripts. Apply them in your next PitchPerfect AI practice round." />
-        <link rel="canonical" href="https://www.pitchperfectai.ai/tips" />
+        <link rel="canonical" href="https://pitchperfectai.ai/tips" />
         <meta property="og:title" content="Sales Tips &amp; Scripts. PitchPerfect AI" />
         <meta property="og:description" content="Curated sales tips, opening lines, objection rebuttals, and ready-to-use scripts." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.pitchperfectai.ai/tips" />
+        <meta property="og:url" content="https://pitchperfectai.ai/tips" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="Sales Tips &amp; Scripts. PitchPerfect AI" />
         <meta name="twitter:description" content="Curated sales tips, opening lines, objection rebuttals, and ready-to-use scripts." />
