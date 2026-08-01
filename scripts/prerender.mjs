@@ -80,6 +80,37 @@ const SEO_ROUTES = [
     <p style="font-size:.9rem;color:#94a3b8;text-align:center">
       Used by SDRs, AEs, Sales Managers, and Founders. Free to start. Plans from $4.99.
     </p>
+
+    <section aria-labelledby="pp-faq-heading" style="margin-top:3.5rem;padding-top:2rem;border-top:1px solid #e2e8f0">
+      <h2 id="pp-faq-heading" style="font-size:1.8rem;font-weight:800;color:#1e293b;text-align:center;margin-bottom:.5rem">Frequently asked questions</h2>
+      <p style="text-align:center;color:#64748b;margin-bottom:1.75rem">Everything reps ask before their first round.</p>
+
+      <h3 style="font-size:1.05rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">How does PitchPerfect AI cold call practice actually work?</h3>
+      <p style="color:#475569;line-height:1.7;margin:0 0 1rem">You pick a scenario, hit record, and start talking to an AI prospect that pushes back like a real buyer. Rounds run about 90 seconds. When you finish, you get a score out of 100 with specific coaching on your hook, tone, objection handling, and closing ask.</p>
+
+      <h3 style="font-size:1.05rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">Do I need to sign up or add a card to try it?</h3>
+      <p style="color:#475569;line-height:1.7;margin:0 0 1rem">No. Your first cold call round is free with no signup and no credit card. You only create an account when you want to unlock your full scorecard, save history, or run more rounds.</p>
+
+      <h3 style="font-size:1.05rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">What objections can the AI prospect throw at me?</h3>
+      <p style="color:#475569;line-height:1.7;margin:0 0 1rem">The standard set that kills real deals: "send me an email," "we already use someone," "not a good time," "no budget," "just email me the deck," "call me back next quarter." You can also pick scenario packs for cold outbound, discovery, and pricing pushback.</p>
+
+      <h3 style="font-size:1.05rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">How is my score calculated?</h3>
+      <p style="color:#475569;line-height:1.7;margin:0 0 1rem">Every round is scored on four things: your opener hook, your tone and pace, how you handled the objection, and whether you asked for the next step. Each is graded 1&ndash;25, summed to a score out of 100. The scorecard also flags filler words, talk-to-listen ratio, and where you lost the prospect.</p>
+
+      <h3 style="font-size:1.05rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">Is this only for SDRs, or does it work for AEs and founders too?</h3>
+      <p style="color:#475569;line-height:1.7;margin:0 0 1rem">Both. SDRs use it for cold-call openers and quick objection reps. AEs use it for discovery frameworks and pricing conversations. Founders use it to practice their pitch before their first enterprise call.</p>
+
+      <h3 style="font-size:1.05rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">Can my manager or team see my scores?</h3>
+      <p style="color:#475569;line-height:1.7;margin:0 0 1rem">Not by default. Individual scores stay private on Solo plans. On Team plans, an admin dashboard shows aggregate progress but not per-round transcripts unless you share.</p>
+
+      <h3 style="font-size:1.05rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">What happens to my voice recordings after a round?</h3>
+      <p style="color:#475569;line-height:1.7;margin:0 0 1rem">Audio is processed to produce the score and coaching, then discarded by default. It is never sold, never used to train third-party models, and never shared outside the round.</p>
+
+      <h3 style="font-size:1.05rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">How is this different from watching sales training on YouTube?</h3>
+      <p style="color:#475569;line-height:1.7;margin:0 0 1rem">Videos teach frameworks. PitchPerfect makes you run the reps. You will fumble the same objection four times in a row before it clicks &mdash; which is exactly how muscle memory forms.</p>
+    </section>
+
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How does PitchPerfect AI cold call practice actually work?","acceptedAnswer":{"@type":"Answer","text":"You pick a scenario, hit record, and start talking to an AI prospect that pushes back like a real buyer. Rounds run about 90 seconds. When you finish, you get a score out of 100 with specific coaching on your hook, tone, objection handling, and closing ask."}},{"@type":"Question","name":"Do I need to sign up or add a card to try it?","acceptedAnswer":{"@type":"Answer","text":"No. Your first cold call round is free with no signup and no credit card. You only create an account when you want to unlock your full scorecard, save history, or run more rounds."}},{"@type":"Question","name":"What objections can the AI prospect throw at me?","acceptedAnswer":{"@type":"Answer","text":"The standard set that kills real deals: send me an email, we already use someone, not a good time, no budget, just email me the deck, call me back next quarter. You can also pick scenario packs for cold outbound, discovery, and pricing pushback."}},{"@type":"Question","name":"How is my score calculated?","acceptedAnswer":{"@type":"Answer","text":"Every round is scored on four things: your opener hook, your tone and pace, how you handled the objection, and whether you asked for the next step. Each is graded 1 to 25, summed to a score out of 100. The scorecard also flags filler words, talk-to-listen ratio, and where you lost the prospect."}},{"@type":"Question","name":"Is this only for SDRs, or does it work for AEs and founders too?","acceptedAnswer":{"@type":"Answer","text":"Both. SDRs use it for cold-call openers and quick objection reps. AEs use it for discovery frameworks and pricing conversations. Founders use it to practice their pitch before their first enterprise call."}},{"@type":"Question","name":"Can my manager or team see my scores?","acceptedAnswer":{"@type":"Answer","text":"Not by default. Individual scores stay private on Solo plans. On Team plans, an admin dashboard shows aggregate progress but not per-round transcripts unless you share."}},{"@type":"Question","name":"What happens to my voice recordings after a round?","acceptedAnswer":{"@type":"Answer","text":"Audio is processed to produce the score and coaching, then discarded by default. It is never sold, never used to train third-party models, and never shared outside the round."}},{"@type":"Question","name":"How is this different from watching sales training on YouTube?","acceptedAnswer":{"@type":"Answer","text":"Videos teach frameworks. PitchPerfect makes you run the reps. You will fumble the same objection four times in a row before it clicks, which is exactly how muscle memory forms."}}]}</script>
   </main>
 </div>`,
   },
@@ -143,18 +174,56 @@ const SEO_ROUTES = [
 <div style="font-family:system-ui,sans-serif;max-width:760px;margin:0 auto;padding:2rem 1rem">
   <main>
     <h1 style="font-size:2.25rem;font-weight:800;color:#1e293b;margin-bottom:1rem">About PitchPerfect AI</h1>
-    <p style="font-size:1.1rem;color:#475569;line-height:1.7;margin-bottom:1.5rem">
-      PitchPerfect AI was built for sales professionals who want to improve faster than weekly call-coaching allows.
-      We believe every rep deserves instant, honest feedback — not just the top performers.
+    <p style="font-size:1.15rem;color:#475569;line-height:1.7;margin-bottom:1.5rem">
+      PitchPerfect AI is a sales coaching tool for reps who want to improve faster than weekly manager
+      call-coaching allows. Every SDR, AE, and founder deserves instant, honest feedback &mdash; not just
+      the top performers who already get manager time.
     </p>
-    <p style="font-size:1.05rem;color:#475569;line-height:1.7;margin-bottom:1.5rem">
-      Our AI prospect is trained to push back like a real buyer: raising budget objections,
-      asking hard questions, and hanging up when you're not concise. Get scored after every round.
-      See exactly where you improved and where you're losing deals.
+
+    <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin:2rem 0 .75rem">Why this exists</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      Most sales training is broken in the same way: you watch a great AE on YouTube handle an objection,
+      you nod, and then the next time you hear "just send me an email" on a real call, you freeze anyway.
+      Watching is not practice. Practice is doing the reps until the words come out without thinking.
     </p>
-    <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin-bottom:.75rem">Our mission</h2>
-    <p style="font-size:1rem;color:#475569;line-height:1.7">
-      Make world-class sales coaching accessible to every rep — not just those with access to great managers.
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      The problem is that live practice is expensive. Roleplaying with a manager takes their calendar time
+      and your ego. Roleplaying with a peer feels awkward and never happens. Recording your real calls and
+      grading them is slow and skips the "try again immediately" step where learning actually happens.
+    </p>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1.5rem">
+      PitchPerfect AI closes that loop. You practice against an AI prospect that pushes back like a real
+      buyer, get scored in seconds, and try the same objection again with your ego intact.
+    </p>
+
+    <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin:2rem 0 .75rem">How the AI prospect works</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      The AI is trained on real B2B objection patterns: budget, timing, incumbent vendor, decision-maker
+      access, and the classic "just email me." It will raise second-order objections when you fumble the
+      first one, hang up when you go on too long, and reward concise, specific answers with warmer replies.
+      It is intentionally not a chatbot that says "great job." If you were vague, it will call you vague.
+    </p>
+
+    <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin:2rem 0 .75rem">Who this is for</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      SDRs and BDRs drilling cold-call openers and objection responses. AEs sharpening discovery frameworks,
+      pricing conversations, and pushback on procurement. Founders who are doing their own selling and want
+      to know their pitch cold before their first enterprise call. And sales managers who want their team
+      running reps between one-on-ones instead of only during them.
+    </p>
+
+    <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin:2rem 0 .75rem">What PitchPerfect AI is not</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      It is not a call recording tool for grading your real prospect calls after the fact. It is not a
+      script generator that writes your outbound email for you. It is not a manager dashboard for scoring
+      your team. Those are useful tools, but they do not replace the reps. What PitchPerfect does is give
+      you a safe place to be bad at the thing you want to be good at, until you are not bad at it anymore.
+    </p>
+
+    <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin:2rem 0 .75rem">Our mission</h2>
+    <p style="color:#475569;line-height:1.7">
+      Make world-class sales coaching accessible to every rep &mdash; not just those with great managers,
+      big training budgets, or the confidence to roleplay in front of coworkers.
     </p>
   </main>
 </div>`,
@@ -276,6 +345,76 @@ const SEO_ROUTES = [
       "I went from 4% connect-to-meeting rate to 11% in 3 weeks just by drilling my opener every morning."
       <footer style="font-style:normal;font-size:.85rem;color:#64748b;margin-top:.5rem">— SDR, B2B SaaS</footer>
     </blockquote>
+  </main>
+</div>`,
+  },
+
+  {
+    path: '/compare',
+    title: 'PitchPerfect AI vs Enterprise Sales Training Tools',
+    description: 'Most AI sales roleplay tools are built for sales orgs buying seats for a whole team. See what changes when the tool is built for one rep instead.',
+    ogTitle: 'PitchPerfect AI vs Enterprise Sales Training Tools',
+    ogDesc: 'No demo call, no seat minimum, no manager dashboard. Built for the rep, not the sales org.',
+    body: `
+<div style="font-family:system-ui,sans-serif;max-width:860px;margin:0 auto;padding:2rem 1rem">
+  <main>
+    <h1 style="font-size:clamp(1.8rem,4.5vw,2.6rem);font-weight:800;color:#1e293b;line-height:1.2;margin-bottom:1rem">
+      Why not an enterprise sales tool instead?
+    </h1>
+    <p style="font-size:1.1rem;color:#475569;line-height:1.7;margin-bottom:1.75rem">
+      Most AI sales roleplay tools are built for VPs of Sales buying seats for a whole team, with a demo
+      call before you even get to try it. Your next objection is not waiting for a sales cycle. Here is
+      what changes when it is built for one rep instead, starting right now.
+    </p>
+
+    <h2 style="font-size:1.35rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">Getting started: minutes, not weeks</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      PitchPerfect gives you a free cold call round in 90 seconds. No signup, no credit card, no calendar
+      invite for a "quick 30-minute discovery call" from an SDR trying to sell you the tool. Most enterprise
+      training platforms require a demo call first, then wait days for a slot, then a pilot proposal.
+      You are trying to get better at sales, not sit through someone else's pitch.
+    </p>
+
+    <h2 style="font-size:1.35rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">Pricing: month-to-month, not annual contracts</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      Solo is $29/month. Cancel in one click from your account page. Team is $49/seat/month with a 3-seat
+      minimum. Most enterprise sales training tools require a custom quote, an annual contract, and a
+      procurement review. If you are the rep, or a founder doing your own sales, that pricing is a
+      non-starter before the tool has even proved it works for you.
+    </p>
+
+    <h2 style="font-size:1.35rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">Who sees your scores</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      On Solo, just you. Your scores stay on your account and are never pushed to a manager dashboard by
+      default. Most team-focused training tools put your scores on a leaderboard the second you sign in,
+      which changes what practice feels like. You will not push through a bad round you needed to hear if
+      you know your manager sees it in real time.
+    </p>
+
+    <h2 style="font-size:1.35rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">Built for the rep, not the sales org</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      Roleplaying objections live in a room of coworkers is nerve-wracking, not something a VP shopping
+      for a training platform worries about. Most tools in this space are built to be sold to a sales org:
+      a manager watching a dashboard, a demo call before you can try it, a contract sized for a whole team,
+      weeks before anyone actually gets to practice. PitchPerfect skips all of that. You find out if it
+      helps you in the time it takes to make one practice call, not a 30-minute sales pitch for a tool
+      that is supposed to help you sell.
+    </p>
+
+    <h2 style="font-size:1.35rem;font-weight:700;color:#1e293b;margin:1.5rem 0 .5rem">When an enterprise tool is the right fit</h2>
+    <p style="color:#475569;line-height:1.7;margin-bottom:1rem">
+      If you are already inside a sales org with budget for an enterprise platform, a manager who wants
+      to track the whole team, and an ops function to run rollout, those tools might be the right fit.
+      If you are the rep who wants to stop freezing on the same objection, on your own time, with no one
+      else seeing your scores &mdash; that is who this is built for.
+    </p>
+
+    <p style="font-weight:600;color:#2563eb;margin-top:1.5rem">
+      Try your first round free, right now. No demo call required.
+    </p>
+    <a href="/signup" style="display:inline-block;background:#2563eb;color:#fff;padding:.85rem 2rem;border-radius:.75rem;font-weight:700;font-size:1rem;text-decoration:none;margin-top:.75rem">
+      Start free &mdash; no credit card
+    </a>
   </main>
 </div>`,
   },
