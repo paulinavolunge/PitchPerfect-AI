@@ -37,16 +37,6 @@ const FAQS: QA[] = [
   },
 ];
 
-const FAQ_JSONLD = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: FAQS.map(({ q, a }) => ({
-    '@type': 'Question',
-    name: q,
-    acceptedAnswer: { '@type': 'Answer', text: a },
-  })),
-};
-
 const HomepageFAQ: React.FC = () => {
   return (
     <section className="pp-section pp-faq-section" aria-labelledby="pp-faq-heading">
@@ -107,10 +97,6 @@ const HomepageFAQ: React.FC = () => {
           ))}
         </div>
       </div>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }}
-      />
     </section>
   );
 };
