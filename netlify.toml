@@ -141,6 +141,18 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/compare"
+  to = "/compare/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/compare/"
+  to = "/compare/index.html"
+  status = 200
+  force = true
+
 # SPA redirect — must be last; catches all unmatched routes
 [[redirects]]
   from = "/*"
