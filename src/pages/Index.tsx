@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 const Footer = lazy(() => import('@/components/Footer'));
 const PricingCTA = lazy(() => import('@/components/PricingCTA'));
 const ColdCallHook = lazy(() => import('@/components/ColdCallHook'));
+const HomepageFAQ = lazy(() => import('@/components/HomepageFAQ'));
 
 /* ── Scroll-reveal hook ── */
 function useReveal() {
@@ -596,6 +597,13 @@ const Index = () => {
                 </div>
               </div>
             </section>
+          </Reveal>
+
+          {/* ═══════════ FAQ ═══════════ */}
+          <Reveal>
+            <Suspense fallback={null}>
+              <HomepageFAQ />
+            </Suspense>
           </Reveal>
 
           {/* ═══════════ FINAL CTA ═══════════ */}
