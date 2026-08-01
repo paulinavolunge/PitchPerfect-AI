@@ -1,16 +1,26 @@
+User-agent: *
+Allow: /
+Allow: /signup
+Allow: /pricing
+Allow: /demo
+Allow: /roleplay
+Disallow: /api/
+Disallow: /auth/callback
+Disallow: /dashboard
+Disallow: /account
+
 User-agent: Googlebot
 Allow: /
+Disallow: /api/
+Disallow: /auth/callback
+Disallow: /dashboard
+Disallow: /account
 
 User-agent: Bingbot
 Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: *
-Allow: /
+Disallow: /api/
+Disallow: /auth/callback
+Disallow: /dashboard
+Disallow: /account
 
 Sitemap: https://pitchperfectai.ai/sitemap.xml
