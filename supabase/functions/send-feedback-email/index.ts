@@ -104,7 +104,7 @@ const buildEmailHtml = (sessionData?: Record<string, unknown>) => {
       <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #111827;">
         <h1 style="margin:0 0 12px; font-size:20px;">Your PitchPerfect AI Feedback</h1>
         <p style="margin:0 0 16px; color:#374151;">Thanks for practicing your pitch! Here's your instant recap.</p>
-        ${typeof score !== 'undefined' ? `<p style="margin:0 0 8px;"><strong>Score:</strong> ${Math.max(0, Math.min(10, Number(score) || 0))}/10</p>` : ''}
+        ${typeof score !== 'undefined' ? `<p style="margin:0 0 8px;"><strong>Score:</strong> ${Math.max(0, Math.min(100, Number(score) || 0))}/100</p>` : ''}
         ${escapedFeedback ? `<p style="margin:0 0 16px;"><strong>Overall Feedback:</strong> ${escapedFeedback}</p>` : ''}
         <h2 style="margin:16px 0 8px; font-size:16px;">What you did well</h2>
         ${strengthsHtml}

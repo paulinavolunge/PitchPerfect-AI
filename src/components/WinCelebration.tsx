@@ -13,7 +13,7 @@
  *  6. Buttons appear: "Run it back" + "Try different objection"
  *
  * Props:
- *  - score: number (1-10, from AI scoring)
+ *  - score: number (0-100, from AI scoring)
  *  - feedback: string (AI-generated summary of what worked)
  *  - bestLine: string (user's strongest quote from the session)
  *  - onRunItBack: () => void
