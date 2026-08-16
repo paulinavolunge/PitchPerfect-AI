@@ -101,6 +101,19 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
     return () => vv.removeEventListener('resize', onResize);
   }, []);
 
+  // Pre-fix versions stored pp_cold_call_last_score pre-scaled by *10;
+  // rescale any legacy value. Idempotent — real 0-100 scores are left alone.
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('pp_cold_call_last_score');
+      if (!v) return;
+      const n = Number(v);
+      if (Number.isFinite(n) && n > 100) {
+        localStorage.setItem('pp_cold_call_last_score', String(Math.round(n / 10)));
+      }
+    } catch {}
+  }, []);
+
   // When the scorecard is visible, hide the page-level sticky mobile CTA
   // (.pp-mobile-cta at z-index: 100) so it doesn't cover the purchase
   // buttons inside the paywall. We toggle a body class so a single CSS
