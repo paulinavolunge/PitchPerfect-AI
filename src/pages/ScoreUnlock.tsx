@@ -40,8 +40,8 @@ interface SavedDebrief {
   sessionStats?: { hungUp?: boolean };
 }
 
-const SCORE_HEX = (score10: number) =>
-  score10 < 5 ? '#ef4444' : score10 <= 7.5 ? '#eab308' : '#22c55e';
+const SCORE_HEX = (score: number) =>
+  score < 50 ? '#ef4444' : score <= 75 ? '#eab308' : '#22c55e';
 
 const ScoreUnlock: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -69,7 +69,7 @@ const ScoreUnlock: React.FC = () => {
     }
   }, []);
 
-  const scorePercent = debrief ? Math.round(debrief.score * 10) : null;
+  const scorePercent = debrief ? Math.round(debrief.score) : null;
 
   // Verify the Stripe session on mount
   useEffect(() => {
