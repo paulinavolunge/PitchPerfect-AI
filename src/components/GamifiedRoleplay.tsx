@@ -20,6 +20,14 @@ const WinCelebration = React.lazy(() => import('@/components/WinCelebration'));
 const ScorePaywall = React.lazy(() => import('@/components/ScorePaywall'));
 const ContextualUpgradeModal = React.lazy(() => import('@/components/upgrade/ContextualUpgradeModal'));
 
+// Supabase endpoint constants — hoisted once so per-turn calls don't
+// re-evaluate import.meta.env every time. The hardcoded fallbacks are the
+// project's public anon key + URL, only used if the env vars are missing.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+  || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
+
 // ── Types ──────────────────────────────────────────────────────
 interface ObjectionCard {
   id: string;
@@ -427,6 +435,33 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     }
   }, [autoStart, presetScenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // F1 guard: the opening AI request now fires in parallel with the ring
+  // (see startConversation). If the component unmounts or the user resets
+  // the session mid-ring, the in-flight fetch must not setState on the way
+  // out. mountedRef covers unmount; startAbortRef is set by the reset paths.
+  const mountedRef = useRef(true);
+  const startAbortRef = useRef(false);
+  useEffect(() => () => { mountedRef.current = false; }, []);
+
+  // F5: cache the Supabase auth token so per-turn AI + TTS + debrief calls
+  // don't re-await getSession() every time. Invalidated whenever the auth
+  // state changes so a mid-session sign-in/sign-out is picked up.
+  const authTokenPromiseRef = useRef<Promise<string> | null>(null);
+  const getAuthToken = useCallback((): Promise<string> => {
+    if (!authTokenPromiseRef.current) {
+      authTokenPromiseRef.current = supabase.auth
+        .getSession()
+        .then(({ data }) => data?.session?.access_token ?? SUPABASE_ANON_KEY)
+        .catch(() => SUPABASE_ANON_KEY);
+    }
+    return authTokenPromiseRef.current;
+  }, []);
+  useEffect(() => {
+    // Invalidate the cached token whenever auth state changes so a
+    // mid-session sign-in/sign-out is picked up on the next call.
+    authTokenPromiseRef.current = null;
+  }, [user]);
+
   // Auto-scroll chat to bottom
   const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -637,28 +672,15 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       isCustom: isCustomMode,
     });
 
-    // Use fetch() directly so we can set the Authorization header for guest users
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
-    const functionUrl = `${supabaseUrl}/functions/v1/roleplay-ai-response`;
-
-    // Determine auth token: use user's JWT if logged in, otherwise anon key
-    let authToken = supabaseAnonKey;
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData?.session?.access_token) {
-        authToken = sessionData.session.access_token;
-      }
-    } catch (e) {
-      console.warn('[GamifiedRoleplay] Could not get session, using anon key:', e);
-    }
-
-    const response = await fetch(functionUrl, {
+    // Fetch directly (rather than supabase.functions.invoke) so we can set
+    // the Authorization header explicitly and support guest callers.
+    const authToken = await getAuthToken();
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/roleplay-ai-response`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`,
-        'apikey': supabaseAnonKey,
+        'apikey': SUPABASE_ANON_KEY,
       },
       body: JSON.stringify(payload),
     });
@@ -677,7 +699,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     }
 
     return data.response;
-  }, [selectedObjection, customScenario, isCustomMode, currentProspectName]);
+  }, [selectedObjection, customScenario, isCustomMode, currentProspectName, getAuthToken]);
 
   // ── Start conversation ─────────────────────────────────────
   const startConversation = useCallback(async () => {
@@ -685,74 +707,86 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     unlock(); // resume AudioContext during user gesture, before any await
     setPhase('conversation');
     setIsAiTyping(true);
+    startAbortRef.current = false; // fresh start; reset before any await
 
-    // Play phone ringing sound before first prospect message — all modes.
-    await playCallStart();
-
-    try {
-      // Standard objections have a scripted opener in their persona — show it
-      // instantly instead of waiting 1-4s on an AI round-trip. The AI still
-      // drives every turn after this one, receiving the opener via
-      // conversationHistory so continuity is preserved.
-      const scriptedPersona = !presetScenario && !isCustomMode && selectedObjection
-        ? OBJECTION_PERSONAS[selectedObjection.id]
-        : undefined;
-      if (scriptedPersona?.openingLine) {
-        const prospectMsg: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: 'prospect',
-          text: scriptedPersona.openingLine,
-          timestamp: new Date(),
-        };
-        setMessages([prospectMsg]);
-        setCurrentRound(1);
-        sessionStartTimeRef.current = Date.now();
-        lastProspectMsgTimeRef.current = Date.now();
-        speakText(scriptedPersona.openingLine);
-        return;
-      }
-
-      const systemPrompt = presetScenario
-        ? presetScenario.systemPrompt
-        : isCustomMode
-          ? '' // custom prompt is built server-side
-          : (OBJECTION_PERSONAS[selectedObjection!.id]?.systemPrompt ?? buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle));
-      const openingLine = presetScenario
-        ? presetScenario.openingLine
-        : isCustomMode && customScenario
-          ? `I'm a sales rep and I'd like to talk to you about ${customScenario.product}. Can I have a few minutes of your time?`
-          : `I'm a sales rep and I'd like to talk to you about our solution. Can I have a few minutes of your time?`;
-      const response = await callAI(
-        systemPrompt,
-        openingLine,
-        []
-      );
+    // Standard objections have a scripted opener in their persona — no AI
+    // round-trip needed. Ring→show is serial here since there's no request
+    // to parallelize against.
+    const scriptedPersona = !presetScenario && !isCustomMode && selectedObjection
+      ? OBJECTION_PERSONAS[selectedObjection.id]
+      : undefined;
+    if (scriptedPersona?.openingLine) {
+      await playCallStart();
+      if (!mountedRef.current || startAbortRef.current) return;
       const prospectMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'prospect',
-        text: response,
+        text: scriptedPersona.openingLine,
         timestamp: new Date(),
       };
       setMessages([prospectMsg]);
       setCurrentRound(1);
       sessionStartTimeRef.current = Date.now();
-      speakText(response);
-    } catch (err) {
+      lastProspectMsgTimeRef.current = Date.now();
+      speakText(scriptedPersona.openingLine);
+      setIsAiTyping(false);
+      return;
+    }
+
+    // AI-driven opener (cold-call hook + custom scenarios). F1: fire the
+    // AI call in parallel with the ring instead of ring→then→AI. The
+    // Promise.all below guarantees the bubble never renders while the
+    // phone is still ringing — if the AI resolves first, we still wait
+    // for the ring to finish before showing anything.
+    const systemPrompt = presetScenario
+      ? presetScenario.systemPrompt
+      : isCustomMode
+        ? '' // custom prompt is built server-side
+        : (OBJECTION_PERSONAS[selectedObjection!.id]?.systemPrompt ?? buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle));
+    const openingLine = presetScenario
+      ? presetScenario.openingLine
+      : isCustomMode && customScenario
+        ? `I'm a sales rep and I'd like to talk to you about ${customScenario.product}. Can I have a few minutes of your time?`
+        : `I'm a sales rep and I'd like to talk to you about our solution. Can I have a few minutes of your time?`;
+
+    const ringPromise = playCallStart();
+    // Catch the AI error into a null sentinel so a failed AI call doesn't
+    // reject the Promise.all before the ring resolves. Fallback text picked
+    // below when response === null.
+    const aiPromise = callAI(systemPrompt, openingLine, []).catch(err => {
       console.error('[GamifiedRoleplay] Failed to get opening response:', err);
-      setMessages([{
+      return null;
+    });
+
+    try {
+      const [, response] = await Promise.all([ringPromise, aiPromise]);
+
+      // F1 guard: component unmounted OR session was reset (via
+      // executeReset / reset / handleTryAnother) while we were waiting.
+      // Drop the response — must not setState on a dead or repurposed
+      // session. The AI request itself continues in the background but
+      // its result is discarded.
+      if (!mountedRef.current || startAbortRef.current) return;
+
+      const text = response ?? (presetScenario
+        ? `${presetScenario.prospectName.split(' ')[0]} speaking.`
+        : isCustomMode && customScenario
+          ? customScenario.objection
+          : (selectedObjection?.description.replace(/"/g, '') || 'What can I do for you?'));
+
+      const prospectMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'prospect',
-        text: presetScenario
-          ? `${presetScenario.prospectName.split(' ')[0]} speaking.`
-          : isCustomMode && customScenario
-            ? customScenario.objection
-            : (selectedObjection?.description.replace(/"/g, '') || 'What can I do for you?'),
+        text,
         timestamp: new Date(),
-      }]);
+      };
+      setMessages([prospectMsg]);
       setCurrentRound(1);
       sessionStartTimeRef.current = Date.now();
+      lastProspectMsgTimeRef.current = Date.now();
+      speakText(text);
     } finally {
-      setIsAiTyping(false);
+      if (mountedRef.current) setIsAiTyping(false);
     }
   }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle, unlock, playCallStart, presetScenario]);
 
@@ -812,6 +846,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setIsAiTyping(false);
       setIsTransitioningToDebrief(true);
       await runDebriefRef.current!(updatedMessages);
+      setIsTransitioningToDebrief(false);
+      setPhase('debrief');
       return;
     }
 
@@ -840,8 +876,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       patienceRef.current = roundPatience;
       setPatience(roundPatience);
 
-      // Auto-trigger debrief after the LAST round's AI response
-      // Delay so the user can read the prospect's final message before transition
+      // Auto-trigger debrief after the LAST round's AI response.
+      // F2 + F3: fire scoring immediately so it runs in parallel with the
+      // read wait (was 7000ms serial; now 5000ms in parallel with ~3-4s
+      // pitch-analysis). Overlay appears at the 5s mark; phase transition
+      // fires once both the read wait and the scoring have completed.
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
         // Scroll to bottom so the prospect's final message is visible
@@ -849,10 +888,19 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           top: chatContainerRef.current.scrollHeight,
           behavior: 'smooth',
         });
-        // Give the user time to read the final message before the overlay appears
-        await new Promise(resolve => setTimeout(resolve, 7000));
-        setIsTransitioningToDebrief(true);
-        await runDebriefRef.current!(allMessages);
+        const debriefWork = runDebriefRef.current!(allMessages);
+        const readWait = new Promise<void>(resolve => setTimeout(resolve, 5000));
+        // Only show the transitioning overlay if scoring is still running
+        // when the read wait ends — if pitch-analysis beat the 5s timer,
+        // jump straight to debrief without flashing the loading state.
+        let scoringDone = false;
+        debriefWork.then(() => { scoringDone = true; }, () => { scoringDone = true; });
+        void readWait.then(() => {
+          if (!scoringDone && mountedRef.current) setIsTransitioningToDebrief(true);
+        });
+        await Promise.all([readWait, debriefWork]);
+        setIsTransitioningToDebrief(false);
+        setPhase('debrief');
         return;
       }
     } catch (err) {
@@ -867,18 +915,27 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setMessages(allMessages);
       setCurrentRound(nextRound);
 
-      // Even on error, auto-trigger debrief if this was the last round
+      // Even on error, auto-trigger debrief if this was the last round.
+      // Same parallel structure as the happy path above (F2 + F3).
       if (nextRound >= MAX_ROUNDS) {
         setIsAiTyping(false);
-        // Scroll to bottom so the prospect's final message is visible
         chatContainerRef.current?.scrollTo({
           top: chatContainerRef.current.scrollHeight,
           behavior: 'smooth',
         });
-        // Give the user time to read the final message before the overlay appears
-        await new Promise(resolve => setTimeout(resolve, 7000));
-        setIsTransitioningToDebrief(true);
-        await runDebriefRef.current!(allMessages);
+        const debriefWork = runDebriefRef.current!(allMessages);
+        const readWait = new Promise<void>(resolve => setTimeout(resolve, 5000));
+        // Only show the transitioning overlay if scoring is still running
+        // when the read wait ends — if pitch-analysis beat the 5s timer,
+        // jump straight to debrief without flashing the loading state.
+        let scoringDone = false;
+        debriefWork.then(() => { scoringDone = true; }, () => { scoringDone = true; });
+        void readWait.then(() => {
+          if (!scoringDone && mountedRef.current) setIsTransitioningToDebrief(true);
+        });
+        await Promise.all([readWait, debriefWork]);
+        setIsTransitioningToDebrief(false);
+        setPhase('debrief');
         return;
       }
     } finally {
@@ -934,8 +991,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setShowHangUpAnimation(false);
     }
 
-    setIsTransitioningToDebrief(true);
-    setIsAiTyping(true);
+    // Note: isTransitioningToDebrief and isAiTyping are managed by the
+    // caller so runDebrief can run in the background in parallel with the
+    // final read wait (F2) without prematurely flipping either flag.
 
     // Build session stats
     const avgTime = responseTimes.length > 0
@@ -959,31 +1017,19 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     let feedbackData: any = null;
 
     try {
-      // Use direct fetch for guest auth support
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ggpodadyycvmmxifqwlp.supabase.co';
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncG9kYWR5eWN2bW14aWZxd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjczNjMsImV4cCI6MjA2MTYwMzM2M30.39iEiaWL6mvX9uMxdcKPE_f2-7FkOuTs6K32Z7NelkY';
-
-      let authToken = supabaseAnonKey;
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData?.session?.access_token) {
-          authToken = sessionData.session.access_token;
-        }
-      } catch (e) {
-        console.warn('[GamifiedRoleplay] Could not get session for debrief, using anon key:', e);
-      }
+      const authToken = await getAuthToken();
 
       // One automatic retry: transient edge-function/network blips were the
       // main cause of sessions falling to fallback (or, pre-June-10, to
       // silent null feedback). Retry once with a short backoff before
       // giving up and using local scoring.
       const callPitchAnalysis = async (): Promise<Response> => {
-        const doFetch = () => fetch(`${supabaseUrl}/functions/v1/pitch-analysis`, {
+        const doFetch = () => fetch(`${SUPABASE_URL}/functions/v1/pitch-analysis`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`,
-          'apikey': supabaseAnonKey,
+          'apikey': SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
           transcript,
@@ -1125,15 +1171,16 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         });
       }
     } finally {
-      setIsAiTyping(false);
-      // Wait briefly to ensure TTS audio has fully stopped before showing debrief
-      await new Promise(resolve => setTimeout(resolve, 100));
-      setIsTransitioningToDebrief(false);
-      setPhase('debrief');
+      // F4: the old 100ms setTimeout here was a leftover TTS-stop guard;
+      // stopSpeech() already ran at the top of runDebrief, so it wasn't
+      // buying anything. Removed. Phase transition is the caller's job now
+      // (see F2 rework in sendMessage).
 
-      // Track the completed session attempt AFTER debrief (skip for cold call hook — it's a free taste)
+      // Track the completed session attempt (skip for cold call hook — it's
+      // a free taste). Fire-and-forget: don't hold the debrief transition
+      // on a DB write; errors get logged but don't affect UX.
       if (!isColdCallHook) {
-        await incrementAttempt({
+        incrementAttempt({
           scenario_type: isCustomMode && customScenario ? `custom: ${customScenario.objection}` : (selectedObjection?.label ?? 'practice'),
           difficulty: 'medium',
           industry: isCustomMode && customScenario ? customScenario.industry : 'general',
@@ -1144,11 +1191,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           score: feedbackData ? finalScore : null,
           transcript,
           feedback_data: feedbackData,
-        });
-        refreshCount();
+        })
+          .then(() => refreshCount())
+          .catch(err => console.error('[GamifiedRoleplay] incrementAttempt failed:', err));
       }
     }
-  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation]);
+  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation, isColdCallHook, getAuthToken]);
 
   // Keep ref always pointing to latest runDebrief
   runDebriefRef.current = runDebrief;
@@ -1307,6 +1355,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   // executeReset: the actual state-reset logic, called after any gate checks pass.
   const executeReset = useCallback(() => {
+    startAbortRef.current = true; // signal any in-flight startConversation to drop its result
     stopSpeech();
     setPhase('select-objection');
     setSelectedObjection(null);
@@ -1355,6 +1404,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   }, [hasReachedLimit, isGuest, isPremium, upgradeShouldShow, upgradeMarkShown, executeReset, navigate]);
 
   const reset = () => {
+    startAbortRef.current = true; // signal any in-flight startConversation to drop its result
     stopSpeech();
     setPhase('select-objection');
     setSelectedObjection(null);
