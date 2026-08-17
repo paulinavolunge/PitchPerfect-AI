@@ -13,7 +13,7 @@ describe('toPercent', () => {
 
   it('coerces non-finite input to 0', () => {
     expect(toPercent(NaN)).toBe(0);
-    expect(toPercent(Infinity)).toBe(100);
+    expect(toPercent(Infinity)).toBe(0);
     expect(toPercent(-Infinity)).toBe(0);
   });
 
