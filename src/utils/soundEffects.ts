@@ -43,8 +43,8 @@ class SoundEffectsEngine {
   }
 
   /**
-   * Phone ringing sound — US standard ring (440Hz + 480Hz, 2-on 4-off pattern)
-   * Plays 2 rings (~4 seconds total)
+   * Phone ringing sound — US standard ring (440Hz + 480Hz, single ring)
+   * Plays 1 ring (~1.8 seconds) — "picked up after one ring" feel.
    */
   async playDialTone(): Promise<void> {
     const ctx = this.getContext();
@@ -55,30 +55,28 @@ class SoundEffectsEngine {
     gainNode.connect(ctx.destination);
     gainNode.gain.setValueAtTime(0.15, now); // Keep it subtle
 
-    // US ring: two sine waves (440Hz + 480Hz), 2s on, 4s off
-    for (let ring = 0; ring < 2; ring++) {
-      const ringStart = now + ring * 3; // 2s ring + 1s gap
-      const ringEnd = ringStart + 1.8;
+    // US ring: two sine waves (440Hz + 480Hz) on for 1.8s
+    const ringStart = now;
+    const ringEnd = ringStart + 1.8;
 
-      [440, 480].forEach((freq) => {
-        const osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ringStart);
-        osc.connect(gainNode);
-        osc.start(ringStart);
-        osc.stop(ringEnd);
-      });
+    [440, 480].forEach((freq) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ringStart);
+      osc.connect(gainNode);
+      osc.start(ringStart);
+      osc.stop(ringEnd);
+    });
 
-      // Fade in/out for each ring to avoid clicks
-      gainNode.gain.setValueAtTime(0, ringStart);
-      gainNode.gain.linearRampToValueAtTime(0.15, ringStart + 0.05);
-      gainNode.gain.setValueAtTime(0.15, ringEnd - 0.05);
-      gainNode.gain.linearRampToValueAtTime(0, ringEnd);
-    }
+    // Fade in/out to avoid clicks
+    gainNode.gain.setValueAtTime(0, ringStart);
+    gainNode.gain.linearRampToValueAtTime(0.15, ringStart + 0.05);
+    gainNode.gain.setValueAtTime(0.15, ringEnd - 0.05);
+    gainNode.gain.linearRampToValueAtTime(0, ringEnd);
 
-    // Return promise that resolves when ringing is done
+    // Resolve when the ring finishes
     return new Promise((resolve) => {
-      setTimeout(resolve, 4200); // 2 rings complete
+      setTimeout(resolve, 1800);
     });
   }
 
@@ -199,7 +197,7 @@ class SoundEffectsEngine {
   async playCallStart(): Promise<void> {
     await this.playDialTone();
     // Brief silence after ringing (the "pickup" moment)
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   /**
