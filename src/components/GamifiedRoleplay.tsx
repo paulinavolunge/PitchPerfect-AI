@@ -841,13 +841,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
     const nextRound = currentRound + 1;
 
-    // If we've exceeded max rounds, go straight to debrief (no more AI calls)
+    // If we've exceeded max rounds, go straight to debrief (no more AI calls).
+    // runDebrief owns the overlay + phase transition in direct-caller mode.
     if (nextRound > MAX_ROUNDS) {
       setIsAiTyping(false);
-      setIsTransitioningToDebrief(true);
       await runDebriefRef.current!(updatedMessages);
-      setIsTransitioningToDebrief(false);
-      setPhase('debrief');
       return;
     }
 
@@ -888,8 +886,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           top: chatContainerRef.current.scrollHeight,
           behavior: 'smooth',
         });
-        const debriefWork = runDebriefRef.current!(allMessages);
+        // F2 parallel mode: runDebrief scores while the user reads. It
+        // holds its final phase transition on the read-wait promise, so
+        // the last message stays visible for the full window even if
+        // scoring finishes first. runDebrief also owns the deferred
+        // stopSpeech + final setPhase('debrief') in this mode.
         const readWait = new Promise<void>(resolve => setTimeout(resolve, 5000));
+        const debriefWork = runDebriefRef.current!(allMessages, { parallelHoldUntil: readWait });
         // Only show the transitioning overlay if scoring is still running
         // when the read wait ends — if pitch-analysis beat the 5s timer,
         // jump straight to debrief without flashing the loading state.
@@ -898,9 +901,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         void readWait.then(() => {
           if (!scoringDone && mountedRef.current) setIsTransitioningToDebrief(true);
         });
-        await Promise.all([readWait, debriefWork]);
-        setIsTransitioningToDebrief(false);
-        setPhase('debrief');
+        await debriefWork;
         return;
       }
     } catch (err) {
@@ -923,8 +924,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           top: chatContainerRef.current.scrollHeight,
           behavior: 'smooth',
         });
-        const debriefWork = runDebriefRef.current!(allMessages);
+        // F2 parallel mode: runDebrief scores while the user reads. It
+        // holds its final phase transition on the read-wait promise, so
+        // the last message stays visible for the full window even if
+        // scoring finishes first. runDebrief also owns the deferred
+        // stopSpeech + final setPhase('debrief') in this mode.
         const readWait = new Promise<void>(resolve => setTimeout(resolve, 5000));
+        const debriefWork = runDebriefRef.current!(allMessages, { parallelHoldUntil: readWait });
         // Only show the transitioning overlay if scoring is still running
         // when the read wait ends — if pitch-analysis beat the 5s timer,
         // jump straight to debrief without flashing the loading state.
@@ -933,9 +939,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         void readWait.then(() => {
           if (!scoringDone && mountedRef.current) setIsTransitioningToDebrief(true);
         });
-        await Promise.all([readWait, debriefWork]);
-        setIsTransitioningToDebrief(false);
-        setPhase('debrief');
+        await debriefWork;
         return;
       }
     } finally {
@@ -978,8 +982,23 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   }, []);
 
   // ── End & Debrief ──────────────────────────────────────────
-  const runDebrief = useCallback(async (finalMessages: ChatMessage[]) => {
-    stopSpeech();
+  /**
+   * Options for parallel-mode callers (F2 final-round path). When
+   * parallelHoldUntil is set, runDebrief:
+   *   - skips its default `stopSpeech()` at entry so the caller-just-fired
+   *     TTS of the final response can play during the read wait
+   *   - skips its default `setIsTransitioningToDebrief(true)` at entry so
+   *     the caller can time the overlay to the end of the read wait
+   *   - awaits the promise before flipping phase to 'debrief' (and stops
+   *     speech at that point)
+   * Direct callers (hang-up flow, End Session button, edge case) pass no
+   * options and get the original synchronous behavior — runDebrief owns
+   * the entry stopSpeech + overlay + final phase transition.
+   */
+  type RunDebriefOptions = { parallelHoldUntil?: Promise<void> };
+  const runDebrief = useCallback(async (finalMessages: ChatMessage[], options?: RunDebriefOptions) => {
+    const isParallel = !!options?.parallelHoldUntil;
+    if (!isParallel) stopSpeech();
 
     // Show dramatic hang-up screen if patience was low and it wasn't already shown
     const shouldShowHangUp = (hungUp || patienceRef.current <= 30) && !showHangUpAnimation;
@@ -991,9 +1010,10 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setShowHangUpAnimation(false);
     }
 
-    // Note: isTransitioningToDebrief and isAiTyping are managed by the
-    // caller so runDebrief can run in the background in parallel with the
-    // final read wait (F2) without prematurely flipping either flag.
+    if (!isParallel) {
+      setIsTransitioningToDebrief(true);
+      setIsAiTyping(true);
+    }
 
     // Build session stats
     const avgTime = responseTimes.length > 0
@@ -1171,30 +1191,42 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         });
       }
     } finally {
-      // F4: the old 100ms setTimeout here was a leftover TTS-stop guard;
-      // stopSpeech() already ran at the top of runDebrief, so it wasn't
-      // buying anything. Removed. Phase transition is the caller's job now
-      // (see F2 rework in sendMessage).
+      setIsAiTyping(false);
 
       // Track the completed session attempt (skip for cold call hook — it's
-      // a free taste). Fire-and-forget: don't hold the debrief transition
-      // on a DB write; errors get logged but don't affect UX.
+      // a free taste). Awaited so hasReachedLimit / creditsRemaining are
+      // observably up-to-date before the debrief screen enables Try Another
+      // (a non-premium user spending their last credit would otherwise be
+      // able to start another round from a stale limit check).
       if (!isColdCallHook) {
-        incrementAttempt({
-          scenario_type: isCustomMode && customScenario ? `custom: ${customScenario.objection}` : (selectedObjection?.label ?? 'practice'),
-          difficulty: 'medium',
-          industry: isCustomMode && customScenario ? customScenario.industry : 'general',
-          duration_seconds: sessionStartTimeRef.current ? Math.round((Date.now() - sessionStartTimeRef.current) / 1000) : 0,
-          // If scoring fully failed (feedbackData null), persist score as null too —
-          // incrementAttempt will then save the row as status='failed' and
-          // skip the credit charge, instead of a fake 'scored' row.
-          score: feedbackData ? finalScore : null,
-          transcript,
-          feedback_data: feedbackData,
-        })
-          .then(() => refreshCount())
-          .catch(err => console.error('[GamifiedRoleplay] incrementAttempt failed:', err));
+        try {
+          await incrementAttempt({
+            scenario_type: isCustomMode && customScenario ? `custom: ${customScenario.objection}` : (selectedObjection?.label ?? 'practice'),
+            difficulty: 'medium',
+            industry: isCustomMode && customScenario ? customScenario.industry : 'general',
+            duration_seconds: sessionStartTimeRef.current ? Math.round((Date.now() - sessionStartTimeRef.current) / 1000) : 0,
+            // If scoring fully failed (feedbackData null), persist score as null too —
+            // incrementAttempt will then save the row as status='failed' and
+            // skip the credit charge, instead of a fake 'scored' row.
+            score: feedbackData ? finalScore : null,
+            transcript,
+            feedback_data: feedbackData,
+          });
+          refreshCount();
+        } catch (err) {
+          console.error('[GamifiedRoleplay] incrementAttempt failed:', err);
+        }
       }
+
+      // Parallel-mode callers hand runDebrief a read-wait promise; the
+      // final response's TTS is allowed to play during that window. Only
+      // stop speech and flip phase once the wait has elapsed.
+      if (isParallel) {
+        await options!.parallelHoldUntil;
+        if (mountedRef.current) stopSpeech();
+      }
+      setIsTransitioningToDebrief(false);
+      setPhase('debrief');
     }
   }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation, isColdCallHook, getAuthToken]);
 
