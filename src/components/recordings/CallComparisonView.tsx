@@ -310,7 +310,19 @@ const CallComparisonView: React.FC<CallComparisonViewProps> = ({ realCall, onBac
                   
                   <TabsContent value="scorecard">
                     <div className="max-h-80 overflow-y-auto pr-2">
-                      <DemoScorecard scoreData={practiceCall} />
+                      {/* The recordings subsystem stores scores on a legacy
+                          0-10 scale; DemoScorecard requires the canonical
+                          0-100. Convert at this boundary. */}
+                      <DemoScorecard scoreData={{
+                        ...practiceCall,
+                        overallScore: practiceCall.overallScore * 10,
+                        categories: {
+                          clarity: practiceCall.categories.clarity * 10,
+                          confidence: practiceCall.categories.confidence * 10,
+                          handling: practiceCall.categories.handling * 10,
+                          vocabulary: practiceCall.categories.vocabulary * 10,
+                        },
+                      }} />
                     </div>
                   </TabsContent>
                 </Tabs>

@@ -3,6 +3,7 @@ import React from 'react';
 import { CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import AIContentBadge from "@/components/AIContentBadge";
+import { toPercent } from "@/lib/score";
 
 interface ScoreData {
   overallScore: number;
@@ -35,19 +36,14 @@ const DemoScorecard: React.FC<DemoScorecardProps> = ({ scoreData }) => {
     sessionCount = 0 // Default to 0 if not provided
   } = scoreData;
 
-  // Normalize to a 0-100 scale so this card matches the rest of the app.
-  // Legacy producers emit 0-10 — detect and upscale.
-  const toHundred = (n: number) => {
-    if (n == null || isNaN(n)) return 0;
-    const v = n <= 10 ? n * 10 : n;
-    return Math.max(0, Math.min(100, Math.round(v)));
-  };
-  const overallScore = toHundred(rawOverall);
+  // Callers must pass 0-100 scores. No scale-guessing — legacy 0-10 sources
+  // must convert at the boundary before handing values here.
+  const overallScore = toPercent(rawOverall);
   const categories = {
-    clarity: toHundred(rawCategories.clarity),
-    confidence: toHundred(rawCategories.confidence),
-    handling: toHundred(rawCategories.handling),
-    vocabulary: toHundred(rawCategories.vocabulary),
+    clarity: toPercent(rawCategories.clarity),
+    confidence: toPercent(rawCategories.confidence),
+    handling: toPercent(rawCategories.handling),
+    vocabulary: toPercent(rawCategories.vocabulary),
   };
 
   const getScoreColor = (score: number) => {

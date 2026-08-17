@@ -14,6 +14,7 @@ import { VoiceRecordingManager, processVoiceInput, type VoiceInputResult } from 
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useProspectVoice } from '@/hooks/useProspectVoice';
 import { isFacebookBrowser } from '@/utils/browserDetection';
+import { toPercent } from '@/lib/score';
 
 const WinCelebration = React.lazy(() => import('@/components/WinCelebration'));
 const ScorePaywall = React.lazy(() => import('@/components/ScorePaywall'));
@@ -43,6 +44,9 @@ interface CustomScenario {
 
 export interface DebriefData {
   won: boolean;
+  /** Overall session score on the canonical 0-100 scale. All producers of a
+   *  DebriefData must have already clamped/normalized to that range; consumers
+   *  render it as `/100` and MUST NOT re-scale. */
   score: number;
   strengths: string[];
   gaps: string[];
@@ -1023,11 +1027,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       if (data?.analysis) {
         const parsed = typeof data.analysis === 'string' ? JSON.parse(data.analysis) : data.analysis;
 
-        // pitch-analysis returns overallScore on a 0-100 scale; if a stray small
-        // value comes back (legacy / fallback), upscale so 7 doesn't become "perfect".
+        // pitch-analysis is prompted for overallScore on a 0-100 scale.
+        // Clamp defensively; no scale-guessing — a raw 7 that comes back
+        // stays 7 (a bad model response), not silently upscaled to 70.
         const rawScore = parsed.overallScore ?? parsed.overall_score ?? parsed.score ?? 50;
-        const normalized = rawScore <= 10 ? rawScore * 10 : rawScore;
-        const apiScore = Math.max(0, Math.min(100, Math.round(normalized)));
+        const apiScore = toPercent(rawScore);
 
         // Compute local fallback score based on conversation content
         const localScore = computeLocalScore(finalMessages);
@@ -1639,10 +1643,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   // itself renders ScorePaywall from its own parent, so we skip this branch
   // when isColdCallHook is set to avoid double-rendering.
   if (phase === 'debrief' && debrief && !debrief.scoringFailed && isGuest && !isColdCallHook) {
-    // debrief.score is already on a 0-100 scale (scorecard scale fix, June 2026).
-    // The old * 10 here was a leftover from the 1-10 era and showed guests
-    // scores like "300".
-    const scorePercent = Math.max(0, Math.min(100, Math.round(debrief.score)));
+    const scorePercent = toPercent(debrief.score);
     const highlights: Array<{ text: string; passed: boolean }> = [];
     if (debrief.strengths[0]) highlights.push({ text: debrief.strengths[0], passed: true });
     if (debrief.gaps[0]) highlights.push({ text: debrief.gaps[0], passed: false });
@@ -1749,9 +1750,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         <div className="bg-card border border-border rounded-xl p-5 mb-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-muted-foreground">Overall Score</span>
-            <span className={`text-2xl font-bold ${debrief.score >= 70 ? 'text-green-600' : debrief.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>{Math.round(debrief.score)}/100</span>
+            <span className={`text-2xl font-bold ${debrief.score >= 70 ? 'text-green-600' : debrief.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>{toPercent(debrief.score)}/100</span>
           </div>
-          <Progress value={Math.max(0, Math.min(100, debrief.score))} className="h-2" />
+          <Progress value={toPercent(debrief.score)} className="h-2" />
         </div>
 
         {/* Strengths */}
