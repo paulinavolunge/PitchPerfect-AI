@@ -393,14 +393,14 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
   };
 
   const generateScore = (transcript: string) => {
-    // This is a simplified version of scoring
+    // Simplified scoring, all values on the canonical 0-100 scale.
     const wordCount = transcript.split(/\s+/).length;
 
     // Score categories
-    const clarity = Math.min(Math.floor(wordCount / 15) + 3, 10);
-    const confidence = Math.min(Math.floor(Math.random() * 3) + 7, 10);
-    const handling = Math.min(Math.floor(Math.random() * 4) + 6, 10);
-    const vocabulary = Math.min(Math.floor(Math.random() * 3) + 6, 10);
+    const clarity = Math.min(Math.floor(wordCount / 15) * 10 + 30, 100);
+    const confidence = Math.min(Math.floor(Math.random() * 30) + 70, 100);
+    const handling = Math.min(Math.floor(Math.random() * 40) + 60, 100);
+    const vocabulary = Math.min(Math.floor(Math.random() * 30) + 60, 100);
 
     // Overall score (weighted average)
     const overallScore = Math.floor((clarity * 0.3) + (confidence * 0.3) + (handling * 0.2) + (vocabulary * 0.2));
@@ -430,7 +430,7 @@ const DemoSandbox: React.FC<DemoSandboxProps> = ({ onComplete }) => {
     setDemoState(DemoState.COMPLETE);
 
     // Trigger confetti if score is good
-    if (scoreData.overallScore >= 7) {
+    if (scoreData.overallScore >= 70) {
       setShowConfetti(true);
     }
 

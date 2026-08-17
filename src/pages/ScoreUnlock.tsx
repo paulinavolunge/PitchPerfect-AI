@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2, CheckCircle2, XCircle, X, Lock, ArrowRight } from 'lucide-react';
+import { toPercent } from '@/lib/score';
 
 /**
  * Stripe redirects buyers here after a successful purchase. Configure each
@@ -69,7 +70,7 @@ const ScoreUnlock: React.FC = () => {
     }
   }, []);
 
-  const scorePercent = debrief ? Math.round(debrief.score) : null;
+  const scorePercent = debrief ? toPercent(debrief.score) : null;
 
   // Verify the Stripe session on mount
   useEffect(() => {

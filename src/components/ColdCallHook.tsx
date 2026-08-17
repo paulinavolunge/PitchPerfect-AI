@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@/utils/analytics';
 import GamifiedRoleplay, { type DebriefData } from '@/components/GamifiedRoleplay';
+import { toPercent } from '@/lib/score';
 
 const GATE_SOURCE = 'cold_call_hook';
 
@@ -155,7 +156,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
   const handleComplete = useCallback((d: DebriefData) => {
     try {
       localStorage.setItem('pp_cold_call_used', 'true');
-      localStorage.setItem('pp_cold_call_last_score', String(Math.round(d.score)));
+      localStorage.setItem('pp_cold_call_last_score', String(toPercent(d.score)));
       // Persist the full debrief so /scorecard-unlock can render the
       // unblurred scorecard after the user returns from Stripe checkout.
       localStorage.setItem('pp_cold_call_last_debrief', JSON.stringify(d));
@@ -269,7 +270,7 @@ const ColdCallHook: React.FC<ColdCallHookProps> = ({ open, onOpenChange }) => {
 
   const guestLocked = !user && typeof window !== 'undefined' && !!localStorage.getItem('pp_cold_call_used');
 
-  const scorePercent = debrief ? Math.round(debrief.score) : 0;
+  const scorePercent = debrief ? toPercent(debrief.score) : 0;
 
   // Extract the top 2-3 feedback items from the AI scoring response for the
   // paywall's free "high-level bullets" row. Lead with one positive to feel good,
