@@ -8,10 +8,14 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
-    // Only run vitest tests under src/. The tests/ dir holds Playwright specs
-    // (run via `npm run test:e2e`) and Jest-style component tests, neither of
-    // which vitest can execute.
-    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    // Run vitest tests under src/, plus the specific vitest regression specs
+    // that live under tests/ next to Jest and Playwright specs vitest can't
+    // execute. Add new entries explicitly when a vitest test lands outside
+    // src/, rather than widening the glob and having to exclude the Jest ones.
+    include: [
+      'src/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+      'tests/components/scorePersistence.test.tsx',
+    ],
   },
   resolve: {
     alias: {
