@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      # package-lock.json has 227 entries resolved against Lovable's private
+      # Artifact Registry, which the CI runner cannot reach. Rewrite them to
+      # the public registry before install; integrity hashes are per-tarball
+      # content, so they still match.
+      - run: sed -i 's|https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache|https://registry.npmjs.org|g' package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx vitest run
