@@ -121,8 +121,9 @@ export default function AnalyticsStatusPanel() {
             </div>
           ) : (
             <div className="text-brand-dark/60 mt-1 text-xs">
-              No pageview tracked yet this session. Pageviews are only sent on the production host with consent granted.
+              No pageview tracked yet this session. Pageviews are only sent on the production host.
             </div>
+
           )}
         </div>
 
