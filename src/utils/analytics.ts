@@ -151,7 +151,7 @@ export const trackEvent = (eventName: string, eventParams: Record<string, any> =
 };
 
 export const autoInitAnalytics = () => {
-  if (hasValidConsent()) initGA();
+  initGA();
 };
 
 export const getLastPageview = (): { path: string; at: number } | null => {
@@ -167,10 +167,12 @@ export const checkAnalyticsConnection = () => ({
   gtmLoaded: typeof window.dataLayer !== 'undefined',
   ga4Loaded: typeof window.gtag === 'function',
   consentValid: hasValidConsent(),
+  consentMode: (hasValidConsent() ? 'granted' : 'denied') as 'granted' | 'denied',
   scriptLoaded: !!document.querySelector('script[src*="googletagmanager.com/gtag/js"]'),
   taggerLoaded: !!document.querySelector('script[src*="cdn.gpteng.co/gptengineer"]'),
   productionHost: isProductionHost(),
 });
+
 
 // Global loadAnalytics for consent banner
 window.loadAnalytics = loadGAScript;
