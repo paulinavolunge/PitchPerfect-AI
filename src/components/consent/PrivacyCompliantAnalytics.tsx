@@ -1,35 +1,19 @@
 
 import { useEffect } from 'react';
-import { autoInitAnalytics, trackPageView, hasValidConsent, checkAnalyticsConnection } from '@/utils/analytics';
+import { autoInitAnalytics, trackPageView } from '@/utils/analytics';
 
 export const PrivacyCompliantAnalytics = () => {
   useEffect(() => {
-    console.log('🔧 PrivacyCompliantAnalytics: Component mounted');
-    
-    // Auto-initialize analytics if consent exists
+    // Consent Mode v2: the tag always loads, but stays cookieless until
+    // the visitor grants analytics consent via the banner.
     autoInitAnalytics();
-    
-    // Track initial page view if analytics is ready and consent is valid
-    if (hasValidConsent()) {
-      const currentPath = window.location.pathname + window.location.search;
-      console.log('📄 PrivacyCompliantAnalytics: Tracking initial page view:', currentPath);
-      
-      // Delay page view tracking to ensure analytics is loaded
-      setTimeout(() => {
-        trackPageView(currentPath);
-      }, 2000); // Increased delay for reliability
-    } else {
-      console.log('ℹ️ PrivacyCompliantAnalytics: No consent found. Please accept analytics cookies to enable tracking.');
-    }
-    
-    // Set up debug check
-    setTimeout(() => {
-      checkAnalyticsConnection();
-    }, 3000);
-    
-    return () => {
-      console.log('🔧 PrivacyCompliantAnalytics: Component unmounting');
-    };
+
+    const currentPath = window.location.pathname + window.location.search;
+    const timeoutId = window.setTimeout(() => {
+      trackPageView(currentPath);
+    }, 1500);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   return null;
