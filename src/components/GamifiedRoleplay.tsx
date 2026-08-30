@@ -386,7 +386,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const runDebriefRef = useRef<(msgs: ChatMessage[]) => Promise<void>>();
+  const runDebriefRef = useRef<(msgs: ChatMessage[], options?: { parallelHoldUntil?: Promise<void> }) => Promise<void>>();
   // ── Prospect voice (ElevenLabs with browser TTS fallback) ──
   const shouldSpeak = alwaysSpeak || inputMode === 'voice';
 

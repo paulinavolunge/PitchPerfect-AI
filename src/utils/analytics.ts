@@ -42,25 +42,44 @@ export const setAnalyticsConsent = (granted: boolean) => {
   if (granted) {
     localStorage.setItem('analytics-consent', 'true');
     localStorage.setItem('analytics-consent-date', Date.now().toString());
-    loadGAScript();
   } else {
     localStorage.removeItem('analytics-consent');
     localStorage.removeItem('analytics-consent-date');
   }
+  loadGAScript();
+  updateConsentMode(granted);
 };
 
 export const revokeAnalyticsConsent = () => {
   localStorage.removeItem('analytics-consent');
   localStorage.removeItem('analytics-consent-date');
+  updateConsentMode(false);
 };
 
+function updateConsentMode(granted: boolean) {
+  if (typeof window.gtag !== 'function') return;
+  window.gtag('consent', 'update', {
+    analytics_storage: granted ? 'granted' : 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+  });
+}
+
 function loadGAScript() {
-  if (!hasValidConsent()) return;
-  
   window.dataLayer = window.dataLayer || [];
   if (!window.gtag) {
     window.gtag = function() { window.dataLayer.push(arguments); };
   }
+
+  // Consent Mode v2 defaults — cookieless pings until the user grants consent.
+  window.gtag('consent', 'default', {
+    analytics_storage: hasValidConsent() ? 'granted' : 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    wait_for_update: 500,
+  });
 
   if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
     const s = document.createElement('script');
@@ -87,9 +106,9 @@ function configureGA4() {
 }
 
 export const initGA = () => {
-  if (!hasValidConsent()) return;
   loadGAScript();
 };
+
 
 export const LAST_PAGEVIEW_KEY = 'analytics-last-pageview';
 
@@ -132,7 +151,7 @@ export const trackEvent = (eventName: string, eventParams: Record<string, any> =
 };
 
 export const autoInitAnalytics = () => {
-  if (hasValidConsent()) initGA();
+  initGA();
 };
 
 export const getLastPageview = (): { path: string; at: number } | null => {
@@ -148,10 +167,12 @@ export const checkAnalyticsConnection = () => ({
   gtmLoaded: typeof window.dataLayer !== 'undefined',
   ga4Loaded: typeof window.gtag === 'function',
   consentValid: hasValidConsent(),
+  consentMode: (hasValidConsent() ? 'granted' : 'denied') as 'granted' | 'denied',
   scriptLoaded: !!document.querySelector('script[src*="googletagmanager.com/gtag/js"]'),
   taggerLoaded: !!document.querySelector('script[src*="cdn.gpteng.co/gptengineer"]'),
   productionHost: isProductionHost(),
 });
+
 
 // Global loadAnalytics for consent banner
 window.loadAnalytics = loadGAScript;
