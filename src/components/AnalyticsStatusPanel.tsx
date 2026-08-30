@@ -73,9 +73,14 @@ export default function AnalyticsStatusPanel() {
     { label: 'GA4 script (gtag/js) loaded', ok: status.scriptLoaded },
     { label: 'gtag() function available', ok: status.ga4Loaded },
     { label: 'dataLayer initialized', ok: status.gtmLoaded },
-    { label: 'Analytics consent granted', ok: status.consentValid },
+    {
+      label: 'Consent mode',
+      ok: true,
+      detail: status.consentMode === 'granted' ? 'granted (full)' : 'denied (cookieless)',
+    },
     { label: 'Production host', ok: status.productionHost, detail: window.location.hostname },
   ];
+
 
   const handleTestPageview = () => {
     forceTrackPageView();
