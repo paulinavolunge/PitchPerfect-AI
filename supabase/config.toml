@@ -351,3 +351,7 @@ verify_jwt = false
 [functions.demo-feedback]
 enabled = true
 verify_jwt = false
+
+[functions.visitor-ping]
+enabled = true
+verify_jwt = false

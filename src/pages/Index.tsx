@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Mic, Phone } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import LiveVisitorBadge from '@/components/LiveVisitorBadge';
 import LazyLoadManager from '@/components/optimized/LazyLoadManager';
 import { SkipLink } from '@/components/accessibility/SkipLink';
 import { Helmet } from 'react-helmet-async';
@@ -247,6 +248,7 @@ const Index = () => {
                     <span className="pp-trust-badge-item">🎙 No voice recordings stored</span>
                     <span className="pp-trust-badge-item">⚡ Score in 90 seconds</span>
                     <span className="pp-trust-badge-item">🆓 Free demo, no card</span>
+                    <LiveVisitorBadge />
                   </div>
                 </div>
 
