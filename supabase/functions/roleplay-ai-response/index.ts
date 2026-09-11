@@ -72,6 +72,8 @@ serve(async (req) => {
       customIndustry,
       customObjection,
       prospectName,
+      sessionId,
+      turnId,
     } = JSON.parse(rawBody);
 
     console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
@@ -99,7 +101,13 @@ serve(async (req) => {
       { role: 'user', content: userInput }
     ];
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+    const requestId = crypto.randomUUID();
+    const startedAt = Date.now();
+    let response: Response;
+    try {
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -113,18 +121,28 @@ serve(async (req) => {
         presence_penalty: 0.1,
         frequency_penalty: 0.1,
       }),
-    });
+      signal: controller.signal,
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      const timedOut = error instanceof DOMException && error.name === 'AbortError';
+      return new Response(JSON.stringify({ ok: false, requestId, sessionId, turnId, errorType: timedOut ? 'MODEL_TIMEOUT' : 'NETWORK_ERROR', retryable: true, latencyMs: Date.now() - startedAt }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      return new Response(JSON.stringify({ ok: false, requestId, sessionId, turnId, errorType: response.status === 429 || response.status >= 500 ? 'MODEL_ERROR' : 'INVALID_RESPONSE', retryable: response.status === 429 || response.status >= 500, latencyMs: Date.now() - startedAt }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const aiResponse = data?.choices?.[0]?.message?.content;
+    if (typeof aiResponse !== 'string' || !aiResponse.trim()) {
+      return new Response(JSON.stringify({ ok: false, requestId, sessionId, turnId, errorType: 'INVALID_RESPONSE', retryable: true, latencyMs: Date.now() - startedAt }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
-    return new Response(JSON.stringify({ response: aiResponse }), {
+    return new Response(JSON.stringify({ ok: true, requestId, sessionId, turnId, response: aiResponse, latencyMs: Date.now() - startedAt }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

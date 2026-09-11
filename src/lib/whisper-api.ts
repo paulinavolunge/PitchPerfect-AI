@@ -1,6 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+export class TranscriptionFailure extends Error {
+  constructor(public category: string, public status: number | null = null) {
+    super('Voice transcription failed. Please try again.');
+  }
+}
+
 export const whisperTranscribe = async (audioBlob: Blob): Promise<string> => {
   try {
     console.log('Starting Whisper transcription, blob size:', audioBlob.size, 'type:', audioBlob.type);
@@ -40,17 +46,17 @@ export const whisperTranscribe = async (audioBlob: Blob): Promise<string> => {
     });
 
     if (error) {
-      console.error('Supabase function error:', error);
-      throw new Error(`Transcription service error: ${error.message}`);
+      const status = error.context instanceof Response ? error.context.status : null;
+      throw new TranscriptionFailure(status ? 'TRANSCRIPTION_PROVIDER_FAILURE' : 'TRANSCRIPTION_REQUEST_FAILURE', status);
     }
 
-    if (!data || !data.text) {
-      throw new Error('No transcription result received');
+    if (!data || typeof data.text !== 'string' || !data.text.trim()) {
+      throw new TranscriptionFailure('INVALID_TRANSCRIPTION');
     }
 
-    console.log('Transcription successful:', data.text);
     return data.text.trim();
   } catch (error) {
+    if (error instanceof TranscriptionFailure) throw error;
     console.error('Whisper transcription failed:', error);
     
     // More specific error messages
