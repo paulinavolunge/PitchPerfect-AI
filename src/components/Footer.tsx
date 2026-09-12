@@ -60,17 +60,6 @@ const Footer = () => {
           <p className="text-gray-300 text-sm text-center md:text-left">
             &copy; {new Date().getFullYear()} PitchPerfect AI. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <Link to="/privacy" className="text-gray-300 hover:text-vibrant-blue-300 text-sm transition-colors">
-              Privacy Policy
-            </Link>
-            <Link to="/terms" className="text-gray-300 hover:text-vibrant-blue-300 text-sm transition-colors">
-              Terms of Use
-            </Link>
-            <Link to="/data-safety" className="text-gray-300 hover:text-vibrant-blue-300 text-sm transition-colors">
-              Data Safety
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

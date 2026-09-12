@@ -14,6 +14,9 @@ export interface RoleplayTurnSuccess {
   text: string;
   latencyMs: number;
   totalLatencyMs?: number;
+  /** True when the turn was streamed and prospect speech was already queued
+   * sentence-by-sentence via onSentence — callers must NOT re-speak text. */
+  sentencesSpoken?: boolean;
 }
 
 export interface RoleplayTurnFailure {

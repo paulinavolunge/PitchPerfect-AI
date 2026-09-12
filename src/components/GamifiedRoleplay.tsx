@@ -12,11 +12,11 @@ import { toast } from '@/hooks/use-toast';
 import { useUpgradeTriggers } from '@/hooks/useUpgradeTriggers';
 import { VoiceRecordingManager, processVoiceInput, type VoiceInputResult } from '@/utils/voiceInput';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
-import { useProspectVoice } from '@/hooks/useProspectVoice';
+import { useProspectVoice, VOICE_FEMALE, VOICE_MALE } from '@/hooks/useProspectVoice';
 import { isFacebookBrowser } from '@/utils/browserDetection';
 import { toPercent } from '@/lib/score';
 import { trackEvent } from '@/utils/analytics';
-import { isRoleplayAttemptCurrent, type RoleplayTurnResult } from '@/types/roleplayReliability';
+import { isRoleplayAttemptCurrent, type RoleplayTurnResult, type RoleplayFailureType } from '@/types/roleplayReliability';
 
 const WinCelebration = React.lazy(() => import('@/components/WinCelebration'));
 const ScorePaywall = React.lazy(() => import('@/components/ScorePaywall'));
@@ -63,6 +63,8 @@ export interface DebriefData {
   tip: string;
   /** True when neither AI nor local scoring produced a result — session was not charged. */
   scoringFailed?: boolean;
+  /** True when live AI scoring was unavailable and the score is a local estimate. */
+  estimatedScore?: boolean;
   sessionStats?: {
     roundsCompleted: number;
     avgResponseTime: number;
@@ -109,10 +111,11 @@ const OBJECTIONS: ObjectionCard[] = [
   { id: 'team', label: 'Loop in Team', emoji: '👥', description: '"I need to loop in my team before deciding."' },
 ];
 
-const OBJECTION_PERSONAS: Record<string, { name: string; title: string; openingLine: string; systemPrompt: string }> = {
+const OBJECTION_PERSONAS: Record<string, { name: string; title: string; openingLine: string; systemPrompt: string; voiceId?: string }> = {
   budget: {
     name: 'Renee Castellano',
     title: 'Director of Ops',
+    voiceId: VOICE_FEMALE,
     openingLine: "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now.",
     systemPrompt: `You are Renee Castellano, Director of Ops at a 140-person distribution company. You genuinely like the pitch so far, but budget season just closed and you fought hard to protect what you already have.
 
@@ -140,6 +143,7 @@ RULES:
   timing: {
     name: 'Marcus Webb',
     title: 'Ops Director',
+    voiceId: VOICE_MALE,
     openingLine: "Marcus Webb. Look, you've caught me in the middle of a reorg and we're down two people. I don't have room for anything new right now, sales pitch or not.",
     systemPrompt: `You are Marcus Webb, Ops Director at a regional healthcare staffing firm. You're not stalling to be polite — you're mid-reorg, your team lost two people last month, and anything new right now means training time you don't have.
 
@@ -164,6 +168,7 @@ RULES:
   competitor: {
     name: 'Sofia Reyes',
     title: 'IT Procurement Lead',
+    voiceId: VOICE_FEMALE,
     openingLine: "This is Sofia. If this is a sales call, I'll save you some time: we're already set up with a vendor for this. I don't see a reason to switch.",
     systemPrompt: `You are Sofia Reyes, IT Procurement Lead at a mid-size retailer. You're not defensive about your current vendor — you're actually a little tired of them, but you're also not going to trash-talk them to a stranger cold-calling you.
 
@@ -188,6 +193,7 @@ RULES:
   think: {
     name: 'Devon Ashworth',
     title: 'Marketing Manager',
+    voiceId: VOICE_FEMALE, // gender-ambiguous name; default female voice
     openingLine: "Devon speaking. Sure, you've got a minute. But I'll tell you now, this sounds like the kind of thing I'd need to think over and get back to you on.",
     systemPrompt: `You are Devon Ashworth, Marketing Manager at a B2B software company. "Let me think about it" is your default reflex when you're not actually the final decision-maker and don't want to admit that on a first call.
 
@@ -212,6 +218,7 @@ RULES:
   email: {
     name: 'Keisha Odom',
     title: 'Office Manager',
+    voiceId: VOICE_FEMALE,
     openingLine: "This is Keisha. I really don't have time to talk right now, can you just send me something over email?",
     systemPrompt: `You are Keisha Odom, Office Manager at a construction supply company. You're not the decision-maker for most things, you're busy, and "send me an email" is how you get people off the phone without being rude.
 
@@ -236,6 +243,7 @@ RULES:
   team: {
     name: 'Andre Kowalski',
     title: 'Sales Ops Manager',
+    voiceId: VOICE_MALE,
     openingLine: "Andre here. I'll hear you out, but fair warning: anything like this goes through my team before we'd move forward on it.",
     systemPrompt: `You are Andre Kowalski, Sales Ops Manager at a logistics company with a genuinely collaborative culture — this isn't a stall for you, it's how your team actually operates, which makes it a harder objection to crack than a fake one.
 
@@ -297,6 +305,111 @@ RULES:
 - Do NOT prefix your response with your name.`;
 }
 
+// ── SSE stream reader for roleplay-ai-response ─────────────────
+// Parses the server's `delta`/`done` events. Each time a sentence boundary
+// is crossed in the accumulated text, onSentence fires so the caller can
+// start TTS on the first sentence while the rest is still generating.
+// Returns the standard RoleplayTurnResult once the `done` event arrives.
+async function readAIStream(
+  response: Response,
+  turnId: string,
+  startedAt: number,
+  sessionId: string,
+  callbacks?: { onText?: (fullText: string) => void; onSentence?: (sentence: string) => void },
+): Promise<RoleplayTurnResult> {
+  const fail = (errorType: RoleplayFailureType): RoleplayTurnResult => ({
+    ok: false, requestId: crypto.randomUUID(), sessionId, turnId,
+    errorType, retryable: true, latencyMs: Date.now() - startedAt,
+  });
+
+  const reader = response.body?.getReader();
+  if (!reader) return fail('NETWORK_ERROR');
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+  let spokenUpTo = 0;
+  let sentencesSpoken = false;
+  let donePayload: any = null;
+
+  const flushSentences = () => {
+    // Speak every fully-received sentence (boundary = . ! ? … followed by
+    // whitespace). The trailing fragment is held until the stream ends.
+    const boundary = /[.!?…]["'”’)]?\s+/g;
+    let lastEnd = spokenUpTo;
+    let m: RegExpExecArray | null;
+    while ((m = boundary.exec(fullText)) !== null) {
+      const end = m.index + m[0].length;
+      if (end > spokenUpTo) lastEnd = end;
+    }
+    if (lastEnd > spokenUpTo) {
+      const chunk = fullText.slice(spokenUpTo, lastEnd).trim();
+      spokenUpTo = lastEnd;
+      if (chunk) {
+        sentencesSpoken = true;
+        callbacks?.onSentence?.(chunk);
+      }
+    }
+  };
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let idx: number;
+      while ((idx = buffer.indexOf('\n\n')) !== -1) {
+        const rawEvent = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        for (const line of rawEvent.split('\n')) {
+          const t = line.trim();
+          if (!t.startsWith('data:')) continue;
+          const payloadStr = t.slice(5).trim();
+          if (!payloadStr || payloadStr === '[DONE]') continue;
+          let evt: any;
+          try { evt = JSON.parse(payloadStr); } catch { continue; }
+          if (evt.type === 'delta' && typeof evt.text === 'string' && evt.text) {
+            fullText += evt.text;
+            callbacks?.onText?.(fullText);
+            flushSentences();
+          } else if (evt.type === 'done') {
+            donePayload = evt;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    // Transport-level failure mid-stream (incl. the 30s abort).
+    const timedOut = error instanceof DOMException && error.name === 'AbortError';
+    return fail(timedOut ? 'MODEL_TIMEOUT' : 'NETWORK_ERROR');
+  }
+
+  if (donePayload?.ok === false) {
+    return { ...donePayload, totalLatencyMs: Date.now() - startedAt, sentencesSpoken } as RoleplayTurnResult;
+  }
+  const finalText = typeof donePayload?.response === 'string' && donePayload.response.trim()
+    ? donePayload.response
+    : fullText;
+  if (donePayload?.ok !== true || !finalText.trim()) {
+    return fail('INVALID_RESPONSE');
+  }
+  // Speak any trailing fragment that never hit a sentence boundary.
+  const tail = finalText.slice(spokenUpTo).trim();
+  if (tail) {
+    sentencesSpoken = true;
+    callbacks?.onSentence?.(tail);
+  }
+  return {
+    ok: true,
+    requestId: donePayload.requestId ?? crypto.randomUUID(),
+    sessionId: donePayload.sessionId ?? sessionId,
+    turnId,
+    text: finalText,
+    latencyMs: donePayload.latencyMs ?? Date.now() - startedAt,
+    totalLatencyMs: Date.now() - startedAt,
+    sentencesSpoken,
+  };
+}
+
 // ── Component ──────────────────────────────────────────────────
 const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   autoStart = false,
@@ -344,6 +457,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   // ── Patience & Timer state ─────────────────────────────────
   const RESPONSE_TIMER_MAX = 15;
+  // Patience recovery tuning: strong replies earn patience back so a good
+  // rep isn't on a fixed countdown to a hang-up.
+  const PATIENCE_MAX = 100;
+  const PATIENCE_RECOVERY_MIN_WORDS = 12; // "substantive reply" threshold
+  const PATIENCE_RECOVERY_SUBSTANTIVE = 8; // earned for a substantive reply
+  const PATIENCE_RECOVERY_QUESTION = 4; // extra for asking a discovery question
   const [patience, setPatience] = useState(100);
   const [timerSeconds, setTimerSeconds] = useState(RESPONSE_TIMER_MAX);
   const [responseTimes, setResponseTimes] = useState<number[]>([]);
@@ -378,6 +497,10 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       ? OBJECTION_PERSONAS[selectedObjection.id].title
       : prospectInfo.title;
 
+  /** Voice that matches the on-screen prospect: preset > dashboard persona > default. */
+  const activeVoiceId = presetScenario?.voiceId
+    ?? (!isCustomMode && selectedObjection ? OBJECTION_PERSONAS[selectedObjection.id]?.voiceId : undefined);
+
   const DEBRIEF_LOADING_MESSAGES = ['Analyzing your performance...', 'Reviewing your objection handling...', 'Generating your score...'];
   const [debriefLoadingMsgIndex, setDebriefLoadingMsgIndex] = useState(0);
 
@@ -401,8 +524,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   const speakText = useCallback((text: string) => {
     if (!shouldSpeak) return;
-    speakEL(text, presetScenario?.voiceId); // non-blocking: fires request, plays when ready
-  }, [shouldSpeak, speakEL, presetScenario?.voiceId]);
+    speakEL(text, activeVoiceId); // non-blocking: fires request, plays when ready
+  }, [shouldSpeak, speakEL, activeVoiceId]);
 
   const stopSpeech = useCallback(() => {
     stopEL();
@@ -424,6 +547,43 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const unmuteSpeech = useCallback(() => {
     unmuteEL();
   }, [unmuteEL]);
+
+  /**
+   * Streaming turn handlers: while the AI response streams in, the prospect
+   * message is created/updated live and each completed sentence is spoken
+   * immediately. Callers use getProspectMsgId() to finalize the message and
+   * removePartial() to clean up if the turn fails mid-stream.
+   */
+  const makeStreamHandlers = () => {
+    let prospectMsgId: string | null = null;
+    let firstText = false;
+    return {
+      callbacks: {
+        onText: (fullText: string) => {
+          if (!firstText) {
+            firstText = true;
+            setIsAiTyping(false); // the prospect has "picked up" — show words, not spinner
+          }
+          if (!prospectMsgId) {
+            prospectMsgId = crypto.randomUUID();
+            const id = prospectMsgId;
+            setMessages(prev => [...prev, { id, role: 'prospect', text: fullText, timestamp: new Date() }]);
+          } else {
+            const id = prospectMsgId;
+            setMessages(prev => prev.map(m => (m.id === id ? { ...m, text: fullText } : m)));
+          }
+        },
+        onSentence: (sentence: string) => speakText(sentence),
+      } as AIStreamCallbacks,
+      getProspectMsgId: () => prospectMsgId,
+      removePartial: () => {
+        if (prospectMsgId) {
+          const id = prospectMsgId;
+          setMessages(prev => prev.filter(m => m.id !== id));
+        }
+      },
+    };
+  };
 
   const { user, isPremium } = useAuth();
   const navigate = useNavigate();
@@ -640,11 +800,22 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   }, [phase, debrief]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── AI Call ────────────────────────────────────────────────
-  const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[], turnId: string): Promise<RoleplayTurnResult> => {
+  /** Optional streaming hooks for callAI: incremental text + per-sentence speech. */
+  interface AIStreamCallbacks {
+    onText?: (fullText: string) => void;
+    onSentence?: (sentence: string) => void;
+  }
+
+  const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[], turnId: string, streamCallbacks?: AIStreamCallbacks): Promise<RoleplayTurnResult> => {
     const conversationHistory = history.map(m => ({
       sender: m.role === 'user' ? 'user' : 'assistant',
       text: m.text,
     }));
+
+    // Patience bucket for the AI: lets the prospect telegraph impatience
+    // in-character before the hang-up instead of it being a surprise.
+    const patienceNow = patienceRef.current;
+    const patienceBucket = patienceNow > 60 ? 'high' : patienceNow > 30 ? 'medium' : 'low';
 
     const payload: Record<string, any> = {
       userInput: userMsg,
@@ -666,6 +837,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       // Pass the carefully-tuned client-side persona prompt so the edge
       // function honors it instead of substituting a rigid built-in script.
       systemPromptOverride: systemPrompt || undefined,
+      // Ask for token streaming: the server pipes SSE deltas and a final
+      // `done` event with the same contract as the JSON response. Servers
+      // that don't understand `stream` just return JSON as before.
+      stream: true,
+      patienceBucket,
     };
 
     // Add custom fields if in custom mode
@@ -689,6 +865,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     const controller = new AbortController();
     abortControllerRef.current = controller;
     const startedAt = Date.now();
+    // 30s backstop for the whole turn, including a streamed body.
     const timeout = setTimeout(() => controller.abort(), 30000);
     let response: Response;
     try {
@@ -708,11 +885,28 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       return { ok: false, requestId: crypto.randomUUID(), sessionId: sessionIdRef.current, turnId, errorType: timedOut ? 'MODEL_TIMEOUT' : 'NETWORK_ERROR', retryable: true, latencyMs: Date.now() - startedAt };
     }
 
-    clearTimeout(timeout);
     if (!response.ok) {
+      clearTimeout(timeout);
       return { ok: false, requestId: crypto.randomUUID(), sessionId: sessionIdRef.current, turnId, errorType: response.status >= 500 || response.status === 429 ? 'MODEL_ERROR' : 'INVALID_RESPONSE', retryable: response.status >= 500 || response.status === 429, latencyMs: Date.now() - startedAt };
     }
 
+    // Streaming path: the server pipes SSE (`delta` events + a final `done`
+    // event carrying the standard contract). Old servers ignore `stream` and
+    // return JSON — handled by the legacy path below.
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/event-stream')) {
+      try {
+        const streamed = await readAIStream(response, turnId, startedAt, sessionIdRef.current, streamCallbacks);
+        clearTimeout(timeout);
+        return streamed;
+      } catch (error) {
+        clearTimeout(timeout);
+        const timedOut = error instanceof DOMException && error.name === 'AbortError';
+        return { ok: false, requestId: crypto.randomUUID(), sessionId: sessionIdRef.current, turnId, errorType: timedOut ? 'MODEL_TIMEOUT' : 'NETWORK_ERROR', retryable: true, latencyMs: Date.now() - startedAt };
+      }
+    }
+
+    clearTimeout(timeout);
     const data = await response.json();
     if (data?.ok === false) return { ...data, totalLatencyMs: Date.now() - startedAt } as RoleplayTurnResult;
     if (data?.ok !== true || typeof data.response !== 'string' || !data.response.trim()) {
@@ -777,7 +971,8 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     const openingRetryCount = failedTurn?.text === '' ? failedTurn.retryCount + 1 : 0;
     const openingAttemptId = crypto.randomUUID();
     activeAttemptRef.current = openingAttemptId;
-    const aiPromise = callAI(systemPrompt, openingLine, [], openingTurnId).catch(err => {
+    const stream = makeStreamHandlers();
+    const aiPromise = callAI(systemPrompt, openingLine, [], openingTurnId, stream.callbacks).catch(err => {
       console.error('[GamifiedRoleplay] Failed to get opening response:', err);
       return { ok: false, requestId: crypto.randomUUID(), sessionId: sessionIdRef.current, turnId: openingTurnId, errorType: 'MODEL_ERROR', retryable: true, latencyMs: 0 } as RoleplayTurnResult;
     });
@@ -794,6 +989,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
       if (!response.ok) {
         // Never turn an infrastructure failure into synthetic prospect dialogue.
+        stream.removePartial();
         setFailedTurn({ text: '', turnId: response.turnId, errorType: response.errorType, retryCount: openingRetryCount });
         trackEvent('roleplay_turn_failed', { session_id: sessionIdRef.current, turn_id: openingTurnId, scenario: selectedObjection?.id ?? presetScenario?.objectionLabel ?? 'custom', input_mode: inputMode, success: false, error_type: response.errorType, retry_count: openingRetryCount, model_latency_ms: response.latencyMs, total_ai_response_latency_ms: response.totalLatencyMs ?? response.latencyMs });
         return;
@@ -802,7 +998,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setFailedTurn(null);
 
       const prospectMsg: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: stream.getProspectMsgId() ?? crypto.randomUUID(),
         role: 'prospect',
         text,
         timestamp: new Date(),
@@ -811,7 +1007,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setCurrentRound(1);
       sessionStartTimeRef.current = Date.now();
       lastProspectMsgTimeRef.current = Date.now();
-      speakText(text);
+      // With streaming the sentences were already queued via onSentence;
+      // only speak here for the legacy non-streaming path.
+      if (!response.sentencesSpoken) speakText(text);
       trackEvent('roleplay_turn_succeeded', { session_id: sessionIdRef.current, turn_id: openingTurnId, scenario: selectedObjection?.id ?? presetScenario?.objectionLabel ?? 'custom', input_mode: inputMode, success: true, error_type: null, retry_count: openingRetryCount, model_latency_ms: response.latencyMs, total_ai_response_latency_ms: response.totalLatencyMs ?? response.latencyMs });
     } finally {
       if (mountedRef.current && activeAttemptRef.current === openingAttemptId) setIsAiTyping(false);
@@ -866,16 +1064,19 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     }
 
     try {
+      const stream = makeStreamHandlers();
       const result = await callAI(
         presetScenario
           ? presetScenario.systemPrompt
           : isCustomMode ? '' : (OBJECTION_PERSONAS[selectedObjection!.id]?.systemPrompt ?? buildSystemPrompt(selectedObjection!, currentProspectName, currentProspectTitle)),
         text,
         updatedMessages,
-        turnId
+        turnId,
+        stream.callbacks
       );
       if (!mountedRef.current || !isRoleplayAttemptCurrent(attemptId, activeAttemptRef.current, result.sessionId, sessionIdRef.current)) return;
       if (!result.ok) {
+        stream.removePartial();
         setFailedTurn({ text, turnId, errorType: result.errorType, retryCount });
         setIsAiTyping(false);
         trackEvent('roleplay_turn_failed', { session_id: sessionIdRef.current, turn_id: turnId, scenario: selectedObjection?.id ?? presetScenario?.objectionLabel ?? 'custom', input_mode: inputMode, success: false, error_type: result.errorType, retry_count: retryCount, model_latency_ms: result.latencyMs, total_ai_response_latency_ms: result.totalLatencyMs ?? result.latencyMs });
@@ -885,12 +1086,18 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setResponseTimes(prev => [...prev, responseTime]);
       const wordCount = text.split(/\s+/).filter(Boolean).length;
       const patienceDrop = wordCount <= 1 ? 25 : wordCount < 3 ? 15 : wordCount < 5 ? 8 : 3;
-      const newPatience = Math.max(0, patienceRef.current - patienceDrop);
+      // Recovery: a substantive reply or a real discovery question earns
+      // patience back — this is what makes "earn 30 more seconds" real
+      // instead of every call being a fixed countdown to a hang-up.
+      let patienceRecovery = 0;
+      if (wordCount >= PATIENCE_RECOVERY_MIN_WORDS) patienceRecovery += PATIENCE_RECOVERY_SUBSTANTIVE;
+      if (text.includes('?')) patienceRecovery += PATIENCE_RECOVERY_QUESTION;
+      const newPatience = Math.min(PATIENCE_MAX, Math.max(0, patienceRef.current - patienceDrop + patienceRecovery));
       patienceRef.current = newPatience;
       setPatience(newPatience);
       setTimerSeconds(RESPONSE_TIMER_MAX);
       const prospectMsg: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: stream.getProspectMsgId() ?? crypto.randomUUID(),
         role: 'prospect',
         text: result.text,
         timestamp: new Date(),
@@ -899,7 +1106,9 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setMessages(allMessages);
       setCurrentRound(nextRound);
       lastProspectMsgTimeRef.current = Date.now();
-      speakText(result.text);
+      // With streaming the sentences were already queued via onSentence;
+      // only speak here for the legacy non-streaming path.
+      if (!result.sentencesSpoken) speakText(result.text);
       trackEvent('roleplay_turn_succeeded', { session_id: sessionIdRef.current, turn_id: turnId, scenario: selectedObjection?.id ?? presetScenario?.objectionLabel ?? 'custom', input_mode: inputMode, success: true, error_type: null, retry_count: retryCount, model_latency_ms: result.latencyMs, total_ai_response_latency_ms: result.totalLatencyMs ?? result.latencyMs });
 
       // Round-based patience decay (3% per round)
@@ -1174,6 +1383,12 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           fallback: true,
         };
 
+        // No more silent degradation: tell the user this score is an estimate.
+        toast({
+          title: 'Live scoring unavailable',
+          description: 'Showing an estimated score for this session.',
+        });
+
         setDebrief({
           won,
           score: localScore,
@@ -1181,6 +1396,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           gaps,
           tip,
           sessionStats,
+          estimatedScore: true,
         });
       } catch (fallbackErr) {
         console.error('[GamifiedRoleplay] Local fallback scoring ALSO failed:', fallbackErr);
@@ -1869,6 +2085,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             <span className={`text-2xl font-bold ${debrief.score >= 70 ? 'text-green-600' : debrief.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>{toPercent(debrief.score)}/100</span>
           </div>
           <Progress value={toPercent(debrief.score)} className="h-2" />
+          {debrief.estimatedScore && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              ⚠️ Estimated score — live AI scoring was unavailable for this session.
+            </p>
+          )}
         </div>
 
         {/* Strengths */}
@@ -2187,7 +2408,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
                     <span className="text-xs font-semibold opacity-70">{currentProspectName}</span>
                     {shouldSpeak && (
                       <button
-                        onClick={() => speakEL(msg.text, presetScenario?.voiceId)}
+                        onClick={() => speakEL(msg.text, activeVoiceId)}
                         className="ml-2 p-0.5 rounded hover:bg-foreground/10 transition-colors"
                         aria-label="Replay message"
                         title="Replay message"

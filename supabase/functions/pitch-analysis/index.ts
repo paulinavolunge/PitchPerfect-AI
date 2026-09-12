@@ -17,6 +17,13 @@ const verifyAuth = async (request: Request) => {
     return null;
   }
 
+  // Fast path: guests present the anon key itself as the bearer token. Skip the
+  // auth-server round trip for them (~100-500ms saved per request).
+  if (token === Deno.env.get('SUPABASE_ANON_KEY')) {
+    console.log('Guest user access via anon key');
+    return null;
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
@@ -117,23 +124,68 @@ ${scenario ? `Context: This is for a ${scenario.industry} industry scenario, add
 
 Provide detailed analysis and scoring as requested.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        max_tokens: 1500,
-        temperature: 0.3,
-        response_format: { type: "json_object" }
-      }),
-    });
+    const openaiPayload = {
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      max_tokens: 1500,
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    };
+
+    // One automatic retry with short backoff on transient OpenAI failures
+    // (429 rate-limit / 5xx / network error). Timeouts are not retried.
+    // A 429 caused by billing/quota exhaustion (`insufficient_quota`) is not
+    // transient, so it fails fast without a retry.
+    const RETRYABLE_STATUS = (s: number) => s === 429 || s >= 500;
+    const isAbort = (e: unknown) => e instanceof DOMException && e.name === 'AbortError';
+    const isQuotaError = async (res: Response): Promise<boolean> => {
+      try { return /insufficient_quota/i.test(await res.clone().text()); }
+      catch { return false; }
+    };
+    const callOpenAI = async (): Promise<Response> => {
+      const attemptController = new AbortController();
+      const attemptTimeout = setTimeout(() => attemptController.abort(), 25_000);
+      try {
+        return await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(openaiPayload),
+          signal: attemptController.signal,
+        });
+      } finally {
+        clearTimeout(attemptTimeout);
+      }
+    };
+
+    let response: Response | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 1_500));
+      try {
+        const res = await callOpenAI();
+        if (res.ok) { response = res; break; }
+        if (res.status === 429 && await isQuotaError(res)) {
+          console.warn('[pitch-analysis] OpenAI billing/quota exhausted — failing fast, no retry');
+          response = res; break;
+        }
+        if (!RETRYABLE_STATUS(res.status)) { response = res; break; }
+        console.warn(`[pitch-analysis] OpenAI ${res.status} on attempt ${attempt + 1} — ${attempt === 0 ? 'retrying once' : 'giving up'}`);
+        response = res;
+      } catch (error) {
+        if (isAbort(error)) { response = null; break; }
+        console.warn(`[pitch-analysis] OpenAI network error on attempt ${attempt + 1} — ${attempt === 0 ? 'retrying once' : 'giving up'}`);
+        response = null;
+      }
+    }
+
+    if (!response) {
+      throw new Error('OpenAI request timed out');
+    }
 
     if (!response.ok) {
       const errorData = await response.text();

@@ -13,6 +13,13 @@ const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) { console.log('No auth token, guest access'); return null; }
 
+  // Fast path: guests present the anon key itself as the bearer token. Skip the
+  // auth-server round trip for them (~100-500ms saved per request).
+  if (token === Deno.env.get('SUPABASE_ANON_KEY')) {
+    console.log('Guest user access via anon key');
+    return null;
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
@@ -20,11 +27,6 @@ const verifyAuth = async (request: Request) => {
 
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) {
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    if (token === anonKey) {
-      console.log('Guest user access via anon key');
-      return null;
-    }
     console.log('Allowing unauthenticated access'); return null;
   }
 
@@ -74,6 +76,8 @@ serve(async (req) => {
       prospectName,
       sessionId,
       turnId,
+      stream,
+      patienceBucket,
     } = JSON.parse(rawBody);
 
     console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
@@ -83,11 +87,22 @@ serve(async (req) => {
     // System prompt is built server-side only. We intentionally do NOT accept a
     // client-supplied systemPromptOverride — that would let any unauthenticated
     // caller jailbreak the AI's persona / content policies.
-    const systemPrompt = isReversedRole 
+    //
+    // Patience awareness: the client reports the prospect's current patience
+    // bucket so the AI can telegraph impatience in-character ("you're losing
+    // me") instead of the hang-up arriving as a surprise. The client owns the
+    // actual hang-up trigger; the AI only warns.
+    const patienceDirection =
+      patienceBucket === 'medium'
+        ? `\n\nPATIENCE CHECK: You're getting impatient with this rep. Keep this reply shorter and more clipped than usual, and give them ONE clear verbal signal that you're losing patience (e.g. "you're losing me here", "I don't have all day for this"). Stay on the line — do not end the call yourself.`
+        : patienceBucket === 'low'
+          ? `\n\nPATIENCE CHECK: You are about to hang up on this rep. Say so plainly in this reply and give them one final beat to earn another minute (e.g. "Look, I've got about thirty seconds left — make it count."). Do not end the call yourself in this reply; just make the warning unmistakable.`
+          : '';
+    const systemPrompt = (isReversedRole 
       ? (isCustom
           ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
           : createProspectSystemPrompt(scenario, voiceStyle))
-      : createSalespersonSystemPrompt(scenario, voiceStyle);
+      : createSalespersonSystemPrompt(scenario, voiceStyle)) + patienceDirection;
 
     // Send the full conversation history (capped to keep tokens sane) so the
     // prospect responds contextually instead of acting like each turn is new.
@@ -101,39 +116,186 @@ serve(async (req) => {
       { role: 'user', content: userInput }
     ];
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30_000);
     const requestId = crypto.randomUUID();
     const startedAt = Date.now();
-    let response: Response;
-    try {
-      response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages,
-        max_tokens: 300,
-        temperature: 0.7,
-        presence_penalty: 0.1,
-        frequency_penalty: 0.1,
-      }),
-      signal: controller.signal,
+    const openaiPayload = {
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 300,
+      temperature: 0.7,
+      presence_penalty: 0.1,
+      frequency_penalty: 0.1,
+    };
+
+    // One automatic retry with short backoff on transient OpenAI failures
+    // (429 rate-limit / 5xx). Timeouts are NOT retried — the model already
+    // consumed the full per-attempt budget and the frontend caps at 30s.
+    // A 429 caused by billing/quota exhaustion (OpenAI `insufficient_quota`)
+    // is NOT transient: retrying it only burns latency, so it fails fast
+    // with retryable:false and enters the Phase 2A recoverable failure state.
+    const RETRYABLE_STATUS = (s: number) => s === 429 || s >= 500;
+    const isAbort = (e: unknown) => e instanceof DOMException && e.name === 'AbortError';
+    const isQuotaError = async (res: Response): Promise<boolean> => {
+      try { return /insufficient_quota/i.test(await res.clone().text()); }
+      catch { return false; }
+    };
+
+    // ── Streaming path (SSE) ─────────────────────────────────────
+    // When the client sends stream:true, pipe OpenAI token deltas as
+    // Server-Sent Events so the frontend can render text and fire TTS on
+    // the first sentence without waiting for the full completion. The
+    // final `done` event carries the same contract fields as the
+    // non-streaming JSON response, so callers that don't ask for a stream
+    // (or run against an older deployment) are unaffected.
+    if (stream === true) {
+      const streamController = new AbortController();
+      const streamTimeout = setTimeout(() => streamController.abort(), 25_000);
+
+      let openaiRes: Response | null = null;
+      let streamQuotaExhausted = false;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 1_500));
+        try {
+          const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ...openaiPayload, stream: true }),
+            signal: streamController.signal,
+          });
+          if (res.ok) { openaiRes = res; break; }
+          if (res.status === 429 && await isQuotaError(res)) {
+            console.warn('[roleplay-ai-response] OpenAI billing/quota exhausted on stream — failing fast, no retry');
+            streamQuotaExhausted = true; openaiRes = res; break;
+          }
+          if (!RETRYABLE_STATUS(res.status)) { openaiRes = res; break; }
+          console.warn(`[roleplay-ai-response] OpenAI ${res.status} on stream attempt ${attempt + 1} — ${attempt === 0 ? 'retrying once' : 'giving up'}`);
+          openaiRes = res;
+        } catch (error) {
+          if (isAbort(error)) { openaiRes = null; break; }
+          console.warn(`[roleplay-ai-response] OpenAI stream network error on attempt ${attempt + 1} — ${attempt === 0 ? 'retrying once' : 'giving up'}`);
+          openaiRes = null;
+        }
+      }
+
+      if (!openaiRes || !openaiRes.ok) {
+        clearTimeout(streamTimeout);
+        const status = openaiRes?.status ?? 0;
+        const retryable = !streamQuotaExhausted && (status === 0 || RETRYABLE_STATUS(status));
+        return new Response(JSON.stringify({
+          ok: false, requestId, sessionId, turnId,
+          errorType: status === 0 ? 'NETWORK_ERROR' : (retryable ? 'MODEL_ERROR' : 'INVALID_RESPONSE'),
+          retryable, latencyMs: Date.now() - startedAt,
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const upstream = openaiRes;
+      const encoder = new TextEncoder();
+      const sseBody = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          const send = (obj: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+          let fullText = '';
+          try {
+            const reader = upstream.body!.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+            for (;;) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buf += decoder.decode(value, { stream: true });
+              const lines = buf.split('\n');
+              buf = lines.pop() ?? '';
+              for (const line of lines) {
+                const t = line.trim();
+                if (!t.startsWith('data:')) continue;
+                const chunk = t.slice(5).trim();
+                if (!chunk || chunk === '[DONE]') continue;
+                try {
+                  const delta = JSON.parse(chunk)?.choices?.[0]?.delta?.content;
+                  if (typeof delta === 'string' && delta) {
+                    fullText += delta;
+                    send({ type: 'delta', text: delta });
+                  }
+                } catch { /* ignore malformed chunk */ }
+              }
+            }
+            if (!fullText.trim()) {
+              send({ type: 'done', ok: false, requestId, sessionId, turnId, errorType: 'INVALID_RESPONSE', retryable: true, latencyMs: Date.now() - startedAt });
+            } else {
+              send({ type: 'done', ok: true, requestId, sessionId, turnId, response: fullText, latencyMs: Date.now() - startedAt });
+            }
+          } catch (error) {
+            console.error('[roleplay-ai-response] SSE pipe error:', error);
+            send({ type: 'done', ok: false, requestId, sessionId, turnId, errorType: 'NETWORK_ERROR', retryable: true, latencyMs: Date.now() - startedAt });
+          } finally {
+            clearTimeout(streamTimeout);
+            controller.close();
+          }
+        },
       });
-    } catch (error) {
-      clearTimeout(timeout);
-      const timedOut = error instanceof DOMException && error.name === 'AbortError';
+
+      return new Response(sseBody, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'X-Accel-Buffering': 'no',
+        },
+      });
+    }
+
+    const callOpenAI = async (): Promise<Response> => {
+      const attemptController = new AbortController();
+      const attemptTimeout = setTimeout(() => attemptController.abort(), 25_000);
+      try {
+        return await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(openaiPayload),
+          signal: attemptController.signal,
+        });
+      } finally {
+        clearTimeout(attemptTimeout);
+      }
+    };
+
+    let response: Response | null = null;
+    let lastError: unknown = null;
+    let quotaExhausted = false;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 1_500));
+      try {
+        const res = await callOpenAI();
+        if (res.ok) { response = res; lastError = null; break; }
+        if (res.status === 429 && await isQuotaError(res)) {
+          console.warn('[roleplay-ai-response] OpenAI billing/quota exhausted — failing fast, no retry');
+          quotaExhausted = true; response = res; lastError = null; break;
+        }
+        if (!RETRYABLE_STATUS(res.status)) { response = res; lastError = null; break; }
+        console.warn(`[roleplay-ai-response] OpenAI ${res.status} on attempt ${attempt + 1} — ${attempt === 0 ? 'retrying once' : 'giving up'}`);
+        response = res;
+      } catch (error) {
+        lastError = error;
+        if (isAbort(error)) { response = null; break; }
+        console.warn(`[roleplay-ai-response] OpenAI network error on attempt ${attempt + 1} — ${attempt === 0 ? 'retrying once' : 'giving up'}`);
+        response = null;
+      }
+    }
+
+    if (!response) {
+      const timedOut = isAbort(lastError);
       return new Response(JSON.stringify({ ok: false, requestId, sessionId, turnId, errorType: timedOut ? 'MODEL_TIMEOUT' : 'NETWORK_ERROR', retryable: true, latencyMs: Date.now() - startedAt }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    clearTimeout(timeout);
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error('OpenAI API error:', errorData);
-      return new Response(JSON.stringify({ ok: false, requestId, sessionId, turnId, errorType: response.status === 429 || response.status >= 500 ? 'MODEL_ERROR' : 'INVALID_RESPONSE', retryable: response.status === 429 || response.status >= 500, latencyMs: Date.now() - startedAt }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ ok: false, requestId, sessionId, turnId, errorType: response.status === 429 || response.status >= 500 ? 'MODEL_ERROR' : 'INVALID_RESPONSE', retryable: !quotaExhausted && (response.status === 429 || response.status >= 500), latencyMs: Date.now() - startedAt }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const data = await response.json();

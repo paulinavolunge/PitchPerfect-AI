@@ -13,6 +13,13 @@ const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) { console.log('No auth token, guest access'); return null; }
 
+  // Fast path: guests present the anon key itself as the bearer token. Skip the
+  // auth-server round trip for them (~100-500ms saved per request).
+  if (token === Deno.env.get('SUPABASE_ANON_KEY')) {
+    console.log('Guest user access via anon key');
+    return null;
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
@@ -20,11 +27,6 @@ const verifyAuth = async (request: Request) => {
 
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) {
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    if (token === anonKey) {
-      console.log('Guest user access via anon key');
-      return null;
-    }
     console.log('Allowing unauthenticated access'); return null;
   }
 
