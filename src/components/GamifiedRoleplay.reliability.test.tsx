@@ -371,6 +371,8 @@ describe('GamifiedRoleplay Phase 2A reliability', () => {
     vi.mocked(fetch).mockImplementation(async (_url, init) => {
       const payload = JSON.parse(String(init?.body));
       if (['pause','resume','engaged'].includes(payload.budgetAction)) return apiResult({ok:true,activityAck:{sessionId:payload.sessionId,sequence:payload.budgetActivitySequence,mode:payload.budgetAction}});
+      const expectedIds: Record<string, string> = { 'Think About It': 'think', 'Send Me an Email': 'email', 'Using a Competitor': 'competitor', 'Bad Timing': 'timing', 'Loop in Team': 'team' };
+      expect(payload.scenario.standardId).toBe(expectedIds[scenario]);
       return apiResult({ ...success(payload.turnId, 'Let us discuss the business case.'), sessionId: payload.sessionId, ...(scenario === 'Budget' ? {prospectState:{...initialState(),state:'GUARDED',turnCount:1,patience:78}} : {}) });
     });
     fireEvent.change(screen.getByPlaceholderText('Type your response…'), { target: { value: 'Could we review the cost of the current process?' } });

@@ -4,6 +4,7 @@ import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateL
 
 import { budgetRequest } from "../_shared/budget/adapter.ts";
 import { fetchOpenAI, isQuotaFailure } from "../_shared/openaiRetry.ts";
+import { selectLegacyPersona, legacySystemPrompt, legacyMessages } from "../_shared/legacyScenarios.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,12 +102,18 @@ serve(async (req) => {
     console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
 
     const isCustom = !!(customProduct || customBuyerTitle || customIndustry || customObjection);
+    let standardPersona = null;
+    try {
+      if (isReversedRole) standardPersona = selectLegacyPersona(scenario, isCustom);
+    } catch {
+      return new Response(JSON.stringify({ok:false,requestId:crypto.randomUUID(),sessionId,turnId,errorType:'INVALID_RESPONSE',retryable:false,latencyMs:0}), {headers:{...corsHeaders,'Content-Type':'application/json'}});
+    }
 
     // System prompt is built server-side only. We intentionally do NOT accept a
     // client-supplied systemPromptOverride — that would let any unauthenticated
     // caller jailbreak the AI's persona / content policies.
     const systemPrompt = isReversedRole 
-      ? (isCustom
+        ? (standardPersona ? legacySystemPrompt(standardPersona) : isCustom
           ? createCustomProspectPrompt({ customProduct, customBuyerTitle, customIndustry, customObjection, prospectName })
           : createProspectSystemPrompt(scenario, voiceStyle))
       : createSalespersonSystemPrompt(scenario, voiceStyle);
@@ -114,7 +121,7 @@ serve(async (req) => {
     // Send the full conversation history (capped to keep tokens sane) so the
     // prospect responds contextually instead of acting like each turn is new.
     const history = Array.isArray(conversationHistory) ? conversationHistory.slice(-30) : [];
-    const messages = [
+    const messages = standardPersona ? legacyMessages(systemPrompt, conversationHistory, userInput) : [
       { role: 'system', content: systemPrompt },
       ...history.map((msg: { sender: string; text: string }) => ({
         role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
