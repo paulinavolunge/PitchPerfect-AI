@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 // ElevenLabs voice IDs
 export const VOICE_FEMALE = '21m00Tcm4TlvDq8ikWAM'; // Rachel — warm, professional female
@@ -16,6 +17,14 @@ export function useProspectVoice() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const currentUrlRef = useRef<string | null>(null);
   const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const epochRef = useRef(0);
+  const noticeAtRef = useRef<number | null>(null);
+  const notifyBackup = useCallback(() => {
+    const now = Date.now();
+    if (noticeAtRef.current !== null && now - noticeAtRef.current < 300000) return;
+    noticeAtRef.current = now;
+    toast({title:'Using backup voice', description:'The voice service was unavailable. Using the browser voice for now.'});
+  }, []);
   const isMutedRef = useRef(false);
   const synthRef = useRef<SpeechSynthesis | null>(
     typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null
@@ -40,11 +49,23 @@ export function useProspectVoice() {
     }
   }, []);
 
-  const stop = useCallback(() => {
+  const playbackDoneRef = useRef<Promise<void>>(Promise.resolve());
+  const finishPlaybackRef = useRef<(() => void) | null>(null);
+  const fallbackDoneRef = useRef<(() => void) | null>(null);
+  const stopPlayback = useCallback(() => {
+    finishPlaybackRef.current?.();
+    finishPlaybackRef.current=null;
     releaseAudio();
     // Stop browser TTS
     synthRef.current?.cancel();
+    fallbackDoneRef.current?.();
+    fallbackDoneRef.current=null;
   }, [releaseAudio]);
+  const stop = useCallback(() => {
+    epochRef.current++;
+    stopPlayback();
+    queueRef.current = Promise.resolve();
+  }, [stopPlayback]);
 
   const fallbackToWebSpeech = useCallback((text: string, voiceId?: string) => {
     const synth = synthRef.current;
@@ -71,22 +92,27 @@ export function useProspectVoice() {
       if (en) utterance.voice = en;
     }
 
-    synth.speak(utterance);
+    return new Promise<void>(resolve => {
+      fallbackDoneRef.current=resolve;
+      utterance.onend=()=>{fallbackDoneRef.current=null;resolve();};
+      utterance.onerror=()=>{fallbackDoneRef.current=null;resolve();};
+      synth.speak(utterance);
+    });
   }, []);
 
-  const _speakImmediate = useCallback(async (text: string, voiceId?: string) => {
+  const _speakImmediate = useCallback(async (text: string, voiceId: string | undefined, epoch: number) => {
     // Skip playback entirely while muted (mic is recording)
-    if (isMutedRef.current) {
+    if (isMutedRef.current || epoch !== epochRef.current) {
       console.log('[ProspectVoice] Muted (mic active) — skipping TTS');
       return;
     }
 
     // Fully release previous audio before starting a new request
-    stop();
+    stopPlayback();
     // Brief pause to let the browser release audio resources
     await new Promise(resolve => setTimeout(resolve, 150));
 
-    if (!text.trim()) return;
+    if (!text.trim() || epoch !== epochRef.current || isMutedRef.current) return;
 
     const vid = voiceId || DEFAULT_VOICE_ID;
     console.log('[ProspectVoice] Speaking:', text.slice(0, 60) + '…', 'voiceId:', vid);
@@ -107,7 +133,9 @@ export function useProspectVoice() {
       }
 
       console.log('[ProspectVoice] Calling ElevenLabs edge function…');
+      if (epoch !== epochRef.current || isMutedRef.current) return;
       const response = await fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts`, {
+        signal: AbortSignal.timeout(15000),
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,6 +159,7 @@ export function useProspectVoice() {
       // AudioContext, no resampling — so the audio ElevenLabs produced is
       // what the user hears.
       const arrayBuffer = await response.arrayBuffer();
+      if (epoch !== epochRef.current || isMutedRef.current) return;
       if (!arrayBuffer.byteLength) {
         throw new Error('Empty TTS response body');
       }
@@ -143,49 +172,49 @@ export function useProspectVoice() {
       currentAudioRef.current = audio;
       currentUrlRef.current = audioUrl;
 
+      playbackDoneRef.current=new Promise<void>(resolve=>{finishPlaybackRef.current=resolve;});
       // Clean up when playback finishes naturally
       audio.onended = () => {
         console.log('[ProspectVoice] Playback ended naturally');
+        finishPlaybackRef.current?.();
+        finishPlaybackRef.current=null;
         releaseAudio();
       };
-      audio.onerror = (e) => {
+      audio.onerror = async (e) => {
+        if (epoch !== epochRef.current || isMutedRef.current) return;
         console.warn('[ProspectVoice] Audio playback error:', e);
         releaseAudio();
-        fallbackToWebSpeech(text, voiceId);
+        notifyBackup();
+        await fallbackToWebSpeech(text, voiceId);
+        if (epoch !== epochRef.current) return;
+        finishPlaybackRef.current?.();
+        finishPlaybackRef.current=null;
       };
 
       await audio.play();
       console.log('[ProspectVoice] Playback started');
     } catch (err) {
+      if (epoch !== epochRef.current || isMutedRef.current) return;
       console.warn('[ProspectVoice] ElevenLabs failed, falling back to browser TTS:', err);
-      fallbackToWebSpeech(text, voiceId);
+      notifyBackup();
+      await fallbackToWebSpeech(text, voiceId);
+      if (epoch !== epochRef.current) return;
+      finishPlaybackRef.current?.();
+      finishPlaybackRef.current=null;
     }
-  }, [stop, releaseAudio, fallbackToWebSpeech]);
+  }, [stopPlayback, releaseAudio, fallbackToWebSpeech, notifyBackup]);
 
   /** Queued speak — serializes requests so they never overlap */
   const speak = useCallback((text: string, voiceId?: string) => {
+    const epoch = epochRef.current;
     // Chain onto the queue: wait for previous speak to finish, then play this one
     queueRef.current = queueRef.current
-      .then(() => _speakImmediate(text, voiceId))
-      .then(() => {
-        // Wait for playback to finish before allowing next queued item
-        return new Promise<void>((resolve) => {
-          const audio = currentAudioRef.current;
-          if (!audio) { resolve(); return; }
-          // If already ended, resolve immediately
-          if (audio.ended || audio.paused) { resolve(); return; }
-          const orig = audio.onended;
-          audio.onended = (e) => {
-            if (typeof orig === 'function') orig.call(audio, e);
-            resolve();
-          };
-          // Safety timeout — don't block the queue forever
-          setTimeout(resolve, 15000);
-        });
-      })
+      .then(() => _speakImmediate(text, voiceId, epoch))
+      .then(() => epoch === epochRef.current ? playbackDoneRef.current : undefined)
       .catch((err) => {
         console.warn('[ProspectVoice] Queue error:', err);
       });
+    return queueRef.current;
   }, [_speakImmediate]);
 
   /** Mute TTS — stops current audio and blocks queued speaks from starting */

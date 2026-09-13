@@ -1,5 +1,7 @@
+import type { ProspectState } from '../../supabase/functions/_shared/budget/state';
 export type RoleplayFailureType =
   | 'MODEL_ERROR'
+  | 'SESSION_CLOSED'
   | 'MODEL_TIMEOUT'
   | 'NETWORK_ERROR'
   | 'INVALID_RESPONSE'
@@ -12,6 +14,8 @@ export interface RoleplayTurnSuccess {
   sessionId: string;
   turnId: string;
   text: string;
+  prospectState?: ProspectState;
+  stateTelemetry?: Record<string, unknown>;
   latencyMs: number;
   totalLatencyMs?: number;
 }

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { fetchOpenAI } from "../_shared/openaiRetry.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateLimit.ts";
 
@@ -12,6 +13,8 @@ const corsHeaders = {
 const tryAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) return null;
+  // null preserves allowed guest access and its existing rate limit.
+  if (token === Deno.env.get('SUPABASE_ANON_KEY')) return null;
 
   try {
     const supabase = createClient(
@@ -75,7 +78,7 @@ serve(async (req) => {
     formData.append('model', 'whisper-1');
     formData.append('language', 'en');
 
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    const response = await fetchOpenAI('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,

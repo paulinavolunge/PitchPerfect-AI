@@ -12,6 +12,8 @@ const corsHeaders = {
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) { console.log('No auth token, guest access'); return null; }
+  // null preserves allowed guest access, exactly as the existing getUser fallback.
+  if (token === Deno.env.get('SUPABASE_ANON_KEY')) return null;
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,

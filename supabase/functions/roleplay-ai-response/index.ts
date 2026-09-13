@@ -2,9 +2,12 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateLimit.ts";
 
+import { budgetRequest } from "../_shared/budget/adapter.ts";
+import { fetchOpenAI, isQuotaFailure } from "../_shared/openaiRetry.ts";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name, x-budget-activity, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
 };
@@ -12,6 +15,9 @@ const corsHeaders = {
 const verifyAuth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) { console.log('No auth token, guest access'); return null; }
+  // null means ALLOWED guest below (user?.id ?? 'guest'), not HTTP rejection.
+  // This returns the same value as the existing anon-key branch after getUser.
+  if (token === Deno.env.get('SUPABASE_ANON_KEY')) return null;
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -43,8 +49,9 @@ serve(async (req) => {
     // Per-IP rate limit to prevent paid-API cost abuse by unauthenticated callers.
     // Authenticated users get a higher cap; guests are kept tight.
     const ip = getClientIp(req);
-    const rlKey = `roleplay:${user?.id ?? `ip:${ip}`}`;
-    const rl = checkRateLimit(rlKey, user ? 60 : 20, 60_000);
+    const activityHeader = req.headers.get('x-budget-activity') === '1';
+    const rlKey = `roleplay:${activityHeader ? 'activity:' : ''}${user?.id ?? `ip:${ip}`}`;
+    const rl = checkRateLimit(rlKey, activityHeader ? 120 : user ? 60 : 20, 60_000);
     if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
@@ -60,6 +67,7 @@ serve(async (req) => {
       );
     }
 
+    const parsedBody = JSON.parse(rawBody);
     const { 
       userInput, 
       scenario, 
@@ -74,7 +82,21 @@ serve(async (req) => {
       prospectName,
       sessionId,
       turnId,
-    } = JSON.parse(rawBody);
+    } = parsedBody;
+
+    if (activityHeader && (scenario?.objection !== 'Budget' || !isReversedRole || customProduct || customBuyerTitle || customIndustry || customObjection || !['pause','resume','tick','close','engaged'].includes(parsedBody.budgetAction))) return new Response('{}',{status:400,headers:corsHeaders});
+    // Budget is explicitly routed; custom and other scenario behavior remains unchanged.
+    if (scenario?.objection === 'Budget' && isReversedRole && !(customProduct || customBuyerTitle || customIndustry || customObjection)) {
+      if (typeof parsedBody.budgetToken !== 'string' || !/^[a-f0-9]{64}$/.test(parsedBody.budgetToken)) {
+        return new Response(JSON.stringify({ok:false,sessionId,turnId,errorType:'INVALID_RESPONSE',retryable:false}), {headers:{...corsHeaders,'Content-Type':'application/json'}});
+      }
+      const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parsedBody.budgetToken));
+      const owner = `${user?.id ?? 'guest'}:${Array.from(new Uint8Array(hash), b=>b.toString(16).padStart(2,'0')).join('')}`;
+      const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {auth:{persistSession:false,autoRefreshToken:false}});
+      const result = await budgetRequest(parsedBody, owner, db, OPENAI_API_KEY);
+      console.log('budget_turn', {session_id:sessionId,turn_id:turnId, ...(result as any).stateTelemetry,success:(result as any).ok,error_type:(result as any).errorType ?? null});
+      return new Response(JSON.stringify({...result as object,requestId:crypto.randomUUID()}), {headers:{...corsHeaders,'Content-Type':'application/json'}});
+    }
 
     console.log('Roleplay AI request:', { userInput, scenario, voiceStyle, isReversedRole, customProduct, prospectName, historyLen: Array.isArray(conversationHistory) ? conversationHistory.length : 0 });
 
@@ -107,7 +129,7 @@ serve(async (req) => {
     const startedAt = Date.now();
     let response: Response;
     try {
-      response = await fetch('https://api.openai.com/v1/chat/completions', {
+      response = await fetchOpenAI('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -133,7 +155,7 @@ serve(async (req) => {
     if (!response.ok) {
       const errorData = await response.text();
       console.error('OpenAI API error:', errorData);
-      return new Response(JSON.stringify({ ok: false, requestId, sessionId, turnId, errorType: response.status === 429 || response.status >= 500 ? 'MODEL_ERROR' : 'INVALID_RESPONSE', retryable: response.status === 429 || response.status >= 500, latencyMs: Date.now() - startedAt }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ ok: false, requestId, sessionId, turnId, errorType: response.status === 429 || response.status >= 500 ? 'MODEL_ERROR' : 'INVALID_RESPONSE', retryable: !isQuotaFailure(response.status, errorData) && (response.status === 429 || response.status >= 500), latencyMs: Date.now() - startedAt }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const data = await response.json();

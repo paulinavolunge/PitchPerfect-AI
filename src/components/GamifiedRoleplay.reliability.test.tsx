@@ -1,3 +1,4 @@
+import { initialState, OPENING } from '../../supabase/functions/_shared/budget/state';
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -30,6 +31,7 @@ vi.mock('@/hooks/useSoundEffects', () => ({
   useSoundEffects: () => ({ unlock: vi.fn(), playCallStart: vi.fn().mockResolvedValue(undefined), playCallEnd: vi.fn().mockResolvedValue(undefined) }),
 }));
 vi.mock('@/hooks/useProspectVoice', () => ({
+  VOICE_FEMALE: '21m00Tcm4TlvDq8ikWAM', VOICE_MALE: 'nPczCjzI2devNBz1zQrb',
   useProspectVoice: () => ({ speak: vi.fn(), stop: vi.fn(), mute: vi.fn(), unmute: vi.fn() }),
 }));
 vi.mock('@/utils/analytics', () => ({ trackEvent: (...args: unknown[]) => trackEvent(...args) }));
@@ -79,6 +81,37 @@ describe('GamifiedRoleplay Phase 2A reliability', () => {
     voiceMocks.transcribe.mockReset();
     incrementAttempt.mockClear();
     trackEvent.mockClear();
+  });
+
+  it('StrictMode second effect setup accepts the Budget opening', async () => {
+    vi.mocked(fetch).mockImplementation(async (_url, init) => {
+      const p=JSON.parse(String(init?.body));
+      if (['pause','resume','engaged'].includes(p.budgetAction)) return apiResult({ok:true,activityAck:{sessionId:p.sessionId,sequence:p.budgetActivitySequence,mode:p.budgetAction}});
+      return apiResult({...success(p.turnId,OPENING),sessionId:p.sessionId,prospectState:initialState()});
+    });
+    render(<React.StrictMode><GamifiedRoleplay /></React.StrictMode>);
+    fireEvent.click(screen.getByText('Budget'));
+    fireEvent.click(screen.getByRole('button',{name:/Start Roleplay/i}));
+    await screen.findByText(OPENING);
+    expect(screen.getByText('80%')).toBeTruthy();
+    expect(screen.getByText('Round 0')).toBeTruthy();
+    expect(trackEvent).toHaveBeenCalledWith('roleplay_turn_succeeded',expect.objectContaining({success:true}));
+    expect(vi.mocked(fetch).mock.calls.filter(([,init])=>JSON.parse(String(init?.body)).budgetAction==='start')).toHaveLength(1);
+  });
+
+  it('rejects a late opening after a genuine unmount', async () => {
+    let finish!: () => void;
+    vi.mocked(fetch).mockImplementationOnce((_url, init) => new Promise(resolve => {
+      const p = JSON.parse(String(init?.body));
+      finish = () => resolve(new Response(JSON.stringify({ ...success(p.turnId, 'Late opening'), sessionId: p.sessionId })));
+    }));
+    const view = render(<React.StrictMode><GamifiedRoleplay autoStart presetScenario={preset} isColdCallHook /></React.StrictMode>);
+    await waitFor(() => expect(finish).toBeTypeOf('function'));
+    view.unmount();
+    await act(async () => { finish(); });
+    expect(trackEvent.mock.calls.filter(([name]) => name === 'roleplay_turn_succeeded')).toHaveLength(0);
+    expect(incrementAttempt).not.toHaveBeenCalled();
+    expect(screen.queryByText('Late opening')).toBeNull();
   });
 
   it('keeps a failed turn uncounted, uncharged, ordered, and retryable with the same turn id', async () => {
@@ -178,7 +211,7 @@ describe('GamifiedRoleplay Phase 2A reliability', () => {
     fireEvent.change(screen.getByPlaceholderText('Type your response…'), { target: { value: 'A failed response.' } });
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
     await screen.findByText('This turn was not counted or scored.');
-    fireEvent.click(screen.getAllByRole('button', { name: 'End Session' }).at(-1)!);
+    fireEvent.click(screen.getAllByRole('button', { name: 'End Session' }).slice(-1)[0]!);
 
     await screen.findByText(/couldn't score this one/i);
     expect(screen.getByText(/weren't charged a practice credit/i)).toBeTruthy();
@@ -238,6 +271,39 @@ describe('GamifiedRoleplay Phase 2A reliability', () => {
     } finally { vi.useRealTimers(); }
   });
 
+  it('Budget keeps server state unchanged on failure and applies retry once', async () => {
+    let failTurn=true;
+    const bodies: Record<string, any>[]=[];
+    vi.mocked(fetch).mockImplementation(async (_url,init)=>{
+      const p=JSON.parse(String(init?.body));
+      if (['pause','resume','engaged'].includes(p.budgetAction)) return apiResult({ok:true,activityAck:{sessionId:p.sessionId,sequence:p.budgetActivitySequence,mode:p.budgetAction}});
+      if(p.budgetAction==='turn') {
+        bodies.push(p);
+        return apiResult(failTurn ? {...failure(p.turnId),sessionId:p.sessionId} : {...success(p.turnId,'What would the measurement involve?'),sessionId:p.sessionId,prospectState:{...initialState(),state:'GUARDED',patience:83,turnCount:1}});
+      }
+      return apiResult({...success(p.turnId,OPENING),sessionId:p.sessionId,prospectState:initialState()});
+    });
+    render(<GamifiedRoleplay/>);
+    fireEvent.click(screen.getByText('Budget'));
+    fireEvent.click(screen.getByRole('button',{name:/Start Roleplay/i}));
+    await screen.findByText(OPENING);
+    expect(screen.getByText('80%')).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText('Type your response…'),{target:{value:'Could we measure order rework first?'}});
+    fireEvent.click(screen.getByRole('button',{name:'Send'}));
+    await screen.findByText('This turn was not counted or scored.');
+    expect(screen.getByText('80%')).toBeTruthy();
+    expect(screen.getByText('Round 0')).toBeTruthy();
+    expect(incrementAttempt).not.toHaveBeenCalled();
+    failTurn=false;
+    fireEvent.click(screen.getByRole('button',{name:'Try Again'}));
+    await screen.findByText('What would the measurement involve?');
+    expect(screen.getByText('83%')).toBeTruthy();
+    expect(screen.getByText('Round 1')).toBeTruthy();
+    expect(screen.getAllByText('Could we measure order rework first?')).toHaveLength(1);
+    expect(bodies[1].turnId).toBe(bodies[0].turnId);
+    expect(bodies[1].budgetVersion).toBe(bodies[0].budgetVersion);
+  });
+
   it.each([
     ['Budget', "This is Renee. I'll be straight with you"],
     ['Think About It', 'Devon speaking.'],
@@ -246,21 +312,27 @@ describe('GamifiedRoleplay Phase 2A reliability', () => {
     ['Bad Timing', 'Marcus Webb.'],
     ['Loop in Team', 'Andre here.'],
   ])('opens %s with its scripted first prospect message', async (scenario, opening) => {
+    if (scenario === 'Budget') vi.mocked(fetch).mockImplementation(async (_url, init) => {
+      const payload=JSON.parse(String(init?.body));
+      if (['pause','resume','engaged'].includes(payload.budgetAction)) return apiResult({ok:true,activityAck:{sessionId:payload.sessionId,sequence:payload.budgetActivitySequence,mode:payload.budgetAction}});
+      return apiResult({...success(payload.turnId, OPENING),sessionId:payload.sessionId,prospectState:initialState()});
+    });
     render(<GamifiedRoleplay />);
     fireEvent.click(screen.getByText(scenario));
     expect(screen.getByText('How do you want to respond?')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Start Roleplay/i }));
     await screen.findByText((text) => text.startsWith(opening));
-    expect(screen.getByText('Round 1')).toBeTruthy();
+    expect(screen.getByText(scenario === 'Budget' ? 'Round 0' : 'Round 1')).toBeTruthy();
     expect(screen.getByPlaceholderText('Type your response…')).toBeTruthy();
-    vi.mocked(fetch).mockImplementationOnce(async (_url, init) => {
+    vi.mocked(fetch).mockImplementation(async (_url, init) => {
       const payload = JSON.parse(String(init?.body));
-      return apiResult({ ...success(payload.turnId, 'Let us discuss the business case.'), sessionId: payload.sessionId });
+      if (['pause','resume','engaged'].includes(payload.budgetAction)) return apiResult({ok:true,activityAck:{sessionId:payload.sessionId,sequence:payload.budgetActivitySequence,mode:payload.budgetAction}});
+      return apiResult({ ...success(payload.turnId, 'Let us discuss the business case.'), sessionId: payload.sessionId, ...(scenario === 'Budget' ? {prospectState:{...initialState(),state:'GUARDED',turnCount:1,patience:78}} : {}) });
     });
     fireEvent.change(screen.getByPlaceholderText('Type your response…'), { target: { value: 'Could we review the cost of the current process?' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await screen.findByText('Let us discuss the business case.');
-    expect(screen.getByText('Round 2')).toBeTruthy();
+    expect(screen.getByText(scenario === 'Budget' ? 'Round 1' : 'Round 2')).toBeTruthy();
     vi.mocked(fetch).mockImplementationOnce(() => apiResult({ analysis: { overallScore: 60, strengths: ['Clear question'], improvements: ['More detail'], recommendation: 'Keep practicing' } }));
     fireEvent.click(screen.getByRole('button', { name: 'End Session' }));
     await screen.findByText('Verified score: 60');

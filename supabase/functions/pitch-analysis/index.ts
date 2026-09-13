@@ -1,4 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { fetchOpenAI } from "../_shared/openaiRetry.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateLimit.ts";
@@ -17,6 +18,8 @@ const verifyAuth = async (request: Request) => {
     return null;
   }
 
+  // null preserves allowed guest access and its existing rate limit.
+  if (token === Deno.env.get('SUPABASE_ANON_KEY')) return null;
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
@@ -117,7 +120,7 @@ ${scenario ? `Context: This is for a ${scenario.industry} industry scenario, add
 
 Provide detailed analysis and scoring as requested.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetchOpenAI('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
