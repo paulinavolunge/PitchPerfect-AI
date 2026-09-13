@@ -304,6 +304,50 @@ describe('GamifiedRoleplay Phase 2A reliability', () => {
     expect(bodies[1].budgetVersion).toBe(bodies[0].budgetVersion);
   });
 
+  it('propagates an inactivity hang-up before React updates and never scores zero accepted turns', async () => {
+    const analysis = vi.fn();
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      const p = JSON.parse(String(init?.body));
+      if (String(url).includes('pitch-analysis')) { analysis(); return apiResult({ analysis: { overallScore: 45 } }); }
+      if (p.budgetAction === 'tick') return apiResult({ ok: true, response: 'Goodbye.',
+        activityAck: {sessionId:p.sessionId,sequence:p.budgetActivitySequence,mode:'closed'},
+        prospectState: {...initialState(),state:'HUNG_UP',hungUp:true,elapsedMs:15000} });
+      if (['pause','resume','engaged'].includes(p.budgetAction)) return apiResult({ok:true,activityAck:{sessionId:p.sessionId,sequence:p.budgetActivitySequence,mode:p.budgetAction}});
+      return apiResult({...success(p.turnId,OPENING),sessionId:p.sessionId,prospectState:initialState()});
+    });
+    render(<GamifiedRoleplay />);
+    fireEvent.click(screen.getByText('Budget'));
+    fireEvent.click(screen.getByRole('button',{name:/Start Roleplay/i}));
+    await screen.findByText('Prospect Hung Up: Yes', {}, {timeout:6000});
+    expect(screen.getByText(/insufficient rep activity/)).toBeTruthy();
+    expect(screen.queryByText(/45\/100|Verified score/)).toBeNull();
+    expect(analysis).not.toHaveBeenCalled();
+    expect(incrementAttempt).toHaveBeenCalledWith(expect.objectContaining({score:null,feedback_data:null}));
+  });
+
+  it.each(['HUNG_UP', 'NEXT_STEP_EARNED'] as const)('uses accepted %s and turn count in the scorable Budget debrief', async terminal => {
+    const analysis = vi.fn();
+    const completed = vi.fn();
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      const p=JSON.parse(String(init?.body));
+      if (String(url).includes('pitch-analysis')) { analysis(); return apiResult({analysis:{overallScore:75,strengths:['Clear'],improvements:[],recommendation:'Continue'}}); }
+      if (['pause','resume','engaged'].includes(p.budgetAction)) return apiResult({ok:true,activityAck:{sessionId:p.sessionId,sequence:p.budgetActivitySequence,mode:p.budgetAction}});
+      return apiResult({...success(p.turnId,p.budgetAction==='turn'?'Final reply.':OPENING),sessionId:p.sessionId,
+        prospectState:p.budgetAction==='turn'?{...initialState(),state:terminal,hungUp:terminal==='HUNG_UP',nextStepEarned:terminal==='NEXT_STEP_EARNED',turnCount:1}:initialState()});
+    });
+    render(<GamifiedRoleplay isColdCallHook compact onComplete={completed} />);
+    fireEvent.click(screen.getByText('Budget'));
+    fireEvent.click(screen.getByRole('button',{name:/Start Roleplay/i}));
+    await screen.findByText(OPENING);
+    fireEvent.change(screen.getByPlaceholderText('Type your response…'),{target:{value:terminal==='HUNG_UP'?'Shut up and buy.':'Can we review the evidence together?'}});
+    fireEvent.click(screen.getByRole('button',{name:'Send'}));
+    await screen.findByRole('heading',{name:terminal==='HUNG_UP'?'Prospect Hung Up':'Deal Won!'});
+    expect(screen.getByText(terminal==='HUNG_UP'?'Yes':'No')).toBeTruthy();
+    expect(analysis).toHaveBeenCalledTimes(1);
+    expect(completed).toHaveBeenCalledWith(expect.objectContaining({sessionStats:expect.objectContaining({state:terminal,turnCount:1,roundsCompleted:1,hungUp:terminal==='HUNG_UP',nextStepEarned:terminal==='NEXT_STEP_EARNED'})}));
+    expect(screen.getByText(terminal==='HUNG_UP'?'30/100':'75/100')).toBeTruthy();
+  });
+
   it.each([
     ['Budget', "This is Renee. I'll be straight with you"],
     ['Think About It', 'Devon speaking.'],

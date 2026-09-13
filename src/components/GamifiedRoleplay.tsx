@@ -63,13 +63,17 @@ export interface DebriefData {
   strengths: string[];
   gaps: string[];
   tip: string;
-  /** True when neither AI nor local scoring produced a result — session was not charged. */
+  /** True when scoring failed or there was insufficient accepted activity — no credit charged. */
   scoringFailed?: boolean;
+  incompleteReason?: string;
   sessionStats?: {
     roundsCompleted: number;
     avgResponseTime: number;
     finalPatience: number;
     hungUp: boolean;
+    nextStepEarned?: boolean;
+    state?: ProspectState['state'];
+    turnCount?: number;
   };
 }
 
@@ -1092,11 +1096,13 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
    */
   type RunDebriefOptions = { parallelHoldUntil?: Promise<void> };
   const runDebrief = useCallback(async (finalMessages: ChatMessage[], options?: RunDebriefOptions) => {
+    // Snapshot the accepted server result before any await or React state update.
+    const budgetOutcome = isBudget && budgetStateRef.current ? { ...budgetStateRef.current } : null;
     const isParallel = !!options?.parallelHoldUntil;
     if (!isParallel) stopSpeech();
 
     // Show dramatic hang-up screen if patience was low and it wasn't already shown
-    const shouldShowHangUp = (hungUp || patienceRef.current <= 30) && !showHangUpAnimation;
+    const shouldShowHangUp = !budgetOutcome && (hungUp || patienceRef.current <= 30) && !showHangUpAnimation;
     if (shouldShowHangUp && !hungUp) {
       // End Session clicked with low patience — set reason and show screen
       setHangUpReason('The prospect was losing patience.');
@@ -1115,10 +1121,11 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
       : 0;
     const sessionStats = {
-      roundsCompleted: Math.min(currentRound, isBudget ? 6 : MAX_ROUNDS),
+      roundsCompleted: budgetOutcome?.turnCount ?? Math.min(currentRound, MAX_ROUNDS),
       avgResponseTime: avgTime,
-      finalPatience: patienceRef.current,
-      hungUp: hungUp || patienceRef.current <= 0,
+      finalPatience: budgetOutcome?.patience ?? patienceRef.current,
+      hungUp: budgetOutcome ? budgetOutcome.hungUp : hungUp || patienceRef.current <= 0,
+      ...(budgetOutcome ? { nextStepEarned: budgetOutcome.nextStepEarned, state: budgetOutcome.state, turnCount: budgetOutcome.turnCount } : {}),
     };
 
     // Build full transcript in Rep/Prospect format (hoisted so persistence can read it)
@@ -1127,11 +1134,17 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       .join('\n');
 
     // Hoisted so the `finally` persistence call can read the real score/feedback.
-    // Default to local score on failure rather than null so the row is never empty.
-    let finalScore: number = computeLocalScore(finalMessages);
+    // Feedback remains null for an unscored session, so persistence cannot charge it.
+    let finalScore = 0;
     let feedbackData: any = null;
 
     try {
+      if (budgetOutcome?.hungUp && budgetOutcome.turnCount === 0) {
+        setDebrief({ won: false, score: 0, strengths: [], gaps: [], tip: '', scoringFailed: true,
+          incompleteReason: 'No rep turns were accepted. There is insufficient rep activity to score this session.', sessionStats });
+        return; // finally persists an unscored attempt with no credit charge.
+      }
+      finalScore = computeLocalScore(finalMessages);
       const authToken = await getAuthToken();
 
       // One automatic retry: transient edge-function/network blips were the
@@ -1210,7 +1223,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
         console.log('API score:', apiScore, 'Local score:', localScore, 'Final:', finalScore);
 
-        const won = !didHangUp && !lowPatience && finalScore >= 70;
+        const won = budgetOutcome ? budgetOutcome.nextStepEarned : !didHangUp && !lowPatience && finalScore >= 70;
 
         feedbackData = {
           score: finalScore,
@@ -1247,7 +1260,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         if (didHangUp) localScore = Math.min(localScore, 30);
         else if (lowPatience) localScore = Math.min(localScore, 50);
         finalScore = localScore;
-        const won = !didHangUp && !lowPatience && localScore >= 70;
+        const won = budgetOutcome ? budgetOutcome.nextStepEarned : !didHangUp && !lowPatience && localScore >= 70;
 
         const gaps = sessionStats.hungUp
           ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
@@ -1323,7 +1336,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setIsTransitioningToDebrief(false);
       setPhase('debrief');
     }
-  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation, isColdCallHook, getAuthToken]);
+  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation, isColdCallHook, getAuthToken, isBudget]);
 
   // Keep ref always pointing to latest runDebrief
   runDebriefRef.current = runDebrief;
@@ -1903,9 +1916,10 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           <div className="text-5xl">⚠️</div>
           <h2 className="text-2xl font-bold">We couldn't score this one</h2>
           <p className="text-muted-foreground">
-            Something went wrong on our end while scoring your session.
+            {debrief.incompleteReason ?? 'Something went wrong on our end while scoring your session.'}
             You weren't charged a practice credit for this run.
           </p>
+          {debrief.sessionStats?.state && <p>Prospect Hung Up: {debrief.sessionStats.hungUp ? 'Yes' : 'No'}</p>}
           <Button onClick={handleTryAnother} className="mt-2">
             Run it back
           </Button>

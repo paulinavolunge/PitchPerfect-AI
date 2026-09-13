@@ -325,6 +325,26 @@ The reconciled implementation is suitable as a **local restore point**, with the
 
 Files touched by reconciliation: this document; Footer.tsx; GamifiedRoleplay.tsx and its reliability test; useProspectVoice.ts and its test; roleplayReliability.ts; budgetNetwork.test.ts; new openaiRetry.test.ts; Budget adapter.ts/session.ts; new shared openaiRetry.ts; roleplay-ai-response, elevenlabs-tts, pitch-analysis and voice-to-text index.ts. All other initial local changes were preserved.
 
+## Phase 2B.8 terminal debrief consistency — 2026-09-13
+
+**TERMINAL DEBRIEF: PASS.** Scoped to the terminal result/debrief handoff; broader microphone/end-to-end acceptance remains incomplete.
+
+Root cause: the heartbeat stored the accepted terminal ProspectState in budgetStateRef, called setHungUp(true), then immediately invoked a debrief callback whose React closure still held hungUp=false and the previous round count. Debrief inferred hang-up from that flag or zero patience, although inactivity can terminate at patience 80. It then scored an opening-only transcript.
+
+Fix: Budget debrief snapshots the accepted server state before any await, deriving hungUp, nextStepEarned, state, turnCount/roundsCompleted and patience from that snapshot. Numeric performance scoring is unchanged for scorable calls; the Budget win outcome follows server nextStepEarned. Non-Budget behavior is unchanged. No separate terminal reason exists in ProspectState, so no inferred internal reason was added.
+
+A server HUNG_UP with zero accepted turns takes the existing scoringFailed/unscored path before either local score calculation or pitch-analysis. UI explains insufficient rep activity and says Prospect Hung Up: Yes without a numeric score. Persistence receives score=null and feedback_data=null, preserving its existing failed/unscored and no-credit behavior.
+
+Regression coverage: heartbeat inactivity with stale React false; no analysis request and null-score persistence; accepted aggressive HUNG_UP displays Yes; NEXT_STEP_EARNED displays the won outcome; authoritative state, flags and turn count survive handoff; scorable calls still invoke normal analysis. Existing successful Budget scoring tests remain passing.
+
+Fresh checks: focused component/debrief suite 19 passed; full Vitest 102 passed, 0 failed, 4 opt-in skipped; separate live Budget tests 4 passed (106 unique automated passes); local Supabase integration 30/30; application and server-module TypeScript PASS; build/prerender PASS, 10/10; diff whitespace check PASS.
+
+Exact browser reproduction used the existing isolated local backend and synthetic Premium profile, with real ElevenLabs opening audio. Playback started at 15:33:02 UTC and ended naturally at 15:33:13 UTC. With no rep input the heartbeat observed inactivity at 15:33:31 UTC. Persisted state: HUNG_UP, hungUp=true, turnCount=0, elapsedMs=17998, activity closed at sequence 2 (the unchanged heartbeat detects the 15-second threshold on its next tick). UI showed We couldn't score this one, insufficient rep activity, and Prospect Hung Up: Yes; no numeric score appeared. Microphone QA was not attempted.
+
+Environment limitation: the isolated database still lacks the legacy practice_sessions table, so browser attempt persistence reports its existing missing-table error. The null-score/no-charge handoff is verified by component tests; Budget terminal persistence is verified in the real database. No schema was changed to hide this limitation. No API key values were exposed.
+
+Changed files: GamifiedRoleplay.tsx, GamifiedRoleplay.reliability.test.tsx, and this document. The Vite-generated MCP artifact is restored separately to HEAD. No commit, push, deployment, migration, other-scenario or Phase 2C work occurred. Remaining broader acceptance blockers are microphone/transcription and the previously incomplete strong/weak/retry browser coverage; none blocks this scoped terminal-debrief fix.
+
 ## Phase 2B.6 browser lifecycle validation — 2026-09-12
 
 **BROWSER ACCEPTANCE: FAIL (remaining browser coverage/environment blockers).** The lifecycle fix and all automated checks pass. This is suitable for a reviewed restore-point commit, not full browser/voice acceptance or production release. Nothing was committed, pushed, deployed or migrated in this task.
