@@ -1,0 +1,1795 @@
+{
+ "initial-state": {
+  "state": "ANSWERED",
+  "patience": 80,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 0,
+  "elapsedMs": 0,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "opening": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now.",
+ "allowed-matrix": {
+  "ANSWERED": {
+   "ANSWERED": true,
+   "GUARDED": true,
+   "ENGAGED": false,
+   "SKEPTICAL": true,
+   "OBJECTION": false,
+   "LOSING_INTEREST": false,
+   "NEXT_STEP_EARNED": false,
+   "HUNG_UP": true
+  },
+  "GUARDED": {
+   "ANSWERED": false,
+   "GUARDED": true,
+   "ENGAGED": true,
+   "SKEPTICAL": true,
+   "OBJECTION": true,
+   "LOSING_INTEREST": true,
+   "NEXT_STEP_EARNED": false,
+   "HUNG_UP": true
+  },
+  "ENGAGED": {
+   "ANSWERED": false,
+   "GUARDED": false,
+   "ENGAGED": true,
+   "SKEPTICAL": true,
+   "OBJECTION": true,
+   "LOSING_INTEREST": true,
+   "NEXT_STEP_EARNED": true,
+   "HUNG_UP": true
+  },
+  "SKEPTICAL": {
+   "ANSWERED": false,
+   "GUARDED": false,
+   "ENGAGED": true,
+   "SKEPTICAL": true,
+   "OBJECTION": true,
+   "LOSING_INTEREST": true,
+   "NEXT_STEP_EARNED": false,
+   "HUNG_UP": true
+  },
+  "OBJECTION": {
+   "ANSWERED": false,
+   "GUARDED": false,
+   "ENGAGED": true,
+   "SKEPTICAL": true,
+   "OBJECTION": true,
+   "LOSING_INTEREST": true,
+   "NEXT_STEP_EARNED": true,
+   "HUNG_UP": true
+  },
+  "LOSING_INTEREST": {
+   "ANSWERED": false,
+   "GUARDED": false,
+   "ENGAGED": false,
+   "SKEPTICAL": true,
+   "OBJECTION": true,
+   "LOSING_INTEREST": true,
+   "NEXT_STEP_EARNED": false,
+   "HUNG_UP": true
+  },
+  "NEXT_STEP_EARNED": {
+   "ANSWERED": false,
+   "GUARDED": false,
+   "ENGAGED": false,
+   "SKEPTICAL": false,
+   "OBJECTION": false,
+   "LOSING_INTEREST": false,
+   "NEXT_STEP_EARNED": true,
+   "HUNG_UP": false
+  },
+  "HUNG_UP": {
+   "ANSWERED": false,
+   "GUARDED": false,
+   "ENGAGED": false,
+   "SKEPTICAL": false,
+   "OBJECTION": false,
+   "LOSING_INTEREST": false,
+   "NEXT_STEP_EARNED": false,
+   "HUNG_UP": true
+  }
+ },
+ "policy-discovery": {
+  "state": "GUARDED",
+  "patience": 83,
+  "interest": 28,
+  "trust": 25,
+  "relevance": 35,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-reflection": {
+  "state": "GUARDED",
+  "patience": 78,
+  "interest": 20,
+  "trust": 35,
+  "relevance": 30,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-proof": {
+  "state": "GUARDED",
+  "patience": 78,
+  "interest": 35,
+  "trust": 35,
+  "relevance": 30,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-discovery-reflection-proof": {
+  "state": "GUARDED",
+  "patience": 83,
+  "interest": 35,
+  "trust": 35,
+  "relevance": 35,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-objection-handling-first": {
+  "state": "GUARDED",
+  "patience": 78,
+  "interest": 20,
+  "trust": 40,
+  "relevance": 35,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "ACKNOWLEDGED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-objection-handling-resolve": {
+  "state": "ENGAGED",
+  "patience": 76,
+  "interest": 20,
+  "trust": 55,
+  "relevance": 50,
+  "objectionsResolved": [
+   "budget"
+  ],
+  "turnCount": 2,
+  "elapsedMs": 4000,
+  "primaryObjectionStatus": "RESOLVED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-objection-handling-after-resolved": {
+  "state": "OBJECTION",
+  "patience": 74,
+  "interest": 20,
+  "trust": 70,
+  "relevance": 65,
+  "objectionsResolved": [],
+  "turnCount": 3,
+  "elapsedMs": 6000,
+  "primaryObjectionStatus": "ACKNOWLEDGED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-appropriate-ask-early": {
+  "state": "GUARDED",
+  "patience": 78,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 1
+ },
+ "policy-earn-path": {
+  "state": "NEXT_STEP_EARNED",
+  "patience": 75,
+  "interest": 73,
+  "trust": 65,
+  "relevance": 75,
+  "objectionsResolved": [
+   "budget"
+  ],
+  "turnCount": 5,
+  "elapsedMs": 10000,
+  "primaryObjectionStatus": "RESOLVED",
+  "nextStepEarned": true,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 1
+ },
+ "policy-generic": {
+  "state": "GUARDED",
+  "patience": 68,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-ignoring": {
+  "state": "GUARDED",
+  "patience": 68,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 1,
+  "meetingAsks": 0
+ },
+ "policy-repeated-ask": {
+  "state": "SKEPTICAL",
+  "patience": 66,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 2,
+  "elapsedMs": 4000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 2
+ },
+ "policy-rambling": {
+  "state": "GUARDED",
+  "patience": 62,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-unsupported": {
+  "state": "GUARDED",
+  "patience": 68,
+  "interest": 12,
+  "trust": 5,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-contradiction": {
+  "state": "GUARDED",
+  "patience": 68,
+  "interest": 12,
+  "trust": 5,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-nonsense-keywords": {
+  "state": "GUARDED",
+  "patience": 50,
+  "interest": 0,
+  "trust": 10,
+  "relevance": 0,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-aggression": {
+  "state": "HUNG_UP",
+  "patience": 0,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-pushing": {
+  "state": "GUARDED",
+  "patience": 68,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-unanchored-discovery": {
+  "state": "GUARDED",
+  "patience": 78,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-unanchored-contextual-quote": {
+  "state": "GUARDED",
+  "patience": 78,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-model-flags-ignored": {
+  "state": "GUARDED",
+  "patience": 78,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 1
+ },
+ "policy-extreme-deltas": {
+  "state": "GUARDED",
+  "patience": 50,
+  "interest": 0,
+  "trust": 10,
+  "relevance": 0,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 0,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-default-turn": {
+  "state": "GUARDED",
+  "patience": 78,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-terminal-reduce-unchanged": {
+  "state": "HUNG_UP",
+  "patience": 0,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-sixth-turn-hang": {
+  "state": "HUNG_UP",
+  "patience": 68,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 6,
+  "elapsedMs": 12000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "policy-hard-duration-hang": {
+  "state": "HUNG_UP",
+  "patience": 78,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 120000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "parse-valid": {
+  "threw": false,
+  "value": {
+   "text": "What would that cost?",
+   "proposedState": "ENGAGED",
+   "deltas": {
+    "patience": 15,
+    "interest": 15,
+    "trust": 15,
+    "relevance": 15
+   },
+   "objectionStatus": "RESOLVED",
+   "hangUp": false,
+   "nextStepEarned": false,
+   "reason": "Observable evidence",
+   "evidence": [
+    {
+     "behavior": "discovery",
+     "quote": "Can we measure the cost of order rework before discussing funding?",
+     "prospectQuote": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now."
+    }
+   ]
+  }
+ },
+ "parse-empty": {
+  "threw": true,
+  "error": "Error: INVALID_RESPONSE"
+ },
+ "parse-text-too-long": {
+  "threw": true,
+  "error": "Error: INVALID_RESPONSE"
+ },
+ "parse-bad-state": {
+  "threw": true,
+  "error": "Error: INVALID_RESPONSE"
+ },
+ "parse-bad-objection": {
+  "threw": true,
+  "error": "Error: INVALID_RESPONSE"
+ },
+ "parse-bad-behavior": {
+  "threw": true,
+  "error": "Error: INVALID_RESPONSE"
+ },
+ "parse-nan-delta": {
+  "threw": true,
+  "error": "Error: INVALID_RESPONSE"
+ },
+ "parse-too-much-evidence": {
+  "threw": true,
+  "error": "Error: INVALID_RESPONSE"
+ },
+ "parse-empty-quote": {
+  "threw": true,
+  "error": "Error: INVALID_RESPONSE"
+ },
+ "transition-answered-to-guarded": "GUARDED",
+ "transition-bad-to-skeptical": "GUARDED",
+ "transition-ack-to-objection": "GUARDED",
+ "transition-relevance-to-engaged": "ENGAGED",
+ "transition-soft-limit-losing-interest": "LOSING_INTEREST",
+ "transition-illegal-falls-back": "GUARDED",
+ "terminal-three-poor": {
+  "state": "HUNG_UP",
+  "patience": 44,
+  "interest": 0,
+  "trust": 10,
+  "relevance": 0,
+  "objectionsResolved": [],
+  "turnCount": 3,
+  "elapsedMs": 6000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 3,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "terminal-two-ignored": {
+  "state": "HUNG_UP",
+  "patience": 56,
+  "interest": 4,
+  "trust": 15,
+  "relevance": 0,
+  "objectionsResolved": [],
+  "turnCount": 2,
+  "elapsedMs": 4000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 2,
+  "ignoredTurns": 2,
+  "meetingAsks": 0
+ },
+ "terminal-pushing-after-losing-interest": {
+  "state": "HUNG_UP",
+  "patience": 18,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "terminal-patience-zero": {
+  "state": "HUNG_UP",
+  "patience": 0,
+  "interest": 12,
+  "trust": 20,
+  "relevance": 8,
+  "objectionsResolved": [],
+  "turnCount": 1,
+  "elapsedMs": 2000,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 1,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "session-start-idempotent": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "response": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now.",
+  "prospectState": {
+   "state": "ANSWERED",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 0,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 0,
+   "mode": "pause"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-turn-ok": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "response": "What would that cost?",
+  "prospectState": {
+   "state": "GUARDED",
+   "patience": 83,
+   "interest": 28,
+   "trust": 25,
+   "relevance": 35,
+   "objectionsResolved": [],
+   "turnCount": 1,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 1,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 0,
+   "mode": "pause"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "GUARDED",
+   "patience_before": 80,
+   "patience_after": 83,
+   "interest_before": 20,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 35,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 1
+  },
+  "latencyMs": 0
+ },
+ "session-receipt-replay-equal": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "response": "What would that cost?",
+  "prospectState": {
+   "state": "GUARDED",
+   "patience": 83,
+   "interest": 28,
+   "trust": 25,
+   "relevance": 35,
+   "objectionsResolved": [],
+   "turnCount": 1,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 1,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 0,
+   "mode": "pause"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "GUARDED",
+   "patience_before": 80,
+   "patience_after": 83,
+   "interest_before": 20,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 35,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 1
+  },
+  "latencyMs": 0
+ },
+ "session-altered-input-rejected": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "errorType": "INVALID_RESPONSE",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "GUARDED",
+   "state_after": "GUARDED",
+   "patience_before": 83,
+   "patience_after": 83,
+   "interest_before": 28,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 35,
+   "relevance_after": 35,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 1
+  },
+  "latencyMs": 0
+ },
+ "session-stale-version-rejected": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "stale",
+  "errorType": "INVALID_RESPONSE",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "GUARDED",
+   "state_after": "GUARDED",
+   "patience_before": 83,
+   "patience_after": 83,
+   "interest_before": 28,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 35,
+   "relevance_after": 35,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 1
+  },
+  "latencyMs": 0
+ },
+ "session-foreign-owner-rejected": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "errorType": "INVALID_RESPONSE",
+  "retryable": true,
+  "latencyMs": 0
+ },
+ "session-failure-result": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "errorType": "MODEL_ERROR",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-failure-preserves-state": {
+  "activity": {
+   "sequence": 0,
+   "mode": "pause",
+   "checkpointAt": null
+  },
+  "state": {
+   "state": "ANSWERED",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "history": [
+   {
+    "role": "assistant",
+    "content": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now."
+   }
+  ],
+  "receipts": {},
+  "readyAt": null,
+  "engaged": false,
+  "activeMs": 0,
+  "pending": {
+   "turnId": "t1",
+   "input": "Can we measure the cost of order rework before discussing funding?",
+   "elapsed": 0
+  }
+ },
+ "session-failure-preserved-equals-before": {
+  "activity": {
+   "sequence": 0,
+   "mode": "pause",
+   "checkpointAt": null
+  },
+  "state": {
+   "state": "ANSWERED",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "history": [
+   {
+    "role": "assistant",
+    "content": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now."
+   }
+  ],
+  "receipts": {},
+  "readyAt": null,
+  "engaged": false,
+  "activeMs": 0,
+  "pending": null
+ },
+ "session-retry-after-failure": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "response": "What would that cost?",
+  "prospectState": {
+   "state": "GUARDED",
+   "patience": 83,
+   "interest": 28,
+   "trust": 25,
+   "relevance": 35,
+   "objectionsResolved": [],
+   "turnCount": 1,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 1,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 0,
+   "mode": "pause"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "GUARDED",
+   "patience_before": 80,
+   "patience_after": 83,
+   "interest_before": 20,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 35,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 1
+  },
+  "latencyMs": 0
+ },
+ "session-concurrent-single-turn": {
+  "turnCount": 1,
+  "historyLength": 3
+ },
+ "session-close-result": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "close1",
+  "response": "I have to get back to work. Goodbye.",
+  "prospectState": {
+   "state": "HUNG_UP",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": true,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 0,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 0,
+   "mode": "closed"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "HUNG_UP",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": true,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-close-invalidates-pending": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "errorType": "NETWORK_ERROR",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-closed-state": {
+  "state": "HUNG_UP",
+  "patience": 80,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 0,
+  "elapsedMs": 0,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": true,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "session-closed-new-turn": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t2",
+  "errorType": "SESSION_CLOSED",
+  "retryable": false,
+  "stateTelemetry": {
+   "state_before": "HUNG_UP",
+   "state_after": "HUNG_UP",
+   "patience_before": 83,
+   "patience_after": 83,
+   "interest_before": 28,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 35,
+   "relevance_after": 35,
+   "hang_up": true,
+   "next_step_earned": false,
+   "turn_count": 1
+  },
+  "latencyMs": 0
+ },
+ "session-closed-evaluate-calls": 0,
+ "session-closed-render-calls": 0,
+ "session-closed-store-unchanged": {
+  "id": "parity-session",
+  "owner": "parity-owner",
+  "version": 3,
+  "document": {
+   "activity": {
+    "sequence": 0,
+    "mode": "closed",
+    "checkpointAt": null
+   },
+   "state": {
+    "state": "HUNG_UP",
+    "patience": 83,
+    "interest": 28,
+    "trust": 25,
+    "relevance": 35,
+    "objectionsResolved": [],
+    "turnCount": 1,
+    "elapsedMs": 0,
+    "primaryObjectionStatus": "UNADDRESSED",
+    "nextStepEarned": false,
+    "hungUp": true,
+    "poorTurns": 0,
+    "ignoredTurns": 0,
+    "meetingAsks": 0
+   },
+   "history": [
+    {
+     "role": "assistant",
+     "content": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now."
+    },
+    {
+     "role": "user",
+     "content": "Can we measure the cost of order rework before discussing funding?"
+    },
+    {
+     "role": "assistant",
+     "content": "What would that cost?"
+    },
+    {
+     "role": "assistant",
+     "content": "I have to get back to work. Goodbye."
+    }
+   ],
+   "receipts": {
+    "t1": {
+     "input": "Can we measure the cost of order rework before discussing funding?",
+     "result": {
+      "ok": true,
+      "sessionId": "parity-session",
+      "turnId": "t1",
+      "response": "What would that cost?",
+      "prospectState": {
+       "state": "GUARDED",
+       "patience": 83,
+       "interest": 28,
+       "trust": 25,
+       "relevance": 35,
+       "objectionsResolved": [],
+       "turnCount": 1,
+       "elapsedMs": 0,
+       "primaryObjectionStatus": "UNADDRESSED",
+       "nextStepEarned": false,
+       "hungUp": false,
+       "poorTurns": 0,
+       "ignoredTurns": 0,
+       "meetingAsks": 0
+      },
+      "version": 1,
+      "activityAck": {
+       "sessionId": "parity-session",
+       "sequence": 0,
+       "mode": "pause"
+      },
+      "stateTelemetry": {
+       "state_before": "ANSWERED",
+       "state_after": "GUARDED",
+       "patience_before": 80,
+       "patience_after": 83,
+       "interest_before": 20,
+       "interest_after": 28,
+       "trust_before": 25,
+       "trust_after": 25,
+       "relevance_before": 20,
+       "relevance_after": 35,
+       "hang_up": false,
+       "next_step_earned": false,
+       "turn_count": 1
+      },
+      "latencyMs": 0
+     },
+     "reason": "Observable evidence"
+    }
+   },
+   "readyAt": null,
+   "engaged": false,
+   "activeMs": 0,
+   "pending": null
+  }
+ },
+ "session-closed-store-before": {
+  "id": "parity-session",
+  "owner": "parity-owner",
+  "version": 3,
+  "document": {
+   "activity": {
+    "sequence": 0,
+    "mode": "closed",
+    "checkpointAt": null
+   },
+   "state": {
+    "state": "HUNG_UP",
+    "patience": 83,
+    "interest": 28,
+    "trust": 25,
+    "relevance": 35,
+    "objectionsResolved": [],
+    "turnCount": 1,
+    "elapsedMs": 0,
+    "primaryObjectionStatus": "UNADDRESSED",
+    "nextStepEarned": false,
+    "hungUp": true,
+    "poorTurns": 0,
+    "ignoredTurns": 0,
+    "meetingAsks": 0
+   },
+   "history": [
+    {
+     "role": "assistant",
+     "content": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now."
+    },
+    {
+     "role": "user",
+     "content": "Can we measure the cost of order rework before discussing funding?"
+    },
+    {
+     "role": "assistant",
+     "content": "What would that cost?"
+    },
+    {
+     "role": "assistant",
+     "content": "I have to get back to work. Goodbye."
+    }
+   ],
+   "receipts": {
+    "t1": {
+     "input": "Can we measure the cost of order rework before discussing funding?",
+     "result": {
+      "ok": true,
+      "sessionId": "parity-session",
+      "turnId": "t1",
+      "response": "What would that cost?",
+      "prospectState": {
+       "state": "GUARDED",
+       "patience": 83,
+       "interest": 28,
+       "trust": 25,
+       "relevance": 35,
+       "objectionsResolved": [],
+       "turnCount": 1,
+       "elapsedMs": 0,
+       "primaryObjectionStatus": "UNADDRESSED",
+       "nextStepEarned": false,
+       "hungUp": false,
+       "poorTurns": 0,
+       "ignoredTurns": 0,
+       "meetingAsks": 0
+      },
+      "version": 1,
+      "activityAck": {
+       "sessionId": "parity-session",
+       "sequence": 0,
+       "mode": "pause"
+      },
+      "stateTelemetry": {
+       "state_before": "ANSWERED",
+       "state_after": "GUARDED",
+       "patience_before": 80,
+       "patience_after": 83,
+       "interest_before": 20,
+       "interest_after": 28,
+       "trust_before": 25,
+       "trust_after": 25,
+       "relevance_before": 20,
+       "relevance_after": 35,
+       "hang_up": false,
+       "next_step_earned": false,
+       "turn_count": 1
+      },
+      "latencyMs": 0
+     },
+     "reason": "Observable evidence"
+    }
+   },
+   "readyAt": null,
+   "engaged": false,
+   "activeMs": 0,
+   "pending": null
+  }
+ },
+ "session-receipt-replay-after-close": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "response": "What would that cost?",
+  "prospectState": {
+   "state": "GUARDED",
+   "patience": 83,
+   "interest": 28,
+   "trust": 25,
+   "relevance": 35,
+   "objectionsResolved": [],
+   "turnCount": 1,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 1,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 0,
+   "mode": "pause"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "GUARDED",
+   "patience_before": 80,
+   "patience_after": 83,
+   "interest_before": 20,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 35,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 1
+  },
+  "latencyMs": 0
+ },
+ "session-tick-inactivity": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "k1",
+  "response": "I have to get back to work. Goodbye.",
+  "prospectState": {
+   "state": "HUNG_UP",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 15000,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": true,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 0,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 1,
+   "mode": "closed"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "HUNG_UP",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": true,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-turn-while-resumed-rejected": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "errorType": "INVALID_RESPONSE",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-turn-while-resumed-evaluate-calls": 0,
+ "session-hard-duration-tick": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "k1",
+  "response": "I have to get back to work. Goodbye.",
+  "prospectState": {
+   "state": "HUNG_UP",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 120000,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": true,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 0,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 1,
+   "mode": "closed"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "HUNG_UP",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": true,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-unpaused-turn-rejected": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "errorType": "INVALID_RESPONSE",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-unpaused-evaluate-calls": 0,
+ "session-superseded-sequence-rejected": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "p1",
+  "errorType": "INVALID_RESPONSE",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-duplicate-pause-idempotent": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "p2b",
+  "response": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now.",
+  "prospectState": {
+   "state": "ANSWERED",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 0,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 2,
+   "mode": "pause"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-duplicate-pause-doc-unchanged": {
+  "activity": {
+   "sequence": 2,
+   "mode": "pause",
+   "checkpointAt": null
+  },
+  "state": {
+   "state": "ANSWERED",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "history": [
+   {
+    "role": "assistant",
+    "content": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now."
+   }
+  ],
+  "receipts": {},
+  "readyAt": null,
+  "engaged": false,
+  "activeMs": 0,
+  "pending": null
+ },
+ "session-duplicate-pause-doc-before": {
+  "activity": {
+   "sequence": 2,
+   "mode": "pause",
+   "checkpointAt": null
+  },
+  "state": {
+   "state": "ANSWERED",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "history": [
+   {
+    "role": "assistant",
+    "content": "This is Renee. I'll be straight with you before you get going: we just closed budget season and I fought hard for what we've got. I don't have room to go back and ask for more right now."
+   }
+  ],
+  "receipts": {},
+  "readyAt": null,
+  "engaged": false,
+  "activeMs": 0,
+  "pending": null
+ },
+ "session-same-sequence-conflicting-intent": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "r2",
+  "errorType": "INVALID_RESPONSE",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-zero-turn-close": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "response": "I have to get back to work. Goodbye.",
+  "prospectState": {
+   "state": "HUNG_UP",
+   "patience": 80,
+   "interest": 20,
+   "trust": 25,
+   "relevance": 20,
+   "objectionsResolved": [],
+   "turnCount": 0,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": true,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 0,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 0,
+   "mode": "closed"
+  },
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "HUNG_UP",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": true,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-expected-turn-gating": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t2",
+  "errorType": "INVALID_RESPONSE",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "GUARDED",
+   "state_after": "GUARDED",
+   "patience_before": 83,
+   "patience_after": 83,
+   "interest_before": 28,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 35,
+   "relevance_after": 35,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 1
+  },
+  "latencyMs": 0
+ },
+ "session-expected-turn-ok": {
+  "ok": true,
+  "sessionId": "parity-session",
+  "turnId": "t2",
+  "response": "What would that cost?",
+  "prospectState": {
+   "state": "ENGAGED",
+   "patience": 81,
+   "interest": 28,
+   "trust": 25,
+   "relevance": 35,
+   "objectionsResolved": [],
+   "turnCount": 2,
+   "elapsedMs": 0,
+   "primaryObjectionStatus": "UNADDRESSED",
+   "nextStepEarned": false,
+   "hungUp": false,
+   "poorTurns": 0,
+   "ignoredTurns": 0,
+   "meetingAsks": 0
+  },
+  "version": 2,
+  "activityAck": {
+   "sessionId": "parity-session",
+   "sequence": 0,
+   "mode": "pause"
+  },
+  "stateTelemetry": {
+   "state_before": "GUARDED",
+   "state_after": "ENGAGED",
+   "patience_before": 83,
+   "patience_after": 81,
+   "interest_before": 28,
+   "interest_after": 28,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 35,
+   "relevance_after": 35,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 2
+  },
+  "latencyMs": 0
+ },
+ "session-quota-failure": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "errorType": "MODEL_ERROR",
+  "retryable": false,
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ },
+ "session-quota-state": {
+  "state": "ANSWERED",
+  "patience": 80,
+  "interest": 20,
+  "trust": 25,
+  "relevance": 20,
+  "objectionsResolved": [],
+  "turnCount": 0,
+  "elapsedMs": 0,
+  "primaryObjectionStatus": "UNADDRESSED",
+  "nextStepEarned": false,
+  "hungUp": false,
+  "poorTurns": 0,
+  "ignoredTurns": 0,
+  "meetingAsks": 0
+ },
+ "session-abort-timeout": {
+  "ok": false,
+  "sessionId": "parity-session",
+  "turnId": "t1",
+  "errorType": "MODEL_ERROR",
+  "retryable": true,
+  "stateTelemetry": {
+   "state_before": "ANSWERED",
+   "state_after": "ANSWERED",
+   "patience_before": 80,
+   "patience_after": 80,
+   "interest_before": 20,
+   "interest_after": 20,
+   "trust_before": 25,
+   "trust_after": 25,
+   "relevance_before": 20,
+   "relevance_after": 20,
+   "hang_up": false,
+   "next_step_earned": false,
+   "turn_count": 0
+  },
+  "latencyMs": 0
+ }
+}
