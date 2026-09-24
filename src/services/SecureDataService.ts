@@ -67,7 +67,7 @@ export class SecureDataService {
     userId?: string
   ): Promise<SecureDataResponse> {
     try {
-      const { data, error } = await supabase.rpc('log_security_event', {
+      const { data, error } = await supabase.rpc('report_client_security_event' as any, {
         p_event_type: eventType,
         p_event_details: eventDetails,
         p_user_id: userId

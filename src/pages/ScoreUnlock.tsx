@@ -18,7 +18,7 @@ import { toPercent } from '@/lib/score';
  *   2. Verify the session via the verify-stripe-session edge function
  *   3. Render the full unblurred scorecard from the debrief saved in
  *      localStorage during the cold call
- *   4. Offer a one-step signup form (email pre-filled, password only) so
+ *   4. Offer a one-step signup form (buyer enters checkout email and password) so
  *      the user can save their purchase. The handle_pending_credits trigger
  *      fires on signup and grants the credits / activates the subscription.
  *   5. Skip → store session_id locally for later prompting
@@ -26,7 +26,6 @@ import { toPercent } from '@/lib/score';
 
 interface VerifyResponse {
   paid: boolean;
-  email: string | null;
   mode: 'payment' | 'subscription' | 'setup' | null;
   amountTotal: number | null;
   productLabel: string | null;
@@ -55,6 +54,7 @@ const ScoreUnlock: React.FC = () => {
     'loading',
   );
   const [verified, setVerified] = useState<VerifyResponse | null>(null);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -128,7 +128,7 @@ const ScoreUnlock: React.FC = () => {
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!verified?.email || !password) return;
+    if (!email.trim() || !password) return;
     if (password.length < 6) {
       toast({
         title: 'Password too short',
@@ -141,7 +141,7 @@ const ScoreUnlock: React.FC = () => {
     setSubmitting(true);
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: verified.email,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/email-confirmed`,
@@ -156,7 +156,7 @@ const ScoreUnlock: React.FC = () => {
           toast({
             title: 'You already have an account. Logging you in.',
           });
-          navigate(`/login?email=${encodeURIComponent(verified.email)}`);
+          navigate(`/login?email=${encodeURIComponent(email.trim())}`);
           return;
         }
 
@@ -364,7 +364,7 @@ const ScoreUnlock: React.FC = () => {
                 Save your rounds. Create your account in 10 seconds.
               </h2>
               <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                Set a password to lock in your purchase and access your rounds anywhere.
+                Use the same email you used at checkout, then set a password to access your rounds anywhere.
               </p>
             </div>
           </div>
@@ -376,9 +376,12 @@ const ScoreUnlock: React.FC = () => {
               </label>
               <input
                 type="email"
-                value={verified?.email ?? ''}
-                readOnly
-                className="w-full rounded-lg bg-gray-800/70 border border-gray-700 px-3 py-2.5 text-sm text-gray-200 cursor-not-allowed"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-label="Checkout email"
+                autoComplete="email"
+                required
+                className="w-full rounded-lg bg-gray-800/70 border border-gray-700 px-3 py-2.5 text-sm text-gray-200"
               />
             </div>
             <div>
@@ -399,7 +402,7 @@ const ScoreUnlock: React.FC = () => {
 
             <Button
               type="submit"
-              disabled={submitting || !verified?.email || password.length < 6}
+              disabled={submitting || !email.trim() || password.length < 6}
               className="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-gray-900 font-extrabold py-5 text-base"
             >
               {submitting ? (

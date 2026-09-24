@@ -57,7 +57,7 @@ export class SafeRPCService {
     userId?: string
   ): Promise<void> {
     // Don't await, just fire and forget with error handling
-    this.call('log_security_event', {
+    this.call('report_client_security_event', {
       p_event_type: eventType,
       p_event_details: eventDetails,
       p_user_id: userId
