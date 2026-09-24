@@ -326,7 +326,7 @@ describe('GamifiedRoleplay Phase 2A reliability', () => {
     expect(incrementAttempt).toHaveBeenCalledWith(expect.objectContaining({score:null,feedback_data:null}));
   });
 
-  it.each(['HUNG_UP', 'NEXT_STEP_EARNED'] as const)('uses accepted %s and turn count in the scorable Budget debrief', async terminal => {
+  it.each([['Budget','HUNG_UP'], ['Budget','NEXT_STEP_EARNED'], ['Send Me an Email','HUNG_UP']] as const)('uses accepted %s %s and turn count in the scorable debrief', async (scenario, terminal) => {
     const analysis = vi.fn();
     const completed = vi.fn();
     vi.mocked(fetch).mockImplementation(async (url, init) => {
@@ -334,16 +334,21 @@ describe('GamifiedRoleplay Phase 2A reliability', () => {
       if (String(url).includes('pitch-analysis')) { analysis(); return apiResult({analysis:{overallScore:75,strengths:['Clear'],improvements:[],recommendation:'Continue'}}); }
       if (['pause','resume','engaged'].includes(p.budgetAction)) return apiResult({ok:true,activityAck:{sessionId:p.sessionId,sequence:p.budgetActivitySequence,mode:p.budgetAction}});
       return apiResult({...success(p.turnId,p.budgetAction==='turn'?'Final reply.':OPENING),sessionId:p.sessionId,
-        prospectState:p.budgetAction==='turn'?{...initialState(),state:terminal,hungUp:terminal==='HUNG_UP',nextStepEarned:terminal==='NEXT_STEP_EARNED',turnCount:1}:initialState()});
+        prospectState:p.budgetAction==='turn'?{...initialState(),state:terminal,hungUp:terminal==='HUNG_UP',nextStepEarned:terminal==='NEXT_STEP_EARNED',turnCount:1,patience:43}:initialState()});
     });
     render(<GamifiedRoleplay isColdCallHook compact onComplete={completed} />);
-    fireEvent.click(screen.getByText('Budget'));
+    fireEvent.click(screen.getByText(scenario));
     fireEvent.click(screen.getByRole('button',{name:/Start Roleplay/i}));
     await screen.findByText(OPENING);
     fireEvent.change(screen.getByPlaceholderText('Type your response…'),{target:{value:terminal==='HUNG_UP'?'Shut up and buy.':'Can we review the evidence together?'}});
     fireEvent.click(screen.getByRole('button',{name:'Send'}));
     await screen.findByRole('heading',{name:terminal==='HUNG_UP'?'Prospect Hung Up':'Deal Won!'});
     expect(screen.getByText(terminal==='HUNG_UP'?'Yes':'No')).toBeTruthy();
+    if (terminal === 'HUNG_UP') {
+      expect(screen.getAllByText('The prospect ended the call before a next step was earned.').length).toBeGreaterThan(0);
+      expect(screen.queryByText(/ran out of patience|lost patience before/)).toBeNull();
+      expect(screen.getByText('43%')).toBeTruthy();
+    }
     expect(analysis).toHaveBeenCalledTimes(1);
     expect(completed).toHaveBeenCalledWith(expect.objectContaining({sessionStats:expect.objectContaining({state:terminal,turnCount:1,roundsCompleted:1,hungUp:terminal==='HUNG_UP',nextStepEarned:terminal==='NEXT_STEP_EARNED'})}));
     expect(screen.getByText(terminal==='HUNG_UP'?'30/100':'75/100')).toBeTruthy();

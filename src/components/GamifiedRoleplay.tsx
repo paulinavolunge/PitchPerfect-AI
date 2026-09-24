@@ -1122,7 +1122,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           score: finalScore,
           strengths: parsed.strengths ?? ['Engaged with the prospect'],
           gaps: sessionStats.hungUp
-            ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', ...(parsed.improvements ?? ['Could dig deeper into root concerns'])]
+            ? [budgetOutcome ? 'The prospect ended the call before a next step was earned.' : 'The prospect lost patience before you could finish. Work on being more concise and responding faster.', ...(parsed.improvements ?? ['Could dig deeper into root concerns'])]
             : (parsed.improvements ?? ['Could dig deeper into root concerns']),
           tip: parsed.recommendation ?? 'Focus on asking discovery questions before presenting solutions.',
           sessionStats,
@@ -1146,7 +1146,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         const won = budgetOutcome ? budgetOutcome.nextStepEarned : !didHangUp && !lowPatience && localScore >= 70;
 
         const gaps = sessionStats.hungUp
-          ? ['The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
+          ? [budgetOutcome ? 'The prospect ended the call before a next step was earned.' : 'The prospect lost patience before you could finish. Work on being more concise and responding faster.', 'Consider asking more discovery questions', 'Provide more specific evidence and ROI data']
           : ['Consider asking more discovery questions', 'Provide more specific evidence and ROI data'];
         const tip = 'Next time, acknowledge the objection first before presenting your counter-argument.';
 
@@ -1840,7 +1840,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           </h2>
           <p className="text-muted-foreground mt-1">
             {debrief.sessionStats?.hungUp
-              ? 'The prospect ran out of patience and ended the call.'
+              ? (debrief.sessionStats.state ? 'The prospect ended the call before a next step was earned.' : 'The prospect ran out of patience and ended the call.')
               : debrief.won
                 ? 'You earned the prospect\'s trust.'
                 : debrief.sessionStats && debrief.sessionStats.finalPatience < 30
