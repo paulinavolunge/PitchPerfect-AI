@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { checkRateLimit, getClientIp, rateLimitResponse } from "../_shared/rateLimit.ts";
 
+import { prospectRequest } from "../_shared/prospect/adapter.ts";
 import { budgetRequest } from "../_shared/budget/adapter.ts";
 import { fetchOpenAI, isQuotaFailure } from "../_shared/openaiRetry.ts";
 import { selectLegacyPersona, legacySystemPrompt, legacyMessages } from "../_shared/legacyScenarios.ts";
@@ -85,17 +86,18 @@ serve(async (req) => {
       turnId,
     } = parsedBody;
 
-    if (activityHeader && (scenario?.objection !== 'Budget' || !isReversedRole || customProduct || customBuyerTitle || customIndustry || customObjection || !['pause','resume','tick','close','engaged'].includes(parsedBody.budgetAction))) return new Response('{}',{status:400,headers:corsHeaders});
-    // Budget is explicitly routed; custom and other scenario behavior remains unchanged.
-    if (scenario?.objection === 'Budget' && isReversedRole && !(customProduct || customBuyerTitle || customIndustry || customObjection)) {
+    const emailEngine = scenario?.standardId === 'email' && scenario?.objection === 'Send Me an Email';
+    if (activityHeader && ((!emailEngine && scenario?.objection !== 'Budget') || !isReversedRole || customProduct || customBuyerTitle || customIndustry || customObjection || !['pause','resume','tick','close','engaged'].includes(parsedBody.budgetAction))) return new Response('{}',{status:400,headers:corsHeaders});
+    // Budget and validated standard Email use server sessions; custom/other routes stay unchanged.
+    if ((scenario?.objection === 'Budget' || emailEngine) && isReversedRole && !(customProduct || customBuyerTitle || customIndustry || customObjection)) {
       if (typeof parsedBody.budgetToken !== 'string' || !/^[a-f0-9]{64}$/.test(parsedBody.budgetToken)) {
         return new Response(JSON.stringify({ok:false,sessionId,turnId,errorType:'INVALID_RESPONSE',retryable:false}), {headers:{...corsHeaders,'Content-Type':'application/json'}});
       }
       const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parsedBody.budgetToken));
       const owner = `${user?.id ?? 'guest'}:${Array.from(new Uint8Array(hash), b=>b.toString(16).padStart(2,'0')).join('')}`;
       const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {auth:{persistSession:false,autoRefreshToken:false}});
-      const result = await budgetRequest(parsedBody, owner, db, OPENAI_API_KEY);
-      console.log('budget_turn', {session_id:sessionId,turn_id:turnId, ...(result as any).stateTelemetry,success:(result as any).ok,error_type:(result as any).errorType ?? null});
+      const result = emailEngine ? await prospectRequest({body:parsedBody,owner,db,key:OPENAI_API_KEY,scenarioId:'email'}) : await budgetRequest(parsedBody, owner, db, OPENAI_API_KEY);
+      console.log(emailEngine ? 'email_turn' : 'budget_turn', {scenario:emailEngine ? 'email' : 'budget',session_id:sessionId,turn_id:turnId, ...(result as any).stateTelemetry,success:(result as any).ok,error_type:(result as any).errorType ?? null});
       return new Response(JSON.stringify({...result as object,requestId:crypto.randomUUID()}), {headers:{...corsHeaders,'Content-Type':'application/json'}});
     }
 

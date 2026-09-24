@@ -111,7 +111,7 @@ describe("Budget parity: generalized engine reproduces validated behavior", () =
 
   it("scenario registry fails closed on unknown ids", () => {
     expect(getScenarioConfig("budget").scenarioId).toBe("budget");
-    expect(SCENARIO_IDS).toEqual(["budget"]);
+    expect(SCENARIO_IDS).toEqual(["budget", "email"]);
     for (const bad of [
       "think",
       "budget ",

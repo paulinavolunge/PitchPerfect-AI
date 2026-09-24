@@ -198,7 +198,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   const [selectedObjection, setSelectedObjection] = useState<ObjectionCard | null>(null);
   const [customScenario, setCustomScenario] = useState<CustomScenario | null>(null);
   const [isCustomMode, setIsCustomMode] = useState(false);
-  const isBudget = selectedObjection?.id === 'budget' && !isCustomMode && !presetScenario;
+  const isServerProspect = (selectedObjection?.id === 'budget' || selectedObjection?.id === 'email') && !isCustomMode && !presetScenario;
   const [customForm, setCustomForm] = useState<CustomScenario>({ product: '', buyerTitle: '', industry: '', objection: '' });
   const [prospectInfo] = useState(() =>
     presetScenario
@@ -429,7 +429,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   useEffect(() => {
     // Only run timer during conversation phase, when it's user's turn (not AI typing), and not hung up
     // PAUSE when user is actively typing or speaking in voice mode
-    if (isBudget || phase !== 'conversation' || isAiTyping || hungUp || isUserTyping || isListening || isProcessingVoice || isOverlayOpen || failedTurn || voiceFailure) {
+    if (isServerProspect || phase !== 'conversation' || isAiTyping || hungUp || isUserTyping || isListening || isProcessingVoice || isOverlayOpen || failedTurn || voiceFailure) {
       // Clear any existing timer
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
@@ -471,7 +471,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         timerIntervalRef.current = null;
       }
     };
-  }, [phase, isAiTyping, hungUp, isUserTyping, isListening, isProcessingVoice, isOverlayOpen, currentRound, messages.length, failedTurn, voiceFailure, isBudget]);
+  }, [phase, isAiTyping, hungUp, isUserTyping, isListening, isProcessingVoice, isOverlayOpen, currentRound, messages.length, failedTurn, voiceFailure, isServerProspect]);
 
   // Detect any modal/overlay (Radix dialog, cmdk palette, alert dialog, popover) opened on top of the session.
   // While one is open the patience timer is paused so the prospect doesn't drain off-screen.
@@ -500,7 +500,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
   // ── Hang-up trigger: patience hits 0 ────────────────────────
   useEffect(() => {
-    if (!isBudget && patience <= 0 && phase === 'conversation' && !hungUp) {
+    if (!isServerProspect && patience <= 0 && phase === 'conversation' && !hungUp) {
       setHungUp(true);
       setHangUpReason(timerSeconds <= 5 ? 'You took too long to respond.' : 'The prospect lost patience.');
       stopSpeech();
@@ -547,14 +547,14 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       if (!mountedRef.current || sid!==sessionIdRef.current) throw new SupersededActivity('Session changed');
       const res=await fetch(`${SUPABASE_URL}/functions/v1/roleplay-ai-response`,{
         method:'POST',headers:{'Content-Type':'application/json','x-budget-activity':'1',Authorization:`Bearer ${auth}`,apikey:SUPABASE_ANON_KEY},
-        body:JSON.stringify({scenario:{objection:'Budget'},isReversedRole:true,sessionId:sid,turnId:commandId,budgetToken:token,budgetVersion:budgetStateRef.current?.turnCount??0,budgetAction:action,budgetActivitySequence:sequence,userInput:''}),signal:AbortSignal.timeout(3000),
+        body:JSON.stringify({scenario:{objection:selectedObjection?.label,standardId:selectedObjection?.id === 'email' ? 'email' : undefined},isReversedRole:true,sessionId:sid,turnId:commandId,budgetToken:token,budgetVersion:budgetStateRef.current?.turnCount??0,budgetAction:action,budgetActivitySequence:sequence,userInput:''}),signal:AbortSignal.timeout(3000),
       });
       if (!res.ok) throw new Error('Activity request failed');
       return await res.json() as ActivityResponse;
     });
     budgetClockRef.current=clock;
     return clock;
-  },[getAuthToken]);
+  },[getAuthToken,selectedObjection]);
 
   // ── AI Call ────────────────────────────────────────────────
   const callAI = useCallback(async (systemPrompt: string, userMsg: string, history: ChatMessage[], turnId: string): Promise<RoleplayTurnResult> => {
@@ -581,7 +581,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       prospectName: currentProspectName,
       sessionId: sessionIdRef.current,
       turnId,
-      ...(isBudget ? { budgetToken: budgetTokenRef.current, budgetVersion: budgetStateRef.current?.turnCount ?? 0, budgetAction: history.length === 0 ? 'start' : 'turn' } : {}),
+      ...(isServerProspect ? { budgetToken: budgetTokenRef.current, budgetVersion: budgetStateRef.current?.turnCount ?? 0, budgetAction: history.length === 0 ? 'start' : 'turn' } : {}),
       // Pass the carefully-tuned client-side persona prompt so the edge
       // function honors it instead of substituting a rigid built-in script.
       systemPromptOverride: systemPrompt || undefined,
@@ -603,7 +603,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
     // Fetch directly (rather than supabase.functions.invoke) so we can set
     // the Authorization header explicitly and support guest callers.
-    if (isBudget && history.length > 0) payload.budgetActivitySequence=(await getBudgetClock().transition('pause')).sequence;
+    if (isServerProspect && history.length > 0) payload.budgetActivitySequence=(await getBudgetClock().transition('pause')).sequence;
     const requestSessionId = sessionIdRef.current;
     const authToken = await getAuthToken();
     abortControllerRef.current?.abort();
@@ -639,23 +639,23 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     if (data?.ok !== true || typeof data.response !== 'string' || !data.response.trim()) {
       return { ok: false, requestId: data?.requestId ?? crypto.randomUUID(), sessionId: sessionIdRef.current, turnId, errorType: 'INVALID_RESPONSE', retryable: true, latencyMs: data?.latencyMs ?? Date.now() - startedAt };
     }
-    if (isBudget && history.length === 0 && data?.ok === true) await getBudgetClock().transition('pause');
-    if (isBudget && (!data.prospectState || data.sessionId !== requestSessionId || data.turnId !== turnId)) throw new Error("INVALID_RESPONSE");
+    if (isServerProspect && history.length === 0 && data?.ok === true) await getBudgetClock().transition('pause');
+    if (isServerProspect && (!data.prospectState || data.sessionId !== requestSessionId || data.turnId !== turnId)) throw new Error("INVALID_RESPONSE");
     return { ok: true, prospectState: data.prospectState, stateTelemetry: data.stateTelemetry, requestId: data.requestId, sessionId: requestSessionId, turnId, text: data.response, latencyMs: data.latencyMs ?? Date.now() - startedAt, totalLatencyMs: Date.now() - startedAt };
-  }, [selectedObjection, customScenario, isCustomMode, currentProspectName, getAuthToken, isBudget, getBudgetClock]);
+  }, [selectedObjection, customScenario, isCustomMode, currentProspectName, getAuthToken, isServerProspect, getBudgetClock]);
 
   useEffect(() => {
-    if (!isBudget || phase !== 'conversation') return;
+    if (!isServerProspect || phase !== 'conversation') return;
     const sid=sessionIdRef.current, token=budgetTokenRef.current;
     return () => {
       if (budgetClockRef.current?.sessionId === sid) budgetClockRef.current.close();
       // Close the old server session on manual end/reset/unmount; never reuse its capability.
-      void getAuthToken().then(auth=>fetch(`${SUPABASE_URL}/functions/v1/roleplay-ai-response`,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','x-budget-activity':'1',Authorization:`Bearer ${auth}`,apikey:SUPABASE_ANON_KEY},body:JSON.stringify({scenario:{objection:'Budget'},isReversedRole:true,sessionId:sid,turnId:`close-${crypto.randomUUID()}`,budgetToken:token,budgetVersion:0,budgetAction:'close',userInput:''})})).catch(()=>{});
+      void getAuthToken().then(auth=>fetch(`${SUPABASE_URL}/functions/v1/roleplay-ai-response`,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','x-budget-activity':'1',Authorization:`Bearer ${auth}`,apikey:SUPABASE_ANON_KEY},body:JSON.stringify({scenario:{objection:selectedObjection?.label,standardId:selectedObjection?.id === 'email' ? 'email' : undefined},isReversedRole:true,sessionId:sid,turnId:`close-${crypto.randomUUID()}`,budgetToken:token,budgetVersion:0,budgetAction:'close',userInput:''})})).catch(()=>{});
     };
-  },[isBudget,phase,getAuthToken]);
+  },[isServerProspect,phase,getAuthToken,selectedObjection]);
 
   useEffect(() => {
-    if (!isBudget || phase !== 'conversation' || !budgetStateRef.current || hungUp || isAiTyping) return;
+    if (!isServerProspect || phase !== 'conversation' || !budgetStateRef.current || hungUp || isAiTyping) return;
     let disposed=false;
     const sid=sessionIdRef.current, clock=getBudgetClock();
     const paused=isProcessingVoice || budgetSpeaking || !!failedTurn || voiceFailure || isOverlayOpen || budgetClockError;
@@ -676,7 +676,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       }).catch(report);
     },3000);
     return ()=>{disposed=true;if(timer)clearInterval(timer);};
-  },[isBudget,phase,hungUp,isAiTyping,isListening,isProcessingVoice,budgetSpeaking,failedTurn,voiceFailure,isOverlayOpen,isUserTyping,messages,getBudgetClock,budgetClockError]);
+  },[isServerProspect,phase,hungUp,isAiTyping,isListening,isProcessingVoice,budgetSpeaking,failedTurn,voiceFailure,isOverlayOpen,isUserTyping,messages,getBudgetClock,budgetClockError]);
 
   // ── Start conversation ─────────────────────────────────────
   const startConversation = useCallback(async () => {
@@ -692,7 +692,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     const scriptedPersona = !presetScenario && !isCustomMode && selectedObjection
       ? OBJECTION_PERSONAS[selectedObjection.id]
       : undefined;
-    if (scriptedPersona?.openingLine && !isBudget) {
+    if (scriptedPersona?.openingLine && !isServerProspect) {
       await playCallStart();
       if (!mountedRef.current || startAbortRef.current) return;
       const prospectMsg: ChatMessage = {
@@ -702,7 +702,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         timestamp: new Date(),
       };
       setMessages([prospectMsg]);
-      setCurrentRound(isBudget ? 0 : 1);
+      setCurrentRound(isServerProspect ? 0 : 1);
       sessionStartTimeRef.current = Date.now();
       lastProspectMsgTimeRef.current = Date.now();
       speakText(scriptedPersona.openingLine);
@@ -756,7 +756,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         return;
       }
       const text = response.text;
-      if (isBudget && response.prospectState) { budgetStateRef.current=response.prospectState; patienceRef.current=response.prospectState.patience; setPatience(response.prospectState.patience); }
+      if (isServerProspect && response.prospectState) { budgetStateRef.current=response.prospectState; patienceRef.current=response.prospectState.patience; setPatience(response.prospectState.patience); }
       setFailedTurn(null);
 
       const prospectMsg: ChatMessage = {
@@ -766,15 +766,15 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         timestamp: new Date(),
       };
       setMessages([prospectMsg]);
-      setCurrentRound(isBudget ? 0 : 1);
+      setCurrentRound(isServerProspect ? 0 : 1);
       sessionStartTimeRef.current = Date.now();
       lastProspectMsgTimeRef.current = Date.now();
-      if (isBudget) { const speakingSession=sessionIdRef.current; setBudgetSpeaking(true); Promise.resolve(speakText(text)).finally(()=>{if(mountedRef.current && speakingSession===sessionIdRef.current)setBudgetSpeaking(false);}); } else speakText(text);
+      if (isServerProspect) { const speakingSession=sessionIdRef.current; setBudgetSpeaking(true); Promise.resolve(speakText(text)).finally(()=>{if(mountedRef.current && speakingSession===sessionIdRef.current)setBudgetSpeaking(false);}); } else speakText(text);
       trackEvent('roleplay_turn_succeeded', { session_id: sessionIdRef.current, turn_id: openingTurnId, scenario: selectedObjection?.id ?? presetScenario?.objectionLabel ?? 'custom', input_mode: inputMode, success: true, error_type: null, retry_count: openingRetryCount, model_latency_ms: response.latencyMs, total_ai_response_latency_ms: response.totalLatencyMs ?? response.latencyMs });
     } finally {
       if (mountedRef.current && activeAttemptRef.current === openingAttemptId) setIsAiTyping(false);
     }
-  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle, unlock, playCallStart, presetScenario, failedTurn, isBudget]);
+  }, [selectedObjection, callAI, inputMode, speakText, isCustomMode, customScenario, currentProspectName, currentProspectTitle, unlock, playCallStart, presetScenario, failedTurn, isServerProspect]);
 
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async (overrideText?: string) => {
@@ -816,7 +816,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
 
     // If we've exceeded max rounds, go straight to debrief (no more AI calls).
     // runDebrief owns the overlay + phase transition in direct-caller mode.
-    if (!isBudget && nextRound > MAX_ROUNDS) {
+    if (!isServerProspect && nextRound > MAX_ROUNDS) {
       requestInFlightRef.current = false;
       setIsAiTyping(false);
       await runDebriefRef.current!(updatedMessages);
@@ -839,7 +839,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         trackEvent('roleplay_turn_failed', { session_id: sessionIdRef.current, turn_id: turnId, scenario: selectedObjection?.id ?? presetScenario?.objectionLabel ?? 'custom', input_mode: inputMode, success: false, error_type: result.errorType, retry_count: retryCount, model_latency_ms: result.latencyMs, total_ai_response_latency_ms: result.totalLatencyMs ?? result.latencyMs });
         return;
       }
-      if (isBudget && result.prospectState) {
+      if (isServerProspect && result.prospectState) {
         budgetStateRef.current=result.prospectState;
         patienceRef.current=result.prospectState.patience;
         setPatience(result.prospectState.patience);
@@ -847,7 +847,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         setFailedTurn(null);
         const allMessages=[...updatedMessages,{id:crypto.randomUUID(),role:'prospect' as const,text:result.text,timestamp:new Date()}];
         setMessages(allMessages);
-        trackEvent('roleplay_turn_succeeded',{session_id:sessionIdRef.current,turn_id:turnId,scenario:'budget',input_mode:inputMode,success:true,error_type:null,retry_count:retryCount,model_latency_ms:result.latencyMs,total_ai_response_latency_ms:result.totalLatencyMs??result.latencyMs,...result.stateTelemetry});
+        trackEvent('roleplay_turn_succeeded',{session_id:sessionIdRef.current,turn_id:turnId,scenario:selectedObjection?.id,input_mode:inputMode,success:true,error_type:null,retry_count:retryCount,model_latency_ms:result.latencyMs,total_ai_response_latency_ms:result.totalLatencyMs??result.latencyMs,...result.stateTelemetry});
         setBudgetSpeaking(true);
         await speakText(result.text);
         if (!mountedRef.current || activeAttemptRef.current !== attemptId) return;
@@ -927,7 +927,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
         setIsAiTyping(false);
       }
     }
-  }, [userInput, isAiTyping, hungUp, selectedObjection, isCustomMode, customScenario, messages, currentRound, callAI, stopSpeech, speakText, inputMode, currentProspectName, currentProspectTitle, failedTurn, presetScenario, isBudget, budgetClockError]);
+  }, [userInput, isAiTyping, hungUp, selectedObjection, isCustomMode, customScenario, messages, currentRound, callAI, stopSpeech, speakText, inputMode, currentProspectName, currentProspectTitle, failedTurn, presetScenario, isServerProspect, budgetClockError]);
 
   // ── Local fallback scoring (0-100 scale) ──────────────────
   const computeLocalScore = useCallback((finalMessages: ChatMessage[]): number => {
@@ -980,7 +980,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
   type RunDebriefOptions = { parallelHoldUntil?: Promise<void> };
   const runDebrief = useCallback(async (finalMessages: ChatMessage[], options?: RunDebriefOptions) => {
     // Snapshot the accepted server result before any await or React state update.
-    const budgetOutcome = isBudget && budgetStateRef.current ? { ...budgetStateRef.current } : null;
+    const budgetOutcome = isServerProspect && budgetStateRef.current ? { ...budgetStateRef.current } : null;
     const isParallel = !!options?.parallelHoldUntil;
     if (!isParallel) stopSpeech();
 
@@ -1219,7 +1219,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       setIsTransitioningToDebrief(false);
       setPhase('debrief');
     }
-  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation, isColdCallHook, getAuthToken, isBudget]);
+  }, [selectedObjection, isCustomMode, customScenario, incrementAttempt, refreshCount, computeLocalScore, stopSpeech, responseTimes, currentRound, hungUp, showHangUpAnimation, isColdCallHook, getAuthToken, isServerProspect]);
 
   // Keep ref always pointing to latest runDebrief
   runDebriefRef.current = runDebrief;
@@ -1253,7 +1253,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
           console.log('[VOICE] MIME check:', blob.type, 'passes:', !blob.type || blob.type.startsWith('audio/'));
           toast({ title: `Recording: ${duration}ms, ${blob.size} bytes`, description: 'Sending to Whisper…' });
           console.log('[VOICE] Sending to Whisper, blob size:', blob.size);
-          const result = isBudget ? await getBudgetClock().service(()=>processVoiceInput(blob)) : await processVoiceInput(blob);
+          const result = isServerProspect ? await getBudgetClock().service(()=>processVoiceInput(blob)) : await processVoiceInput(blob);
           if (!mountedRef.current || voiceSessionId !== sessionIdRef.current) return;
           trackEvent('roleplay_transcription', { session_id: voiceSessionId, success: true, recorded_mime_type: blob.type, blob_size: blob.size, recording_duration_ms: duration, transcription_latency_ms: Date.now() - voiceStartedAt, error_type: null });
           if (!result.transcript || result.transcript.trim().length === 0) {
@@ -1341,7 +1341,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     try {
       const manager = new VoiceRecordingManager();
       voiceManagerRef.current = manager;
-      if (isBudget) await getBudgetClock().service(()=>manager.startRecording());
+      if (isServerProspect) await getBudgetClock().service(()=>manager.startRecording());
       else await manager.startRecording();
       setVoiceFailure(false);
       setIsListening(true);
@@ -1368,7 +1368,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
     } finally {
       setIsProcessingVoice(false);
     }
-  }, [isListening, sendMessage, muteSpeech, unmuteSpeech, isFbBrowser, isBudget, getBudgetClock]);
+  }, [isListening, sendMessage, muteSpeech, unmuteSpeech, isFbBrowser, isServerProspect, getBudgetClock]);
 
   // ── Reset ──────────────────────────────────────────────────
   const handleGoProCheckout = async (planId: string = 'solo', quantity: number = 1) => {
@@ -1912,7 +1912,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="flex flex-col">
                 <span className="text-muted-foreground">Rounds Completed</span>
-                <span className="font-semibold text-foreground">{debrief.sessionStats.roundsCompleted}/{isBudget ? 6 : MAX_ROUNDS}</span>
+                <span className="font-semibold text-foreground">{debrief.sessionStats.roundsCompleted}/{isServerProspect ? 6 : MAX_ROUNDS}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-muted-foreground">Avg Response Time</span>
@@ -2103,7 +2103,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
       </div>
 
       <div className="flex items-center gap-2 mb-4 shrink-0">
-        {Array.from({ length: isBudget ? 6 : MAX_ROUNDS }).map((_, i) => (
+        {Array.from({ length: isServerProspect ? 6 : MAX_ROUNDS }).map((_, i) => (
           <div
             key={i}
             className={`w-3 h-3 rounded-full transition-colors ${
@@ -2111,7 +2111,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             }`}
           />
         ))}
-        <span className="text-xs text-muted-foreground ml-2">Round {Math.min(currentRound, isBudget ? 6 : MAX_ROUNDS)}</span>
+        <span className="text-xs text-muted-foreground ml-2">Round {Math.min(currentRound, isServerProspect ? 6 : MAX_ROUNDS)}</span>
       </div>
 
       {/* Patience meter */}
@@ -2266,7 +2266,7 @@ const GamifiedRoleplay: React.FC<GamifiedRoleplayProps> = ({
             onChange={(e) => {
               setUserInput(e.target.value);
               if (e.target.value.length > 0) setIsUserTyping(true);
-              if (isBudget) {
+              if (isServerProspect) {
                 if (budgetTypingTimerRef.current) clearTimeout(budgetTypingTimerRef.current);
                 if (!e.target.value.length) setIsUserTyping(false);
                 budgetTypingTimerRef.current=setTimeout(()=>setIsUserTyping(false),1000);
