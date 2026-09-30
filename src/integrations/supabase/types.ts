@@ -77,6 +77,30 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_prospect_sessions: {
+        Row: {
+          created_at: string
+          document: Json
+          id: string
+          owner: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          document: Json
+          id: string
+          owner: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          document?: Json
+          id?: string
+          owner?: string
+          version?: number
+        }
+        Relationships: []
+      }
       coaching_feedback: {
         Row: {
           category: string | null
@@ -154,6 +178,30 @@ export type Database = {
           success?: boolean | null
           table_accessed?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_prospect_sessions: {
+        Row: {
+          created_at: string
+          document: Json
+          id: string
+          owner: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          document: Json
+          id: string
+          owner: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          document?: Json
+          id?: string
+          owner?: string
+          version?: number
         }
         Relationships: []
       }
@@ -845,6 +893,14 @@ export type Database = {
           p_subscription_tier?: string
         }
         Returns: Json
+      }
+      report_client_security_event: {
+        Args: {
+          p_event_details?: Json
+          p_event_type: string
+          p_user_id?: string
+        }
+        Returns: undefined
       }
       safe_create_profile: { Args: never; Returns: undefined }
       sanitize_error_message: {
